@@ -28,6 +28,6 @@ resources:
     memory: 384Mi
 fasitResources:
   exposed:
-used:
+  used:
   - alias: srvsyfosminfotrygd
     resourceType: Credential
