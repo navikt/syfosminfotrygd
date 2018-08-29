@@ -22,7 +22,7 @@ To build locally and run the integration tests you can simply run `./gradlew ins
 `gradlew.bat installDist`
 
 #### Creating a docker image
-Creating a docker image should be as simple as `docker build -t syfosykemeldingregler .`
+Creating a docker image should be as simple as `docker build -t syfosminfotrygd .`
 
 
 ## Contact us
