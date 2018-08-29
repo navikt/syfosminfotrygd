@@ -35,13 +35,13 @@ val unmarshaller: Unmarshaller = jaxBContext.createUnmarshaller()
 
 val log: Logger = LoggerFactory.getLogger("no.nav.syfo.smjoark")
 
-fun main(args: Array<String>) {
+fun main(args: Array<String>) = runBlocking<Unit> {
     val env = Environment()
     val applicationState = ApplicationState()
 
     val applicationServer = embeddedServer(Netty, env.applicationPort) {
         initRouting(applicationState)
-    }.start(wait = true)
+    }.start(wait = false)
 
     try {
         val consumerProperties = readConsumerConfig(env, valueDeserializer = StringDeserializer::class)
@@ -54,14 +54,12 @@ fun main(args: Array<String>) {
             }
         }.toList()
 
-        runBlocking {
-            Runtime.getRuntime().addShutdownHook(Thread {
-                applicationServer.stop(10, 10, TimeUnit.SECONDS)
-            })
+        Runtime.getRuntime().addShutdownHook(Thread {
+            applicationServer.stop(10, 10, TimeUnit.SECONDS)
+        })
 
-            applicationState.initialized = true
-            listeners.forEach { it.join() }
-        }
+        applicationState.initialized = true
+        listeners.forEach { it.join() }
     } finally {
         applicationState.running = false
     }
