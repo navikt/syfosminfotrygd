@@ -73,7 +73,7 @@ suspend fun listen(
     producer: KafkaProducer<String, String>,
     env: Environment
 ) {
-    while (!applicationState.running) {
+    while (applicationState.running) {
         consumer.poll(Duration.ofMillis(0)).forEach {
             val fellesformat = unmarshaller.unmarshal(StringReader(it.value())) as XMLEIFellesformat
             val msgHead: XMLMsgHead = fellesformat.get()
