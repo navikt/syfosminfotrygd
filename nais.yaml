@@ -31,3 +31,6 @@ fasitResources:
   used:
   - alias: srvsyfosminfotrygd
     resourceType: Credential
+  - alias: kafka_bootstrap_servers
+    resourceType: baseurl
+
