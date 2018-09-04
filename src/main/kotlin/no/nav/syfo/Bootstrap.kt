@@ -35,7 +35,7 @@ val unmarshaller: Unmarshaller = jaxBContext.createUnmarshaller()
 
 val log: Logger = LoggerFactory.getLogger("no.nav.syfo.smjoark")
 
-fun main(args: Array<String>) = runBlocking<Unit> {
+fun main(args: Array<String>) = runBlocking {
     val env = Environment()
     val applicationState = ApplicationState()
 
@@ -48,9 +48,9 @@ fun main(args: Array<String>) = runBlocking<Unit> {
         val producerProperties = readProducerConfig(env, valueSerializer = StringSerializer::class)
         val listeners = (1..env.applicationThreads).map {
             launch {
-                val consumer = KafkaConsumer<String, String>(consumerProperties)
-                val producer = KafkaProducer<String, String>(producerProperties)
-                listen(applicationState, consumer, producer, env)
+                val kafkaconsumer = KafkaConsumer<String, String>(consumerProperties)
+                val kafkaproducer = KafkaProducer<String, String>(producerProperties)
+                listen(applicationState, kafkaconsumer, kafkaproducer, env)
             }
         }.toList()
 
@@ -66,13 +66,13 @@ fun main(args: Array<String>) = runBlocking<Unit> {
 }
 
 suspend fun listen(
-    applicationState: ApplicationState,
-    consumer: KafkaConsumer<String, String>,
-    producer: KafkaProducer<String, String>,
-    env: Environment
+        applicationState: ApplicationState,
+        kafkaconsumer: KafkaConsumer<String, String>,
+        kafkaproducer: KafkaProducer<String, String>,
+        env: Environment
 ) {
     while (applicationState.running) {
-        consumer.poll(Duration.ofMillis(0)).forEach {
+        kafkaconsumer.poll(Duration.ofMillis(0)).forEach {
             val fellesformat = unmarshaller.unmarshal(StringReader(it.value())) as XMLEIFellesformat
             val msgHead: XMLMsgHead = fellesformat.get()
             val mottakEnhetBlokk: XMLMottakenhetBlokk = fellesformat.get()
@@ -81,7 +81,7 @@ suspend fun listen(
                     .and<LogstashMarker>(append("organizationNumber", msgHead.msgInfo.sender.organisation.extractOrganizationNumber()))
             log.info(marker, "Received a SM2013, going through rules and persisting in infotrygd")
 
-            producer.send(ProducerRecord(env.syfoMottakOppgaveGsakInfotrygdTopic, it.value()))
+            kafkaproducer.send(ProducerRecord(env.syfoMottakOppgaveGsakInfotrygdTopic, it.value()))
         }
         delay(100)
     }
