@@ -3,7 +3,7 @@
     {
       "topicName": "privat-syfomottak-sm2013-infotrygdRoute",
       "members": [
-        {"member":"srvsyfosykemelding", "role":"CONSUMER"},
+        {"member":"srvsyfosminfotrygd", "role":"CONSUMER"},
         {"member":"srvsyfomottak", "role":"PRODUCER"}
       ],
       "numPartitions": 3
