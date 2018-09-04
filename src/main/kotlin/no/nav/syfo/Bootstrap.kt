@@ -49,7 +49,7 @@ fun main(args: Array<String>) = runBlocking {
                 val consumerProperties = readConsumerConfig(env, valueDeserializer = StringDeserializer::class)
                 val producerProperties = readProducerConfig(env, valueSerializer = StringSerializer::class)
                 val kafkaconsumer = KafkaConsumer<String, String>(consumerProperties)
-                kafkaconsumer.subscribe(listOf(env.syfoMottakInfotrygdRouteTopic))
+                kafkaconsumer.subscribe(listOf(env.syfoMottakInfotrygdRouteTopic, env.kafkaSM2013PapirmottakTopic))
                 val kafkaproducer = KafkaProducer<String, String>(producerProperties)
 
                 blockingApplicationLogic(applicationState, kafkaconsumer, kafkaproducer, env)
