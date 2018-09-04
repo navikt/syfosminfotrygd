@@ -15,6 +15,7 @@ buildscript {
 }
 
 plugins {
+    id 'org.jmailen.kotlinter' version '1.14.0'
     id 'org.jetbrains.kotlin.jvm' version '1.2.51'
     id("com.diffplug.gradle.spotless") version "3.14.0"
     id 'application'
@@ -97,3 +98,6 @@ task printVersion() {
         println(version)
     }
 }
+
+// suppress warning for experimental coroutines
+kotlin { experimental { coroutines "enable"} }

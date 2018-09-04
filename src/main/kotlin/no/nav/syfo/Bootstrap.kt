@@ -33,7 +33,7 @@ val jaxBContext: JAXBContext = JAXBContext.newInstance(XMLEIFellesformat::class.
         XMLMottakenhetBlokk::class.java)
 val unmarshaller: Unmarshaller = jaxBContext.createUnmarshaller()
 
-val log: Logger = LoggerFactory.getLogger("no.nav.syfo.smjoark")
+val log: Logger = LoggerFactory.getLogger("no.nav.syfo.sminfotrygd")
 
 fun main(args: Array<String>) = runBlocking {
     val env = Environment()
@@ -44,33 +44,30 @@ fun main(args: Array<String>) = runBlocking {
     }.start(wait = false)
 
     try {
-        val consumerProperties = readConsumerConfig(env, valueDeserializer = StringDeserializer::class)
-        val producerProperties = readProducerConfig(env, valueSerializer = StringSerializer::class)
         val listeners = (1..env.applicationThreads).map {
             launch {
+                val consumerProperties = readConsumerConfig(env, valueDeserializer = StringDeserializer::class)
+                val producerProperties = readProducerConfig(env, valueSerializer = StringSerializer::class)
                 val kafkaconsumer = KafkaConsumer<String, String>(consumerProperties)
+                kafkaconsumer.subscribe(listOf(env.syfoMottakInfotrygdRouteTopic))
                 val kafkaproducer = KafkaProducer<String, String>(producerProperties)
-                listen(applicationState, kafkaconsumer, kafkaproducer, env)
+
+                blockingApplicationLogic(applicationState, kafkaconsumer, kafkaproducer, env)
             }
         }.toList()
+
+        applicationState.initialized = true
 
         Runtime.getRuntime().addShutdownHook(Thread {
             applicationServer.stop(10, 10, TimeUnit.SECONDS)
         })
-
-        applicationState.initialized = true
-        listeners.forEach { it.join() }
+        runBlocking { listeners.forEach { it.join() } }
     } finally {
         applicationState.running = false
     }
 }
 
-suspend fun listen(
-        applicationState: ApplicationState,
-        kafkaconsumer: KafkaConsumer<String, String>,
-        kafkaproducer: KafkaProducer<String, String>,
-        env: Environment
-) {
+suspend fun blockingApplicationLogic(applicationState: ApplicationState, kafkaconsumer: KafkaConsumer<String, String>, kafkaproducer: KafkaProducer<String, String>, env: Environment) {
     while (applicationState.running) {
         kafkaconsumer.poll(Duration.ofMillis(0)).forEach {
             val fellesformat = unmarshaller.unmarshal(StringReader(it.value())) as XMLEIFellesformat
