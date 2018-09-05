@@ -49,7 +49,7 @@ fun main(args: Array<String>) = runBlocking {
                 val consumerProperties = readConsumerConfig(env, valueDeserializer = StringDeserializer::class)
                 val producerProperties = readProducerConfig(env, valueSerializer = StringSerializer::class)
                 val kafkaconsumer = KafkaConsumer<String, String>(consumerProperties)
-                kafkaconsumer.subscribe(listOf(env.syfoMottakInfotrygdRouteTopic, env.kafkaSM2013PapirmottakTopic))
+                kafkaconsumer.subscribe(listOf(env.sm2013AutomaticHandlingTopic, env.smPaperAutomaticHandlingTopic))
                 val kafkaproducer = KafkaProducer<String, String>(producerProperties)
 
                 blockingApplicationLogic(applicationState, kafkaconsumer, kafkaproducer, env)
@@ -78,7 +78,7 @@ suspend fun blockingApplicationLogic(applicationState: ApplicationState, kafkaco
                     .and<LogstashMarker>(append("organizationNumber", msgHead.msgInfo.sender.organisation.extractOrganizationNumber()))
             log.info(marker, "Received a SM2013, going through rules and persisting in infotrygd")
 
-            kafkaproducer.send(ProducerRecord(env.syfoMottakOppgaveGsakInfotrygdTopic, it.value()))
+            kafkaproducer.send(ProducerRecord(env.smGsakTaskCreationTopic, it.value()))
         }
         delay(100)
     }

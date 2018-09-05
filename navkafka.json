@@ -1,18 +1,10 @@
 {
   "topics": [
     {
-      "topicName": "privat-syfomottak-sm2013-infotrygdRoute",
+      "topicName": "privat-syfo-sminfotrygd-manuellBehandling",
       "members": [
-        {"member":"srvsyfosminfotrygd", "role":"CONSUMER"},
-        {"member":"srvsyfomottak", "role":"PRODUCER"}
-      ],
-      "numPartitions": 3
-    },
-    {
-      "topicName": "privat-syfosmpapirmottak-sm2013",
-      "members": [
-        {"member":"srvsyfosminfotrygd", "role":"CONSUMER"},
-        {"member":"srvsyfosmpapirmottak", "role":"PRODUCER"}
+        {"member":"srvsyfosmgsak", "role":"CONSUMER"},
+        {"member":"srvsyfosminfotrygd", "role":"PRODUCER"}
       ],
       "numPartitions": 3
     }

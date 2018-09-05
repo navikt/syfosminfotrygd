@@ -6,9 +6,9 @@ data class Environment(
     val srvsminfotrygdUsername: String = getEnvVar("SRVSYFOSMINFOTRYGD_USERNAME"),
     val srvsminfotrygdPassword: String = getEnvVar("SRVSYFOSMINFOTRYGD_PASSWORD"),
     val kafkaBootstrapServers: String = getEnvVar("KAFKA_BOOTSTRAP_SERVERS_URL"),
-    val syfoMottakInfotrygdRouteTopic: String = getEnvVar("SYFOMOTTAK_INFOTRYGD_ROUTE_TOPIC", "privat-syfomottak-sm2013-infotrygdRoute"),
-    val kafkaSM2013PapirmottakTopic: String = getEnvVar("KAFKA_SM2013_PAPIR_MOTTAK_TOPIC", "privat-syfosmpapirmottak-sm2013"),
-    val syfoMottakOppgaveGsakInfotrygdTopic: String = getEnvVar("SYFOMOTTAK_OPPGAVE_GSAK_INFOTRYGD_TOPIC", "privat-syfomottak-sm2013-oppgaveGsakInfotrygd")
+    val sm2013AutomaticHandlingTopic: String = getEnvVar("SM2013_AUTOMATIC_HANDLING_TOPIC", "privat-syfo-sm2013-automatiskBehandling"),
+    val smPaperAutomaticHandlingTopic: String = getEnvVar("SMPAPER_AUTOMATIC_HANDLING_TOPIC", "privat-syfo-smpapir-automatiskBehandling"),
+    val smGsakTaskCreationTopic: String = getEnvVar("SMINFOTRYGD_MANUAL_HANDLING_TOPIC", "privat-syfo-sminfotrygd-manualHandling")
 )
 
 fun getEnvVar(varName: String, defaultValue: String? = null) =
