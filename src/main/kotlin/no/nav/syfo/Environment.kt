@@ -8,7 +8,7 @@ data class Environment(
     val kafkaBootstrapServers: String = getEnvVar("KAFKA_BOOTSTRAP_SERVERS_URL"),
     val sm2013AutomaticHandlingTopic: String = getEnvVar("SM2013_AUTOMATIC_HANDLING_TOPIC", "privat-syfo-sm2013-automatiskBehandling"),
     val smPaperAutomaticHandlingTopic: String = getEnvVar("SMPAPER_AUTOMATIC_HANDLING_TOPIC", "privat-syfo-smpapir-automatiskBehandling"),
-    val smGsakTaskCreationTopic: String = getEnvVar("SMINFOTRYGD_MANUAL_HANDLING_TOPIC", "privat-syfo-sminfotrygd-manualHandling")
+    val smGsakTaskCreationTopic: String = getEnvVar("SMINFOTRYGD_MANUAL_HANDLING_TOPIC", "privat-syfo-sminfotrygd-manuellBehandling")
 )
 
 fun getEnvVar(varName: String, defaultValue: String? = null) =
