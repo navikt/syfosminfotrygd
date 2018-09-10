@@ -9,6 +9,7 @@ pipeline {
         ZONE = 'fss'
         DOCKER_SLUG='syfo'
         FASIT_ENVIRONMENT='q1'
+        DISABLE_SLACK_MESSAGES = true
     }
 
     stages {
