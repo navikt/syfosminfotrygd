@@ -5,7 +5,6 @@ pipeline {
 
     environment {
         APPLICATION_NAME = 'syfosminfotrygd'
-        DISABLE_SLACK_MESSAGES = true
         ZONE = 'fss'
         DOCKER_SLUG='syfo'
         FASIT_ENVIRONMENT='q1'
