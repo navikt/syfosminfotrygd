@@ -7,8 +7,7 @@ import io.ktor.server.netty.Netty
 import kotlinx.coroutines.experimental.delay
 import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.runBlocking
-import net.logstash.logback.marker.LogstashMarker
-import net.logstash.logback.marker.Markers.append
+import net.logstash.logback.argument.StructuredArguments.keyValue
 import no.kith.xmlstds.msghead._2006_05_24.XMLMsgHead
 import no.kith.xmlstds.msghead._2006_05_24.XMLOrganisation
 import no.nav.syfo.api.registerNaisApi
@@ -67,18 +66,26 @@ fun main(args: Array<String>) = runBlocking {
     }
 }
 
-suspend fun blockingApplicationLogic(applicationState: ApplicationState, kafkaconsumer: KafkaConsumer<String, String>, kafkaproducer: KafkaProducer<String, String>, env: Environment) {
+suspend fun blockingApplicationLogic(
+    applicationState: ApplicationState,
+    kafkaConsumer: KafkaConsumer<String, String>,
+    kafkaProducer: KafkaProducer<String, String>,
+    env: Environment
+) {
     while (applicationState.running) {
-        kafkaconsumer.poll(Duration.ofMillis(0)).forEach {
+        kafkaConsumer.poll(Duration.ofMillis(0)).forEach {
             val fellesformat = unmarshaller.unmarshal(StringReader(it.value())) as XMLEIFellesformat
             val msgHead: XMLMsgHead = fellesformat.get()
             val mottakEnhetBlokk: XMLMottakenhetBlokk = fellesformat.get()
-            val marker = append("msgId", msgHead.msgInfo.msgId)
-                    .and<LogstashMarker>(append("smId", mottakEnhetBlokk.ediLoggId))
-                    .and<LogstashMarker>(append("organizationNumber", msgHead.msgInfo.sender.organisation.extractOrganizationNumber()))
-            log.info(marker, "Received a SM2013, going through rules and persisting in infotrygd")
+            val logValues = arrayOf(
+                    keyValue("smId", mottakEnhetBlokk.ediLoggId),
+                    keyValue("msgId", msgHead.msgInfo.msgId),
+                    keyValue("orgNr", msgHead.msgInfo.sender.organisation.extractOrganizationNumber())
+            )
+            val logKeys = logValues.joinToString(prefix = "(", postfix = ")", separator = ",") { "{}" }
+            log.info("Received a SM2013, going through rules and persisting in infotrygd $logKeys", logValues)
 
-            kafkaproducer.send(ProducerRecord(env.smGsakTaskCreationTopic, it.value()))
+            kafkaProducer.send(ProducerRecord(env.smGsakTaskCreationTopic, it.value()))
         }
         delay(100)
     }
