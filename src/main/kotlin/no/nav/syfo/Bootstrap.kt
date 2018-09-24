@@ -51,6 +51,10 @@ fun main(args: Array<String>) = runBlocking {
                 kafkaconsumer.subscribe(listOf(env.sm2013AutomaticHandlingTopic, env.smPaperAutomaticHandlingTopic))
                 val kafkaproducer = KafkaProducer<String, String>(producerProperties)
 
+                connectionFactory(env).createConnection(env.mqUsername, env.mqPassword).use { connection ->
+                    connection.start()
+                }
+
                 blockingApplicationLogic(applicationState, kafkaconsumer, kafkaproducer, env)
             }
         }.toList()
