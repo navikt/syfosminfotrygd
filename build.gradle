@@ -92,6 +92,28 @@ class Jaxb2Task extends DefaultTask {
                 'fork': 'true'
         )
 
+        ant.xjc(
+                'destdir': outputDir,
+                'package': 'no.nav.model.sm2013',
+                'schema': "$sourceDir/HelseOpplysningerArbeidsuforhet_2013-10-01.xsd",
+                'encoding': 'UTF-8',
+                'fork': 'true'
+        )
+        ant.xjc(
+                'destdir': outputDir,
+                'package': 'no.nav.model.kith',
+                'schema': "$sourceDir/kith.xsd",
+                'encoding': 'UTF-8',
+                'fork': 'true'
+        )
+        ant.xjc(
+                'destdir': outputDir,
+                'package': 'no.nav.model.felleskomponent1',
+                'schema': "$sourceDir/felleskomponent1.xsd",
+                'encoding': 'UTF-8',
+                'fork': 'true'
+        )
+
     }
 }
 

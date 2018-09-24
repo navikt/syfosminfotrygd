@@ -10,6 +10,8 @@ import kotlinx.coroutines.experimental.runBlocking
 import net.logstash.logback.argument.StructuredArguments.keyValue
 import no.kith.xmlstds.msghead._2006_05_24.XMLMsgHead
 import no.kith.xmlstds.msghead._2006_05_24.XMLOrganisation
+import no.nav.model.infotrygdSporing.InfotrygdForesp
+import no.nav.model.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.syfo.api.registerNaisApi
 import no.trygdeetaten.xml.eiff._1.XMLEIFellesformat
 import no.trygdeetaten.xml.eiff._1.XMLMottakenhetBlokk
@@ -21,16 +23,15 @@ import org.apache.kafka.common.serialization.StringSerializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.StringReader
+import java.io.StringWriter
 import java.time.Duration
+import java.util.GregorianCalendar
 import java.util.concurrent.TimeUnit
-import javax.xml.bind.JAXBContext
-import javax.xml.bind.Unmarshaller
+import javax.jms.MessageProducer
+import javax.jms.Session
+import javax.xml.bind.Marshaller
 
 data class ApplicationState(var running: Boolean = true, var initialized: Boolean = false)
-
-val jaxBContext: JAXBContext = JAXBContext.newInstance(XMLEIFellesformat::class.java, XMLMsgHead::class.java,
-        XMLMottakenhetBlokk::class.java)
-val unmarshaller: Unmarshaller = jaxBContext.createUnmarshaller()
 
 val log: Logger = LoggerFactory.getLogger("no.nav.syfo.sminfotrygd")
 
@@ -53,9 +54,16 @@ fun main(args: Array<String>) = runBlocking {
 
                 connectionFactory(env).createConnection(env.mqUsername, env.mqPassword).use { connection ->
                     connection.start()
-                }
 
-                blockingApplicationLogic(applicationState, kafkaconsumer, kafkaproducer, env)
+                    val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
+                    val infotrygdOppdateringQueue = session.createQueue(env.infotrygdOppdateringQueue)
+                    val infotrygdSporringQueue = session.createQueue(env.infotrygdSporringQueue)
+
+                    val infotrygdOppdateringProducer = session.createProducer(infotrygdOppdateringQueue)
+                    val infotrygdSporringProducer = session.createProducer(infotrygdSporringQueue)
+
+                    blockingApplicationLogic(applicationState, kafkaconsumer, kafkaproducer, env, infotrygdOppdateringProducer, infotrygdSporringProducer, session)
+                }
             }
         }.toList()
 
@@ -74,13 +82,17 @@ suspend fun blockingApplicationLogic(
     applicationState: ApplicationState,
     kafkaConsumer: KafkaConsumer<String, String>,
     kafkaProducer: KafkaProducer<String, String>,
-    env: Environment
+    env: Environment,
+    infotrygdOppdateringProducer: MessageProducer,
+    infotrygdSporringProducer: MessageProducer,
+    session: Session
 ) {
     while (applicationState.running) {
         kafkaConsumer.poll(Duration.ofMillis(0)).forEach {
-            val fellesformat = unmarshaller.unmarshal(StringReader(it.value())) as XMLEIFellesformat
+            val fellesformat = fellesformatUnmarshaller.unmarshal(StringReader(it.value())) as XMLEIFellesformat
             val msgHead: XMLMsgHead = fellesformat.get()
             val mottakEnhetBlokk: XMLMottakenhetBlokk = fellesformat.get()
+            val healthInformation: HelseOpplysningerArbeidsuforhet = fellesformat.get()
             val logValues = arrayOf(
                     keyValue("smId", mottakEnhetBlokk.ediLoggId),
                     keyValue("msgId", msgHead.msgInfo.msgId),
@@ -89,6 +101,8 @@ suspend fun blockingApplicationLogic(
             val logKeys = logValues.joinToString(prefix = "(", postfix = ")", separator = ",") { "{}" }
             log.info("Received a SM2013, going through rules and persisting in infotrygd $logKeys", logValues)
 
+            val infotrygdForesp = createInfotrygdForesp(healthInformation)
+            sendInfotrygdSporring(infotrygdOppdateringProducer, session, infotrygdForesp)
             kafkaProducer.send(ProducerRecord(env.smGsakTaskCreationTopic, it.value()))
         }
         delay(100)
@@ -110,4 +124,42 @@ fun Application.initRouting(applicationState: ApplicationState) {
                 }
         )
     }
+}
+
+fun Marshaller.toString(input: Any): String = StringWriter().use {
+    marshal(input, it)
+    it.toString()
+}
+
+fun sendInfotrygdSporring(
+    producer: MessageProducer,
+    session: Session,
+    infotrygdForesp: InfotrygdForesp
+) = producer.send(session.createTextMessage().apply {
+    val info = infotrygdForesp
+    text = infotrygdSporringMarshaller.toString(info)
+    log.info("text sendt to Infotrygd + $text")
+})
+
+fun createInfotrygdForesp(healthInformation: HelseOpplysningerArbeidsuforhet) = InfotrygdForesp().apply {
+    fodselsnummer = healthInformation.pasient.fodselsnummer.id.first().toString()
+    tkNummer = healthInformation.pasient.navKontor
+    tkNrFraDato = newInstance.newXMLGregorianCalendar(GregorianCalendar()) // TODO maybe set to - 1 years
+    forespNr = 1.toBigInteger()
+    forespTidsStempel = newInstance.newXMLGregorianCalendar(GregorianCalendar())
+    fraDato = newInstance.newXMLGregorianCalendar(GregorianCalendar()) // TODO maybe set to - 1 years
+    eldsteFraDato = newInstance.newXMLGregorianCalendar(GregorianCalendar()) // TODO maybe set to - 4 years
+    diagnosekodeOK = InfotrygdForesp.DiagnosekodeOK().apply {
+        hovedDiagnosekode = healthInformation.medisinskVurdering.hovedDiagnose.diagnosekode.v
+        hovedDiagnosekodeverk = Diagnosekode.values().filter {
+            it.kithCode == healthInformation.medisinskVurdering.hovedDiagnose.diagnosekode.s
+        }.first().infotrygdCode
+    }
+    fodselsnrBehandler = healthInformation.behandler.id.filter {
+        it.typeId.v == "FNR"
+    }.first().id // TODO maybe get the fnr from xmlmsg its mandatorie to be there
+    biDiagnoseKode = healthInformation.medisinskVurdering.biDiagnoser.diagnosekode.first().v
+    biDiagnosekodeverk = Diagnosekode.values().filter {
+        it.kithCode == healthInformation.medisinskVurdering.biDiagnoser.diagnosekode.first().s
+    }.first().infotrygdCode
 }
