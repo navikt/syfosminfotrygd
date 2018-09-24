@@ -14,7 +14,7 @@ data class Environment(
     val mqHostname: String = getEnvVar("MQGATEWAY03_HOSTNAME"),
     val mqPort: Int = getEnvVar("MQGATEWAY03_PORT").toInt(),
     val mqQueueManagerName: String = getEnvVar("MQGATEWAY03_NAME"),
-    val mqChannelName: String = getEnvVar("PAOP_CHANNEL_NAME"),
+    val mqChannelName: String = getEnvVar("SYFOSMINFOTRYGD_CHANNEL_NAME"),
     val mqUsername: String = getEnvVar("SRVAPPSERVER_USERNAME", "srvappserver"),
     val mqPassword: String = getEnvVar("SRVAPPSERVER_PASSWORD", "")
 )
