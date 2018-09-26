@@ -148,7 +148,6 @@ fun sendInfotrygdSporring(
 
 fun createInfotrygdForesp(healthInformation: HelseOpplysningerArbeidsuforhet) = InfotrygdForesp().apply {
     fodselsnummer = healthInformation.pasient.fodselsnummer.id.first().toString()
-    tkNummer = healthInformation.pasient.navKontor
     tkNrFraDato = newInstance.newXMLGregorianCalendar(GregorianCalendar()) // TODO maybe set to - 1 years
     forespNr = 1.toBigInteger()
     forespTidsStempel = newInstance.newXMLGregorianCalendar(GregorianCalendar())
