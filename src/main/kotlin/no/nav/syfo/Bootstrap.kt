@@ -30,6 +30,8 @@ import java.util.GregorianCalendar
 import java.util.concurrent.TimeUnit
 import javax.jms.MessageProducer
 import javax.jms.Session
+import javax.jms.TemporaryQueue
+import javax.jms.TextMessage
 import javax.xml.bind.Marshaller
 
 data class ApplicationState(var running: Boolean = true, var initialized: Boolean = false)
@@ -103,8 +105,26 @@ suspend fun blockingApplicationLogic(
             val logKeys = logValues.joinToString(prefix = "(", postfix = ")", separator = ",") { "{}" }
             log.info("Received a SM2013, going through rules and persisting in infotrygd $logKeys", *logValues)
 
-            val infotrygdForesp = createInfotrygdForesp(healthInformation)
-            sendInfotrygdSporring(infotrygdOppdateringProducer, session, infotrygdForesp)
+            val infotrygdForespRequest = createInfotrygdForesp(healthInformation)
+            val temporaryQueue = session.createTemporaryQueue()
+            sendInfotrygdSporring(infotrygdOppdateringProducer, session, infotrygdForespRequest, temporaryQueue)
+            val tmpConsumer = session.createConsumer(temporaryQueue)
+            tmpConsumer.setMessageListener {
+                try {
+                    val inputMessageText = when (it) {
+                        is TextMessage -> it.text
+                        else -> throw RuntimeException("Incoming message needs to be a byte message or text message")
+                    }
+                    log.info("Message is read, from tmp que")
+                    println(inputMessageText)
+                    val infotrygdForespResponse = infotrygdSporringUnmarshaller.unmarshal(StringReader(inputMessageText)) as EIFellesformat
+                    log.info("Message is Unmarshelled, from tmp que")
+                    println(infotrygdForespResponse)
+                } catch (e: Exception) {
+                    log.error("Exception caught while handling message")
+                }
+            }
+
             kafkaProducer.send(ProducerRecord(env.smGsakTaskCreationTopic, it.value()))
         }
         delay(100)
@@ -139,11 +159,13 @@ fun Marshaller.toString(input: Any): String = StringWriter().use {
 fun sendInfotrygdSporring(
     producer: MessageProducer,
     session: Session,
-    infotrygdForesp: InfotrygdForesp
+    infotrygdForespRequest: InfotrygdForesp,
+    temporaryQueue: TemporaryQueue
 ) = producer.send(session.createTextMessage().apply {
-    val info = infotrygdForesp
+    val info = infotrygdForespRequest
     text = infotrygdSporringMarshaller.toString(info)
     log.info("text sendt to Infotrygd + $text")
+    jmsReplyTo = temporaryQueue
 })
 
 fun createInfotrygdForesp(healthInformation: HelseOpplysningerArbeidsuforhet) = InfotrygdForesp().apply {

@@ -15,6 +15,7 @@ val newInstance: DatatypeFactory = DatatypeFactory.newInstance()
 
 val infotrygdSporringJaxBContext: JAXBContext = JAXBContext.newInstance(InfotrygdForesp::class.java)
 val infotrygdSporringMarshaller: Marshaller = infotrygdSporringJaxBContext.createMarshaller()
+val infotrygdSporringUnmarshaller: Unmarshaller = infotrygdSporringJaxBContext.createUnmarshaller()
 
 val fellesformatJaxBContext: JAXBContext = JAXBContext.newInstance(EIFellesformat::class.java, XMLMsgHead::class.java,
         XMLMottakenhetBlokk::class.java, HelseOpplysningerArbeidsuforhet::class.java)
