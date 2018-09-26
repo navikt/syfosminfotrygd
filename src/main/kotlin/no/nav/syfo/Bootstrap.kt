@@ -163,11 +163,11 @@ fun createInfotrygdForesp(healthInformation: HelseOpplysningerArbeidsuforhet) = 
     fodselsnrBehandler = healthInformation.behandler.id.filter {
         it.typeId.v == "FNR"
     }.first().id // TODO maybe get the fnr from xmlmsg its mandatorie to be there
-    if (healthInformation.medisinskVurdering.biDiagnoser.diagnosekode.firstOrNull()?.v != null &&
-            healthInformation.medisinskVurdering.biDiagnoser.diagnosekode.firstOrNull()?.s != null) {
-        biDiagnoseKode = healthInformation.medisinskVurdering.biDiagnoser.diagnosekode.firstOrNull()?.v
+    if (healthInformation.medisinskVurdering.biDiagnoser?.diagnosekode?.firstOrNull()?.v != null &&
+            healthInformation.medisinskVurdering.biDiagnoser?.diagnosekode?.firstOrNull()?.s != null) {
+        biDiagnoseKode = healthInformation.medisinskVurdering.biDiagnoser.diagnosekode.first().v
         biDiagnosekodeverk = Diagnosekode.values().filter {
-            it.kithCode == healthInformation.medisinskVurdering.biDiagnoser.diagnosekode.firstOrNull()?.s
+            it.kithCode == healthInformation.medisinskVurdering.biDiagnoser.diagnosekode.first().s
         }.first().infotrygdCode
     }
 }
