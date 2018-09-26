@@ -10,6 +10,7 @@ import kotlinx.coroutines.experimental.runBlocking
 import net.logstash.logback.argument.StructuredArguments.keyValue
 import no.kith.xmlstds.msghead._2006_05_24.XMLMsgHead
 import no.kith.xmlstds.msghead._2006_05_24.XMLOrganisation
+import no.kith.xmlstds.msghead._2006_05_24.XMLRefDoc
 import no.nav.helse.sm2013.EIFellesformat
 import no.nav.model.infotrygdSporing.InfotrygdForesp
 import no.nav.model.sm2013.HelseOpplysningerArbeidsuforhet
@@ -90,9 +91,10 @@ suspend fun blockingApplicationLogic(
     while (applicationState.running) {
         kafkaConsumer.poll(Duration.ofMillis(0)).forEach {
             val fellesformat = fellesformatUnmarshaller.unmarshal(StringReader(it.value())) as EIFellesformat
+            println()
             val msgHead: XMLMsgHead = fellesformat.get()
             val mottakEnhetBlokk: XMLMottakenhetBlokk = fellesformat.get()
-            val healthInformation: HelseOpplysningerArbeidsuforhet = fellesformat.get()
+            val healthInformation = extractHelseopplysninger(msgHead)
             val logValues = arrayOf(
                     keyValue("smId", mottakEnhetBlokk.ediLoggId),
                     keyValue("msgId", msgHead.msgInfo.msgId),
@@ -112,6 +114,9 @@ suspend fun blockingApplicationLogic(
 fun XMLOrganisation.extractOrganizationNumber(): String? = ident.find { it.typeId.v == "ENH" }?.id
 
 inline fun <reified T> EIFellesformat.get(): T = any.find { it is T } as T
+
+inline fun <reified T> XMLRefDoc.Content.get() = this.any.find { it is T } as T
+fun extractHelseopplysninger(msgHead: XMLMsgHead) = msgHead.document[0].refDoc.content.get<HelseOpplysningerArbeidsuforhet>()
 
 fun Application.initRouting(applicationState: ApplicationState) {
     routing {
