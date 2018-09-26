@@ -154,12 +154,10 @@ fun createInfotrygdForesp(healthInformation: HelseOpplysningerArbeidsuforhet) = 
     forespTidsStempel = newInstance.newXMLGregorianCalendar(GregorianCalendar())
     fraDato = newInstance.newXMLGregorianCalendar(GregorianCalendar()) // TODO maybe set to - 1 years
     eldsteFraDato = newInstance.newXMLGregorianCalendar(GregorianCalendar()) // TODO maybe set to - 4 years
-    diagnosekodeOK = InfotrygdForesp.DiagnosekodeOK().apply {
-        hovedDiagnosekode = healthInformation.medisinskVurdering.hovedDiagnose.diagnosekode.v
-        hovedDiagnosekodeverk = Diagnosekode.values().filter {
+    hovedDiagnosekode = healthInformation.medisinskVurdering.hovedDiagnose.diagnosekode.v
+    hovedDiagnosekodeverk = Diagnosekode.values().filter {
             it.kithCode == healthInformation.medisinskVurdering.hovedDiagnose.diagnosekode.s
         }.first().infotrygdCode
-    }
     fodselsnrBehandler = healthInformation.behandler.id.filter {
         it.typeId.v == "FNR"
     }.first().id // TODO maybe get the fnr from xmlmsg its mandatorie to be there
@@ -170,4 +168,5 @@ fun createInfotrygdForesp(healthInformation: HelseOpplysningerArbeidsuforhet) = 
             it.kithCode == healthInformation.medisinskVurdering.biDiagnoser.diagnosekode.first().s
         }.first().infotrygdCode
     }
+    tkNrFraDato = newInstance.newXMLGregorianCalendar(GregorianCalendar())
 }
