@@ -101,7 +101,7 @@ suspend fun blockingApplicationLogic(
                     keyValue("orgNr", msgHead.msgInfo.sender.organisation.extractOrganizationNumber())
             )
             val logKeys = logValues.joinToString(prefix = "(", postfix = ")", separator = ",") { "{}" }
-            log.info("Received a SM2013, going through rules and persisting in infotrygd $logKeys", logValues)
+            log.info("Received a SM2013, going through rules and persisting in infotrygd $logKeys", *logValues)
 
             val infotrygdForesp = createInfotrygdForesp(healthInformation)
             sendInfotrygdSporring(infotrygdOppdateringProducer, session, infotrygdForesp)
