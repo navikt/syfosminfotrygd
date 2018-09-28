@@ -109,21 +109,16 @@ suspend fun blockingApplicationLogic(
             val temporaryQueue = session.createTemporaryQueue()
             sendInfotrygdSporring(infotrygdOppdateringProducer, session, infotrygdForespRequest, temporaryQueue)
             val tmpConsumer = session.createConsumer(temporaryQueue)
-            tmpConsumer.setMessageListener {
-                try {
-                    val inputMessageText = when (it) {
-                        is TextMessage -> it.text
-                        else -> throw RuntimeException("Incoming message needs to be a byte message or text message")
-                    }
-                    log.info("Message is read, from tmp que")
-                    println(inputMessageText)
-                    val infotrygdForespResponse = infotrygdSporringUnmarshaller.unmarshal(StringReader(inputMessageText)) as EIFellesformat
-                    log.info("Message is Unmarshelled, from tmp que")
-                    println(infotrygdForespResponse)
-                } catch (e: Exception) {
-                    log.error("Exception caught while handling message")
-                }
+            val consumedMessage = tmpConsumer.receive(10000)
+            val inputMessageText = when (consumedMessage) {
+                is TextMessage -> consumedMessage.text
+                else -> throw RuntimeException("Incoming message needs to be a byte message or text message")
             }
+            log.info("Message is read, from tmp que")
+            println(inputMessageText)
+            val infotrygdForespResponse = infotrygdSporringUnmarshaller.unmarshal(StringReader(inputMessageText)) as EIFellesformat
+            log.info("Message is Unmarshelled, from tmp que")
+            println(infotrygdForespResponse)
 
             kafkaProducer.send(ProducerRecord(env.smGsakTaskCreationTopic, it.value()))
         }
