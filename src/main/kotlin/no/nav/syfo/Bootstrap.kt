@@ -107,7 +107,7 @@ suspend fun blockingApplicationLogic(
 
             val infotrygdForespRequest = createInfotrygdForesp(healthInformation)
             val temporaryQueue = session.createTemporaryQueue()
-            sendInfotrygdSporring(infotrygdOppdateringProducer, session, infotrygdForespRequest, temporaryQueue)
+            sendInfotrygdSporring(infotrygdSporringProducer, session, infotrygdForespRequest, temporaryQueue)
             val tmpConsumer = session.createConsumer(temporaryQueue)
             val consumedMessage = tmpConsumer.receive(15000)
             val inputMessageText = when (consumedMessage) {
