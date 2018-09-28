@@ -158,8 +158,7 @@ fun sendInfotrygdSporring(
     temporaryQueue: TemporaryQueue
 ) = producer.send(session.createTextMessage().apply {
     val info = infotrygdForespRequest
-    text = infotrygdSporringMarshaller.toString(info)
-    text.replace(" xmlns=\"http.+\"", "")
+    text = infotrygdSporringMarshaller.toString(info).replace(" xmlns=\"http.+\"", "")
     log.info("text sendt to Infotrygd + $text")
     jmsReplyTo = temporaryQueue
 })
