@@ -109,7 +109,7 @@ suspend fun blockingApplicationLogic(
             val temporaryQueue = session.createTemporaryQueue()
             sendInfotrygdSporring(infotrygdOppdateringProducer, session, infotrygdForespRequest, temporaryQueue)
             val tmpConsumer = session.createConsumer(temporaryQueue)
-            val consumedMessage = tmpConsumer.receive(10000)
+            val consumedMessage = tmpConsumer.receive(15000)
             val inputMessageText = when (consumedMessage) {
                 is TextMessage -> consumedMessage.text
                 else -> throw RuntimeException("Incoming message needs to be a byte message or text message, JMS type:" + consumedMessage.jmsType)
