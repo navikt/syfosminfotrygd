@@ -112,7 +112,7 @@ suspend fun blockingApplicationLogic(
             val consumedMessage = tmpConsumer.receive(10000)
             val inputMessageText = when (consumedMessage) {
                 is TextMessage -> consumedMessage.text
-                else -> throw RuntimeException("Incoming message needs to be a byte message or text message")
+                else -> throw RuntimeException("Incoming message needs to be a byte message or text message, JMS type:" + consumedMessage.jmsType)
             }
             log.info("Message is read, from tmp que")
             println(inputMessageText)
