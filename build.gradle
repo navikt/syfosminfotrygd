@@ -114,14 +114,6 @@ class Jaxb2Task extends DefaultTask {
                 'encoding': 'UTF-8',
                 'fork': 'true'
         )
-        ant.xjc(
-                'destdir': outputDir,
-                'package': 'no.nav.model.ksof',
-                'schema': "$sourceDir/RTV_EI_KSOF.v09.xsd",
-                'encoding': 'UTF-8',
-                'fork': 'true'
-        )
-
     }
 }
 
