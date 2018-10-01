@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<xs:schema targetNamespace="http://www.trygdeetaten.no/xml/eispsv/1/"
+	xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	xmlns:it="http://www.trygdeetaten.no/xml/it/1/"
+	xmlns="http://www.trygdeetaten.no/xml/eispsv/1/"
+	elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:import namespace="http://www.trygdeetaten.no/xml/it/1/"
+		schemaLocation="./RTV_IT_IFT.v14.xsd" />
+	<xs:element name="EI_KSOperasjonsformat">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="Operasjon" minOccurs="0" maxOccurs="unbounded">
+					<xs:complexType>
+						<xs:choice minOccurs="0">
+							<xs:element ref="it:InfotrygdForesp" />
+						</xs:choice>
+						<xs:attribute name="tilSystem" use="required">
+							<xs:annotation>
+								<xs:documentation>Hvilket system spørsmålet skal sendes til:
+									TPS eller IT (infotrygd)</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="xs:string">
+									<xs:enumeration value="TPS" />
+									<xs:enumeration value="TSS" />
+									<xs:enumeration value="IT" />
+									<xs:enumeration value="IT_OPPDATERING" />
+									<xs:enumeration value="ARKIV" />
+									<xs:enumeration value="KVITTERING" />
+									<xs:enumeration value="IKKEOK" />
+									<xs:enumeration value="AAREGISTER" />
+									<xs:enumeration value="ARENA" />
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:attribute>
+						<xs:attribute name="utfort" use="required">
+							<xs:annotation>
+								<xs:documentation>Er forespørselen utført?
+									0 = Nei
+									1 = Ja</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="xs:nonNegativeInteger">
+									<xs:enumeration value="0" />
+									<xs:enumeration value="1" />
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:attribute>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:annotation>
+		<xs:documentation>V07: la til spørring til AAregisteret 28.04.2003
+		</xs:documentation>
+	</xs:annotation>
+</xs:schema>

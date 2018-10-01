@@ -12,7 +12,8 @@ import no.kith.xmlstds.msghead._2006_05_24.XMLMsgHead
 import no.kith.xmlstds.msghead._2006_05_24.XMLOrganisation
 import no.kith.xmlstds.msghead._2006_05_24.XMLRefDoc
 import no.nav.helse.sm2013.EIFellesformat
-import no.nav.model.infotrygdSporing.InfotrygdForesp
+import no.nav.model.ksof.EIKSOperasjonsformat
+import no.nav.model.ksof.InfotrygdForesp
 import no.nav.model.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.syfo.api.registerNaisApi
 import no.trygdeetaten.xml.eiff._1.XMLMottakenhetBlokk
@@ -106,8 +107,9 @@ suspend fun blockingApplicationLogic(
             log.info("Received a SM2013, going through rules and persisting in infotrygd $logKeys", *logValues)
 
             val infotrygdForespRequest = createInfotrygdForesp(healthInformation)
+            val ksofRequest = createksofRequest(infotrygdForespRequest)
             val temporaryQueue = session.createTemporaryQueue()
-            sendInfotrygdSporring(infotrygdSporringProducer, session, infotrygdForespRequest, temporaryQueue)
+            sendInfotrygdSporring(infotrygdSporringProducer, session, ksofRequest, temporaryQueue)
             val tmpConsumer = session.createConsumer(temporaryQueue)
             val consumedMessage = tmpConsumer.receive(15000)
             val inputMessageText = when (consumedMessage) {
@@ -154,11 +156,11 @@ fun Marshaller.toString(input: Any): String = StringWriter().use {
 fun sendInfotrygdSporring(
     producer: MessageProducer,
     session: Session,
-    infotrygdForespRequest: InfotrygdForesp,
+    oprasjon: EIKSOperasjonsformat,
     temporaryQueue: TemporaryQueue
 ) = producer.send(session.createTextMessage().apply {
-    val info = infotrygdForespRequest
-    text = infotrygdSporringMarshaller.toString(info)
+    val info = oprasjon
+    text = oprasjonMarshaller.toString(info)
     log.info("text sendt to Infotrygd + $text")
     jmsReplyTo = temporaryQueue
 })
@@ -185,4 +187,12 @@ fun createInfotrygdForesp(healthInformation: HelseOpplysningerArbeidsuforhet) = 
         }.first().infotrygdCode
     }
     tkNrFraDato = newInstance.newXMLGregorianCalendar(GregorianCalendar())
+}
+
+fun createksofRequest(infotrygdForesporsel: InfotrygdForesp) = EIKSOperasjonsformat().apply {
+    operasjon.add(EIKSOperasjonsformat.Operasjon().apply {
+        tilSystem = "IT"
+        utfort = 0.toBigInteger()
+        infotrygdForesp = infotrygdForesporsel
+    })
 }
