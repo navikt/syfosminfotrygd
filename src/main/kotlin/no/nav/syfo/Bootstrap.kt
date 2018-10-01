@@ -116,9 +116,11 @@ suspend fun blockingApplicationLogic(
             }
             log.info("Message is read, from tmp que")
             println(inputMessageText)
+            /*
             val infotrygdForespResponse = infotrygdSporringUnmarshaller.unmarshal(StringReader(inputMessageText)) as EIFellesformat
             log.info("Message is Unmarshelled, from tmp que")
             println(infotrygdForespResponse)
+            */
 
             kafkaProducer.send(ProducerRecord(env.smGsakTaskCreationTopic, it.value()))
         }
