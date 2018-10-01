@@ -17,7 +17,7 @@ val newInstance: DatatypeFactory = DatatypeFactory.newInstance()
 val infotrygdSporringJaxBContext: JAXBContext = JAXBContext.newInstance(InfotrygdForesp::class.java)
 val infotrygdSporringMarshaller: Marshaller = infotrygdSporringJaxBContext.createMarshaller()
 
-val oprasjonJaxBContext: JAXBContext = JAXBContext.newInstance(EIKSOperasjonsformat::class.java)
+val oprasjonJaxBContext: JAXBContext = JAXBContext.newInstance(EIKSOperasjonsformat.Operasjon::class.java)
 val oprasjonMarshaller: Marshaller = oprasjonJaxBContext.createMarshaller()
 
 val infotrygdSporringUnmarshaller: Unmarshaller = infotrygdSporringJaxBContext.createUnmarshaller()

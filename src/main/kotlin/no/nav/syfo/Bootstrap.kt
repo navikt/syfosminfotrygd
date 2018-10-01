@@ -107,9 +107,9 @@ suspend fun blockingApplicationLogic(
             log.info("Received a SM2013, going through rules and persisting in infotrygd $logKeys", *logValues)
 
             val infotrygdForespRequest = createInfotrygdForesp(healthInformation)
-            val ksofRequest = createksofRequest(infotrygdForespRequest)
+            val oprasjonRequest = createksofRequest(infotrygdForespRequest)
             val temporaryQueue = session.createTemporaryQueue()
-            sendInfotrygdSporring(infotrygdSporringProducer, session, ksofRequest, temporaryQueue)
+            sendInfotrygdSporring(infotrygdSporringProducer, session, oprasjonRequest, temporaryQueue)
             val tmpConsumer = session.createConsumer(temporaryQueue)
             val consumedMessage = tmpConsumer.receive(15000)
             val inputMessageText = when (consumedMessage) {
@@ -156,7 +156,7 @@ fun Marshaller.toString(input: Any): String = StringWriter().use {
 fun sendInfotrygdSporring(
     producer: MessageProducer,
     session: Session,
-    oprasjon: EIKSOperasjonsformat,
+    oprasjon: EIKSOperasjonsformat.Operasjon,
     temporaryQueue: TemporaryQueue
 ) = producer.send(session.createTextMessage().apply {
     val info = oprasjon
@@ -189,10 +189,9 @@ fun createInfotrygdForesp(healthInformation: HelseOpplysningerArbeidsuforhet) = 
     tkNrFraDato = newInstance.newXMLGregorianCalendar(GregorianCalendar())
 }
 
-fun createksofRequest(infotrygdForesporsel: InfotrygdForesp) = EIKSOperasjonsformat().apply {
-    operasjon.add(EIKSOperasjonsformat.Operasjon().apply {
+fun createksofRequest(infotrygdForesporsel: InfotrygdForesp) =
+    EIKSOperasjonsformat.Operasjon().apply {
         tilSystem = "IT"
         utfort = 0.toBigInteger()
         infotrygdForesp = infotrygdForesporsel
-    })
-}
+    }
