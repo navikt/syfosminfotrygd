@@ -12,7 +12,6 @@ import no.kith.xmlstds.msghead._2006_05_24.XMLMsgHead
 import no.kith.xmlstds.msghead._2006_05_24.XMLOrganisation
 import no.kith.xmlstds.msghead._2006_05_24.XMLRefDoc
 import no.nav.helse.sm2013.EIFellesformat
-import no.nav.model.felleskomponent1.Ident
 import no.nav.model.infotrygdSporing.InfotrygdForesp
 import no.nav.model.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.syfo.api.registerNaisApi
