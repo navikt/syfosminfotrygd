@@ -12,6 +12,7 @@ import no.kith.xmlstds.msghead._2006_05_24.XMLMsgHead
 import no.kith.xmlstds.msghead._2006_05_24.XMLOrganisation
 import no.kith.xmlstds.msghead._2006_05_24.XMLRefDoc
 import no.nav.helse.sm2013.EIFellesformat
+import no.nav.model.felleskomponent1.Ident
 import no.nav.model.infotrygdSporing.InfotrygdForesp
 import no.nav.model.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.syfo.api.registerNaisApi
@@ -158,13 +159,13 @@ fun sendInfotrygdSporring(
     temporaryQueue: TemporaryQueue
 ) = producer.send(session.createTextMessage().apply {
     val info = infotrygdForespRequest
-    text = infotrygdSporringMarshaller.toString(info).replace("xmlns=\"http://www.trygdeetaten.no/xml/it/1/\"", "")
+    text = infotrygdSporringMarshaller.toString(info)
     log.info("text sendt to Infotrygd + $text")
     jmsReplyTo = temporaryQueue
 })
 
 fun createInfotrygdForesp(healthInformation: HelseOpplysningerArbeidsuforhet) = InfotrygdForesp().apply {
-    fodselsnummer = healthInformation.pasient.fodselsnummer.id.first().toString()
+    fodselsnummer = (healthInformation.pasient.fodselsnummer.id as Ident).id
     tkNrFraDato = newInstance.newXMLGregorianCalendar(GregorianCalendar()) // TODO maybe set to - 1 years
     forespNr = 1.toBigInteger()
     forespTidsStempel = newInstance.newXMLGregorianCalendar(GregorianCalendar())
