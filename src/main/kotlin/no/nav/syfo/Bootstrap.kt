@@ -197,7 +197,7 @@ fun createInfotrygdxml(healthInformation: HelseOpplysningerArbeidsuforhet): Stri
     val xmlStreamWriter = xmlOutputFactory.createXMLStreamWriter(it)
     xmlStreamWriter.writeStartDocument("ISO-8859-1", "1.0")
     xmlStreamWriter.writeStartElement("InfotrygdForesp")
-    xmlStreamWriter.writeAttribute("eldsteFraDato", "2014-09-21")
+    xmlStreamWriter.writeAttribute("eldsteFraDato", "2017-09-21")
     xmlStreamWriter.writeAttribute("fodselsnrBehandler", healthInformation.behandler.id.filter {
         it.typeId.v == "FNR"
     }.first().id)
@@ -205,12 +205,14 @@ fun createInfotrygdxml(healthInformation: HelseOpplysningerArbeidsuforhet): Stri
     xmlStreamWriter.writeAttribute("forespNr", "1")
     xmlStreamWriter.writeAttribute("forespTidsStempel", "2016-07-14T09:00:14.851+02:00")
     xmlStreamWriter.writeAttribute("fraDato", "2017-09-21")
-    xmlStreamWriter.writeAttribute("hovedDiagnosekode", "P02")
-    xmlStreamWriter.writeAttribute("hovedDiagnosekodeverk", "5")
-    xmlStreamWriter.writeAttribute("tkNummer", "0335")
+    xmlStreamWriter.writeAttribute("hovedDiagnosekode", healthInformation.medisinskVurdering.hovedDiagnose.diagnosekode.v)
+    xmlStreamWriter.writeAttribute("hovedDiagnosekodeverk", Diagnosekode.values().filter {
+        it.kithCode == healthInformation.medisinskVurdering.hovedDiagnose.diagnosekode.s
+    }.first().infotrygdCode)
+    xmlStreamWriter.writeAttribute("tkNrFraDato", "2017-09-21")
     xmlStreamWriter.writeAttribute("xmlns", "http://www.trygdeetaten.no/xml/it/1/")
     xmlStreamWriter.writeAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance")
-    xmlStreamWriter.writeAttribute("xsi:schemaLocation", "http://www.trygdeetaten.no/xml/it/1/ ./RTV_IT_IFT.v13.xsd")
+    xmlStreamWriter.writeAttribute("xsi:schemaLocation", "http://www.trygdeetaten.no/xml/it/1/ ./RTV_IT_IFT.v14.xsd")
     xmlStreamWriter.writeEndElement()
     xmlStreamWriter.flush()
     it.toString()
