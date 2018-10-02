@@ -209,10 +209,12 @@ fun createInfotrygdxml(healthInformation: HelseOpplysningerArbeidsuforhet): Stri
     xmlStreamWriter.writeAttribute("hovedDiagnosekodeverk", Diagnosekode.values().filter {
         it.kithCode == healthInformation.medisinskVurdering.hovedDiagnose.diagnosekode.s
     }.first().infotrygdCode)
+    xmlStreamWriter.writeAttribute("biDiagnoseKode", "Z07")
+    xmlStreamWriter.writeAttribute("biDiagnosekodeverk", "5")
     xmlStreamWriter.writeAttribute("tkNrFraDato", "2017-09-21")
-    xmlStreamWriter.writeAttribute("xmlns", "http://www.trygdeetaten.no/xml/it/1/")
-    xmlStreamWriter.writeAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance")
-    xmlStreamWriter.writeAttribute("xsi:schemaLocation", "http://www.trygdeetaten.no/xml/it/1/ ./RTV_IT_IFT.v14.xsd")
+   // xmlStreamWriter.writeAttribute("xmlns", "http://www.trygdeetaten.no/xml/it/1/")
+   // xmlStreamWriter.writeAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance")
+   // xmlStreamWriter.writeAttribute("xsi:schemaLocation", "http://www.trygdeetaten.no/xml/it/1/ ./RTV_IT_IFT.v14.xsd")
     xmlStreamWriter.writeEndElement()
     xmlStreamWriter.flush()
     it.toString()
