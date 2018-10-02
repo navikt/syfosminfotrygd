@@ -195,7 +195,7 @@ fun createInfotrygdForesp(healthInformation: HelseOpplysningerArbeidsuforhet) = 
 fun createInfotrygdxml(healthInformation: HelseOpplysningerArbeidsuforhet): String = StringWriter().use {
     val xmlOutputFactory = XMLOutputFactory.newFactory()
     val xmlStreamWriter = xmlOutputFactory.createXMLStreamWriter(it)
-    xmlStreamWriter.writeStartDocument("UTF-8", "1.0")
+    xmlStreamWriter.writeStartDocument("ISO-8859-1", "1.0")
     xmlStreamWriter.writeStartElement("InfotrygdForesp")
     xmlStreamWriter.writeAttribute("eldsteFraDato", "2014-09-21")
     xmlStreamWriter.writeAttribute("fodselsnrBehandler", healthInformation.behandler.id.filter {
@@ -203,7 +203,7 @@ fun createInfotrygdxml(healthInformation: HelseOpplysningerArbeidsuforhet): Stri
     }.first().id)
     xmlStreamWriter.writeAttribute("fodselsnummer", healthInformation.pasient.fodselsnummer.id)
     xmlStreamWriter.writeAttribute("forespNr", "1")
-    xmlStreamWriter.writeAttribute("forespTidsStempel", "2018-09-21T11:12:11")
+    xmlStreamWriter.writeAttribute("forespTidsStempel", "2016-07-14T09:00:14.851+02:00")
     xmlStreamWriter.writeAttribute("fraDato", "2017-09-21")
     xmlStreamWriter.writeAttribute("hovedDiagnosekode", "P02")
     xmlStreamWriter.writeAttribute("hovedDiagnosekodeverk", "5")
