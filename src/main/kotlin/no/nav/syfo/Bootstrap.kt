@@ -196,7 +196,7 @@ fun createInfotrygdForesp(healthInformation: HelseOpplysningerArbeidsuforhet) = 
 fun createInfotrygdxml(healthInformation: HelseOpplysningerArbeidsuforhet): String = StringWriter().use {
     val xmlOutputFactory = XMLOutputFactory.newFactory()
     val xmlStreamWriter = xmlOutputFactory.createXMLStreamWriter(it)
-    xmlStreamWriter.writeStartDocument("ISO-8859-1", "1.0")
+    //  xmlStreamWriter.writeStartDocument("ISO-8859-1", "1.0")
     xmlStreamWriter.writeStartElement("InfotrygdForesp")
     xmlStreamWriter.writeAttribute("eldsteFraDato", "2017-09-21")
     xmlStreamWriter.writeAttribute("fodselsnrBehandler", healthInformation.behandler.id.filter {
