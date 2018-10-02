@@ -107,7 +107,8 @@ suspend fun blockingApplicationLogic(
             log.info("Received a SM2013, going through rules and persisting in infotrygd $logKeys", *logValues)
 
             // val infotrygdForespRequest = createInfotrygdForesp(healthInformation)
-            val infotrygdForespRequestStrig = createInfotrygdxml(healthInformation)
+            // val infotrygdForespRequestStrig = createInfotrygdxml(healthInformation)
+            val infotrygdForespRequestStrig = createInfotrygdKsofRequest(healthInformation)
             val temporaryQueue = session.createTemporaryQueue()
             sendInfotrygdSporring(infotrygdSporringProducer, session, infotrygdForespRequestStrig, temporaryQueue)
             val tmpConsumer = session.createConsumer(temporaryQueue)
@@ -212,9 +213,47 @@ fun createInfotrygdxml(healthInformation: HelseOpplysningerArbeidsuforhet): Stri
     xmlStreamWriter.writeAttribute("biDiagnoseKode", "Z07")
     xmlStreamWriter.writeAttribute("biDiagnosekodeverk", "5")
     xmlStreamWriter.writeAttribute("tkNrFraDato", "2017-09-21")
-    // xmlStreamWriter.writeAttribute("xmlns", "http://www.trygdeetaten.no/xml/it/1/")
+    xmlStreamWriter.writeAttribute("xmlns", "http://www.trygdeetaten.no/xml/it/1/")
     // xmlStreamWriter.writeAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance")
     // xmlStreamWriter.writeAttribute("xsi:schemaLocation", "http://www.trygdeetaten.no/xml/it/1/ ./RTV_IT_IFT.v14.xsd")
+    xmlStreamWriter.writeEndElement()
+    xmlStreamWriter.flush()
+    it.toString()
+}
+
+fun createInfotrygdKsofRequest(healthInformation: HelseOpplysningerArbeidsuforhet): String = StringWriter().use {
+    val xmlOutputFactory = XMLOutputFactory.newFactory()
+    val xmlStreamWriter = xmlOutputFactory.createXMLStreamWriter(it)
+    xmlStreamWriter.writeStartDocument("ISO-8859-1", "1.0")
+    xmlStreamWriter.writeStartElement("EI_KSOperasjonsformat")
+    xmlStreamWriter.writeAttribute("xmlns", "http://www.trygdeetaten.no/xml/eispsv/1/")
+    xmlStreamWriter.writeAttribute("xmlns:it", "http://www.trygdeetaten.no/xml/it/1/")
+
+    xmlStreamWriter.writeStartElement("Operasjon")
+    xmlStreamWriter.writeAttribute("tilSystem", "IT")
+    xmlStreamWriter.writeAttribute("utfort", "1")
+
+    xmlStreamWriter.writeStartElement("it:InfotrygdForesp")
+    xmlStreamWriter.writeAttribute("xmlns", "http://www.trygdeetaten.no/xml/it/1/")
+
+    xmlStreamWriter.writeAttribute("it:eldsteFraDato", "2017-09-21")
+    xmlStreamWriter.writeAttribute("it:fodselsnrBehandler", healthInformation.behandler.id.filter {
+        it.typeId.v == "FNR"
+    }.first().id)
+    xmlStreamWriter.writeAttribute("it:fodselsnummer", healthInformation.pasient.fodselsnummer.id)
+    xmlStreamWriter.writeAttribute("it:forespNr", "1")
+    xmlStreamWriter.writeAttribute("it:forespTidsStempel", "2016-07-14T09:00:14.851+02:00")
+    xmlStreamWriter.writeAttribute("it:fraDato", "2017-09-21")
+    xmlStreamWriter.writeAttribute("it:hovedDiagnosekode", healthInformation.medisinskVurdering.hovedDiagnose.diagnosekode.v)
+    xmlStreamWriter.writeAttribute("it:hovedDiagnosekodeverk", Diagnosekode.values().filter {
+        it.kithCode == healthInformation.medisinskVurdering.hovedDiagnose.diagnosekode.s
+    }.first().infotrygdCode)
+    xmlStreamWriter.writeAttribute("it:biDiagnoseKode", "Z07")
+    xmlStreamWriter.writeAttribute("it:biDiagnosekodeverk", "5")
+    xmlStreamWriter.writeAttribute("it:tkNrFraDato", "2017-09-21")
+
+    xmlStreamWriter.writeEndElement()
+    xmlStreamWriter.writeEndElement()
     xmlStreamWriter.writeEndElement()
     xmlStreamWriter.flush()
     it.toString()
