@@ -164,6 +164,7 @@ dependencies {
 
     implementation "com.ibm.mq:com.ibm.mq.allclient:$ibm_mq_version"
     implementation "no.nav.helse.xml:fellesformat:$felleformavV1_version"
+    implementation 'com.fasterxml.woodstox:woodstox-core:5.1.0'
 
     testImplementation "org.amshove.kluent:kluent:$kluent_version"
     testImplementation "org.spekframework.spek2:spek-dsl-jvm:$spek_version"

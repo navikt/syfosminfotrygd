@@ -33,6 +33,7 @@ import javax.jms.Session
 import javax.jms.TemporaryQueue
 import javax.jms.TextMessage
 import javax.xml.bind.Marshaller
+import javax.xml.stream.XMLOutputFactory
 
 data class ApplicationState(var running: Boolean = true, var initialized: Boolean = false)
 
@@ -105,9 +106,10 @@ suspend fun blockingApplicationLogic(
             val logKeys = logValues.joinToString(prefix = "(", postfix = ")", separator = ",") { "{}" }
             log.info("Received a SM2013, going through rules and persisting in infotrygd $logKeys", *logValues)
 
-            val infotrygdForespRequest = createInfotrygdForesp(healthInformation)
+            // val infotrygdForespRequest = createInfotrygdForesp(healthInformation)
+            val infotrygdForespRequestStrig = createInfotrygdxml(healthInformation)
             val temporaryQueue = session.createTemporaryQueue()
-            sendInfotrygdSporring(infotrygdSporringProducer, session, infotrygdForespRequest, temporaryQueue)
+            sendInfotrygdSporring(infotrygdSporringProducer, session, infotrygdForespRequestStrig, temporaryQueue)
             val tmpConsumer = session.createConsumer(temporaryQueue)
             val consumedMessage = tmpConsumer.receive(15000)
             val inputMessageText = when (consumedMessage) {
@@ -156,11 +158,12 @@ fun Marshaller.toString(input: Any): String = StringWriter().use {
 fun sendInfotrygdSporring(
     producer: MessageProducer,
     session: Session,
-    infotrygdForesp: InfotrygdForesp,
+    infotrygdForesp: String,
     temporaryQueue: TemporaryQueue
 ) = producer.send(session.createTextMessage().apply {
-    val info = infotrygdForesp
-    text = infotrygdSporringMarshaller.toString(info)
+    /*val info = infotrygdForesp
+    text = infotrygdSporringMarshaller.toString(info)*/
+    text = infotrygdForesp
     log.info("text sendt to Infotrygd + $text")
     jmsReplyTo = temporaryQueue
 })
@@ -187,4 +190,28 @@ fun createInfotrygdForesp(healthInformation: HelseOpplysningerArbeidsuforhet) = 
         }.first().infotrygdCode
     }
     tkNrFraDato = newInstance.newXMLGregorianCalendar(GregorianCalendar())
+}
+
+fun createInfotrygdxml(healthInformation: HelseOpplysningerArbeidsuforhet): String = StringWriter().use {
+    val xmlOutputFactory = XMLOutputFactory.newFactory()
+    val xmlStreamWriter = xmlOutputFactory.createXMLStreamWriter(it)
+    xmlStreamWriter.writeStartDocument("UTF-8", "1.0")
+    xmlStreamWriter.writeStartElement("InfotrygdForesp")
+    xmlStreamWriter.writeAttribute("eldsteFraDato", "2014-09-21")
+    xmlStreamWriter.writeAttribute("fodselsnrBehandler", healthInformation.behandler.id.filter {
+        it.typeId.v == "FNR"
+    }.first().id)
+    xmlStreamWriter.writeAttribute("fodselsnummer", healthInformation.pasient.fodselsnummer.id)
+    xmlStreamWriter.writeAttribute("forespNr", "1")
+    xmlStreamWriter.writeAttribute("forespTidsStempel", "2008-07-14T09:00:14.851+02:00")
+    xmlStreamWriter.writeAttribute("fraDato", "2008-06-24")
+    xmlStreamWriter.writeAttribute("hovedDiagnosekode", "P74")
+    xmlStreamWriter.writeAttribute("hovedDiagnosekodeverk", "5")
+    xmlStreamWriter.writeAttribute("tkNummer", "0335")
+    xmlStreamWriter.writeAttribute("xmlns", "http://www.trygdeetaten.no/xml/it/1/")
+    xmlStreamWriter.writeAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance")
+    xmlStreamWriter.writeAttribute("xsi:schemaLocation", "http://www.trygdeetaten.no/xml/it/1/ ./RTV_IT_IFT.v13.xsd")
+    xmlStreamWriter.writeEndElement()
+    xmlStreamWriter.flush()
+    it.toString()
 }
