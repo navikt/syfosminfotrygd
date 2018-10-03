@@ -24,9 +24,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.StringReader
 import java.io.StringWriter
-import java.text.SimpleDateFormat
 import java.time.Duration
-import java.util.Date
 import java.util.GregorianCalendar
 import java.util.concurrent.TimeUnit
 import javax.jms.MessageProducer
@@ -34,7 +32,6 @@ import javax.jms.Session
 import javax.jms.TemporaryQueue
 import javax.jms.TextMessage
 import javax.xml.bind.Marshaller
-import javax.xml.stream.XMLOutputFactory
 
 data class ApplicationState(var running: Boolean = true, var initialized: Boolean = false)
 
@@ -119,11 +116,10 @@ suspend fun blockingApplicationLogic(
             }
             log.info("Message is read, from tmp que")
             println(inputMessageText)
-            /*
-            val infotrygdForespResponse = infotrygdSporringUnmarshaller.unmarshal(StringReader(inputMessageText)) as EIFellesformat
+            val infotrygdForespResponse = infotrygdSporringUnmarshaller.unmarshal(StringReader(inputMessageText)) as InfotrygdForesp
+
             log.info("Message is Unmarshelled, from tmp que")
             println(infotrygdForespResponse)
-            */
 
             // TODO Send to manuell behandling
         }
@@ -190,28 +186,4 @@ fun createInfotrygdForesp(healthInformation: HelseOpplysningerArbeidsuforhet) = 
         }.first().infotrygdCode
     }
     tkNrFraDato = newInstance.newXMLGregorianCalendar(GregorianCalendar())
-}
-
-fun createInfotrygdxml(healthInformation: HelseOpplysningerArbeidsuforhet): String = StringWriter().use {
-    val xmlOutputFactory = XMLOutputFactory.newFactory()
-    val xmlStreamWriter = xmlOutputFactory.createXMLStreamWriter(it)
-    xmlStreamWriter.writeStartDocument("ISO-8859-1", "1.0")
-    xmlStreamWriter.writeStartElement("InfotrygdForesp")
-    xmlStreamWriter.writeAttribute("xmlns", "http://www.trygdeetaten.no/xml/it/1/")
-    xmlStreamWriter.writeAttribute("eldsteFraDato", "2014-10-03")
-    xmlStreamWriter.writeAttribute("fodselsnrBehandler", healthInformation.behandler.id.filter {
-        it.typeId.v == "FNR"
-    }.first().id)
-    xmlStreamWriter.writeAttribute("fodselsnummer", healthInformation.pasient.fodselsnummer.id)
-    xmlStreamWriter.writeAttribute("forespNr", "1")
-    xmlStreamWriter.writeAttribute("forespTidsStempel", SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(Date(System.currentTimeMillis())))
-    xmlStreamWriter.writeAttribute("fraDato", "2017-10-03")
-    xmlStreamWriter.writeAttribute("hovedDiagnosekode", healthInformation.medisinskVurdering.hovedDiagnose.diagnosekode.v)
-    xmlStreamWriter.writeAttribute("hovedDiagnosekodeverk", Diagnosekode.values().filter {
-        it.kithCode == healthInformation.medisinskVurdering.hovedDiagnose.diagnosekode.s
-    }.first().infotrygdCode)
-    xmlStreamWriter.writeAttribute("tkNrFraDato", "2017-10-03")
-    xmlStreamWriter.writeEndElement()
-    xmlStreamWriter.flush()
-    it.toString()
 }
