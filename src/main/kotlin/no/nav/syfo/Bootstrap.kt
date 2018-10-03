@@ -103,11 +103,9 @@ suspend fun blockingApplicationLogic(
             val logKeys = logValues.joinToString(prefix = "(", postfix = ")", separator = ",") { "{}" }
             log.info("Received a SM2013, going through rules and persisting in infotrygd $logKeys", *logValues)
 
-            // val infotrygdForespRequest = createInfotrygdForesp(healthInformation)
-            // val infotrygdForespRequestStrig = createInfotrygdxml(healthInformation)
-            val infotrygdForespRequestStrig = createInfotrygdForesp(healthInformation)
+            val infotrygdForespRequest = createInfotrygdForesp(healthInformation)
             val temporaryQueue = session.createTemporaryQueue()
-            sendInfotrygdSporring(infotrygdSporringProducer, session, infotrygdForespRequestStrig, temporaryQueue)
+            sendInfotrygdSporring(infotrygdSporringProducer, session, infotrygdForespRequest, temporaryQueue)
             val tmpConsumer = session.createConsumer(temporaryQueue)
             val consumedMessage = tmpConsumer.receive(15000)
             val inputMessageText = when (consumedMessage) {
@@ -115,12 +113,12 @@ suspend fun blockingApplicationLogic(
                 else -> throw RuntimeException("Incoming message needs to be a byte message or text message, JMS type:" + consumedMessage.jmsType)
             }
             log.info("Message is read, from tmp que")
-            println(inputMessageText)
+
             val infotrygdForespResponse = infotrygdSporringUnmarshaller.unmarshal(StringReader(inputMessageText)) as InfotrygdForesp
 
-            log.info("Message is Unmarshelled, from tmp que")
-            println(infotrygdForespResponse)
-
+            // TODO GOING throw rules
+            // If rules are OK
+            // Update SM2013 i INFOTRGD
             // TODO Send to manuell behandling
         }
         delay(100)
@@ -187,3 +185,6 @@ fun createInfotrygdForesp(healthInformation: HelseOpplysningerArbeidsuforhet) = 
     }
     tkNrFraDato = newInstance.newXMLGregorianCalendar(GregorianCalendar())
 }
+
+fun createInfotrygdForesp() {
+    }
