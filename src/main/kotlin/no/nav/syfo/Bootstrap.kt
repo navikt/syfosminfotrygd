@@ -198,6 +198,7 @@ fun createInfotrygdxml(healthInformation: HelseOpplysningerArbeidsuforhet): Stri
     val xmlStreamWriter = xmlOutputFactory.createXMLStreamWriter(it)
     xmlStreamWriter.writeStartDocument("ISO-8859-1", "1.0")
     xmlStreamWriter.writeStartElement("InfotrygdForesp")
+    xmlStreamWriter.writeAttribute("xmlns", "http://www.trygdeetaten.no/xml/it/1/")
     xmlStreamWriter.writeAttribute("eldsteFraDato", "2017-09-21")
     xmlStreamWriter.writeAttribute("fodselsnrBehandler", healthInformation.behandler.id.filter {
         it.typeId.v == "FNR"
