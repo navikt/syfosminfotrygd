@@ -9,7 +9,7 @@ data class Environment(
     val sm2013AutomaticHandlingTopic: String = getEnvVar("SM2013_AUTOMATIC_HANDLING_TOPIC", "privat-syfo-sm2013-automatiskBehandling"),
     val smPaperAutomaticHandlingTopic: String = getEnvVar("SMPAPER_AUTOMATIC_HANDLING_TOPIC", "privat-syfo-smpapir-automatiskBehandling"),
     // val infotrygdSporringQueue: String = getEnvVar("EIA_QUEUE_INFOTRYGD_REQUEST_QUEUENAME"),
-    val infotrygdSporringQueue: String = getEnvVar("INFOTRYGD_REQUEST_Q8_QUEUENAME"),
+    val infotrygdSporringQueue: String = getEnvVar("INFOTRYGD_REQUEST_Q4_QUEUENAME"),
     val infotrygdOppdateringQueue: String = getEnvVar("EIA_QUEUE_INFOTRYGD_OUTBOUND_QUEUENAME"),
     val mqHostname: String = getEnvVar("MQGATEWAY03_HOSTNAME"),
     val mqPort: Int = getEnvVar("MQGATEWAY03_PORT").toInt(),
