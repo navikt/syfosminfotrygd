@@ -62,8 +62,7 @@ fun main(args: Array<String>) = runBlocking {
 
                     val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
                     val infotrygdOppdateringQueue = session.createQueue(env.infotrygdOppdateringQueue)
-                    val infotrygdSporringQueue = session.createQueue(env.infotrygdSporringQueue)
-
+                    val infotrygdSporringQueue = session.createQueue("queue:///${env.infotrygdSporringQueue}?targetClient=1")
                     val infotrygdOppdateringProducer = session.createProducer(infotrygdOppdateringQueue)
                     val infotrygdSporringProducer = session.createProducer(infotrygdSporringQueue)
 
