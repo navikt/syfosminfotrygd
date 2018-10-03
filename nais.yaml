@@ -37,6 +37,10 @@ fasitResources:
       resourceType: Credential
     - alias: kafka_bootstrap_servers
       resourceType: baseurl
+    - alias: infotrygd_request_q8
+      resourceType: Queue
+      propertyMap:
+        queueName: INFOTRYGD_REQUEST_Q8_QUEUENAME
     - alias: eia_queue_infotrygd_request
       resourceType: Queue
       propertyMap:
