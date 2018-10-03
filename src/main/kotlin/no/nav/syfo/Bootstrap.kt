@@ -18,14 +18,15 @@ import no.nav.syfo.api.registerNaisApi
 import no.trygdeetaten.xml.eiff._1.XMLMottakenhetBlokk
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
-import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.apache.kafka.common.serialization.StringSerializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.StringReader
 import java.io.StringWriter
+import java.text.SimpleDateFormat
 import java.time.Duration
+import java.util.Date
 import java.util.GregorianCalendar
 import java.util.concurrent.TimeUnit
 import javax.jms.MessageProducer
@@ -125,7 +126,7 @@ suspend fun blockingApplicationLogic(
             println(infotrygdForespResponse)
             */
 
-            kafkaProducer.send(ProducerRecord(env.smGsakTaskCreationTopic, it.value()))
+            // TODO Send to manuell behandling
         }
         delay(100)
     }
@@ -199,19 +200,19 @@ fun createInfotrygdxml(healthInformation: HelseOpplysningerArbeidsuforhet): Stri
     xmlStreamWriter.writeStartDocument("ISO-8859-1", "1.0")
     xmlStreamWriter.writeStartElement("InfotrygdForesp")
     xmlStreamWriter.writeAttribute("xmlns", "http://www.trygdeetaten.no/xml/it/1/")
-    xmlStreamWriter.writeAttribute("eldsteFraDato", "2017-09-21")
+    xmlStreamWriter.writeAttribute("eldsteFraDato", "2014-10-03")
     xmlStreamWriter.writeAttribute("fodselsnrBehandler", healthInformation.behandler.id.filter {
         it.typeId.v == "FNR"
     }.first().id)
     xmlStreamWriter.writeAttribute("fodselsnummer", healthInformation.pasient.fodselsnummer.id)
     xmlStreamWriter.writeAttribute("forespNr", "1")
-    xmlStreamWriter.writeAttribute("forespTidsStempel", "2018-10-02T15:57:20")
-    xmlStreamWriter.writeAttribute("fraDato", "2017-09-21")
+    xmlStreamWriter.writeAttribute("forespTidsStempel", SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(Date(System.currentTimeMillis())))
+    xmlStreamWriter.writeAttribute("fraDato", "2017-10-03")
     xmlStreamWriter.writeAttribute("hovedDiagnosekode", healthInformation.medisinskVurdering.hovedDiagnose.diagnosekode.v)
     xmlStreamWriter.writeAttribute("hovedDiagnosekodeverk", Diagnosekode.values().filter {
         it.kithCode == healthInformation.medisinskVurdering.hovedDiagnose.diagnosekode.s
     }.first().infotrygdCode)
-    xmlStreamWriter.writeAttribute("tkNrFraDato", "2017-09-21")
+    xmlStreamWriter.writeAttribute("tkNrFraDato", "2017-10-03")
     xmlStreamWriter.writeEndElement()
     xmlStreamWriter.flush()
     it.toString()

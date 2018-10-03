@@ -8,7 +8,6 @@ data class Environment(
     val kafkaBootstrapServers: String = getEnvVar("KAFKA_BOOTSTRAP_SERVERS_URL"),
     val sm2013AutomaticHandlingTopic: String = getEnvVar("SM2013_AUTOMATIC_HANDLING_TOPIC", "privat-syfo-sm2013-automatiskBehandling"),
     val smPaperAutomaticHandlingTopic: String = getEnvVar("SMPAPER_AUTOMATIC_HANDLING_TOPIC", "privat-syfo-smpapir-automatiskBehandling"),
-    val smGsakTaskCreationTopic: String = getEnvVar("SMINFOTRYGD_MANUAL_HANDLING_TOPIC", "privat-syfo-sminfotrygd-manuellBehandling"),
     val infotrygdSporringQueue: String = getEnvVar("EIA_QUEUE_INFOTRYGD_REQUEST_QUEUENAME"),
     val infotrygdOppdateringQueue: String = getEnvVar("EIA_QUEUE_INFOTRYGD_OUTBOUND_QUEUENAME"),
     val mqHostname: String = getEnvVar("MQGATEWAY03_HOSTNAME"),
