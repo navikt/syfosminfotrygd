@@ -108,7 +108,7 @@ suspend fun blockingApplicationLogic(
 
             // val infotrygdForespRequest = createInfotrygdForesp(healthInformation)
             // val infotrygdForespRequestStrig = createInfotrygdxml(healthInformation)
-            val infotrygdForespRequestStrig = createInfotrygdxml(healthInformation)
+            val infotrygdForespRequestStrig = createInfotrygdForesp(healthInformation)
             val temporaryQueue = session.createTemporaryQueue()
             sendInfotrygdSporring(infotrygdSporringProducer, session, infotrygdForespRequestStrig, temporaryQueue)
             val tmpConsumer = session.createConsumer(temporaryQueue)
@@ -159,12 +159,11 @@ fun Marshaller.toString(input: Any): String = StringWriter().use {
 fun sendInfotrygdSporring(
     producer: MessageProducer,
     session: Session,
-    infotrygdForesp: String,
+    infotrygdForesp: InfotrygdForesp,
     temporaryQueue: TemporaryQueue
 ) = producer.send(session.createTextMessage().apply {
-    /*val info = infotrygdForesp
-    text = infotrygdSporringMarshaller.toString(info)*/
-    text = infotrygdForesp
+    val info = infotrygdForesp
+    text = infotrygdSporringMarshaller.toString(info)
     log.info("text sendt to Infotrygd + $text")
     jmsReplyTo = temporaryQueue
 })
