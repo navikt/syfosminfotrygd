@@ -7,7 +7,7 @@ pipeline {
         APPLICATION_NAME = 'syfosminfotrygd'
         ZONE = 'fss'
         DOCKER_SLUG='syfo'
-        FASIT_ENVIRONMENT='q4'
+        FASIT_ENVIRONMENT='q1'
         DISABLE_SLACK_MESSAGES = true
     }
 

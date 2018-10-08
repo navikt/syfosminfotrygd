@@ -15,6 +15,8 @@ import no.nav.helse.sm2013.EIFellesformat
 import no.nav.model.infotrygdSporing.InfotrygdForesp
 import no.nav.model.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.syfo.api.registerNaisApi
+import no.nav.syfo.rules.postInfotrygdQueryChain
+import no.nav.syfo.rules.preInfotrygdQueryChain
 import no.trygdeetaten.xml.eiff._1.XMLMottakenhetBlokk
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -117,6 +119,10 @@ suspend fun blockingApplicationLogic(
             val infotrygdForespResponse = infotrygdSporringUnmarshaller.unmarshal(StringReader(inputMessageText)) as InfotrygdForesp
 
             // TODO GOING throw rules
+            val results = listOf(
+                    preInfotrygdQueryChain.executeFlow(healthInformation),
+                    postInfotrygdQueryChain.executeFlow(infotrygdForespResponse)
+            ).flatMap { it }
             // If rules are OK
             // Update SM2013 i INFOTRGD
             // TODO Send to manuell behandling
@@ -185,6 +191,3 @@ fun createInfotrygdForesp(healthInformation: HelseOpplysningerArbeidsuforhet) = 
     }
     tkNrFraDato = newInstance.newXMLGregorianCalendar(GregorianCalendar())
 }
-
-fun createInfotrygdForesp() {
-    }
