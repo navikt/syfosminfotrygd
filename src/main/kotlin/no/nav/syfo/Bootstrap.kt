@@ -15,8 +15,8 @@ import no.nav.helse.sm2013.EIFellesformat
 import no.nav.model.infotrygdSporing.InfotrygdForesp
 import no.nav.model.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.syfo.api.registerNaisApi
+import no.nav.syfo.model.Status
 import no.nav.syfo.rules.postInfotrygdQueryChain
-import no.nav.syfo.rules.preInfotrygdQueryChain
 import no.trygdeetaten.xml.eiff._1.XMLMottakenhetBlokk
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -119,17 +119,26 @@ suspend fun blockingApplicationLogic(
             val infotrygdForespResponse = infotrygdSporringUnmarshaller.unmarshal(StringReader(inputMessageText)) as InfotrygdForesp
 
             // TODO GOING throw rules
+            val infotrygdForespAndHealthInformation = InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation)
+
             val results = listOf(
-                    preInfotrygdQueryChain.executeFlow(healthInformation),
-                    postInfotrygdQueryChain.executeFlow(infotrygdForespResponse)
+                    postInfotrygdQueryChain.executeFlow(infotrygdForespAndHealthInformation)
             ).flatMap { it }
-            // If rules are OK
-            // Update SM2013 i INFOTRGD
-            // TODO Send to manuell behandling
+
+            if (results.any { it.outcomeType.status == Status.MANUAL_PROCESSING }) {
+                // TODO Send to manuell behandling
+            } else {
+                // Update SM2013 i INFOTRGD
+            }
         }
         delay(100)
     }
 }
+
+data class InfotrygdForespAndHealthInformation(
+    val infotrygdForesp: InfotrygdForesp,
+    val healthInformation: HelseOpplysningerArbeidsuforhet
+)
 
 fun XMLOrganisation.extractOrganizationNumber(): String? = ident.find { it.typeId.v == "ENH" }?.id
 
