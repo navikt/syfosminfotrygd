@@ -4,6 +4,7 @@ import no.nav.syfo.InfotrygdForespAndHealthInformation
 import no.nav.syfo.OutcomeType
 import no.nav.syfo.Rule
 import no.nav.syfo.RuleChain
+import java.math.BigInteger
 import javax.xml.datatype.XMLGregorianCalendar
 
 val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
@@ -89,6 +90,16 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                             infotrygdforespUtbetalingTOM.compare(infotrygdforespHistArbuforFom) > 0 &&
                             infotrygdforespArbuforFom.compare(infotrygdforespHistArbuforFom) > 0 &&
                             !infotrygdforespFriskKode.equals("H")
+                },
+                Rule(
+                        // TODO need to check if the rule is implemented correctly
+                        name = "Patients",
+                        outcomeType = OutcomeType.DIABILITY_GRADE_CANGED,
+                        description = "Hvis uføregrad er endret går meldingen til manuell behandling") {
+                    val disabilityGradeIT: BigInteger = it.infotrygdForesp.sMhistorikk.sykmelding.first().periode.ufoeregrad
+                    val healthInformationdisabilityGrade: Int = it.healthInformation.aktivitet.periode.first().gradertSykmelding.sykmeldingsgrad
+
+                    !disabilityGradeIT.equals(healthInformationdisabilityGrade)
                 }
 
         ))

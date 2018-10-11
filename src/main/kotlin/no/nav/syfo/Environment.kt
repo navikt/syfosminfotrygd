@@ -11,7 +11,7 @@ data class Environment(
     val infotrygdSporringQueue: String = getEnvVar("INFOTRYGD_REQUEST_Q4_QUEUENAME", "infotrygdSporringQueue"),
     val infotrygdOppdateringQueue: String = getEnvVar("EIA_QUEUE_INFOTRYGD_OUTBOUND_QUEUENAME", "infotrygdOppdateringQueue"),
     val mqHostname: String = getEnvVar("MQGATEWAY03_HOSTNAME", "mqHostname"),
-    val mqPort: Int = getEnvVar("MQGATEWAY03_PORT" , "1413").toInt(),
+    val mqPort: Int = getEnvVar("MQGATEWAY03_PORT", "1413").toInt(),
     val mqQueueManagerName: String = getEnvVar("MQGATEWAY03_NAME", "mqQueueManagerName"),
     val mqChannelName: String = getEnvVar("SYFOSMINFOTRYGD_CHANNEL_NAME", "mqChannelName"),
     val mqUsername: String = getEnvVar("SRVAPPSERVER_USERNAME", "srvappserver"),
