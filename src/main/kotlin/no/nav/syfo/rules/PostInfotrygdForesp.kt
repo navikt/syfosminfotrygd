@@ -100,6 +100,23 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                     val healthInformationdisabilityGrade: Int = it.healthInformation.aktivitet.periode.first().gradertSykmelding.sykmeldingsgrad
 
                     !disabilityGradeIT.equals(healthInformationdisabilityGrade)
+                },
+                Rule(
+                        // TODO need to check if the rule is implemented correctly
+                        name = "Patients",
+                        outcomeType = OutcomeType.ERROR_FROM_IT,
+                        description = "Feilmelding fra Infotrygd") {
+                    val hovedStatusKodemelding: Int? = it.infotrygdForesp.hovedStatus.kodeMelding.toIntOrNull()
+                    val sMhistorikktStatusKodemelding: Int? = it.infotrygdForesp.sMhistorikk.status.kodeMelding.toIntOrNull()
+                    val parallelleYtelserStatusKodemelding: Int? = it.infotrygdForesp.parallelleYtelser.status.kodeMelding.toIntOrNull()
+                    val diagnoseOKUttrekkStatusKodemelding: Int? = it.infotrygdForesp.diagnosekodeOK.status.kodeMelding.toIntOrNull()
+                    val pasientUttrekkStatusKodemelding: Int? = it.infotrygdForesp.pasient.status.kodeMelding.toIntOrNull()
+
+                    hovedStatusKodemelding ?: 0 > 4 &&
+                            sMhistorikktStatusKodemelding ?: 0 > 4 &&
+                            parallelleYtelserStatusKodemelding ?: 0 > 4 &&
+                            diagnoseOKUttrekkStatusKodemelding ?: 0 > 4 &&
+                            pasientUttrekkStatusKodemelding ?: 0 > 4
                 }
 
         ))
