@@ -21,3 +21,5 @@ val infotrygdSporringUnmarshaller: Unmarshaller = infotrygdSporringJaxBContext.c
 val fellesformatJaxBContext: JAXBContext = JAXBContext.newInstance(EIFellesformat::class.java, XMLMsgHead::class.java,
         XMLMottakenhetBlokk::class.java, HelseOpplysningerArbeidsuforhet::class.java)
 val fellesformatUnmarshaller: Unmarshaller = fellesformatJaxBContext.createUnmarshaller()
+
+val fellesformatMarshaller: Marshaller = fellesformatJaxBContext.createMarshaller()

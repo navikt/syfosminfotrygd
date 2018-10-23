@@ -20,6 +20,7 @@ import no.nav.syfo.rules.postInfotrygdQueryChain
 import no.trygdeetaten.xml.eiff._1.XMLMottakenhetBlokk
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
+import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.apache.kafka.common.serialization.StringSerializer
 import org.slf4j.Logger
@@ -93,7 +94,6 @@ suspend fun blockingApplicationLogic(
     while (applicationState.running) {
         kafkaConsumer.poll(Duration.ofMillis(0)).forEach {
             val fellesformat = fellesformatUnmarshaller.unmarshal(StringReader(it.value())) as EIFellesformat
-            println()
             val msgHead: XMLMsgHead = fellesformat.get()
             val mottakEnhetBlokk: XMLMottakenhetBlokk = fellesformat.get()
             val healthInformation = extractHelseopplysninger(msgHead)
@@ -118,18 +118,23 @@ suspend fun blockingApplicationLogic(
 
             val infotrygdForespResponse = infotrygdSporringUnmarshaller.unmarshal(StringReader(inputMessageText)) as InfotrygdForesp
 
-            // TODO GOING throw rules
-            val infotrygdForespAndHealthInformation = InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation)
-
+            log.info("Start rule flow")
             val results = listOf(
-                    postInfotrygdQueryChain.executeFlow(infotrygdForespAndHealthInformation)
+                    postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
             ).flatMap { it }
 
+            log.info("Finish rule flow")
+
+            log.debug("Outcomes: " + results.joinToString(", ", prefix = "\"", postfix = "\""))
+
             if (results.any { it.outcomeType.status == Status.MANUAL_PROCESSING }) {
-                // TODO Send to manuell behandling
+                kafkaProducer.send(ProducerRecord(env.smInfotrygdManualHandlingTopic, fellesformatMarshaller.toString(fellesformat)))
+            } else if (results.any { it.outcomeType.status == Status.INVALID }) {
+                // TODO Send apprec to EPJ
             } else {
-                // Update SM2013 i INFOTRGD
-            }
+                log.info("SM2013 updated in Infotrygd")
+                sendInfotrygdOppdatering(infotrygdOppdateringProducer, session, fellesformat)
+        }
         }
         delay(100)
     }
@@ -175,6 +180,16 @@ fun sendInfotrygdSporring(
     text = infotrygdSporringMarshaller.toString(info)
     log.info("text sendt to Infotrygd + $text")
     jmsReplyTo = temporaryQueue
+})
+
+fun sendInfotrygdOppdatering(
+    producer: MessageProducer,
+    session: Session,
+    fellesformat: EIFellesformat
+) = producer.send(session.createTextMessage().apply {
+    val info = fellesformat
+    text = fellesformatMarshaller.toString(info)
+    log.info("text sendt to Infotrygd + $text")
 })
 
 fun createInfotrygdForesp(healthInformation: HelseOpplysningerArbeidsuforhet) = InfotrygdForesp().apply {
