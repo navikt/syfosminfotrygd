@@ -9,7 +9,7 @@ data class Environment(
     val sm2013AutomaticHandlingTopic: String = getEnvVar("SM2013_AUTOMATIC_HANDLING_TOPIC", "privat-syfo-sm2013-automatiskBehandling"),
     val smPaperAutomaticHandlingTopic: String = getEnvVar("SMPAPER_AUTOMATIC_HANDLING_TOPIC", "privat-syfo-smpapir-automatiskBehandling"),
     val smInfotrygdManualHandlingTopic: String = getEnvVar("KAFKA_SM2013_OPPGAVE_IT_TOPIC", "privat-syfo-sminfotrygd-manuellBehandling"),
-    val infotrygdSporringQueue: String = getEnvVar("INFOTRYGD_REQUEST_Q4_QUEUENAME", "infotrygdSporringQueue"),
+    val infotrygdSporringQueue: String = getEnvVar("EIA_QUEUE_INFOTRYGD_REQUEST_QUEUENAME", "infotrygdSporringQueue"),
     val infotrygdOppdateringQueue: String = getEnvVar("EIA_QUEUE_INFOTRYGD_OUTBOUND_QUEUENAME", "infotrygdOppdateringQueue"),
     val mqHostname: String = getEnvVar("MQGATEWAY03_HOSTNAME", "mqHostname"),
     val mqPort: Int = getEnvVar("MQGATEWAY03_PORT", "1413").toInt(),
