@@ -25,12 +25,12 @@ enum class OutcomeType(val ruleId: Int, val status: Status) {
     DOCTOR_IS_KI_AND_OVER_12_WEEKS(1520, Status.INVALID), // TODO this rule should not be here it should be i syfosykemeldingregler
     DIABILITY_GRADE_CANGED(1530, Status.MANUAL_PROCESSING), // TODO maybe auto update IT
     NOT_VALDIG_DIAGNOSE(1540, Status.INVALID), // TODO maybe auto update syfosykemeldingregler
-    EXTANION_OVER_AA(1544, Status.MANUAL_PROCESSING),
+    EXTANION_OVER_FA(1544, Status.MANUAL_PROCESSING),
     PATIENT_DEAD(1545, Status.MANUAL_PROCESSING),
     PERSON_MOVING_KODE_FL(1546, Status.MANUAL_PROCESSING),
     PERIOD_ENDED_DEAD(1548, Status.MANUAL_PROCESSING),
     PERIOD_FOR_AA_ENDED(1549, Status.MANUAL_PROCESSING),
-    PERIOD_IS_AF(1550, Status.MANUAL_PROCESSING),
+    PERIOD_IS_AF(1550, Status.MANUAL_PROCESSING), // TODO maybe change what we do with this
     MAX_SICK_LEAVE_PAYOUT(1551, Status.MANUAL_PROCESSING),
     REFUSAL_IS_REGISTERED(1552, Status.MANUAL_PROCESSING),
     ERROR_FROM_IT(1591, Status.MANUAL_PROCESSING)

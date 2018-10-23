@@ -4,7 +4,6 @@ import no.nav.syfo.InfotrygdForespAndHealthInformation
 import no.nav.syfo.OutcomeType
 import no.nav.syfo.Rule
 import no.nav.syfo.RuleChain
-import java.math.BigInteger
 import java.time.LocalDate
 import java.time.Period
 
@@ -82,7 +81,7 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                 },
                 Rule(
                         // TODO need to check if the rule is implemented correctly
-                        name = "Patients",
+                        name = "Patient has a diffrent NAV Office",
                         outcomeType = OutcomeType.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE,
                         description = "Hvis sykmeldingen er forlengelse av registrert sykepengehistorikk fra annet kontor så medlingen gå til manuell behandling slik at  saksbehandler kan registrere sykepengetilfellet på ny identdato og  send oppgave til Nav forvaltning for registrering av inntektsopplysninger."
                 ) {
@@ -98,18 +97,22 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                             !infotrygdforespFriskKode.equals("H")
                 },
                 Rule(
-                        // TODO need to check if the rule is implemented correctly
-                        name = "Patients",
+                        name = "Patients disability is changed",
                         outcomeType = OutcomeType.DIABILITY_GRADE_CANGED,
                         description = "Hvis uføregrad er endret går meldingen til manuell behandling") {
-                    val disabilityGradeIT: BigInteger = it.infotrygdForesp.sMhistorikk.sykmelding.first().periode.ufoeregrad
-                    val healthInformationdisabilityGrade: Int = it.healthInformation.aktivitet.periode.first().gradertSykmelding.sykmeldingsgrad
+                    val disabilityGradeIT: Int = it.infotrygdForesp.sMhistorikk.sykmelding.first().periode.ufoeregrad.toInt()
+                    val healthInformationDisabilityGrade: Int = it.healthInformation.aktivitet.periode.first().gradertSykmelding.sykmeldingsgrad
+                    val sMhistorikkArbuforFOM: LocalDate = it.infotrygdForesp.sMhistorikk.sykmelding.first().periode.arbufoerFOM.toGregorianCalendar().toZonedDateTime().toLocalDate()
+                    val healthInformationPeriodeFOMDato: LocalDate = it.healthInformation.aktivitet.periode.first().periodeFOMDato.toGregorianCalendar().toZonedDateTime().toLocalDate()
+                    val healthInformationPeriodeTOMDato: LocalDate = it.healthInformation.aktivitet.periode.first().periodeTOMDato.toGregorianCalendar().toZonedDateTime().toLocalDate()
 
-                    !disabilityGradeIT.equals(healthInformationdisabilityGrade)
+                    disabilityGradeIT != healthInformationDisabilityGrade &&
+                            sMhistorikkArbuforFOM.isAfter(healthInformationPeriodeFOMDato) &&
+                            sMhistorikkArbuforFOM.isBefore(healthInformationPeriodeTOMDato)
                 },
                 Rule(
                         // TODO need to check if the rule is implemented correctly
-                        name = "Patients",
+                        name = "Error message from Infotrygd",
                         outcomeType = OutcomeType.ERROR_FROM_IT,
                         description = "Feilmelding fra Infotrygd") {
                     val hovedStatusKodemelding: Int? = it.infotrygdForesp.hovedStatus.kodeMelding.toIntOrNull()
@@ -125,9 +128,8 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                             pasientUttrekkStatusKodemelding ?: 0 > 4
                 },
                 Rule(
-                        // TODO need to check if the rule is implemented correctly
-                        name = "Patient",
-                        outcomeType = OutcomeType.EXTANION_OVER_AA,
+                        name = "Patient has extantion is type FA",
+                        outcomeType = OutcomeType.EXTANION_OVER_FA,
                         description = "Hvis forlengelse utover registrert tiltak FA tiltak ") {
                     val sMhistorikkTilltakTypeFA: Boolean = it.infotrygdForesp.sMhistorikk.sykmelding.any {
                         it.historikk.first().tilltak.type == "FA"
@@ -171,7 +173,7 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                     }
                 },
                 Rule(
-                        name = "Patient",
+                        name = "Patient has recived max sick leave payout",
                         outcomeType = OutcomeType.MAX_SICK_LEAVE_PAYOUT,
                         description = "Hvis maks sykepenger er utbetalt") {
                     it.infotrygdForesp.sMhistorikk.sykmelding.any {
@@ -179,7 +181,7 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                     }
                 },
                 Rule(
-                        name = "Patient",
+                        name = "Patient has recived a refusal",
                         outcomeType = OutcomeType.REFUSAL_IS_REGISTERED,
                         description = "Hvis det er registrert avslag i IT") {
                     it.infotrygdForesp.sMhistorikk.sykmelding.any {
@@ -187,7 +189,7 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                     }
                 },
                 Rule(
-                        name = "Patient",
+                        name = "Patient sick leave period is over 1 year",
                         outcomeType = OutcomeType.SICK_LEAVE_PERIOD_OVER_1_YEAR,
                         description = "Hvis sykmeldingsperioden er større enn 1 år meldingen til manuell behandling") {
                     val sMhistorikkArbuforFOM: LocalDate = it.infotrygdForesp.sMhistorikk.sykmelding.first().periode.arbufoerFOM.toGregorianCalendar().toZonedDateTime().toLocalDate()
