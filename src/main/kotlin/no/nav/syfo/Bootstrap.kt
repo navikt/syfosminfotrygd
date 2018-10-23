@@ -115,6 +115,7 @@ suspend fun blockingApplicationLogic(
                 else -> throw RuntimeException("Incoming message needs to be a byte message or text message, JMS type:" + consumedMessage.jmsType)
             }
             log.info("Message is read, from tmp que")
+            log.debug("Message response from IT: + $inputMessageText")
 
             val infotrygdForespResponse = infotrygdSporringUnmarshaller.unmarshal(StringReader(inputMessageText)) as InfotrygdForesp
 

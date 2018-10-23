@@ -52,10 +52,10 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                         description = "New clean bill date is earlier than registered clean bill date of registration in Infotrygd"
                 ) {
 
-                    val newfriskmeldtDato: LocalDate = it.infotrygdForesp.sMhistorikk.sykmelding.first().periode.friskmeldtDato.toGregorianCalendar().toZonedDateTime().toLocalDate()
-                    val secoundfriskmeldtDato: LocalDate = it.infotrygdForesp.sMhistorikk.sykmelding.drop(1).first().periode.friskmeldtDato.toGregorianCalendar().toZonedDateTime().toLocalDate()
+                    val newfriskmeldtDato: LocalDate? = it.infotrygdForesp.sMhistorikk.sykmelding.firstOrNull()?.periode?.friskmeldtDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
+                    val secoundfriskmeldtDato: LocalDate? = it.infotrygdForesp.sMhistorikk.sykmelding.drop(1).firstOrNull()?.periode?.friskmeldtDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
 
-                    newfriskmeldtDato.isAfter(secoundfriskmeldtDato)
+                    newfriskmeldtDato?.isAfter(secoundfriskmeldtDato) ?: false
                 },
                 Rule(
                         name = "Patients has partially conincident sick leave period with previously registrered sick lave",
