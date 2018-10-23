@@ -41,10 +41,10 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                         outcomeType = OutcomeType.NEW_CLEAN_BILL_DATE_BEFORE_PAYOUT,
                         description = "This is a rule that hits whenever the patient new clean bill date is before payout date"
                 ) {
-                    val sMhistorikkfriskmeldtDato: LocalDate = it.infotrygdForesp.sMhistorikk.sykmelding.first().periode.friskmeldtDato.toGregorianCalendar().toZonedDateTime().toLocalDate()
-                    val sMhistorikkutbetTOM: LocalDate = it.infotrygdForesp.sMhistorikk.sykmelding.first().periode.utbetTOM.toGregorianCalendar().toZonedDateTime().toLocalDate()
+                    val sMhistorikkfriskmeldtDato: LocalDate? = it.infotrygdForesp.sMhistorikk.sykmelding.firstOrNull()?.periode?.friskmeldtDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
+                    val sMhistorikkutbetTOM: LocalDate? = it.infotrygdForesp.sMhistorikk.sykmelding.firstOrNull()?.periode?.utbetTOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
 
-                    sMhistorikkfriskmeldtDato.isBefore(sMhistorikkutbetTOM)
+                    sMhistorikkfriskmeldtDato?.isBefore(sMhistorikkutbetTOM) ?: false
                 },
                 Rule(
                         name = "Patients new clean bill date before payout",
