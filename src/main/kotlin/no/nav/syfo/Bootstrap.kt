@@ -12,6 +12,8 @@ import no.kith.xmlstds.msghead._2006_05_24.XMLMsgHead
 import no.kith.xmlstds.msghead._2006_05_24.XMLOrganisation
 import no.kith.xmlstds.msghead._2006_05_24.XMLRefDoc
 import no.nav.helse.sm2013.EIFellesformat
+import no.nav.helse.sm2013.KontrollSystemBlokk
+import no.nav.helse.sm2013.KontrollsystemBlokkType
 import no.nav.model.infotrygdSporing.InfotrygdForesp
 import no.nav.model.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.syfo.api.registerNaisApi
@@ -134,7 +136,8 @@ suspend fun blockingApplicationLogic(
                 // TODO Send apprec to EPJ
             } else {
                 log.info("SM2013 updated in Infotrygd")
-                sendInfotrygdOppdatering(infotrygdOppdateringProducer, session, fellesformat)
+
+                sendInfotrygdOppdatering(infotrygdOppdateringProducer, session, createInfotrygdInfo)
         }
         }
         delay(100)
@@ -222,3 +225,21 @@ fun createInfotrygdForesp(healthInformation: HelseOpplysningerArbeidsuforhet) = 
     }
     tkNrFraDato = newInstance.newXMLGregorianCalendar(gregorianCalendarMinus1Year)
 }
+
+fun createInfotrygdInfo(fellesformat: EIFellesformat, it: InfotrygdForespAndHealthInformation) = fellesformat.apply { (KontrollSystemBlokk().apply {
+    infotrygdBlokk.add(KontrollsystemBlokkType.InfotrygdBlokk().apply {
+        fodselsnummer = it.healthInformation.pasient.fodselsnummer.id
+        tkNummer = ""
+        forsteFravaersDag = it.healthInformation.aktivitet.periode.firstOrNull()?.periodeFOMDato
+        mottakerKode = it.infotrygdForesp.behandlerInfo.behandler.first().mottakerKode.value()
+        operasjonstype = "3".toBigInteger()
+        hovedDiagnose = it.infotrygdForesp.hovedDiagnosekode
+        hovedDiagnoseGruppe = it.infotrygdForesp.hovedDiagnosekodeverk.toBigInteger()
+        hovedDiagnoseTekst = it.healthInformation.medisinskVurdering.hovedDiagnose.diagnosekode.dn
+        arbeidsufoerTOM = it.healthInformation.aktivitet.periode.first().periodeTOMDato
+        ufoeregrad = when (it.healthInformation.aktivitet.periode.firstOrNull()?.gradertSykmelding) {
+            null -> "100".toBigInteger()
+            else -> it.healthInformation.aktivitet.periode.first().gradertSykmelding.sykmeldingsgrad.toBigInteger()
+        }
+    })
+}) }
