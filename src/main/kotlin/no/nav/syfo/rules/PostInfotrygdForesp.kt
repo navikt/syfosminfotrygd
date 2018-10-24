@@ -144,7 +144,7 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                         outcomeType = OutcomeType.EXTANION_OVER_FA,
                         description = "Hvis forlengelse utover registrert tiltak FA tiltak ") {
                     val sMhistorikkTilltakTypeFA: Boolean = it.infotrygdForesp.sMhistorikk.sykmelding.any {
-                        it.historikk.first().tilltak.type == "FA"
+                        it.historikk.firstOrNull()?.tilltak?.type == "FA"
                     }
 
                     val healthInformationPeriodeFomdato: LocalDate? = it.healthInformation.aktivitet.periode.firstOrNull()?.periodeFOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
