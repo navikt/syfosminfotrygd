@@ -149,7 +149,7 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
 
                     val healthInformationPeriodeFomdato: LocalDate? = it.healthInformation.aktivitet.periode.firstOrNull()?.periodeFOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
                     val sMhistorikkTilltakTypeFATomDato: LocalDate? = it.infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.historikk?.firstOrNull {
-                        it.tilltak.type == "FA"
+                        it?.tilltak?.type == "FA"
                     }?.tilltak?.tom?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
 
                     sMhistorikkTilltakTypeFA && healthInformationPeriodeFomdato?.isAfter(sMhistorikkTilltakTypeFATomDato) ?: false
