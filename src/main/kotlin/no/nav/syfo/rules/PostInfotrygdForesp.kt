@@ -206,8 +206,12 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                         description = "Hvis sykmeldingsperioden er større enn 1 år meldingen til manuell behandling") {
                     val sMhistorikkArbuforFOM: LocalDate? = it.infotrygdForesp.sMhistorikk.sykmelding.firstOrNull()?.periode?.arbufoerFOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
                     val sMhistorikkArbuforTOM: LocalDate? = it.infotrygdForesp.sMhistorikk.sykmelding.firstOrNull()?.periode?.arbufoerTOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
-
-                    Period.between(sMhistorikkArbuforFOM, sMhistorikkArbuforTOM).years > 1
+                    if (sMhistorikkArbuforFOM != null && sMhistorikkArbuforTOM != null) {
+                        Period.between(sMhistorikkArbuforFOM, sMhistorikkArbuforTOM).years > 1
+                    }
+                    else {
+                        false
+                    }
                 }
 
         ))
