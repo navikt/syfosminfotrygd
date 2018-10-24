@@ -202,11 +202,11 @@ fun createInfotrygdForesp(healthInformation: HelseOpplysningerArbeidsuforhet) = 
     gregorianCalendarMinus4Year.add(Calendar.YEAR, -4)
 
     fodselsnummer = healthInformation.pasient.fodselsnummer.id
-    tkNrFraDato = newInstance.newXMLGregorianCalendar(gregorianCalendarMinus1Year) // TODO maybe set to - 1 years
+    tkNrFraDato = newInstance.newXMLGregorianCalendar(gregorianCalendarMinus1Year)
     forespNr = 1.toBigInteger()
     forespTidsStempel = newInstance.newXMLGregorianCalendar(GregorianCalendar())
-    fraDato = newInstance.newXMLGregorianCalendar(gregorianCalendarMinus1Year) // TODO maybe set to - 1 years
-    eldsteFraDato = newInstance.newXMLGregorianCalendar(gregorianCalendarMinus4Year) // TODO maybe set to - 4 years
+    fraDato = newInstance.newXMLGregorianCalendar(gregorianCalendarMinus1Year)
+    eldsteFraDato = newInstance.newXMLGregorianCalendar(gregorianCalendarMinus4Year)
     hovedDiagnosekode = healthInformation.medisinskVurdering.hovedDiagnose.diagnosekode.v
     hovedDiagnosekodeverk = Diagnosekode.values().filter {
             it.kithCode == healthInformation.medisinskVurdering.hovedDiagnose.diagnosekode.s
