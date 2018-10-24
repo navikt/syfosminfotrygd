@@ -63,10 +63,10 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                         description = "This is a rule that hits whenever the patient has partially conincident sick leave period with previously registrered sick lave"
                 ) {
 
-                    val healthInformationPeriodeFomdato: LocalDate = it.healthInformation.aktivitet.periode.first().periodeFOMDato.toGregorianCalendar().toZonedDateTime().toLocalDate()
-                    val infotrygdforespArbuforFom: LocalDate = it.infotrygdForesp.sMhistorikk.sykmelding.first().periode.arbufoerFOM.toGregorianCalendar().toZonedDateTime().toLocalDate()
+                    val healthInformationPeriodeFomdato: LocalDate? = it.healthInformation.aktivitet.periode.firstOrNull()?.periodeFOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
+                    val infotrygdforespArbuforFom: LocalDate? = it.infotrygdForesp.sMhistorikk.sykmelding.firstOrNull()?.periode?.arbufoerFOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
 
-                    healthInformationPeriodeFomdato.isAfter(infotrygdforespArbuforFom)
+                    healthInformationPeriodeFomdato?.isAfter(infotrygdforespArbuforFom) ?: false
                 },
                 Rule(
                         name = "Message not registered in IT",
