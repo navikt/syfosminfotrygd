@@ -221,5 +221,5 @@ fun createInfotrygdForesp(healthInformation: HelseOpplysningerArbeidsuforhet) = 
             it.kithCode == healthInformation.medisinskVurdering.biDiagnoser.diagnosekode.first().s
         }.first().infotrygdCode
     }
-    tkNrFraDato = newInstance.newXMLGregorianCalendar(GregorianCalendar())
+    tkNrFraDato = newInstance.newXMLGregorianCalendar(gregorianCalendarMinus1Year)
 }
