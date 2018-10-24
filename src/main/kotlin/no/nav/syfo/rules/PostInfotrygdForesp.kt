@@ -85,7 +85,8 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
 
                     when (healthInformationPeriodeFomdato) {
                         null -> false
-                        else -> !infotrygdforespSmHistFinnes && healthInformationSyketilfelleStartDato?.isEqual(healthInformationPeriodeFomdato) ?: false
+                        else -> infotrygdforespSmHistFinnes && healthInformationSyketilfelleStartDato?.isBefore(healthInformationPeriodeFomdato) ?: false ||
+                                healthInformationSyketilfelleStartDato?.isAfter(healthInformationPeriodeFomdato) ?: false
                     }
                 },
                 Rule(
