@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory
 import java.io.StringReader
 import java.io.StringWriter
 import java.time.Duration
+import java.util.Calendar
 import java.util.GregorianCalendar
 import java.util.concurrent.TimeUnit
 import javax.jms.MessageProducer
@@ -194,12 +195,18 @@ fun sendInfotrygdOppdatering(
 })
 
 fun createInfotrygdForesp(healthInformation: HelseOpplysningerArbeidsuforhet) = InfotrygdForesp().apply {
+    val gregorianCalendarMinus1Year = GregorianCalendar()
+    gregorianCalendarMinus1Year.add(Calendar.YEAR, -1)
+
+    val gregorianCalendarMinus4Year = GregorianCalendar()
+    gregorianCalendarMinus4Year.add(Calendar.YEAR, -4)
+
     fodselsnummer = healthInformation.pasient.fodselsnummer.id
-    tkNrFraDato = newInstance.newXMLGregorianCalendar(GregorianCalendar()) // TODO maybe set to - 1 years
+    tkNrFraDato = newInstance.newXMLGregorianCalendar(gregorianCalendarMinus1Year) // TODO maybe set to - 1 years
     forespNr = 1.toBigInteger()
     forespTidsStempel = newInstance.newXMLGregorianCalendar(GregorianCalendar())
-    fraDato = newInstance.newXMLGregorianCalendar(GregorianCalendar()) // TODO maybe set to - 1 years
-    eldsteFraDato = newInstance.newXMLGregorianCalendar(GregorianCalendar()) // TODO maybe set to - 4 years
+    fraDato = newInstance.newXMLGregorianCalendar(gregorianCalendarMinus1Year) // TODO maybe set to - 1 years
+    eldsteFraDato = newInstance.newXMLGregorianCalendar(gregorianCalendarMinus4Year) // TODO maybe set to - 4 years
     hovedDiagnosekode = healthInformation.medisinskVurdering.hovedDiagnose.diagnosekode.v
     hovedDiagnosekodeverk = Diagnosekode.values().filter {
             it.kithCode == healthInformation.medisinskVurdering.hovedDiagnose.diagnosekode.s
