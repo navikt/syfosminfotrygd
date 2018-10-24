@@ -55,7 +55,10 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                     val newfriskmeldtDato: LocalDate? = it.infotrygdForesp.sMhistorikk.sykmelding.firstOrNull()?.periode?.friskmeldtDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
                     val secoundfriskmeldtDato: LocalDate? = it.infotrygdForesp.sMhistorikk.sykmelding.drop(1).firstOrNull()?.periode?.friskmeldtDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
 
-                    newfriskmeldtDato?.isAfter(secoundfriskmeldtDato) ?: false
+                    when (secoundfriskmeldtDato) {
+                        null -> false
+                        else -> newfriskmeldtDato?.isAfter(secoundfriskmeldtDato) ?: false
+                    }
                 },
                 Rule(
                         name = "Patients has partially conincident sick leave period with previously registrered sick lave",
@@ -66,7 +69,10 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                     val healthInformationPeriodeFomdato: LocalDate? = it.healthInformation.aktivitet.periode.firstOrNull()?.periodeFOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
                     val infotrygdforespArbuforFom: LocalDate? = it.infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.arbufoerFOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
 
-                    healthInformationPeriodeFomdato?.isAfter(infotrygdforespArbuforFom) ?: false
+                    when (infotrygdforespArbuforFom) {
+                        null -> false
+                        else -> healthInformationPeriodeFomdato?.isAfter(infotrygdforespArbuforFom) ?: false
+                    }
                 },
                 Rule(
                         name = "Message not registered in IT",
@@ -74,10 +80,13 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                         description = "Hvis meldingen ikke kan knyttes til noe registrert tilfelle i Infotrygd, og legen har spesifisert syketilfellets startdato forskjellig fra første fraværsdag"
                 ) {
                     val infotrygdforespSmHistFinnes: Boolean = it.infotrygdForesp.sMhistorikk.status.kodeMelding == "04"
-                    val healthInformationSyketilfelleStartDato: LocalDate = it.healthInformation.syketilfelleStartDato.toGregorianCalendar().toZonedDateTime().toLocalDate()
-                    val healthInformationPeriodeFomdato: LocalDate = it.healthInformation.aktivitet.periode.first().periodeFOMDato.toGregorianCalendar().toZonedDateTime().toLocalDate()
+                    val healthInformationSyketilfelleStartDato: LocalDate? = it.healthInformation.syketilfelleStartDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
+                    val healthInformationPeriodeFomdato: LocalDate? = it.healthInformation.aktivitet.periode.firstOrNull()?.periodeFOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
 
-                    !infotrygdforespSmHistFinnes && healthInformationSyketilfelleStartDato.isEqual(healthInformationPeriodeFomdato)
+                    when (healthInformationPeriodeFomdato) {
+                        null -> false
+                        else -> !infotrygdforespSmHistFinnes && healthInformationSyketilfelleStartDato?.isEqual(healthInformationPeriodeFomdato) ?: false
+                    }
                 },
                 Rule(
                         // TODO need to check if the rule is implemented correctly
