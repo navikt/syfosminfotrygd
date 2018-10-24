@@ -100,14 +100,13 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                     val infotrygdforespUtbetalingTOM: LocalDate? = it.infotrygdForesp.sMhistorikk?.sykmelding?.drop(1)?.firstOrNull()?.periode?.utbetTOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
                     val infotrygdforespFriskKode: String? = it.infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.friskKode
 
-                    when (infotrygdforespHistArbuforFom ){
+                    when (infotrygdforespHistArbuforFom) {
                         null -> false
                         else -> healthInformationPeriodeFomdato?.isAfter(infotrygdforespHistArbuforFom) ?: false &&
                                 infotrygdforespUtbetalingTOM?.isAfter(infotrygdforespHistArbuforFom) ?: false &&
                                 infotrygdforespArbuforFom?.isAfter(infotrygdforespHistArbuforFom) ?: false &&
                                 !infotrygdforespFriskKode.equals("H")
                     }
-
                 },
                 Rule(
                         name = "Patients disability is changed",
