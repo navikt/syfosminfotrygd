@@ -20,7 +20,6 @@ import no.nav.syfo.rules.postInfotrygdQueryChain
 import no.trygdeetaten.xml.eiff._1.XMLMottakenhetBlokk
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
-import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.apache.kafka.common.serialization.StringSerializer
 import org.slf4j.Logger
@@ -130,7 +129,7 @@ suspend fun blockingApplicationLogic(
             log.info("Outcomes: " + results.joinToString(", ", prefix = "\"", postfix = "\""))
 
             if (results.any { it.outcomeType.status == Status.MANUAL_PROCESSING }) {
-                kafkaProducer.send(ProducerRecord(env.smInfotrygdManualHandlingTopic, fellesformatMarshaller.toString(fellesformat)))
+                // TODO send to GSAK kafkaProducer.send(ProducerRecord(env.smInfotrygdManualHandlingTopic, fellesformatMarshaller.toString(fellesformat)))
             } else if (results.any { it.outcomeType.status == Status.INVALID }) {
                 // TODO Send apprec to EPJ
             } else {
