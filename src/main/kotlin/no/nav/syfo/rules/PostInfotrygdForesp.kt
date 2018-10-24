@@ -94,30 +94,30 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                         outcomeType = OutcomeType.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE,
                         description = "Hvis sykmeldingen er forlengelse av registrert sykepengehistorikk fra annet kontor så medlingen gå til manuell behandling slik at  saksbehandler kan registrere sykepengetilfellet på ny identdato og  send oppgave til Nav forvaltning for registrering av inntektsopplysninger."
                 ) {
-                    val infotrygdforespArbuforFom: LocalDate = it.infotrygdForesp.sMhistorikk.sykmelding.first().periode.arbufoerFOM.toGregorianCalendar().toZonedDateTime().toLocalDate()
-                    val infotrygdforespHistArbuforFom: LocalDate = it.infotrygdForesp.sMhistorikk.sykmelding.drop(1).first().periode.arbufoerFOM.toGregorianCalendar().toZonedDateTime().toLocalDate()
-                    val healthInformationPeriodeFomdato: LocalDate = it.healthInformation.aktivitet.periode.first().periodeFOMDato.toGregorianCalendar().toZonedDateTime().toLocalDate()
-                    val infotrygdforespUtbetalingTOM: LocalDate = it.infotrygdForesp.sMhistorikk.sykmelding.drop(1).first().periode.utbetTOM.toGregorianCalendar().toZonedDateTime().toLocalDate()
-                    val infotrygdforespFriskKode: String = it.infotrygdForesp.sMhistorikk.sykmelding.first().periode.friskKode
+                    val infotrygdforespArbuforFom: LocalDate? = it.infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.arbufoerFOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
+                    val infotrygdforespHistArbuforFom: LocalDate? = it.infotrygdForesp.sMhistorikk?.sykmelding?.drop(1)?.firstOrNull()?.periode?.arbufoerFOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
+                    val healthInformationPeriodeFomdato: LocalDate? = it.healthInformation.aktivitet?.periode?.firstOrNull()?.periodeFOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
+                    val infotrygdforespUtbetalingTOM: LocalDate? = it.infotrygdForesp.sMhistorikk?.sykmelding?.drop(1)?.firstOrNull()?.periode?.utbetTOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
+                    val infotrygdforespFriskKode: String? = it.infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.friskKode
 
-                    healthInformationPeriodeFomdato.isAfter(infotrygdforespHistArbuforFom) &&
-                            infotrygdforespUtbetalingTOM.isAfter(infotrygdforespHistArbuforFom) &&
-                            infotrygdforespArbuforFom.isAfter(infotrygdforespHistArbuforFom) &&
+                    healthInformationPeriodeFomdato?.isAfter(infotrygdforespHistArbuforFom) ?: false &&
+                            infotrygdforespUtbetalingTOM?.isAfter(infotrygdforespHistArbuforFom) ?: false &&
+                            infotrygdforespArbuforFom?.isAfter(infotrygdforespHistArbuforFom) ?: false &&
                             !infotrygdforespFriskKode.equals("H")
                 },
                 Rule(
                         name = "Patients disability is changed",
                         outcomeType = OutcomeType.DIABILITY_GRADE_CANGED,
                         description = "Hvis uføregrad er endret går meldingen til manuell behandling") {
-                    val disabilityGradeIT: Int = it.infotrygdForesp.sMhistorikk.sykmelding.first().periode.ufoeregrad.toInt()
-                    val healthInformationDisabilityGrade: Int = it.healthInformation.aktivitet.periode.first().gradertSykmelding.sykmeldingsgrad
-                    val sMhistorikkArbuforFOM: LocalDate = it.infotrygdForesp.sMhistorikk.sykmelding.first().periode.arbufoerFOM.toGregorianCalendar().toZonedDateTime().toLocalDate()
-                    val healthInformationPeriodeFOMDato: LocalDate = it.healthInformation.aktivitet.periode.first().periodeFOMDato.toGregorianCalendar().toZonedDateTime().toLocalDate()
-                    val healthInformationPeriodeTOMDato: LocalDate = it.healthInformation.aktivitet.periode.first().periodeTOMDato.toGregorianCalendar().toZonedDateTime().toLocalDate()
+                    val disabilityGradeIT: Int? = it.infotrygdForesp.sMhistorikk.sykmelding.firstOrNull()?.periode?.ufoeregrad?.toInt()
+                    val healthInformationDisabilityGrade: Int? = it.healthInformation.aktivitet.periode.firstOrNull()?.gradertSykmelding?.sykmeldingsgrad
+                    val sMhistorikkArbuforFOM: LocalDate? = it.infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.arbufoerFOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
+                    val healthInformationPeriodeFOMDato: LocalDate? = it.healthInformation.aktivitet.periode.firstOrNull()?.periodeFOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
+                    val healthInformationPeriodeTOMDato: LocalDate? = it.healthInformation.aktivitet.periode.firstOrNull()?.periodeTOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
 
                     disabilityGradeIT != healthInformationDisabilityGrade &&
-                            sMhistorikkArbuforFOM.isAfter(healthInformationPeriodeFOMDato) &&
-                            sMhistorikkArbuforFOM.isBefore(healthInformationPeriodeTOMDato)
+                            sMhistorikkArbuforFOM?.isAfter(healthInformationPeriodeFOMDato) ?: false &&
+                            sMhistorikkArbuforFOM?.isBefore(healthInformationPeriodeTOMDato) ?: false
                 },
                 Rule(
                         // TODO need to check if the rule is implemented correctly
@@ -125,10 +125,10 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                         outcomeType = OutcomeType.ERROR_FROM_IT,
                         description = "Feilmelding fra Infotrygd") {
                     val hovedStatusKodemelding: Int? = it.infotrygdForesp.hovedStatus.kodeMelding.toIntOrNull()
-                    val sMhistorikktStatusKodemelding: Int? = it.infotrygdForesp.sMhistorikk.status.kodeMelding.toIntOrNull()
-                    val parallelleYtelserStatusKodemelding: Int? = it.infotrygdForesp.parallelleYtelser.status.kodeMelding.toIntOrNull()
-                    val diagnoseOKUttrekkStatusKodemelding: Int? = it.infotrygdForesp.diagnosekodeOK.status.kodeMelding.toIntOrNull()
-                    val pasientUttrekkStatusKodemelding: Int? = it.infotrygdForesp.pasient.status.kodeMelding.toIntOrNull()
+                    val sMhistorikktStatusKodemelding: Int? = it.infotrygdForesp.sMhistorikk?.status?.kodeMelding?.toIntOrNull()
+                    val parallelleYtelserStatusKodemelding: Int? = it.infotrygdForesp.parallelleYtelser?.status?.kodeMelding?.toIntOrNull()
+                    val diagnoseOKUttrekkStatusKodemelding: Int? = it.infotrygdForesp.diagnosekodeOK?.status?.kodeMelding?.toIntOrNull()
+                    val pasientUttrekkStatusKodemelding: Int? = it.infotrygdForesp.pasient?.status?.kodeMelding?.toIntOrNull()
 
                     hovedStatusKodemelding ?: 0 > 4 &&
                             sMhistorikktStatusKodemelding ?: 0 > 4 &&
@@ -144,12 +144,12 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                         it.historikk.first().tilltak.type == "FA"
                     }
 
-                    val healthInformationPeriodeFomdato: LocalDate = it.healthInformation.aktivitet.periode.first().periodeFOMDato.toGregorianCalendar().toZonedDateTime().toLocalDate()
-                    val sMhistorikkTilltakTypeFATomDato: LocalDate = it.infotrygdForesp.sMhistorikk.sykmelding.first().historikk.first {
+                    val healthInformationPeriodeFomdato: LocalDate? = it.healthInformation.aktivitet.periode.firstOrNull()?.periodeFOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
+                    val sMhistorikkTilltakTypeFATomDato: LocalDate? = it.infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.historikk?.firstOrNull {
                         it.tilltak.type == "FA"
-                    }.tilltak.tom.toGregorianCalendar().toZonedDateTime().toLocalDate()
+                    }?.tilltak?.tom?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
 
-                    sMhistorikkTilltakTypeFA && healthInformationPeriodeFomdato.isAfter(sMhistorikkTilltakTypeFATomDato)
+                    sMhistorikkTilltakTypeFA && healthInformationPeriodeFomdato?.isAfter(sMhistorikkTilltakTypeFATomDato) ?: false
                 },
                 Rule(
                         name = "Patient has sick leav periode ended",
@@ -201,8 +201,8 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                         name = "Patient sick leave period is over 1 year",
                         outcomeType = OutcomeType.SICK_LEAVE_PERIOD_OVER_1_YEAR,
                         description = "Hvis sykmeldingsperioden er større enn 1 år meldingen til manuell behandling") {
-                    val sMhistorikkArbuforFOM: LocalDate = it.infotrygdForesp.sMhistorikk.sykmelding.first().periode.arbufoerFOM.toGregorianCalendar().toZonedDateTime().toLocalDate()
-                    val sMhistorikkArbuforTOM: LocalDate = it.infotrygdForesp.sMhistorikk.sykmelding.first().periode.arbufoerTOM.toGregorianCalendar().toZonedDateTime().toLocalDate()
+                    val sMhistorikkArbuforFOM: LocalDate? = it.infotrygdForesp.sMhistorikk.sykmelding.firstOrNull()?.periode?.arbufoerFOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
+                    val sMhistorikkArbuforTOM: LocalDate? = it.infotrygdForesp.sMhistorikk.sykmelding.firstOrNull()?.periode?.arbufoerTOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
 
                     Period.between(sMhistorikkArbuforFOM, sMhistorikkArbuforTOM).years > 1
                 }
