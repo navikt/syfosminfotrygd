@@ -64,7 +64,7 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                 ) {
 
                     val healthInformationPeriodeFomdato: LocalDate? = it.healthInformation.aktivitet.periode.firstOrNull()?.periodeFOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
-                    val infotrygdforespArbuforFom: LocalDate? = it.infotrygdForesp.sMhistorikk.sykmelding.firstOrNull()?.periode?.arbufoerFOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
+                    val infotrygdforespArbuforFom: LocalDate? = it.infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.arbufoerFOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
 
                     healthInformationPeriodeFomdato?.isAfter(infotrygdforespArbuforFom) ?: false
                 },
