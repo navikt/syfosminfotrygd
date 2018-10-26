@@ -137,7 +137,7 @@ suspend fun blockingApplicationLogic(
             } else {
                 log.info("SM2013 updated in Infotrygd")
 
-                sendInfotrygdOppdatering(infotrygdOppdateringProducer, session, createInfotrygdInfo)
+                sendInfotrygdOppdatering(infotrygdOppdateringProducer, session, createInfotrygdInfo(fellesformat, InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation)))
         }
         }
         delay(100)
