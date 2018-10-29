@@ -4,7 +4,7 @@ import no.nav.model.infotrygdSporing.InfotrygdForesp
 import no.nav.model.infotrygdSporing.StatusType
 import no.nav.model.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.syfo.rules.postInfotrygdQueryChain
-import org.amshove.kluent.shouldEqual
+import org.amshove.kluent.`should be true`
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -37,7 +37,7 @@ object PostInfotrygdForespSpek : Spek({
                         postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
                 ).flatMap { it }
 
-                results.first().outcomeType.ruleId.shouldEqual(1501)
+               results.any{it.outcomeType.ruleId == 1501}.`should be true`()
             }
         }
 })
