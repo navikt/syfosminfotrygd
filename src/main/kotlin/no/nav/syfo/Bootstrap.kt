@@ -1,5 +1,6 @@
 package no.nav.syfo
 
+import io.confluent.kafka.serializers.KafkaAvroSerializer
 import io.ktor.application.Application
 import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
@@ -20,11 +21,12 @@ import no.nav.model.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.syfo.api.registerNaisApi
 import no.nav.syfo.model.Status
 import no.nav.syfo.rules.postInfotrygdQueryChain
+import no.nav.syfo.sak.avro.ProduceTask
 import no.trygdeetaten.xml.eiff._1.XMLMottakenhetBlokk
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
+import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.StringDeserializer
-import org.apache.kafka.common.serialization.StringSerializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.StringReader
@@ -57,10 +59,10 @@ fun main(args: Array<String>) = runBlocking {
         val listeners = (1..env.applicationThreads).map {
             launch {
                 val consumerProperties = readConsumerConfig(env, valueDeserializer = StringDeserializer::class)
-                val producerProperties = readProducerConfig(env, valueSerializer = StringSerializer::class)
+                val producerProperties = readProducerConfig(env, valueSerializer = KafkaAvroSerializer::class)
                 val kafkaconsumer = KafkaConsumer<String, String>(consumerProperties)
                 kafkaconsumer.subscribe(listOf(env.sm2013AutomaticHandlingTopic, env.smPaperAutomaticHandlingTopic))
-                val kafkaproducer = KafkaProducer<String, String>(producerProperties)
+                val kafkaproducer = KafkaProducer<String, ProduceTask>(producerProperties)
 
                 connectionFactory(env).createConnection(env.mqUsername, env.mqPassword).use { connection ->
                     connection.start()
@@ -90,7 +92,7 @@ fun main(args: Array<String>) = runBlocking {
 suspend fun blockingApplicationLogic(
     applicationState: ApplicationState,
     kafkaConsumer: KafkaConsumer<String, String>,
-    kafkaProducer: KafkaProducer<String, String>,
+    kafkaProducer: KafkaProducer<String, ProduceTask>,
     infotrygdOppdateringProducer: MessageProducer,
     infotrygdSporringProducer: MessageProducer,
     session: Session
@@ -126,10 +128,26 @@ suspend fun blockingApplicationLogic(
                     postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
             ).flatMap { it }
 
-            log.info("Outcomes: " + results.joinToString(", ", prefix = "\"", postfix = "\""))
+            when (results.joinToString(", ", prefix = "\"", postfix = "\"")) {
+                "" -> log.info("Zero outcomes")
+                else -> log.info("Outcomes: " + results.joinToString(", ", prefix = "\"", postfix = "\""))
+            }
 
             if (results.any { it.outcomeType.status == Status.MANUAL_PROCESSING }) {
-                // TODO send to GSAK kafkaProducer.send(ProducerRecord(env.smInfotrygdManualHandlingTopic, fellesformatMarshaller.toString(fellesformat)))
+                kafkaProducer.send(ProducerRecord("aapen-syfo-oppgave-produserOppgave", ProduceTask().apply {
+                    setMessageId(msgHead.msgInfo.msgId)
+                    setUserIdent(healthInformation.pasient.fodselsnummer.id)
+                    setUserTypeCode("PERSON")
+                    setTaskType("SYK")
+                    setFieldCode("SYK")
+                    setSubcategoryType("SYK_SYK")
+                    setPriorityCode("NORM_SYK")
+                    setDescription("Kunne ikkje oppdatere Infotrygd automatisk, på grunn av følgende: ${results.joinToString(", ", prefix = "\"", postfix = "\"")}")
+                    setStartsInDays(0)
+                    setEndsInDays(21)
+                    setResponsibleUnit("") // TODO the rules should send the NAV office that is found on the person
+                    setFollowUpText("") // TODO
+                }))
             } else if (results.any { it.outcomeType.status == Status.INVALID }) {
                 // TODO Send apprec to EPJ
             } else {

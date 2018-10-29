@@ -1,4 +1,7 @@
 buildscript {
+    ext.avro_version = '1.8.2'
+    ext.confluent_version = '4.1.1'
+    ext.syfooppgave_schemas_version = '1.0-SNAPSHOT'
     ext.coroutines_version = '0.23.4'
     ext.fellesformat_version = '1.0'
     ext.jaxb_version = '2.3.0.1'
@@ -38,6 +41,7 @@ repositories {
     maven { url "https://dl.bintray.com/kotlin/ktor" }
     maven { url = "http://packages.confluent.io/maven/" }
     maven { url 'https://repo.adeo.no/repository/maven-releases/' }
+    maven { url 'https://repo.adeo.no/repository/maven-snapshots/' }
     maven { url "https://dl.bintray.com/spekframework/spek-dev" }
 }
 
@@ -161,6 +165,10 @@ dependencies {
 
     implementation "no.nav.syfo.tjenester:fellesformat:$fellesformat_version"
     implementation "no.nav.syfo.tjenester:kith-hodemelding:$kith_hodemelding_version"
+
+    implementation "io.confluent:kafka-avro-serializer:$confluent_version"
+    implementation "org.apache.avro:avro:$avro_version"
+    implementation "no.nav.syfo:syfooppgave-schemas:$syfooppgave_schemas_version"
 
     implementation "com.ibm.mq:com.ibm.mq.allclient:$ibm_mq_version"
     implementation "no.nav.helse.xml:fellesformat:$felleformavV1_version"
