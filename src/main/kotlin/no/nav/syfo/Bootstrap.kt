@@ -68,7 +68,7 @@ fun main(args: Array<String>) = runBlocking {
                     val infotrygdOppdateringProducer = session.createProducer(infotrygdOppdateringQueue)
                     val infotrygdSporringProducer = session.createProducer(infotrygdSporringQueue)
 
-                    blockingApplicationLogic(applicationState, kafkaconsumer, kafkaproducer, env, infotrygdOppdateringProducer, infotrygdSporringProducer, session)
+                    blockingApplicationLogic(applicationState, kafkaconsumer, kafkaproducer, infotrygdOppdateringProducer, infotrygdSporringProducer, session)
                 }
             }
         }.toList()
@@ -88,7 +88,6 @@ suspend fun blockingApplicationLogic(
     applicationState: ApplicationState,
     kafkaConsumer: KafkaConsumer<String, String>,
     kafkaProducer: KafkaProducer<String, String>,
-    env: Environment,
     infotrygdOppdateringProducer: MessageProducer,
     infotrygdSporringProducer: MessageProducer,
     session: Session
@@ -116,17 +115,13 @@ suspend fun blockingApplicationLogic(
                 is TextMessage -> consumedMessage.text
                 else -> throw RuntimeException("Incoming message needs to be a byte message or text message, JMS type:" + consumedMessage.jmsType)
             }
-            log.info("Message is read, from tmp que")
-            log.info("Message response from IT: + $inputMessageText")
+            log.info("Query Infotrygd response: + $inputMessageText $logKeys", *logValues)
 
             val infotrygdForespResponse = infotrygdSporringUnmarshaller.unmarshal(StringReader(inputMessageText)) as InfotrygdForesp
 
-            log.info("Start rule flow")
             val results = listOf(
                     postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
             ).flatMap { it }
-
-            log.info("Finish rule flow")
 
             log.info("Outcomes: " + results.joinToString(", ", prefix = "\"", postfix = "\""))
 
@@ -135,8 +130,6 @@ suspend fun blockingApplicationLogic(
             } else if (results.any { it.outcomeType.status == Status.INVALID }) {
                 // TODO Send apprec to EPJ
             } else {
-                log.info("SM2013 updated in Infotrygd")
-
                 sendInfotrygdOppdatering(infotrygdOppdateringProducer, session, createInfotrygdInfo(fellesformat, InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation)))
         }
         }
@@ -182,7 +175,7 @@ fun sendInfotrygdSporring(
 ) = producer.send(session.createTextMessage().apply {
     val info = infotrygdForesp
     text = infotrygdSporringMarshaller.toString(info)
-    log.info("text sendt to Infotrygd + $text")
+    log.info("Query Infotrygd request, text sendt to Infotrygd + $text")
     jmsReplyTo = temporaryQueue
 })
 
@@ -193,7 +186,7 @@ fun sendInfotrygdOppdatering(
 ) = producer.send(session.createTextMessage().apply {
     val info = fellesformat
     text = fellesformatMarshaller.toString(info)
-    log.info("text sendt to Infotrygd + $text")
+    log.info("Updateing Infotrygd, text sendt to Infotrygd + $text")
 })
 
 fun createInfotrygdForesp(healthInformation: HelseOpplysningerArbeidsuforhet) = InfotrygdForesp().apply {
