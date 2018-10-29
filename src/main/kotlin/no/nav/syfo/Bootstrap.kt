@@ -247,15 +247,17 @@ fun createInfotrygdInfo(fellesformat: EIFellesformat, itfh: InfotrygdForespAndHe
 }
 
 fun findOprasjonstype(periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode, itfh: InfotrygdForespAndHealthInformation, typeSMinfo: TypeSMinfo): BigInteger {
-    val infotrygdforespSmHistFinnes: Boolean = itfh.infotrygdForesp.sMhistorikk.status.kodeMelding == "04"
+    val infotrygdforespSmHistFinnes: Boolean = itfh.infotrygdForesp.sMhistorikk.status.kodeMelding != "04"
     val sMhistorikkArbuforFOM: LocalDate? = typeSMinfo.periode?.arbufoerFOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
     val sMhistorikkArbuforTOM: LocalDate? = typeSMinfo.periode?.arbufoerTOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
     val syketilfelleStartDatoFraSykemelding = itfh.healthInformation.syketilfelleStartDato
+    val healthInformationPeriodeTOMDato: LocalDate? = periode.periodeTOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
+
     if (!infotrygdforespSmHistFinnes && syketilfelleStartDatoFraSykemelding.equals(periode.periodeFOMDato)) {
         return "1".toBigInteger()
     } else if (infotrygdforespSmHistFinnes && periode.periodeFOMDato.equals(sMhistorikkArbuforFOM) && periode.periodeTOMDato.equals(sMhistorikkArbuforTOM)) {
         return "2".toBigInteger()
-    } else if (infotrygdforespSmHistFinnes && sMhistorikkArbuforFOM != null && sMhistorikkArbuforTOM != null && !sMhistorikkArbuforTOM.equals(periode.periodeTOMDato)) {
+    } else if (infotrygdforespSmHistFinnes && sMhistorikkArbuforFOM != null && sMhistorikkArbuforTOM != null && sMhistorikkArbuforTOM.equals(periode.periodeTOMDato) || sMhistorikkArbuforTOM?.isBefore(healthInformationPeriodeTOMDato) != null) {
         return "3".toBigInteger()
     } else {
         throw RuntimeException("Could not determined operasjonstype")

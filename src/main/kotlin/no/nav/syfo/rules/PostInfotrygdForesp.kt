@@ -79,7 +79,7 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                         outcomeType = OutcomeType.MESSAGE_NOT_IN_INFOTRYGD,
                         description = "Hvis meldingen ikke kan knyttes til noe registrert tilfelle i Infotrygd, og legen har spesifisert syketilfellets startdato forskjellig fra første fraværsdag"
                 ) {
-                    val infotrygdforespSmHistFinnes: Boolean = it.infotrygdForesp.sMhistorikk.status.kodeMelding == "04"
+                    val infotrygdforespSmHistFinnes: Boolean = it.infotrygdForesp.sMhistorikk.status.kodeMelding != "04"
                     val healthInformationSyketilfelleStartDato: LocalDate? = it.healthInformation.syketilfelleStartDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
                     val healthInformationPeriodeFomdato: LocalDate? = it.healthInformation.aktivitet.periode.firstOrNull()?.periodeFOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
 
