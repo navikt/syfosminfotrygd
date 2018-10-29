@@ -238,8 +238,8 @@ fun createInfotrygdInfo(fellesformat: EIFellesformat, itfh: InfotrygdForespAndHe
         hovedDiagnoseTekst = itfh.healthInformation.medisinskVurdering.hovedDiagnose.diagnosekode.dn
         arbeidsufoerTOM = periode.periodeTOMDato
         ufoeregrad = when (periode.aktivitetIkkeMulig) {
-            null -> "100".toBigInteger()
-            else -> periode.gradertSykmelding.sykmeldingsgrad.toBigInteger()
+            null -> periode.gradertSykmelding.sykmeldingsgrad.toBigInteger()
+            else -> "100".toBigInteger()
             }
         })
         }
