@@ -242,21 +242,19 @@ fun createInfotrygdInfo(fellesformat: EIFellesformat, itfh: InfotrygdForespAndHe
             else -> periode.gradertSykmelding.sykmeldingsgrad.toBigInteger()
             }
         })
-      }
+        }
     })
 }
 
 fun findOprasjonstype(periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode, itfh: InfotrygdForespAndHealthInformation, typeSMinfo: TypeSMinfo): BigInteger {
-
-   val infotrygdforespSmHistFinnes: Boolean = itfh.infotrygdForesp.sMhistorikk.status.kodeMelding == "04"
-   val sMhistorikkArbuforFOM: LocalDate? = typeSMinfo.periode?.arbufoerFOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
-   val sMhistorikkArbuforTOM: LocalDate? = typeSMinfo.periode?.arbufoerTOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
-   val syketilfelleStartDatoFraSykemelding = itfh.healthInformation.syketilfelleStartDato
-
+    val infotrygdforespSmHistFinnes: Boolean = itfh.infotrygdForesp.sMhistorikk.status.kodeMelding == "04"
+    val sMhistorikkArbuforFOM: LocalDate? = typeSMinfo.periode?.arbufoerFOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
+    val sMhistorikkArbuforTOM: LocalDate? = typeSMinfo.periode?.arbufoerTOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
+    val syketilfelleStartDatoFraSykemelding = itfh.healthInformation.syketilfelleStartDato
     if (!infotrygdforespSmHistFinnes && syketilfelleStartDatoFraSykemelding.equals(periode.periodeFOMDato)) {
-             return "1".toBigInteger()
+        return "1".toBigInteger()
     } else if (infotrygdforespSmHistFinnes && periode.periodeFOMDato.equals(sMhistorikkArbuforFOM) && periode.periodeTOMDato.equals(sMhistorikkArbuforTOM)) {
-             return "2".toBigInteger()
+        return "2".toBigInteger()
     } else if (infotrygdforespSmHistFinnes && sMhistorikkArbuforFOM != null && sMhistorikkArbuforTOM != null && !sMhistorikkArbuforTOM.equals(periode.periodeTOMDato)) {
         return "3".toBigInteger()
     } else {
