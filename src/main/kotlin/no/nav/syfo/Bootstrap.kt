@@ -219,7 +219,7 @@ fun createInfotrygdForesp(healthInformation: HelseOpplysningerArbeidsuforhet) = 
     tkNrFraDato = newInstance.newXMLGregorianCalendar(gregorianCalendarMinus1Year)
 }
 
-fun createInfotrygdInfo(fellesformat: EIFellesformat, it: InfotrygdForespAndHealthInformation) = fellesformat.apply { (KontrollSystemBlokk().apply {
+fun createInfotrygdInfo(fellesformat: EIFellesformat, it: InfotrygdForespAndHealthInformation) = fellesformat.apply { any.add(KontrollSystemBlokk().apply {
     infotrygdBlokk.add(KontrollsystemBlokkType.InfotrygdBlokk().apply {
         fodselsnummer = it.healthInformation.pasient.fodselsnummer.id
         tkNummer = ""
