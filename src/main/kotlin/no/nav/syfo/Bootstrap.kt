@@ -15,6 +15,7 @@ import no.nav.helse.sm2013.EIFellesformat
 import no.nav.helse.sm2013.KontrollSystemBlokk
 import no.nav.helse.sm2013.KontrollsystemBlokkType
 import no.nav.model.infotrygdSporing.InfotrygdForesp
+import no.nav.model.infotrygdSporing.TypeSMinfo
 import no.nav.model.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.syfo.api.registerNaisApi
 import no.nav.syfo.model.Status
@@ -28,7 +29,9 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.StringReader
 import java.io.StringWriter
+import java.math.BigInteger
 import java.time.Duration
+import java.time.LocalDate
 import java.util.Calendar
 import java.util.GregorianCalendar
 import java.util.concurrent.TimeUnit
@@ -220,22 +223,43 @@ fun createInfotrygdForesp(healthInformation: HelseOpplysningerArbeidsuforhet) = 
 }
 
 fun createInfotrygdInfo(fellesformat: EIFellesformat, itfh: InfotrygdForespAndHealthInformation) = fellesformat.apply { any.add(KontrollSystemBlokk().apply {
-    itfh.healthInformation.aktivitet.periode.forEach {
+    itfh.healthInformation.aktivitet.periode.forEachIndexed { index, periode ->
     infotrygdBlokk.add(KontrollsystemBlokkType.InfotrygdBlokk().apply {
         fodselsnummer = itfh.healthInformation.pasient.fodselsnummer.id
         tkNummer = ""
-        forsteFravaersDag = it.periodeFOMDato
+        forsteFravaersDag = periode.periodeFOMDato
         mottakerKode = itfh.infotrygdForesp.behandlerInfo.behandler.first().mottakerKode.value()
-        operasjonstype = "3".toBigInteger()
+        operasjonstype = when (index) {
+            0 -> findOprasjonstype(periode, itfh, itfh.infotrygdForesp.sMhistorikk.sykmelding.first())
+            else -> "2".toBigInteger()
+        }
         hovedDiagnose = itfh.infotrygdForesp.hovedDiagnosekode
         hovedDiagnoseGruppe = itfh.infotrygdForesp.hovedDiagnosekodeverk.toBigInteger()
         hovedDiagnoseTekst = itfh.healthInformation.medisinskVurdering.hovedDiagnose.diagnosekode.dn
-        arbeidsufoerTOM = it.periodeTOMDato
-        ufoeregrad = when (it.aktivitetIkkeMulig) {
+        arbeidsufoerTOM = periode.periodeTOMDato
+        ufoeregrad = when (periode.aktivitetIkkeMulig) {
             null -> "100".toBigInteger()
-            else -> it.gradertSykmelding.sykmeldingsgrad.toBigInteger()
+            else -> periode.gradertSykmelding.sykmeldingsgrad.toBigInteger()
             }
         })
       }
     })
+}
+
+fun findOprasjonstype(periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode, itfh: InfotrygdForespAndHealthInformation, typeSMinfo: TypeSMinfo): BigInteger {
+
+   val infotrygdforespSmHistFinnes: Boolean = itfh.infotrygdForesp.sMhistorikk.status.kodeMelding == "04"
+   val sMhistorikkArbuforFOM: LocalDate? = typeSMinfo.periode?.arbufoerFOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
+   val sMhistorikkArbuforTOM: LocalDate? = typeSMinfo.periode?.arbufoerTOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
+   val syketilfelleStartDatoFraSykemelding = itfh.healthInformation.syketilfelleStartDato
+
+    if (!infotrygdforespSmHistFinnes && syketilfelleStartDatoFraSykemelding.equals(periode.periodeFOMDato)) {
+             return "1".toBigInteger()
+    } else if (infotrygdforespSmHistFinnes && periode.periodeFOMDato.equals(sMhistorikkArbuforFOM) && periode.periodeTOMDato.equals(sMhistorikkArbuforTOM)) {
+             return "2".toBigInteger()
+    } else if (infotrygdforespSmHistFinnes && sMhistorikkArbuforFOM != null && sMhistorikkArbuforTOM != null && !sMhistorikkArbuforTOM.equals(periode.periodeTOMDato)) {
+        return "3".toBigInteger()
+    } else {
+        throw RuntimeException("Could not determined operasjonstype")
+    }
 }
