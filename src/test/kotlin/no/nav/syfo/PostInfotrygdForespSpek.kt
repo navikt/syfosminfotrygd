@@ -2,6 +2,7 @@ package no.nav.syfo
 
 import no.nav.model.infotrygdSporing.InfotrygdForesp
 import no.nav.model.infotrygdSporing.StatusType
+import no.nav.model.infotrygdSporing.TypeMottakerKode
 import no.nav.model.infotrygdSporing.TypeSMinfo
 import no.nav.model.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.syfo.rules.postInfotrygdQueryChain
@@ -45,7 +46,7 @@ object PostInfotrygdForespSpek : Spek({
                     postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
             ).flatMap { it }
 
-            results.any { it.outcomeType.ruleId == 1501 } shouldEqual true
+            results.any { it.outcomeType == OutcomeType.PATIENT_NOT_IN_IP } shouldEqual true
             }
 
         it("Should check rule 1510") {
@@ -63,7 +64,7 @@ object PostInfotrygdForespSpek : Spek({
                     postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
             ).flatMap { it }
 
-            results.any { it.outcomeType.ruleId == 1510 } shouldEqual true
+            results.any { it.outcomeType == OutcomeType.MESSAGE_NOT_IN_INFOTRYGD } shouldEqual true
         }
 
         it("Should check rule 1513") {
@@ -84,7 +85,7 @@ object PostInfotrygdForespSpek : Spek({
                     postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
             ).flatMap { it }
 
-            results.any { it.outcomeType.ruleId == 1513 } shouldEqual true
+            results.any { it.outcomeType == OutcomeType.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE } shouldEqual true
         }
 
         it("Should check rule 1514") {
@@ -102,7 +103,7 @@ object PostInfotrygdForespSpek : Spek({
                     postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
             ).flatMap { it }
 
-            results.any { it.outcomeType.ruleId == 1514 } shouldEqual true
+            results.any { it.outcomeType == OutcomeType.SICK_LEAVE_PERIOD_OVER_1_YEAR } shouldEqual true
         }
 
         it("Should check rule 1515") {
@@ -129,7 +130,7 @@ object PostInfotrygdForespSpek : Spek({
                     postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
             ).flatMap { it }
 
-            results.any { it.outcomeType.ruleId == 1515 } shouldEqual true
+            results.any { it.outcomeType == OutcomeType.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE } shouldEqual true
         }
 
         it("Should check rule 1517") {
@@ -147,7 +148,7 @@ object PostInfotrygdForespSpek : Spek({
                     postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
             ).flatMap { it }
 
-            results.any { it.outcomeType.ruleId == 1517 } shouldEqual true
+            results.any { it.outcomeType == OutcomeType.NEW_CLEAN_BILL_DATE_BEFORE_PAYOUT } shouldEqual true
         }
 
         it("Should check rule 1518") {
@@ -169,7 +170,7 @@ object PostInfotrygdForespSpek : Spek({
                     postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
             ).flatMap { it }
 
-            results.any { it.outcomeType.ruleId == 1518 } shouldEqual true
+            results.any { it.outcomeType == OutcomeType.NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE } shouldEqual true
         }
 
         it("Should check rule 1530") {
@@ -194,20 +195,7 @@ object PostInfotrygdForespSpek : Spek({
                     postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
             ).flatMap { it }
 
-            results.any { it.outcomeType.ruleId == 1530 } shouldEqual true
-        }
-
-        it("Should check rule 1540") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
-
-            val infotrygdForespResponse = deafaultInfotrygdForesp()
-            infotrygdForespResponse.diagnosekodeOK.isDiagnoseOk = false
-
-            val results = listOf(
-                    postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
-            ).flatMap { it }
-
-            results.any { it.outcomeType.ruleId == 1540 } shouldEqual true
+            results.any { it.outcomeType == OutcomeType.DIABILITY_GRADE_CANGED } shouldEqual true
         }
 
         it("Should check rule 1544") {
@@ -230,7 +218,7 @@ object PostInfotrygdForespSpek : Spek({
                     postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
             ).flatMap { it }
 
-            results.any { it.outcomeType.ruleId == 1544 } shouldEqual true
+            results.any { it.outcomeType == OutcomeType.EXTANION_OVER_FA } shouldEqual true
         }
 
         it("Should check rule 1545") {
@@ -247,7 +235,7 @@ object PostInfotrygdForespSpek : Spek({
                     postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
             ).flatMap { it }
 
-            results.any { it.outcomeType.ruleId == 1545 } shouldEqual true
+            results.any { it.outcomeType == OutcomeType.PATIENT_DEAD } shouldEqual true
         }
 
         it("Should check rule 1546") {
@@ -264,7 +252,173 @@ object PostInfotrygdForespSpek : Spek({
                     postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
             ).flatMap { it }
 
-            results.any { it.outcomeType.ruleId == 1546 } shouldEqual true
+            results.any { it.outcomeType == OutcomeType.PERSON_MOVING_KODE_FL } shouldEqual true
+        }
+
+        it("Should check rule 1548") {
+            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
+
+            val infotrygdForespResponse = deafaultInfotrygdForesp()
+            infotrygdForespResponse.sMhistorikk.sykmelding.add(TypeSMinfo().apply {
+                periode = TypeSMinfo.Periode().apply {
+                    stans = "AD"
+                }
+            })
+
+            val results = listOf(
+                    postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
+            ).flatMap { it }
+
+            results.any { it.outcomeType == OutcomeType.PERIOD_ENDED_DEAD } shouldEqual true
+        }
+
+        it("Should check rule 1549") {
+            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
+
+            val infotrygdForespResponse = deafaultInfotrygdForesp()
+            infotrygdForespResponse.sMhistorikk.sykmelding.add(TypeSMinfo().apply {
+                periode = TypeSMinfo.Periode().apply {
+                    stans = "AA"
+                }
+            })
+
+            val results = listOf(
+                    postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
+            ).flatMap { it }
+
+            results.any { it.outcomeType == OutcomeType.PERIOD_FOR_AA_ENDED } shouldEqual true
+        }
+
+        it("Should check rule 1550") {
+            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
+
+            val infotrygdForespResponse = deafaultInfotrygdForesp()
+            infotrygdForespResponse.sMhistorikk.sykmelding.add(TypeSMinfo().apply {
+                periode = TypeSMinfo.Periode().apply {
+                    stans = "AF"
+                }
+            })
+
+            val results = listOf(
+                    postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
+            ).flatMap { it }
+
+            results.any { it.outcomeType == OutcomeType.PERIOD_IS_AF } shouldEqual true
+        }
+
+        it("Should check rule 1551") {
+            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
+
+            val infotrygdForespResponse = deafaultInfotrygdForesp()
+            infotrygdForespResponse.sMhistorikk.sykmelding.add(TypeSMinfo().apply {
+                periode = TypeSMinfo.Periode().apply {
+                    stans = "MAX"
+                }
+            })
+
+            val results = listOf(
+                    postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
+            ).flatMap { it }
+
+            results.any { it.outcomeType == OutcomeType.MAX_SICK_LEAVE_PAYOUT } shouldEqual true
+        }
+
+        it("Should check rule 1552") {
+            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
+
+            val infotrygdForespResponse = deafaultInfotrygdForesp()
+            infotrygdForespResponse.sMhistorikk.sykmelding.add(TypeSMinfo().apply {
+                periode = TypeSMinfo.Periode().apply {
+                    avslag = "Fordi"
+                }
+            })
+
+            val results = listOf(
+                    postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
+            ).flatMap { it }
+
+            results.any { it.outcomeType == OutcomeType.REFUSAL_IS_REGISTERED } shouldEqual true
+        }
+
+        it("Should check rule 1591") {
+            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
+
+            val infotrygdForespResponse = deafaultInfotrygdForesp()
+            infotrygdForespResponse.hovedStatus = StatusType().apply {
+                kodeMelding = "3"
+            }
+
+            infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
+                status = StatusType().apply {
+                    kodeMelding = "3"
+                }
+            }
+
+            infotrygdForespResponse.parallelleYtelser = InfotrygdForesp.ParallelleYtelser().apply {
+                status = StatusType().apply {
+                    kodeMelding = "3"
+                }
+            }
+
+            infotrygdForespResponse.diagnosekodeOK = InfotrygdForesp.DiagnosekodeOK().apply {
+                status = StatusType().apply {
+                    kodeMelding = "3"
+                }
+            }
+
+            infotrygdForespResponse.pasient = InfotrygdForesp.Pasient().apply {
+                status = StatusType().apply {
+                    kodeMelding = "5"
+                }
+            }
+
+            val results = listOf(
+                    postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
+            ).flatMap { it }
+
+            results.any { it.outcomeType == OutcomeType.ERROR_FROM_IT } shouldEqual true
+        }
+
+        it("Should check rule 1519") {
+            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
+            healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
+                periodeFOMDato = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 0, 1))
+                periodeTOMDato = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 10, 1))
+            })
+
+            val infotrygdForespResponse = deafaultInfotrygdForesp()
+            infotrygdForespResponse.behandlerInfo = InfotrygdForesp.BehandlerInfo().apply {
+                behandler.add(InfotrygdForesp.BehandlerInfo.Behandler().apply {
+                    mottakerKode = TypeMottakerKode.MT
+                })
+            }
+
+            val results = listOf(
+                    postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
+            ).flatMap { it }
+
+            results.any { it.outcomeType == OutcomeType.DOCTOR_IS_MT_AND_OVER_12_WEEKS } shouldEqual true
+        }
+
+        it("Should check rule 1520") {
+            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
+            healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
+                periodeFOMDato = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 0, 1))
+                periodeTOMDato = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 10, 1))
+            })
+
+            val infotrygdForespResponse = deafaultInfotrygdForesp()
+            infotrygdForespResponse.behandlerInfo = InfotrygdForesp.BehandlerInfo().apply {
+                behandler.add(InfotrygdForesp.BehandlerInfo.Behandler().apply {
+                    mottakerKode = TypeMottakerKode.KI
+                })
+            }
+
+            val results = listOf(
+                    postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
+            ).flatMap { it }
+
+            results.any { it.outcomeType == OutcomeType.DOCTOR_IS_KI_AND_OVER_12_WEEKS } shouldEqual true
         }
     }
 })

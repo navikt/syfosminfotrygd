@@ -1,5 +1,6 @@
 package no.nav.syfo.rules
 
+import no.nav.model.infotrygdSporing.TypeMottakerKode
 import no.nav.syfo.InfotrygdForespAndHealthInformation
 import no.nav.syfo.OutcomeType
 import no.nav.syfo.Rule
@@ -137,10 +138,10 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                     val diagnoseOKUttrekkStatusKodemelding: Int? = it.infotrygdForesp.diagnosekodeOK?.status?.kodeMelding?.toIntOrNull()
                     val pasientUttrekkStatusKodemelding: Int? = it.infotrygdForesp.pasient?.status?.kodeMelding?.toIntOrNull()
 
-                    hovedStatusKodemelding ?: 0 > 4 &&
-                            sMhistorikktStatusKodemelding ?: 0 > 4 &&
-                            parallelleYtelserStatusKodemelding ?: 0 > 4 &&
-                            diagnoseOKUttrekkStatusKodemelding ?: 0 > 4 &&
+                    hovedStatusKodemelding ?: 0 > 4 ||
+                            sMhistorikktStatusKodemelding ?: 0 > 4 ||
+                            parallelleYtelserStatusKodemelding ?: 0 > 4 ||
+                            diagnoseOKUttrekkStatusKodemelding ?: 0 > 4 ||
                             pasientUttrekkStatusKodemelding ?: 0 > 4
                 },
                 Rule(
@@ -173,12 +174,6 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                     it.infotrygdForesp.sMhistorikk.sykmelding.any {
                         it?.periode?.stans == "AF"
                     }
-                },
-                Rule(
-                        name = "Patient",
-                        outcomeType = OutcomeType.NOT_VALDIG_DIAGNOSE,
-                        description = "Hvis det er oppgitt ugyldig hoveddiagnose i forhold til angitt kodeverk") {
-                    !it.infotrygdForesp.diagnosekodeOK.isDiagnoseOk
                 },
                 Rule(
                         name = "Patient",
@@ -215,6 +210,25 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                     } else {
                         false
                     }
-                }
+                },
+                Rule(
+                        name = "Doctor i MT and sick leave is over 12 weeks",
+                        outcomeType = OutcomeType.DOCTOR_IS_MT_AND_OVER_12_WEEKS,
+                        description = "Hvis en sykmelding fra manuellterapeut overstiger 12 uker regnet fra første sykefraværsdag skal meldingen avvises") {
+                    val samhandlerType = it.infotrygdForesp?.behandlerInfo?.behandler?.firstOrNull()?.mottakerKode
+                    val healthInformationPeriodeFomdato: LocalDate? = it.healthInformation.aktivitet.periode.firstOrNull()?.periodeFOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
+                    val healthInformationPeriodeTomdato: LocalDate? = it.healthInformation.aktivitet.periode.firstOrNull()?.periodeTOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
 
+                    samhandlerType == TypeMottakerKode.MT && Period.between(healthInformationPeriodeFomdato, healthInformationPeriodeTomdato).days > 84
+                },
+                Rule(
+                        name = "Doctor i MT and sick leave is over 12 weeks",
+                        outcomeType = OutcomeType.DOCTOR_IS_KI_AND_OVER_12_WEEKS,
+                        description = "Hvis en sykmelding fra manuellterapeut overstiger 12 uker regnet fra første sykefraværsdag skal meldingen avvises") {
+                    val samhandlerType = it.infotrygdForesp?.behandlerInfo?.behandler?.firstOrNull()?.mottakerKode
+                    val healthInformationPeriodeFomdato: LocalDate? = it.healthInformation.aktivitet.periode.firstOrNull()?.periodeFOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
+                    val healthInformationPeriodeTomdato: LocalDate? = it.healthInformation.aktivitet.periode.firstOrNull()?.periodeTOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
+
+                    samhandlerType == TypeMottakerKode.KI && Period.between(healthInformationPeriodeFomdato, healthInformationPeriodeTomdato).days > 84
+                }
         ))
