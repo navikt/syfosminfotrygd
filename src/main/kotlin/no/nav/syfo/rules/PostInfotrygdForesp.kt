@@ -128,7 +128,6 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                             sMhistorikkArbuforFOM?.isBefore(healthInformationPeriodeTOMDato) ?: false
                 },
                 Rule(
-                        // TODO need to check if the rule is implemented correctly
                         name = "Error message from Infotrygd",
                         outcomeType = OutcomeType.ERROR_FROM_IT,
                         description = "Feilmelding fra Infotrygd") {
@@ -215,7 +214,7 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                         name = "Doctor i MT and sick leave is over 12 weeks",
                         outcomeType = OutcomeType.DOCTOR_IS_MT_AND_OVER_12_WEEKS,
                         description = "Hvis en sykmelding fra manuellterapeut overstiger 12 uker regnet fra første sykefraværsdag skal meldingen avvises") {
-                    val samhandlerType = it.infotrygdForesp?.behandlerInfo?.behandler?.firstOrNull()?.mottakerKode
+                    val samhandlerType = it.infotrygdForesp.behandlerInfo?.behandler?.firstOrNull()?.mottakerKode
                     val healthInformationPeriodeFomdato: LocalDate? = it.healthInformation.aktivitet.periode.firstOrNull()?.periodeFOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
                     val healthInformationPeriodeTomdato: LocalDate? = it.healthInformation.aktivitet.periode.firstOrNull()?.periodeTOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
 
@@ -225,7 +224,7 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                         name = "Doctor i MT and sick leave is over 12 weeks",
                         outcomeType = OutcomeType.DOCTOR_IS_KI_AND_OVER_12_WEEKS,
                         description = "Hvis en sykmelding fra manuellterapeut overstiger 12 uker regnet fra første sykefraværsdag skal meldingen avvises") {
-                    val samhandlerType = it.infotrygdForesp?.behandlerInfo?.behandler?.firstOrNull()?.mottakerKode
+                    val samhandlerType = it.infotrygdForesp.behandlerInfo?.behandler?.firstOrNull()?.mottakerKode
                     val healthInformationPeriodeFomdato: LocalDate? = it.healthInformation.aktivitet.periode.firstOrNull()?.periodeFOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
                     val healthInformationPeriodeTomdato: LocalDate? = it.healthInformation.aktivitet.periode.firstOrNull()?.periodeTOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
 
