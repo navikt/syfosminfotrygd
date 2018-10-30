@@ -60,7 +60,6 @@ pipeline {
     post {
         always {
             postProcess action: 'always'
-            junit '**/build/test-results/test/*.xml'
             archiveArtifacts artifacts: 'build/reports/rules.csv', allowEmptyArchive: true
         }
         success {
