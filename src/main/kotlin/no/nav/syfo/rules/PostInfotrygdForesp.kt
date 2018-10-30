@@ -6,7 +6,7 @@ import no.nav.syfo.OutcomeType
 import no.nav.syfo.Rule
 import no.nav.syfo.RuleChain
 import java.time.LocalDate
-import java.time.Period
+import java.time.temporal.ChronoUnit
 
 val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
         name = "Validation rule chain",
@@ -206,7 +206,7 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                     val sMhistorikkArbuforFOM: LocalDate? = it.infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.arbufoerFOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
                     val sMhistorikkArbuforTOM: LocalDate? = it.infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.arbufoerTOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
                     if (sMhistorikkArbuforFOM != null && sMhistorikkArbuforTOM != null) {
-                        Period.between(sMhistorikkArbuforFOM, sMhistorikkArbuforTOM).years < 1
+                        ChronoUnit.YEARS.between(sMhistorikkArbuforFOM, sMhistorikkArbuforTOM) < 1
                     } else {
                         false
                     }
@@ -219,7 +219,7 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                     val healthInformationPeriodeFomdato: LocalDate? = it.healthInformation.aktivitet.periode.firstOrNull()?.periodeFOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
                     val healthInformationPeriodeTomdato: LocalDate? = it.healthInformation.aktivitet.periode.firstOrNull()?.periodeTOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
 
-                    samhandlerType == TypeMottakerKode.MT && Period.between(healthInformationPeriodeFomdato, healthInformationPeriodeTomdato).days > 84
+                    samhandlerType == TypeMottakerKode.MT && ChronoUnit.DAYS.between(healthInformationPeriodeFomdato, healthInformationPeriodeTomdato) > 84
                 },
                 Rule(
                         name = "Doctor i MT and sick leave is over 12 weeks",
@@ -229,6 +229,6 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                     val healthInformationPeriodeFomdato: LocalDate? = it.healthInformation.aktivitet.periode.firstOrNull()?.periodeFOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
                     val healthInformationPeriodeTomdato: LocalDate? = it.healthInformation.aktivitet.periode.firstOrNull()?.periodeTOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
 
-                    samhandlerType == TypeMottakerKode.KI && Period.between(healthInformationPeriodeFomdato, healthInformationPeriodeTomdato).days > 84
+                    samhandlerType == TypeMottakerKode.KI && ChronoUnit.DAYS.between(healthInformationPeriodeFomdato, healthInformationPeriodeTomdato) > 84
                 }
         ))
