@@ -17,8 +17,8 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                         description = "This is a rule that hits whenever there is a stopped kode FL"
                 ) {
                     it.infotrygdForesp.sMhistorikk.sykmelding.any {
-                        it.periode.stans == "FL"
-                    }
+                            it?.periode?.stans == "FL"
+                        }
                 },
                 Rule(
                         name = "Patients has stopped kode DØD",
@@ -26,7 +26,7 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                         description = "This is a rule that hits whenever there is a stopped kode DØD"
                 ) {
                     it.infotrygdForesp.sMhistorikk.sykmelding.any {
-                        it.periode.stans == "DØD"
+                        it?.periode?.stans == "DØD"
                     }
                 },
                 Rule(
@@ -44,7 +44,10 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                     val sMhistorikkfriskmeldtDato: LocalDate? = it.infotrygdForesp.sMhistorikk.sykmelding.firstOrNull()?.periode?.friskmeldtDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
                     val sMhistorikkutbetTOM: LocalDate? = it.infotrygdForesp.sMhistorikk.sykmelding.firstOrNull()?.periode?.utbetTOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
 
-                    sMhistorikkfriskmeldtDato?.isBefore(sMhistorikkutbetTOM) ?: false
+                    when (sMhistorikkutbetTOM) {
+                        null -> false
+                        else -> sMhistorikkfriskmeldtDato?.isBefore(sMhistorikkutbetTOM) ?: false
+                    }
                 },
                 Rule(
                         name = "Patients new clean bill date before payout",
@@ -160,7 +163,7 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                         outcomeType = OutcomeType.PERIOD_FOR_AA_ENDED,
                         description = "Hvis perioden er avsluttet (AA)") {
                     it.infotrygdForesp.sMhistorikk.sykmelding.any {
-                        it.periode.stans == "AA"
+                        it?.periode?.stans == "AA"
                     }
                 },
                 Rule(
@@ -168,7 +171,7 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                         outcomeType = OutcomeType.PERIOD_IS_AF,
                         description = "Hvis perioden er avsluttet-frisk (AF) ") {
                     it.infotrygdForesp.sMhistorikk.sykmelding.any {
-                        it.periode.stans == "AF"
+                        it?.periode?.stans == "AF"
                     }
                 },
                 Rule(
@@ -182,7 +185,7 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                         outcomeType = OutcomeType.PERIOD_ENDED_DEAD,
                         description = "Hvis perioden er avsluttet-død(AD).") {
                     it.infotrygdForesp.sMhistorikk.sykmelding.any {
-                        it.periode.stans == "AD"
+                        it?.periode?.stans == "AD"
                     }
                 },
                 Rule(
@@ -190,7 +193,7 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                         outcomeType = OutcomeType.MAX_SICK_LEAVE_PAYOUT,
                         description = "Hvis maks sykepenger er utbetalt") {
                     it.infotrygdForesp.sMhistorikk.sykmelding.any {
-                        it.periode.stans == "MAX"
+                        it?.periode?.stans == "MAX"
                     }
                 },
                 Rule(
@@ -198,7 +201,7 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                         outcomeType = OutcomeType.REFUSAL_IS_REGISTERED,
                         description = "Hvis det er registrert avslag i IT") {
                     it.infotrygdForesp.sMhistorikk.sykmelding.any {
-                        !it.periode.avslag.isNullOrEmpty()
+                        !it?.periode?.avslag.isNullOrEmpty()
                     }
                 },
                 Rule(
@@ -208,7 +211,7 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                     val sMhistorikkArbuforFOM: LocalDate? = it.infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.arbufoerFOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
                     val sMhistorikkArbuforTOM: LocalDate? = it.infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.arbufoerTOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
                     if (sMhistorikkArbuforFOM != null && sMhistorikkArbuforTOM != null) {
-                        Period.between(sMhistorikkArbuforFOM, sMhistorikkArbuforTOM).years > 1
+                        Period.between(sMhistorikkArbuforFOM, sMhistorikkArbuforTOM).years < 1
                     } else {
                         false
                     }
