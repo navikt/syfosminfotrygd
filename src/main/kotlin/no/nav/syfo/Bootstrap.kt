@@ -49,9 +49,6 @@ val log: Logger = LoggerFactory.getLogger("no.nav.syfo.sminfotrygd")
 
 fun main(args: Array<String>) = runBlocking {
     val env = Environment()
-    log.info("applicationPort : ${env.applicationPort}")
-    log.info("applicationThreads : ${env.applicationThreads}")
-    log.info("srvsminfotrygdUsername : ${env.srvsminfotrygdUsername}")
     val applicationState = ApplicationState()
 
     val applicationServer = embeddedServer(Netty, env.applicationPort) {
