@@ -94,8 +94,8 @@ object PostInfotrygdForespSpek : Spek({
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk.sykmelding.add(TypeSMinfo().apply {
                 periode = TypeSMinfo.Periode().apply {
-                    arbufoerFOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 0, 1))
-                    arbufoerTOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 11, 31))
+                    arbufoerFOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 5, 1))
+                    arbufoerTOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2019, 6, 31))
                 }
             })
 
