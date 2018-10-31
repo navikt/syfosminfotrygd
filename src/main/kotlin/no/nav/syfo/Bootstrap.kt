@@ -66,7 +66,6 @@ fun main(args: Array<String>) = runBlocking {
 
                 connectionFactory(env).createConnection(env.mqUsername, env.mqPassword).use { connection ->
                     connection.start()
-                    log.info("check that vault works:  ${env.srvsminfotrygdUsername}")
 
                     val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
                     val infotrygdOppdateringQueue = session.createQueue("queue:///${env.infotrygdOppdateringQueue}?targetClient=1")
