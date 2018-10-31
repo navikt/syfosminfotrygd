@@ -128,10 +128,7 @@ suspend fun blockingApplicationLogic(
                     postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
             ).flatMap { it }
 
-            when (results.joinToString(", ", prefix = "\"", postfix = "\"")) {
-                "" -> log.info("Zero outcomes")
-                else -> log.info("Outcomes: " + results.joinToString(", ", prefix = "\"", postfix = "\""))
-            }
+            log.info("Outcomes: " + results.joinToString(", ", prefix = "\"", postfix = "\""))
 
             if (results.any { it.outcomeType.status == Status.MANUAL_PROCESSING }) {
                 kafkaProducer.send(ProducerRecord("aapen-syfo-oppgave-produserOppgave", ProduceTask().apply {
