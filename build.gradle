@@ -19,6 +19,7 @@ buildscript {
     ext.javax_activation_version = '1.1.1'
     ext.ibm_mq_version = '9.0.5.0'
     ext.felleformavV1_version = '1.0.0'
+    ext.konfig_version = '1.6.10.0'
 
     ext.jaxb2SourceDir = file("$buildDir/generated-sources/jaxb2")
 }
@@ -153,6 +154,7 @@ dependencies {
     implementation "io.prometheus:simpleclient_hotspot:$prometheus_version"
     implementation "io.prometheus:simpleclient_common:$prometheus_version"
     implementation "io.ktor:ktor-server-netty:$ktor_version"
+    implementation "com.natpryce:konfig:$konfig_version"
 
     implementation "ch.qos.logback:logback-classic:$logback_version"
     implementation "net.logstash.logback:logstash-logback-encoder:$logstash_logback_encoder"
@@ -195,6 +197,3 @@ task printVersion() {
         println(version)
     }
 }
-
-// suppress warning for experimental coroutines
-kotlin { experimental { coroutines "enable"} }

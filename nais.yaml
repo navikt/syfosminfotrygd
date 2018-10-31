@@ -32,6 +32,7 @@ resources:
   requests:
     cpu: 100m
     memory: 128Mi
+secrets: true
 fasitResources:
   used:
     - alias: srvsyfosminfotrygd
