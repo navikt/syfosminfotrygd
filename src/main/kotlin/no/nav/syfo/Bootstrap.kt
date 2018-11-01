@@ -59,18 +59,19 @@ fun main(args: Array<String>) = runBlocking {
         initRouting(applicationState)
     }.start(wait = false)
 
-    try {
-        val listeners = (1..env.applicationThreads).map {
-            launch(errorHandler) {
-                val consumerProperties = readConsumerConfig(env, valueDeserializer = StringDeserializer::class)
-                val producerProperties = readProducerConfig(env, valueSerializer = KafkaAvroSerializer::class)
-                val kafkaconsumer = KafkaConsumer<String, String>(consumerProperties)
-                kafkaconsumer.subscribe(listOf(env.sm2013AutomaticHandlingTopic, env.smPaperAutomaticHandlingTopic))
-                val kafkaproducer = KafkaProducer<String, ProduceTask>(producerProperties)
+    connectionFactory(env).createConnection(env.mqUsername, env.mqPassword).use { connection ->
+        connection.start()
 
-                connectionFactory(env).createConnection(env.mqUsername, env.mqPassword).use { connection ->
-                    connection.start()
+        try {
+            val listeners = (1..env.applicationThreads).map {
+                launch(errorHandler) {
+                    val consumerProperties = readConsumerConfig(env, valueDeserializer = StringDeserializer::class)
+                    val producerProperties = readProducerConfig(env, valueSerializer = KafkaAvroSerializer::class)
+                    val kafkaconsumer = KafkaConsumer<String, String>(consumerProperties)
+                    kafkaconsumer.subscribe(listOf(env.sm2013AutomaticHandlingTopic, env.smPaperAutomaticHandlingTopic))
+                    val kafkaproducer = KafkaProducer<String, ProduceTask>(producerProperties)
 
+                    log.info("Started listening for messages on ${kafkaconsumer.subscription()}")
                     val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
                     val infotrygdOppdateringQueue = session.createQueue("queue:///${env.infotrygdOppdateringQueue}?targetClient=1")
                     val infotrygdSporringQueue = session.createQueue("queue:///${env.infotrygdSporringQueue}?targetClient=1")
@@ -79,17 +80,17 @@ fun main(args: Array<String>) = runBlocking {
 
                     blockingApplicationLogic(applicationState, kafkaconsumer, kafkaproducer, infotrygdOppdateringProducer, infotrygdSporringProducer, session)
                 }
-            }
-        }.toList()
+            }.toList()
 
-        applicationState.initialized = true
+            applicationState.initialized = true
 
-        Runtime.getRuntime().addShutdownHook(Thread {
-            applicationServer.stop(10, 10, TimeUnit.SECONDS)
-        })
-        runBlocking { listeners.forEach { it.join() } }
-    } finally {
-        applicationState.running = false
+            Runtime.getRuntime().addShutdownHook(Thread {
+                applicationServer.stop(10, 10, TimeUnit.SECONDS)
+            })
+            runBlocking { listeners.forEach { it.join() } }
+        } finally {
+            applicationState.running = false
+        }
     }
 }
 
@@ -149,7 +150,7 @@ suspend fun blockingApplicationLogic(
                     setResponsibleUnit("") // TODO the rules should send the NAV office that is found on the person
                     setFollowUpText("") // TODO
                 }))
-                results.any { it.outcomeType.status == Status.INVALID } -> {
+                results.any { outcome -> outcome.outcomeType.status == Status.INVALID } -> {
                     // TODO Send apprec to EPJ
                 }
                 else -> sendInfotrygdOppdatering(infotrygdOppdateringProducer, session, createInfotrygdInfo(fellesformat, InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation)))
