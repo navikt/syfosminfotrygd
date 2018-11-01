@@ -31,4 +31,19 @@ data class Environment(
     val mqChannelName: String = config.getProperty("mq.channel.name"),
     val mqUsername: String = config.getProperty("mq.username"),
     val mqPassword: String = config.getProperty("mq.password")
+    /*
+    TODO
+    Getting fasit values:
+
+    val kafkaBootstrapServers: String = getEnvVar("KAFKA_BOOTSTRAP_SERVERS_URL", "SSL://12345.test.local:8443"),
+    val infotrygdSporringQueue: String = getEnvVar("EIA_QUEUE_INFOTRYGD_REQUEST_QUEUENAME", "infotrygdSporringQueue"),
+    val infotrygdOppdateringQueue: String = getEnvVar("EIA_QUEUE_INFOTRYGD_OUTBOUND_QUEUENAME", "infotrygdOppdateringQueue"),
+    val mqHostname: String = getEnvVar("MQGATEWAY03_HOSTNAME", "mqHostname"),
+    val mqQueueManagerName: String = getEnvVar("MQGATEWAY03_NAME", "mqQueueManagerName"),
+    val mqChannelName: String = getEnvVar("SYFOSMINFOTRYGD_CHANNEL_NAME", "mqChannelName"),
+
+    fun getEnvVar(varName: String, defaultValue: String? = null) =
+        System.getenv(varName) ?: defaultValue ?: throw RuntimeException("Missing required variable \"$varName\"")
+
+    */
 )

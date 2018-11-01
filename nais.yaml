@@ -33,3 +33,22 @@ resources:
     cpu: 100m
     memory: 128Mi
 secrets: true
+# TOOD how should we differ from preprod to prod??
+#fasitResources:
+#  used:
+#  - alias: srvsyfosminfotrygd
+#    resourceType: Credential
+#  - alias: kafka_bootstrap_servers
+#    resourceType: baseurl
+#  - alias: eia_queue_infotrygd_request
+#    resourceType: Queue
+#    propertyMap:
+#      queueName: EIA_QUEUE_INFOTRYGD_REQUEST_QUEUENAME
+#  - alias: eia_queue_infotrygd_outbound
+#    resourceType: Queue
+#    propertyMap:
+#      queueName: EIA_QUEUE_INFOTRYGD_OUTBOUND_QUEUENAME
+#  - alias: mqGateway03
+#    resourceType: QueueManager
+#  - alias: syfosminfotrygd_channel
+#    resourceType: Channel
