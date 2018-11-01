@@ -20,18 +20,15 @@ data class Environment(
     val applicationThreads: Int = config.getProperty("application.threads").toInt(),
     val srvsminfotrygdUsername: String = config.getProperty("serviceuser.username"),
     val srvsminfotrygdPassword: String = config.getProperty("serviceuser.password"),
-    val kafkaBootstrapServers: String = getEnvVar("KAFKA_BOOTSTRAP_SERVERS_URL", "SSL://12345.test.local:8443"),
-    val sm2013AutomaticHandlingTopic: String = getEnvVar("SM2013_AUTOMATIC_HANDLING_TOPIC", "privat-syfo-sm2013-automatiskBehandling"),
-    val smPaperAutomaticHandlingTopic: String = getEnvVar("SMPAPER_AUTOMATIC_HANDLING_TOPIC", "privat-syfo-smpapir-automatiskBehandling"),
-    val infotrygdSporringQueue: String = getEnvVar("EIA_QUEUE_INFOTRYGD_REQUEST_QUEUENAME", "infotrygdSporringQueue"),
-    val infotrygdOppdateringQueue: String = getEnvVar("EIA_QUEUE_INFOTRYGD_OUTBOUND_QUEUENAME", "infotrygdOppdateringQueue"),
-    val mqHostname: String = getEnvVar("MQGATEWAY03_HOSTNAME", "mqHostname"),
-    val mqPort: Int = getEnvVar("MQGATEWAY03_PORT", "1413").toInt(),
-    val mqQueueManagerName: String = getEnvVar("MQGATEWAY03_NAME", "mqQueueManagerName"),
-    val mqChannelName: String = getEnvVar("SYFOSMINFOTRYGD_CHANNEL_NAME", "mqChannelName"),
-    val mqUsername: String = getEnvVar("SRVAPPSERVER_USERNAME", "srvappserver"),
-    val mqPassword: String = getEnvVar("SRVAPPSERVER_PASSWORD", "")
+    val kafkaBootstrapServers: String = config.getProperty("kafka.bootstrap.servers.url"),
+    val sm2013AutomaticHandlingTopic: String = config.getProperty("kafka.syfo.sm2013.automatiskBehandling.topic"),
+    val smPaperAutomaticHandlingTopic: String = config.getProperty("kafka.syfo.smpapir.automatiskBehandling.topic"),
+    val infotrygdSporringQueue: String = config.getProperty("mq.queue.infotrygd.request.queuename"),
+    val infotrygdOppdateringQueue: String = config.getProperty("mq.queue.infotrygd.outbound.queuename"),
+    val mqHostname: String = config.getProperty("mq.gateway03.hostname"),
+    val mqPort: Int = config.getProperty("mq.port").toInt(),
+    val mqQueueManagerName: String = config.getProperty("mq.queueManager.name"),
+    val mqChannelName: String = config.getProperty("mq.channel.name"),
+    val mqUsername: String = config.getProperty("mq.username"),
+    val mqPassword: String = config.getProperty("mq.password ")
 )
-
-fun getEnvVar(varName: String, defaultValue: String? = null) =
-        System.getenv(varName) ?: defaultValue ?: throw RuntimeException("Missing required variable \"$varName\"")
