@@ -6,6 +6,7 @@ import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.launch
@@ -37,6 +38,7 @@ import java.time.Duration
 import java.time.LocalDate
 import java.util.Calendar
 import java.util.GregorianCalendar
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import javax.jms.MessageProducer
 import javax.jms.Session
@@ -51,7 +53,7 @@ val errorHandler = CoroutineExceptionHandler { context, ex ->
     log.error("Exception caught by coroutine exception handler {}", keyValue("context", context), ex)
 }
 
-fun main(args: Array<String>) = runBlocking {
+fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()) {
     val env = Environment()
     val applicationState = ApplicationState()
 
