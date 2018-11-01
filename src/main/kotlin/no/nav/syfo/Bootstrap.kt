@@ -53,7 +53,7 @@ val errorHandler = CoroutineExceptionHandler { context, ex ->
     log.error("Exception caught by coroutine exception handler {}", keyValue("context", context), ex)
 }
 
-fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()) {
+fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCoroutineDispatcher()) {
     val env = Environment()
     val applicationState = ApplicationState()
 
