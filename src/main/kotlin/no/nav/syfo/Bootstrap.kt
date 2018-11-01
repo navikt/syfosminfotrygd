@@ -5,7 +5,6 @@ import io.ktor.application.Application
 import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
-import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -63,7 +62,7 @@ fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCo
 
         try {
             val listeners = (1..env.applicationThreads).map {
-                launch{
+                launch {
                     val consumerProperties = readConsumerConfig(env, valueDeserializer = StringDeserializer::class)
                     val producerProperties = readProducerConfig(env, valueSerializer = KafkaAvroSerializer::class)
                     val kafkaconsumer = KafkaConsumer<String, String>(consumerProperties)
