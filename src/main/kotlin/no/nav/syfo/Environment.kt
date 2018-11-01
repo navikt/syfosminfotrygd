@@ -30,5 +30,5 @@ data class Environment(
     val mqQueueManagerName: String = config.getProperty("mq.queueManager.name"),
     val mqChannelName: String = config.getProperty("mq.channel.name"),
     val mqUsername: String = config.getProperty("mq.username"),
-    val mqPassword: String = config.getProperty("mq.password ")
+    val mqPassword: String = config.getProperty("mq.password")
 )
