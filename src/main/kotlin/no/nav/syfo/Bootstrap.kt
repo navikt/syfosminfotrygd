@@ -5,6 +5,7 @@ import io.ktor.application.Application
 import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.launch
@@ -46,6 +47,9 @@ import javax.xml.bind.Marshaller
 data class ApplicationState(var running: Boolean = true, var initialized: Boolean = false)
 
 val log: Logger = LoggerFactory.getLogger("no.nav.syfo.sminfotrygd")
+val errorHandler = CoroutineExceptionHandler { context, ex ->
+    log.error("Exception caught by coroutine exception handler {}", keyValue("context", context), ex)
+}
 
 fun main(args: Array<String>) = runBlocking {
     val env = Environment()
@@ -57,7 +61,7 @@ fun main(args: Array<String>) = runBlocking {
 
     try {
         val listeners = (1..env.applicationThreads).map {
-            launch {
+            launch(errorHandler) {
                 val consumerProperties = readConsumerConfig(env, valueDeserializer = StringDeserializer::class)
                 val producerProperties = readProducerConfig(env, valueSerializer = KafkaAvroSerializer::class)
                 val kafkaconsumer = KafkaConsumer<String, String>(consumerProperties)
@@ -126,12 +130,12 @@ suspend fun blockingApplicationLogic(
 
             val results = listOf(
                     postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
-            ).flatMap { it }
+            ).flatten()
 
             log.info("Outcomes: " + results.joinToString(", ", prefix = "\"", postfix = "\""))
 
-            if (results.any { it.outcomeType.status == Status.MANUAL_PROCESSING }) {
-                kafkaProducer.send(ProducerRecord("aapen-syfo-oppgave-produserOppgave", ProduceTask().apply {
+            when {
+                results.any { outcome -> outcome.outcomeType.status == Status.MANUAL_PROCESSING } -> kafkaProducer.send(ProducerRecord("aapen-syfo-oppgave-produserOppgave", ProduceTask().apply {
                     setMessageId(msgHead.msgInfo.msgId)
                     setUserIdent(healthInformation.pasient.fodselsnummer.id)
                     setUserTypeCode("PERSON")
@@ -145,11 +149,11 @@ suspend fun blockingApplicationLogic(
                     setResponsibleUnit("") // TODO the rules should send the NAV office that is found on the person
                     setFollowUpText("") // TODO
                 }))
-            } else if (results.any { it.outcomeType.status == Status.INVALID }) {
-                // TODO Send apprec to EPJ
-            } else {
-                sendInfotrygdOppdatering(infotrygdOppdateringProducer, session, createInfotrygdInfo(fellesformat, InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation)))
-        }
+                results.any { it.outcomeType.status == Status.INVALID } -> {
+                    // TODO Send apprec to EPJ
+                }
+                else -> sendInfotrygdOppdatering(infotrygdOppdateringProducer, session, createInfotrygdInfo(fellesformat, InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation)))
+            }
         }
         delay(100)
     }
@@ -202,8 +206,7 @@ fun sendInfotrygdOppdatering(
     session: Session,
     fellesformat: EIFellesformat
 ) = producer.send(session.createTextMessage().apply {
-    val info = fellesformat
-    text = fellesformatMarshaller.toString(info)
+    text = fellesformatMarshaller.toString(fellesformat)
     log.info("Updateing Infotrygd, text sendt to Infotrygd + $text")
 })
 
