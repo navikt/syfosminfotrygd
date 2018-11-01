@@ -49,9 +49,6 @@ import javax.xml.bind.Marshaller
 data class ApplicationState(var running: Boolean = true, var initialized: Boolean = false)
 
 val log: Logger = LoggerFactory.getLogger("no.nav.syfo.sminfotrygd")
-val errorHandler = CoroutineExceptionHandler { context, ex ->
-    log.error("Exception caught by coroutine exception handler {}", keyValue("context", context), ex)
-}
 
 fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCoroutineDispatcher()) {
     val env = Environment()
@@ -66,14 +63,12 @@ fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCo
 
         try {
             val listeners = (1..env.applicationThreads).map {
-                launch(errorHandler) {
+                launch{
                     val consumerProperties = readConsumerConfig(env, valueDeserializer = StringDeserializer::class)
                     val producerProperties = readProducerConfig(env, valueSerializer = KafkaAvroSerializer::class)
                     val kafkaconsumer = KafkaConsumer<String, String>(consumerProperties)
                     kafkaconsumer.subscribe(listOf(env.sm2013AutomaticHandlingTopic, env.smPaperAutomaticHandlingTopic))
                     val kafkaproducer = KafkaProducer<String, ProduceTask>(producerProperties)
-
-                    log.info("Started listening for messages on ${kafkaconsumer.subscription()}")
                     val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
                     val infotrygdOppdateringQueue = session.createQueue("queue:///${env.infotrygdOppdateringQueue}?targetClient=1")
                     val infotrygdSporringQueue = session.createQueue("queue:///${env.infotrygdSporringQueue}?targetClient=1")
@@ -152,9 +147,6 @@ suspend fun blockingApplicationLogic(
                     setResponsibleUnit("") // TODO the rules should send the NAV office that is found on the person
                     setFollowUpText("") // TODO
                 }))
-                results.any { outcome -> outcome.outcomeType.status == Status.INVALID } -> {
-                    // TODO Send apprec to EPJ
-                }
                 else -> sendInfotrygdOppdatering(infotrygdOppdateringProducer, session, createInfotrygdInfo(fellesformat, InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation)))
             }
         }
@@ -198,8 +190,7 @@ fun sendInfotrygdSporring(
     infotrygdForesp: InfotrygdForesp,
     temporaryQueue: TemporaryQueue
 ) = producer.send(session.createTextMessage().apply {
-    val info = infotrygdForesp
-    text = infotrygdSporringMarshaller.toString(info)
+    text = infotrygdSporringMarshaller.toString(infotrygdForesp)
     log.info("Query Infotrygd request, text sendt to Infotrygd + $text")
     jmsReplyTo = temporaryQueue
 })
