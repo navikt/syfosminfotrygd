@@ -19,7 +19,7 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                 ) {
                     it.infotrygdForesp.sMhistorikk?.sykmelding?.any {
                             it?.periode?.stans == "FL"
-                        } ?: false
+                        }!!
                 },
                 Rule(
                         name = "Patients has stopped kode DØD",
@@ -28,14 +28,14 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                 ) {
                     it.infotrygdForesp.sMhistorikk?.sykmelding?.any {
                         it?.periode?.stans == "DØD"
-                    } ?: false
+                    }!!
                 },
                 Rule(
                         name = "Patients not i IP",
                         outcomeType = OutcomeType.PATIENT_NOT_IN_IP,
                         description = "This is a rule that hits whenever the patient is not found in IP"
                 ) {
-                    !it.infotrygdForesp.pasient.isFinnes
+                    !it.infotrygdForesp.pasient?.isFinnes!!
                 },
                 Rule(
                         name = "Patients new clean bill date before payout",
@@ -74,7 +74,7 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
 
                     when (secoundfriskmeldtDato) {
                         null -> false
-                        else -> newfriskmeldtDato?.isAfter(secoundfriskmeldtDato) ?: false
+                        else -> newfriskmeldtDato?.isAfter(secoundfriskmeldtDato)!!
                     }
                 },
                 Rule(
@@ -162,7 +162,7 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                         description = "Hvis forlengelse utover registrert tiltak FA tiltak ") {
                     val sMhistorikkTilltakTypeFA: Boolean = it.infotrygdForesp.sMhistorikk?.sykmelding?.any {
                         it.historikk.firstOrNull()?.tilltak?.type == "FA"
-                    } ?: false
+                    }!!
 
                     val healthInformationPeriodeFomdato: LocalDate? = it.healthInformation.aktivitet.periode.firstOrNull()?.periodeFOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
                     val sMhistorikkTilltakTypeFATomDato: LocalDate? = it.infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.historikk?.firstOrNull { historikk ->
