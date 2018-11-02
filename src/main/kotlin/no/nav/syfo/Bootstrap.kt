@@ -121,11 +121,11 @@ suspend fun blockingApplicationLogic(
                 is TextMessage -> consumedMessage.text
                 else -> throw RuntimeException("Incoming message needs to be a byte message or text message, JMS type:" + consumedMessage.jmsType)
             }
-            log.info("Query Infotrygd response: + $inputMessageText $logKeys", *logValues)
+            log.info("Query Infotrygd response $inputMessageText $logKeys", *logValues)
 
             val infotrygdForespResponse = infotrygdSporringUnmarshaller.unmarshal(StringReader(inputMessageText)) as InfotrygdForesp
 
-            log.info("Executing Infotrygd rules: + $logKeys", *logValues)
+            log.info("Executing Infotrygd rules $logKeys", *logValues)
             val results = listOf(
                     postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
             ).flatten()
@@ -201,7 +201,7 @@ fun sendInfotrygdOppdatering(
     fellesformat: EIFellesformat
 ) = producer.send(session.createTextMessage().apply {
     text = fellesformatMarshaller.toString(fellesformat)
-    log.info("Updateing Infotrygd, text sendt to Infotrygd + $text")
+    log.info("Updating Infotrygd, text sendt to Infotrygd + $text")
 })
 
 fun createInfotrygdForesp(healthInformation: HelseOpplysningerArbeidsuforhet) = InfotrygdForesp().apply {
