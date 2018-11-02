@@ -217,11 +217,8 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                         description = "Hvis sykmeldingsperioden er større enn 1 år meldingen til manuell behandling") {
                     val sMhistorikkArbuforFOM: LocalDate? = it.infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.arbufoerFOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
                     val sMhistorikkArbuforTOM: LocalDate? = it.infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.arbufoerTOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
-                    if (sMhistorikkArbuforFOM != null && sMhistorikkArbuforTOM != null) {
-                        ChronoUnit.YEARS.between(sMhistorikkArbuforFOM, sMhistorikkArbuforTOM) >= 1
-                    } else {
-                        false
-                    }
+
+                    sMhistorikkArbuforFOM != null && sMhistorikkArbuforTOM != null && ChronoUnit.YEARS.between(sMhistorikkArbuforFOM, sMhistorikkArbuforTOM) >= 1
                 },
                 Rule(
                         name = "Doctor i MT and sick leave is over 12 weeks",
