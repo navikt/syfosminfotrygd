@@ -51,6 +51,19 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                     }
                 },
                 Rule(
+                        name = "Patients new clean bill date before arbufor tom date",
+                        outcomeType = OutcomeType.NEW_CLEAN_BILL_DATE_BEFORE_ARBUFORTOM,
+                        description = "This is a rule that hits whenever the patient new clean bill date is before arbufor tom date"
+                ) {
+                    val sMhistorikkfriskmeldtDato: LocalDate? = it.infotrygdForesp.sMhistorikk.sykmelding.firstOrNull()?.periode?.friskmeldtDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
+                    val sMhistorikkArbuforTom: LocalDate? = it.infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.arbufoerTOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
+
+                    when (sMhistorikkArbuforTom) {
+                        null -> false
+                        else -> sMhistorikkfriskmeldtDato?.isBefore(sMhistorikkArbuforTom) ?: false
+                    }
+                },
+                Rule(
                         name = "Patients new clean bill date before payout",
                         outcomeType = OutcomeType.NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE,
                         description = "New clean bill date is earlier than registered clean bill date of registration in Infotrygd"

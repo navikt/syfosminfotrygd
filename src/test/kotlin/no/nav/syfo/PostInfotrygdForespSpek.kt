@@ -133,6 +133,24 @@ object PostInfotrygdForespSpek : Spek({
             results.any { it.outcomeType == OutcomeType.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE } shouldEqual true
         }
 
+        it("Should check rule 1516") {
+            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
+
+            val infotrygdForespResponse = deafaultInfotrygdForesp()
+            infotrygdForespResponse.sMhistorikk.sykmelding.add(TypeSMinfo().apply {
+                periode = TypeSMinfo.Periode().apply {
+                    friskmeldtDato = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2017, 0, 1))
+                    arbufoerTOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 0, 1))
+                }
+            })
+
+            val results = listOf(
+                    postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
+            ).flatMap { it }
+
+            results.any { it.outcomeType == OutcomeType.NEW_CLEAN_BILL_DATE_BEFORE_ARBUFORTOM } shouldEqual true
+        }
+
         it("Should check rule 1517") {
             val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
 
