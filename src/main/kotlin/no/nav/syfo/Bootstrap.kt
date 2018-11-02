@@ -125,6 +125,7 @@ suspend fun blockingApplicationLogic(
 
             val infotrygdForespResponse = infotrygdSporringUnmarshaller.unmarshal(StringReader(inputMessageText)) as InfotrygdForesp
 
+            log.info("Executing Infotrygd rules: + $inputMessageText $logKeys", *logValues)
             val results = listOf(
                     postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
             ).flatten()
@@ -217,18 +218,18 @@ fun createInfotrygdForesp(healthInformation: HelseOpplysningerArbeidsuforhet) = 
     fraDato = newInstance.newXMLGregorianCalendar(gregorianCalendarMinus1Year)
     eldsteFraDato = newInstance.newXMLGregorianCalendar(gregorianCalendarMinus4Year)
     hovedDiagnosekode = healthInformation.medisinskVurdering.hovedDiagnose.diagnosekode.v
-    hovedDiagnosekodeverk = Diagnosekode.values().filter {
-            it.kithCode == healthInformation.medisinskVurdering.hovedDiagnose.diagnosekode.s
-        }.first().infotrygdCode
-    fodselsnrBehandler = healthInformation.behandler.id.filter {
+    hovedDiagnosekodeverk = Diagnosekode.values().first {
+        it.kithCode == healthInformation.medisinskVurdering.hovedDiagnose.diagnosekode.s
+    }.infotrygdCode
+    fodselsnrBehandler = healthInformation.behandler.id.first {
         it.typeId.v == "FNR"
-    }.first().id // TODO maybe get the fnr from xmlmsg its mandatorie to be there
+    }.id // TODO maybe get the fnr from xmlmsg its mandatorie to be there
     if (healthInformation.medisinskVurdering.biDiagnoser?.diagnosekode?.firstOrNull()?.v != null &&
             healthInformation.medisinskVurdering.biDiagnoser?.diagnosekode?.firstOrNull()?.s != null) {
         biDiagnoseKode = healthInformation.medisinskVurdering.biDiagnoser.diagnosekode.first().v
-        biDiagnosekodeverk = Diagnosekode.values().filter {
+        biDiagnosekodeverk = Diagnosekode.values().first {
             it.kithCode == healthInformation.medisinskVurdering.biDiagnoser.diagnosekode.first().s
-        }.first().infotrygdCode
+        }.infotrygdCode
     }
     tkNrFraDato = newInstance.newXMLGregorianCalendar(gregorianCalendarMinus1Year)
 }
@@ -261,15 +262,16 @@ fun findOprasjonstype(periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode
     val infotrygdforespSmHistFinnes: Boolean = itfh.infotrygdForesp.sMhistorikk.status.kodeMelding != "04"
     val sMhistorikkArbuforFOM: LocalDate? = typeSMinfo.periode?.arbufoerFOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
     val sMhistorikkArbuforTOM: LocalDate? = typeSMinfo.periode?.arbufoerTOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
-    val syketilfelleStartDatoFraSykemelding = itfh.healthInformation.syketilfelleStartDato
+    val syketilfelleStartDatoFraSykemelding = itfh.healthInformation.syketilfelleStartDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
     val healthInformationPeriodeTOMDato: LocalDate? = periode.periodeTOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
+    val healthInformationPeriodeFOMDato: LocalDate? = periode.periodeFOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
 
-    if (!infotrygdforespSmHistFinnes && syketilfelleStartDatoFraSykemelding.equals(periode.periodeFOMDato)) {
-        return "1".toBigInteger()
-    } else if (infotrygdforespSmHistFinnes && periode.periodeFOMDato.equals(sMhistorikkArbuforFOM) && periode.periodeTOMDato.equals(sMhistorikkArbuforTOM)) {
-        return "2".toBigInteger()
-    } else if (infotrygdforespSmHistFinnes && sMhistorikkArbuforFOM != null && sMhistorikkArbuforTOM != null && sMhistorikkArbuforTOM.equals(periode.periodeTOMDato) || sMhistorikkArbuforTOM?.isBefore(healthInformationPeriodeTOMDato) != null) {
-        return "3".toBigInteger()
+    return if (!infotrygdforespSmHistFinnes && syketilfelleStartDatoFraSykemelding == healthInformationPeriodeFOMDato) {
+        "1".toBigInteger()
+    } else if (infotrygdforespSmHistFinnes && healthInformationPeriodeTOMDato == sMhistorikkArbuforFOM && healthInformationPeriodeTOMDato == sMhistorikkArbuforTOM) {
+        "2".toBigInteger()
+    } else if (infotrygdforespSmHistFinnes && sMhistorikkArbuforFOM != null && sMhistorikkArbuforTOM != null && sMhistorikkArbuforTOM == healthInformationPeriodeTOMDato || sMhistorikkArbuforTOM?.isBefore(healthInformationPeriodeTOMDato) != null) {
+        "3".toBigInteger()
     } else {
         throw RuntimeException("Could not determined operasjonstype")
     }

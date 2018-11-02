@@ -17,18 +17,18 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                         outcomeType = OutcomeType.PERSON_MOVING_KODE_FL,
                         description = "This is a rule that hits whenever there is a stopped kode FL"
                 ) {
-                    it.infotrygdForesp.sMhistorikk.sykmelding.any {
+                    it.infotrygdForesp.sMhistorikk?.sykmelding?.any {
                             it?.periode?.stans == "FL"
-                        }
+                        } ?: false
                 },
                 Rule(
                         name = "Patients has stopped kode DØD",
                         outcomeType = OutcomeType.PATIENT_DEAD,
                         description = "This is a rule that hits whenever there is a stopped kode DØD"
                 ) {
-                    it.infotrygdForesp.sMhistorikk.sykmelding.any {
+                    it.infotrygdForesp.sMhistorikk?.sykmelding?.any {
                         it?.periode?.stans == "DØD"
-                    }
+                    } ?: false
                 },
                 Rule(
                         name = "Patients not i IP",
@@ -42,8 +42,8 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                         outcomeType = OutcomeType.NEW_CLEAN_BILL_DATE_BEFORE_PAYOUT,
                         description = "This is a rule that hits whenever the patient new clean bill date is before payout date"
                 ) {
-                    val sMhistorikkfriskmeldtDato: LocalDate? = it.infotrygdForesp.sMhistorikk.sykmelding.firstOrNull()?.periode?.friskmeldtDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
-                    val sMhistorikkutbetTOM: LocalDate? = it.infotrygdForesp.sMhistorikk.sykmelding.firstOrNull()?.periode?.utbetTOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
+                    val sMhistorikkfriskmeldtDato: LocalDate? = it.infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.friskmeldtDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
+                    val sMhistorikkutbetTOM: LocalDate? = it.infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.utbetTOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
 
                     when (sMhistorikkutbetTOM) {
                         null -> false
@@ -55,7 +55,7 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                         outcomeType = OutcomeType.NEW_CLEAN_BILL_DATE_BEFORE_ARBUFORTOM,
                         description = "This is a rule that hits whenever the patient new clean bill date is before arbufor tom date"
                 ) {
-                    val sMhistorikkfriskmeldtDato: LocalDate? = it.infotrygdForesp.sMhistorikk.sykmelding.firstOrNull()?.periode?.friskmeldtDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
+                    val sMhistorikkfriskmeldtDato: LocalDate? = it.infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.friskmeldtDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
                     val sMhistorikkArbuforTom: LocalDate? = it.infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.arbufoerTOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
 
                     when (sMhistorikkArbuforTom) {
@@ -69,8 +69,8 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                         description = "New clean bill date is earlier than registered clean bill date of registration in Infotrygd"
                 ) {
 
-                    val newfriskmeldtDato: LocalDate? = it.infotrygdForesp.sMhistorikk.sykmelding.firstOrNull()?.periode?.friskmeldtDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
-                    val secoundfriskmeldtDato: LocalDate? = it.infotrygdForesp.sMhistorikk.sykmelding.drop(1).firstOrNull()?.periode?.friskmeldtDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
+                    val newfriskmeldtDato: LocalDate? = it.infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.friskmeldtDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
+                    val secoundfriskmeldtDato: LocalDate? = it.infotrygdForesp.sMhistorikk?.sykmelding?.drop(1)?.firstOrNull()?.periode?.friskmeldtDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
 
                     when (secoundfriskmeldtDato) {
                         null -> false
@@ -96,7 +96,7 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                         outcomeType = OutcomeType.MESSAGE_NOT_IN_INFOTRYGD,
                         description = "Hvis meldingen ikke kan knyttes til noe registrert tilfelle i Infotrygd, og legen har spesifisert syketilfellets startdato forskjellig fra første fraværsdag"
                 ) {
-                    val infotrygdforespSmHistFinnes: Boolean = it.infotrygdForesp.sMhistorikk.status.kodeMelding != "04"
+                    val infotrygdforespSmHistFinnes: Boolean = it.infotrygdForesp.sMhistorikk?.status?.kodeMelding != "04"
                     val healthInformationSyketilfelleStartDato: LocalDate? = it.healthInformation.syketilfelleStartDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
                     val healthInformationPeriodeFomdato: LocalDate? = it.healthInformation.aktivitet.periode.firstOrNull()?.periodeFOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
 
@@ -160,13 +160,13 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                         name = "Patient has extantion is type FA",
                         outcomeType = OutcomeType.EXTANION_OVER_FA,
                         description = "Hvis forlengelse utover registrert tiltak FA tiltak ") {
-                    val sMhistorikkTilltakTypeFA: Boolean = it.infotrygdForesp.sMhistorikk.sykmelding.any {
+                    val sMhistorikkTilltakTypeFA: Boolean = it.infotrygdForesp.sMhistorikk?.sykmelding?.any {
                         it.historikk.firstOrNull()?.tilltak?.type == "FA"
-                    }
+                    } ?: false
 
                     val healthInformationPeriodeFomdato: LocalDate? = it.healthInformation.aktivitet.periode.firstOrNull()?.periodeFOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
-                    val sMhistorikkTilltakTypeFATomDato: LocalDate? = it.infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.historikk?.firstOrNull {
-                        it?.tilltak?.type == "FA"
+                    val sMhistorikkTilltakTypeFATomDato: LocalDate? = it.infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.historikk?.firstOrNull { historikk ->
+                        historikk?.tilltak?.type == "FA"
                     }?.tilltak?.tom?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
 
                     sMhistorikkTilltakTypeFA && healthInformationPeriodeFomdato?.isAfter(sMhistorikkTilltakTypeFATomDato) ?: false
@@ -174,42 +174,42 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                 Rule(
                         name = "Patient has sick leav periode ended",
                         outcomeType = OutcomeType.PERIOD_FOR_AA_ENDED,
-                        description = "Hvis perioden er avsluttet (AA)") {
-                    it.infotrygdForesp.sMhistorikk.sykmelding.any {
-                        it?.periode?.stans == "AA"
-                    }
+                        description = "Hvis perioden er avsluttet (AA)") { ifph ->
+                    ifph.infotrygdForesp.sMhistorikk?.sykmelding?.any { sykemelding ->
+                        sykemelding?.periode?.stans == "AA"
+                    } ?: false
                 },
                 Rule(
                         name = "Patient",
                         outcomeType = OutcomeType.PERIOD_IS_AF,
-                        description = "Hvis perioden er avsluttet-frisk (AF) ") {
-                    it.infotrygdForesp.sMhistorikk.sykmelding.any {
-                        it?.periode?.stans == "AF"
-                    }
+                        description = "Hvis perioden er avsluttet-frisk (AF) ") { ifph ->
+                    ifph.infotrygdForesp.sMhistorikk?.sykmelding?.any { sykemelding ->
+                        sykemelding?.periode?.stans == "AF"
+                    } ?: false
                 },
                 Rule(
                         name = "Patient",
                         outcomeType = OutcomeType.PERIOD_ENDED_DEAD,
-                        description = "Hvis perioden er avsluttet-død(AD).") {
-                    it.infotrygdForesp.sMhistorikk.sykmelding.any {
-                        it?.periode?.stans == "AD"
-                    }
+                        description = "Hvis perioden er avsluttet-død(AD).") { ifph ->
+                    ifph.infotrygdForesp.sMhistorikk?.sykmelding?.any { sykemelding ->
+                        sykemelding?.periode?.stans == "AD"
+                    } ?: false
                 },
                 Rule(
                         name = "Patient has recived max sick leave payout",
                         outcomeType = OutcomeType.MAX_SICK_LEAVE_PAYOUT,
-                        description = "Hvis maks sykepenger er utbetalt") {
-                    it.infotrygdForesp.sMhistorikk.sykmelding.any {
-                        it?.periode?.stans == "MAX"
-                    }
+                        description = "Hvis maks sykepenger er utbetalt") { ifph ->
+                    ifph.infotrygdForesp.sMhistorikk?.sykmelding?.any { sykemelding ->
+                        sykemelding?.periode?.stans == "MAX"
+                    } ?: false
                 },
                 Rule(
                         name = "Patient has recived a refusal",
                         outcomeType = OutcomeType.REFUSAL_IS_REGISTERED,
-                        description = "Hvis det er registrert avslag i IT") {
-                    it.infotrygdForesp.sMhistorikk.sykmelding.any {
-                        !it?.periode?.avslag.isNullOrEmpty()
-                    }
+                        description = "Hvis det er registrert avslag i IT") { ifph ->
+                    ifph.infotrygdForesp.sMhistorikk?.sykmelding?.any { sykemelding ->
+                        !sykemelding?.periode?.avslag.isNullOrEmpty()
+                    } ?: false
                 },
                 Rule(
                         name = "Patient sick leave period is over 1 year",
