@@ -21,18 +21,8 @@ object PostInfotrygdForespSpek : Spek({
     }
 
     fun deafaultInfotrygdForesp() = InfotrygdForesp().apply {
-        pasient = InfotrygdForesp.Pasient().apply {
-        }
-        sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
-            status = StatusType().apply {
-                kodeMelding = "00"
-            }
-        }
         hovedStatus = StatusType().apply {
             kodeMelding = "00"
-        }
-        diagnosekodeOK = InfotrygdForesp.DiagnosekodeOK().apply {
-            isDiagnoseOk = true
         }
     }
 
@@ -40,7 +30,9 @@ object PostInfotrygdForespSpek : Spek({
         it("Should check rule 1501") {
             val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
             val infotrygdForespResponse = deafaultInfotrygdForesp()
-            infotrygdForespResponse.pasient.isFinnes = false
+            infotrygdForespResponse.pasient = InfotrygdForesp.Pasient().apply {
+                isFinnes = false
+            }
 
             val results = listOf(
                     postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
@@ -58,7 +50,11 @@ object PostInfotrygdForespSpek : Spek({
             })
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
-            infotrygdForespResponse.sMhistorikk.status.kodeMelding = "00"
+            infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
+                status = StatusType().apply {
+                    kodeMelding = "00"
+                }
+            }
 
             val results = listOf(
                     postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
@@ -74,12 +70,14 @@ object PostInfotrygdForespSpek : Spek({
             })
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
-            infotrygdForespResponse.sMhistorikk.sykmelding.add(TypeSMinfo().apply {
-                periode = TypeSMinfo.Periode().apply {
-                    arbufoerFOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar())
-                    arbufoerFOM.year = healthInformation.aktivitet.periode.first().periodeFOMDato.year - 1
-                }
-            })
+            infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
+                sykmelding.add(TypeSMinfo().apply {
+                    periode = TypeSMinfo.Periode().apply {
+                        arbufoerFOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar())
+                        arbufoerFOM.year = healthInformation.aktivitet.periode.first().periodeFOMDato.year - 1
+                    }
+                })
+            }
 
             val results = listOf(
                     postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
@@ -92,12 +90,15 @@ object PostInfotrygdForespSpek : Spek({
             val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
-            infotrygdForespResponse.sMhistorikk.sykmelding.add(TypeSMinfo().apply {
-                periode = TypeSMinfo.Periode().apply {
-                    arbufoerFOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 5, 1))
-                    arbufoerTOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2019, 6, 31))
-                }
-            })
+            infotrygdForespResponse.sMhistorikk =
+                    InfotrygdForesp.SMhistorikk().apply {
+                        sykmelding.add(TypeSMinfo().apply {
+                            periode = TypeSMinfo.Periode().apply {
+                                arbufoerFOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 5, 1))
+                                arbufoerTOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2019, 6, 31))
+                            }
+                        })
+                    }
 
             val results = listOf(
                     postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
@@ -113,18 +114,20 @@ object PostInfotrygdForespSpek : Spek({
             })
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
-            infotrygdForespResponse.sMhistorikk.sykmelding.add(TypeSMinfo().apply {
-                periode = TypeSMinfo.Periode().apply {
-                    arbufoerFOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 0, 1))
-                    friskKode = "J"
-                }
-            })
-            infotrygdForespResponse.sMhistorikk.sykmelding.add(TypeSMinfo().apply {
-                periode = TypeSMinfo.Periode().apply {
-                    utbetTOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 0, 1))
-                    arbufoerFOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2017, 0, 1))
-                }
-            })
+            infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
+                    sykmelding.add(TypeSMinfo().apply {
+                        periode = TypeSMinfo.Periode().apply {
+                            arbufoerFOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 0, 1))
+                            friskKode = "J"
+                        }
+                    })
+                sykmelding.add(TypeSMinfo().apply {
+                    periode = TypeSMinfo.Periode().apply {
+                        utbetTOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 0, 1))
+                        arbufoerFOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2017, 0, 1))
+                    }
+                })
+            }
 
             val results = listOf(
                     postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
@@ -137,12 +140,14 @@ object PostInfotrygdForespSpek : Spek({
             val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
-            infotrygdForespResponse.sMhistorikk.sykmelding.add(TypeSMinfo().apply {
-                periode = TypeSMinfo.Periode().apply {
-                    friskmeldtDato = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2017, 0, 1))
-                    arbufoerTOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 0, 1))
-                }
-            })
+            infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
+                sykmelding.add(TypeSMinfo().apply {
+                    periode = TypeSMinfo.Periode().apply {
+                        friskmeldtDato = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2017, 0, 1))
+                        arbufoerTOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 0, 1))
+                    }
+                })
+            }
 
             val results = listOf(
                     postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
@@ -155,12 +160,14 @@ object PostInfotrygdForespSpek : Spek({
             val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
-            infotrygdForespResponse.sMhistorikk.sykmelding.add(TypeSMinfo().apply {
-                periode = TypeSMinfo.Periode().apply {
-                    friskmeldtDato = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2017, 0, 1))
-                    utbetTOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 0, 1))
-                }
-            })
+            infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
+                sykmelding.add(TypeSMinfo().apply {
+                    periode = TypeSMinfo.Periode().apply {
+                        friskmeldtDato = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2017, 0, 1))
+                        utbetTOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 0, 1))
+                    }
+                })
+            }
 
             val results = listOf(
                     postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
@@ -173,23 +180,25 @@ object PostInfotrygdForespSpek : Spek({
             val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
-            infotrygdForespResponse.sMhistorikk.sykmelding.add(TypeSMinfo().apply {
-                periode = TypeSMinfo.Periode().apply {
-                    friskmeldtDato = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 0, 1))
-                }
-            })
-            infotrygdForespResponse.sMhistorikk.sykmelding.add(TypeSMinfo().apply {
-                periode = TypeSMinfo.Periode().apply {
-                    friskmeldtDato = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2017, 0, 1))
-                }
-            })
+            infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
+                sykmelding.add(TypeSMinfo().apply {
+                    periode = TypeSMinfo.Periode().apply {
+                        friskmeldtDato = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 0, 1))
+                    }
+                })
+                sykmelding.add(TypeSMinfo().apply {
+                    periode = TypeSMinfo.Periode().apply {
+                        friskmeldtDato = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2017, 0, 1))
+                    }
+                })
+            }
 
-            val results = listOf(
-                    postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
-            ).flatMap { it }
+                val results = listOf(
+                        postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
+                ).flatMap { it }
 
-            results.any { it.outcomeType == OutcomeType.NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE } shouldEqual true
-        }
+                results.any { it.outcomeType == OutcomeType.NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE } shouldEqual true
+            }
 
         it("Should check rule 1530") {
             val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
@@ -202,12 +211,14 @@ object PostInfotrygdForespSpek : Spek({
             })
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
-            infotrygdForespResponse.sMhistorikk.sykmelding.add(TypeSMinfo().apply {
-                periode = TypeSMinfo.Periode().apply {
-                    ufoeregrad = "90".toBigInteger()
-                    arbufoerFOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 0, 1))
-                }
-            })
+            infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
+                sykmelding.add(TypeSMinfo().apply {
+                    periode = TypeSMinfo.Periode().apply {
+                        ufoeregrad = "90".toBigInteger()
+                        arbufoerFOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 0, 1))
+                    }
+                })
+            }
 
             val results = listOf(
                     postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
@@ -223,14 +234,16 @@ object PostInfotrygdForespSpek : Spek({
             })
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
-            infotrygdForespResponse.sMhistorikk.sykmelding.add(TypeSMinfo().apply {
-                historikk.add(TypeSMinfo.Historikk().apply {
-                    tilltak = TypeSMinfo.Historikk.Tilltak().apply {
-                        type = "FA"
-                        tom = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2017, 0, 1))
-                    }
+            infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
+                    sykmelding.add(TypeSMinfo().apply {
+                    historikk.add(TypeSMinfo.Historikk().apply {
+                        tilltak = TypeSMinfo.Historikk.Tilltak().apply {
+                            type = "FA"
+                            tom = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2017, 0, 1))
+                        }
+                    })
                 })
-            })
+            }
 
             val results = listOf(
                     postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
@@ -243,11 +256,13 @@ object PostInfotrygdForespSpek : Spek({
             val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
-            infotrygdForespResponse.sMhistorikk.sykmelding.add(TypeSMinfo().apply {
-                periode = TypeSMinfo.Periode().apply {
-                    stans = "DØD"
-                }
-            })
+            infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
+                sykmelding.add(TypeSMinfo().apply {
+                    periode = TypeSMinfo.Periode().apply {
+                        stans = "DØD"
+                    }
+                })
+            }
 
             val results = listOf(
                     postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
@@ -260,11 +275,13 @@ object PostInfotrygdForespSpek : Spek({
             val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
-            infotrygdForespResponse.sMhistorikk.sykmelding.add(TypeSMinfo().apply {
-                periode = TypeSMinfo.Periode().apply {
-                    stans = "FL"
-                }
-            })
+            infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
+                sykmelding.add(TypeSMinfo().apply {
+                    periode = TypeSMinfo.Periode().apply {
+                        stans = "FL"
+                    }
+                })
+            }
 
             val results = listOf(
                     postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
@@ -277,11 +294,13 @@ object PostInfotrygdForespSpek : Spek({
             val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
-            infotrygdForespResponse.sMhistorikk.sykmelding.add(TypeSMinfo().apply {
-                periode = TypeSMinfo.Periode().apply {
-                    stans = "AD"
-                }
-            })
+            infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
+                sykmelding.add(TypeSMinfo().apply {
+                    periode = TypeSMinfo.Periode().apply {
+                        stans = "AD"
+                    }
+                })
+            }
 
             val results = listOf(
                     postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
@@ -294,11 +313,13 @@ object PostInfotrygdForespSpek : Spek({
             val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
-            infotrygdForespResponse.sMhistorikk.sykmelding.add(TypeSMinfo().apply {
-                periode = TypeSMinfo.Periode().apply {
-                    stans = "AA"
-                }
-            })
+            infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
+                sykmelding.add(TypeSMinfo().apply {
+                    periode = TypeSMinfo.Periode().apply {
+                        stans = "AA"
+                    }
+                })
+            }
 
             val results = listOf(
                     postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
@@ -311,11 +332,13 @@ object PostInfotrygdForespSpek : Spek({
             val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
-            infotrygdForespResponse.sMhistorikk.sykmelding.add(TypeSMinfo().apply {
-                periode = TypeSMinfo.Periode().apply {
-                    stans = "AF"
-                }
-            })
+            infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
+                sykmelding.add(TypeSMinfo().apply {
+                    periode = TypeSMinfo.Periode().apply {
+                        stans = "AF"
+                    }
+                })
+            }
 
             val results = listOf(
                     postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
@@ -328,11 +351,13 @@ object PostInfotrygdForespSpek : Spek({
             val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
-            infotrygdForespResponse.sMhistorikk.sykmelding.add(TypeSMinfo().apply {
-                periode = TypeSMinfo.Periode().apply {
-                    stans = "MAX"
-                }
-            })
+            infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
+                sykmelding.add(TypeSMinfo().apply {
+                    periode = TypeSMinfo.Periode().apply {
+                        stans = "MAX"
+                    }
+                })
+            }
 
             val results = listOf(
                     postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
@@ -345,11 +370,13 @@ object PostInfotrygdForespSpek : Spek({
             val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
-            infotrygdForespResponse.sMhistorikk.sykmelding.add(TypeSMinfo().apply {
-                periode = TypeSMinfo.Periode().apply {
-                    avslag = "Fordi"
-                }
-            })
+            infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
+                sykmelding.add(TypeSMinfo().apply {
+                    periode = TypeSMinfo.Periode().apply {
+                        avslag = "Fordi"
+                    }
+                })
+            }
 
             val results = listOf(
                     postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))

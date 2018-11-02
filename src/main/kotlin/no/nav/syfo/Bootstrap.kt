@@ -125,7 +125,7 @@ suspend fun blockingApplicationLogic(
 
             val infotrygdForespResponse = infotrygdSporringUnmarshaller.unmarshal(StringReader(inputMessageText)) as InfotrygdForesp
 
-            log.info("Executing Infotrygd rules: + $inputMessageText $logKeys", *logValues)
+            log.info("Executing Infotrygd rules: + $logKeys", *logValues)
             val results = listOf(
                     postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
             ).flatten()
