@@ -21,8 +21,10 @@ import no.nav.model.infotrygdSporing.TypeSMinfo
 import no.nav.model.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.syfo.api.registerNaisApi
 import no.nav.syfo.model.Status
-import no.nav.syfo.rules.postInfotrygdQueryChain
+import no.nav.syfo.rules.RuleData
+import no.nav.syfo.rules.ValidationRules
 import no.nav.syfo.sak.avro.ProduceTask
+import no.trygdeetaten.xml.eiff._1.XMLEIFellesformat
 import no.trygdeetaten.xml.eiff._1.XMLMottakenhetBlokk
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -126,14 +128,15 @@ suspend fun blockingApplicationLogic(
             val infotrygdForespResponse = infotrygdSporringUnmarshaller.unmarshal(StringReader(inputMessageText)) as InfotrygdForesp
 
             log.info("Executing Infotrygd rules $logKeys", *logValues)
-            val results = listOf(
-                    postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))
-            ).flatten()
+            val ruleData = RuleData(infotrygdForespResponse, healthInformation)
+            val results = listOf<List<Rule<RuleData>>>(
+                    ValidationRules.values().toList()
+            ).flatten().filter { rule -> rule.predicate(ruleData) }
 
             log.info("Outcomes: " + results.joinToString(", ", prefix = "\"", postfix = "\""))
 
             when {
-                results.any { outcome -> outcome.outcomeType.status == Status.MANUAL_PROCESSING } -> kafkaProducer.send(ProducerRecord("aapen-syfo-oppgave-produserOppgave", ProduceTask().apply {
+                results.any { rule -> rule.status == Status.MANUAL_PROCESSING } -> kafkaProducer.send(ProducerRecord("aapen-syfo-oppgave-produserOppgave", ProduceTask().apply {
                     setMessageId(msgHead.msgInfo.msgId)
                     setUserIdent(healthInformation.pasient.fodselsnummer.id)
                     setUserTypeCode("PERSON")
@@ -276,3 +279,5 @@ fun findOprasjonstype(periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode
         throw RuntimeException("Could not determined operasjonstype")
     }
 }
+
+inline fun <reified T> XMLEIFellesformat.get() = this.any.find { it is T } as T
