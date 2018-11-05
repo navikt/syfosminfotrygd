@@ -26,8 +26,8 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                         outcomeType = OutcomeType.PATIENT_DEAD,
                         description = "This is a rule that hits whenever there is a stopped kode DØD"
                 ) {
-                    it.infotrygdForesp.sMhistorikk?.sykmelding?.any {
-                        it?.periode?.stans == "DØD"
+                    it.infotrygdForesp.sMhistorikk?.sykmelding?.any { sykmelding ->
+                        sykmelding?.periode?.stans == "DØD"
                     } ?: false
                 },
                 Rule(
@@ -110,7 +110,6 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                     }
                 },
                 Rule(
-                        // TODO need to check if the rule is implemented correctly
                         name = "Patient has a diffrent NAV Office",
                         outcomeType = OutcomeType.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE,
                         description = "Hvis sykmeldingen er forlengelse av registrert sykepengehistorikk fra annet kontor så medlingen gå til manuell behandling slik at  saksbehandler kan registrere sykepengetilfellet på ny identdato og  send oppgave til Nav forvaltning for registrering av inntektsopplysninger."
@@ -163,8 +162,8 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                         name = "Patient has extantion is type FA",
                         outcomeType = OutcomeType.EXTANION_OVER_FA,
                         description = "Hvis forlengelse utover registrert tiltak FA tiltak ") {
-                    val sMhistorikkTilltakTypeFA: Boolean? = it.infotrygdForesp.sMhistorikk?.sykmelding?.any {
-                        it.historikk.firstOrNull()?.tilltak?.type == "FA"
+                    val sMhistorikkTilltakTypeFA: Boolean? = it.infotrygdForesp.sMhistorikk?.sykmelding?.any { sykemelding ->
+                        sykemelding.historikk.firstOrNull()?.tilltak?.type == "FA"
                     } ?: false
 
                     val healthInformationPeriodeFomdato: LocalDate? = it.healthInformation.aktivitet.periode.firstOrNull()?.periodeFOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()

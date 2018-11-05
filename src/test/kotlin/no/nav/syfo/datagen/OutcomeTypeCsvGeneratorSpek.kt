@@ -8,13 +8,12 @@ import java.nio.file.Paths
 
 object OutcomeTypeCsvGeneratorSpek : Spek({
     describe("OutcomeType") {
-        it("Generates a OutcomeType CSV") {
+            val basePath = Paths.get("build/doc")
+            Files.createDirectories(basePath)
             val header = "Referanse i kode;Merknad nr;Utfall"
             val csv = OutcomeType.values()
                     .map { "${it.name};${it.ruleId};${it.status}" }
-            val basePath = Paths.get("build", "reports")
-            Files.createDirectories(basePath)
-            Files.write(basePath.resolve("rules.csv"), listOf(header) + csv, Charsets.UTF_8)
+            val csvFile = basePath.resolve("rules.csv")
+            Files.write(csvFile, listOf(header) + csv, Charsets.UTF_8)
         }
-    }
 })
