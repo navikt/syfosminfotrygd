@@ -18,7 +18,7 @@ object RuleChainDocGenSpek : Spek({
 
     describe("Generate docs for rule chains") {
         it("Generates a CSV file with rule chain") {
-            val basePath = Paths.get("build/doc")
+            val basePath = Paths.get("build", "reports")
             Files.createDirectories(basePath)
             val ruleCSV = arrayOf("Rule name;status;Rule ID;Description").union(listOf<List<Rule<*>>>(ValidationRules.values().toList()).flatten()
                     .map { rule ->
