@@ -75,8 +75,6 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                     val newfriskmeldtDato: LocalDate? = it.infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.friskmeldtDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
                     val secoundfriskmeldtDato: LocalDate? = it.infotrygdForesp.sMhistorikk?.sykmelding?.drop(1)?.firstOrNull()?.periode?.friskmeldtDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
 
-                    println("newfriskmeldtDato:  $newfriskmeldtDato")
-                    println("secoundfriskmeldtDato $secoundfriskmeldtDato")
                     when (secoundfriskmeldtDato) {
                         null -> false
                         else -> newfriskmeldtDato?.isAfter(secoundfriskmeldtDato) ?: false
