@@ -52,7 +52,7 @@ object PostInfotrygdForespSpek : Spek({
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
                 status = StatusType().apply {
-                    kodeMelding = "00"
+                    kodeMelding = "04"
                 }
             }
 

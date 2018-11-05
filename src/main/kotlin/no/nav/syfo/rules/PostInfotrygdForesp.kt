@@ -99,14 +99,14 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                         outcomeType = OutcomeType.MESSAGE_NOT_IN_INFOTRYGD,
                         description = "Hvis meldingen ikke kan knyttes til noe registrert tilfelle i Infotrygd, og legen har spesifisert syketilfellets startdato forskjellig fra første fraværsdag"
                 ) {
-                    val infotrygdforespSmHistFinnes: Boolean? = it.infotrygdForesp.sMhistorikk?.status?.kodeMelding != "04"
+                    val infotrygdforespSmHistFinnes: Boolean = it.infotrygdForesp.sMhistorikk?.status?.kodeMelding != "04"
                     val healthInformationSyketilfelleStartDato: LocalDate? = it.healthInformation.syketilfelleStartDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
                     val healthInformationPeriodeFomdato: LocalDate? = it.healthInformation.aktivitet.periode.firstOrNull()?.periodeFOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
 
-                    when (healthInformationPeriodeFomdato) {
-                        null -> false
-                        else -> !infotrygdforespSmHistFinnes!! && healthInformationSyketilfelleStartDato?.isBefore(healthInformationPeriodeFomdato) ?: false ||
-                                healthInformationSyketilfelleStartDato?.isAfter(healthInformationPeriodeFomdato) ?: false
+                    if (healthInformationPeriodeFomdato != null && healthInformationSyketilfelleStartDato != null) {
+                    !infotrygdforespSmHistFinnes && healthInformationSyketilfelleStartDato.compareTo(healthInformationPeriodeFomdato) >= 1
+                    } else {
+                        false
                     }
                 },
                 Rule(
@@ -185,10 +185,11 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
                 Rule(
                         name = "Patient",
                         outcomeType = OutcomeType.PERIOD_IS_AF,
-                        description = "Hvis perioden er avsluttet-frisk (AF) ") { ifph ->
-                    ifph.infotrygdForesp.sMhistorikk?.sykmelding?.any { sykemelding ->
-                        sykemelding?.periode?.stans == "AF"
-                    } ?: false
+                        description = "Hvis perioden er avsluttet-frisk (AF) ") {
+                    when (it.infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.stans) {
+                    null -> false
+                    else -> it.infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.stans == "AF"
+                    }
                 },
                 Rule(
                         name = "Patient",
