@@ -64,20 +64,21 @@ object PostInfotrygdForespSpek : Spek({
         }
 
         it("Should check rule 1513") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
-            healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                periodeFOMDato = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar())
-            })
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
                 sykmelding.add(TypeSMinfo().apply {
                     periode = TypeSMinfo.Periode().apply {
                         arbufoerFOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar())
-                        arbufoerFOM.year = healthInformation.aktivitet.periode.first().periodeFOMDato.year - 1
                     }
                 })
             }
+
+            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
+            healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
+                periodeFOMDato = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar())
+                periodeFOMDato.year = infotrygdForespResponse.sMhistorikk.sykmelding.first().periode.arbufoerFOM.year - 1
+            })
 
             val results = listOf(
                     postInfotrygdQueryChain.executeFlow(InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation))

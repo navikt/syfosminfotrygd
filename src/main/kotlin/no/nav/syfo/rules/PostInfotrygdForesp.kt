@@ -91,7 +91,7 @@ val postInfotrygdQueryChain = RuleChain<InfotrygdForespAndHealthInformation>(
 
                     when (infotrygdforespArbuforFom) {
                         null -> false
-                        else -> healthInformationPeriodeFomdato?.isAfter(infotrygdforespArbuforFom) ?: false
+                        else -> healthInformationPeriodeFomdato?.isBefore(infotrygdforespArbuforFom) ?: false
                     }
                 },
                 Rule(
