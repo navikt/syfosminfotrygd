@@ -162,7 +162,7 @@ object PostInfotrygdForespSpek : Spek({
         it("Should check rule 1515") {
             val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
             healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                periodeFOMDato = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 0, 1))
+                periodeFOMDato = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 0, 2))
             })
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
@@ -171,12 +171,33 @@ object PostInfotrygdForespSpek : Spek({
                         periode = TypeSMinfo.Periode().apply {
                             arbufoerFOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 0, 1))
                             friskKode = "J"
+                            hovedDiagnosekode = "001"
+                            utbetTOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 0, 3))
                         }
                     })
+            }
+
+            val ruleData = RuleData(infotrygdForespResponse, healthInformation)
+            val results = listOf<List<Rule<RuleData>>>(
+                    ValidationRules.values().toList()
+            ).flatten().filter { rule -> rule.predicate(ruleData) }
+
+            results.any { it == ValidationRules.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_1 } shouldEqual true
+        }
+
+        it("Should check rule 1515") {
+            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
+            healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
+                periodeFOMDato = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 0, 4))
+            })
+
+            val infotrygdForespResponse = deafaultInfotrygdForesp()
+            infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
                 sykmelding.add(TypeSMinfo().apply {
                     periode = TypeSMinfo.Periode().apply {
-                        utbetTOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 0, 1))
-                        arbufoerFOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2017, 0, 1))
+                        friskKode = "J"
+                        hovedDiagnosekode = "001"
+                        utbetTOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 0, 3))
                     }
                 })
             }
@@ -186,7 +207,32 @@ object PostInfotrygdForespSpek : Spek({
                     ValidationRules.values().toList()
             ).flatten().filter { rule -> rule.predicate(ruleData) }
 
-            results.any { it == ValidationRules.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE } shouldEqual true
+            results.any { it == ValidationRules.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_2 } shouldEqual true
+        }
+
+        it("Should check rule 1515") {
+            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
+            healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
+                periodeFOMDato = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 10, 11))
+            })
+
+            val infotrygdForespResponse = deafaultInfotrygdForesp()
+            infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
+                sykmelding.add(TypeSMinfo().apply {
+                    periode = TypeSMinfo.Periode().apply {
+                        friskKode = "J"
+                        hovedDiagnosekode = "001"
+                        utbetTOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 10, 9))
+                    }
+                })
+            }
+
+            val ruleData = RuleData(infotrygdForespResponse, healthInformation)
+            val results = listOf<List<Rule<RuleData>>>(
+                    ValidationRules.values().toList()
+            ).flatten().filter { rule -> rule.predicate(ruleData) }
+
+            results.any { it == ValidationRules.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_3 } shouldEqual true
         }
 
         it("Should check rule 1516") {
