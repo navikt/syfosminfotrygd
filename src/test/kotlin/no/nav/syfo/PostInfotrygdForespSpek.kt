@@ -111,7 +111,52 @@ object PostInfotrygdForespSpek : Spek({
                     ValidationRules.values().toList()
             ).flatten().filter { rule -> rule.predicate(ruleData) }
 
-            results.any { it == ValidationRules.SICK_LEAVE_PERIOD_OVER_1_YEAR } shouldEqual true
+            results.any { it == ValidationRules.SICK_LEAVE_PERIOD_OVER_1_YEAR_NO_HISTORY } shouldEqual true
+        }
+
+        it("Should check rule 1514") {
+            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
+
+            val infotrygdForespResponse = deafaultInfotrygdForesp()
+            infotrygdForespResponse.sMhistorikk =
+                    InfotrygdForesp.SMhistorikk().apply {
+                        sykmelding.add(TypeSMinfo().apply {
+                            periode = TypeSMinfo.Periode().apply {
+                                arbufoerFOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 5, 1))
+                                arbufoerTOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2019, 6, 31))
+                            }
+                        })
+                    }
+
+            val ruleData = RuleData(infotrygdForespResponse, healthInformation)
+            val results = listOf<List<Rule<RuleData>>>(
+                    ValidationRules.values().toList()
+            ).flatten().filter { rule -> rule.predicate(ruleData) }
+
+            results.any { it == ValidationRules.SICK_LEAVE_PERIOD_OVER_1_YEAR_NO_MAXDATO } shouldEqual true
+        }
+
+        it("Should check rule 1514") {
+            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
+
+            val infotrygdForespResponse = deafaultInfotrygdForesp()
+            infotrygdForespResponse.sMhistorikk =
+                    InfotrygdForesp.SMhistorikk().apply {
+                        sykmelding.add(TypeSMinfo().apply {
+                            periode = TypeSMinfo.Periode().apply {
+                                arbufoerFOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 5, 1))
+                                arbufoerTOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2019, 6, 31))
+                                maxDato = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2019, 5, 31))
+                            }
+                        })
+                    }
+
+            val ruleData = RuleData(infotrygdForespResponse, healthInformation)
+            val results = listOf<List<Rule<RuleData>>>(
+                    ValidationRules.values().toList()
+            ).flatten().filter { rule -> rule.predicate(ruleData) }
+
+            results.any { it == ValidationRules.SICK_LEAVE_PERIOD_OVER_1_YEAR_MAXDATO } shouldEqual true
         }
 
         it("Should check rule 1515") {

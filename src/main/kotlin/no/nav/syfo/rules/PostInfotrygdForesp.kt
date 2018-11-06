@@ -48,11 +48,29 @@ enum class ValidationRules(override val ruleId: Int?, override val status: Statu
     }),
 
     @Description("Hvis sykmeldingsperioden er større enn 1 år")
-    SICK_LEAVE_PERIOD_OVER_1_YEAR(1514, Status.MANUAL_PROCESSING, { (infotrygdForesp) ->
+    SICK_LEAVE_PERIOD_OVER_1_YEAR_NO_HISTORY(1514, Status.MANUAL_PROCESSING, { (infotrygdForesp) ->
         val sMhistorikkArbuforFOM: java.time.LocalDate? = infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.arbufoerFOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
         val sMhistorikkArbuforTOM: java.time.LocalDate? = infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.arbufoerTOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
 
         sMhistorikkArbuforFOM != null && sMhistorikkArbuforTOM != null && java.time.temporal.ChronoUnit.YEARS.between(sMhistorikkArbuforFOM, sMhistorikkArbuforTOM) >= 1
+    }),
+
+    @Description("Hvis sykmeldingsperioden er større enn 1 år")
+    SICK_LEAVE_PERIOD_OVER_1_YEAR_NO_MAXDATO(1514, Status.MANUAL_PROCESSING, { (infotrygdForesp) ->
+        val sMhistorikkArbuforFOM: java.time.LocalDate? = infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.arbufoerFOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
+        val sMhistorikkArbuforTOM: java.time.LocalDate? = infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.arbufoerTOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
+        val sMhistorikkMaxDato: java.time.LocalDate? = infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.maxDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
+
+        sMhistorikkArbuforFOM != null && sMhistorikkArbuforTOM != null && sMhistorikkMaxDato == null && java.time.temporal.ChronoUnit.YEARS.between(sMhistorikkArbuforFOM, sMhistorikkArbuforTOM) >= 1
+    }),
+
+    @Description("Hvis sykmeldingsperioden er større enn 1 år")
+    SICK_LEAVE_PERIOD_OVER_1_YEAR_MAXDATO(1514, Status.MANUAL_PROCESSING, { (infotrygdForesp) ->
+        val sMhistorikkArbuforFOM: java.time.LocalDate? = infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.arbufoerFOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
+        val sMhistorikkArbuforTOM: java.time.LocalDate? = infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.arbufoerTOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
+        val sMhistorikkMaxDato: java.time.LocalDate? = infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.maxDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
+
+        sMhistorikkArbuforFOM != null && sMhistorikkArbuforTOM != null && sMhistorikkMaxDato != null && sMhistorikkMaxDato.isBefore(sMhistorikkArbuforTOM) && java.time.temporal.ChronoUnit.YEARS.between(sMhistorikkArbuforFOM, sMhistorikkArbuforTOM) >= 1
     }),
 
     @Description("Hvis sykmeldingen er forlengelse av registrert sykepengehistorikk fra annet kontor så medlingen gå til manuell behandling slik at  saksbehandler kan registrere sykepengetilfellet på ny identdato og  send oppgave til Nav forvaltning for registrering av inntektsopplysninger")
