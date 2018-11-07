@@ -17,6 +17,11 @@ data class RuleData(
 
 enum class ValidationRules(override val ruleId: Int?, override val status: Status, override val predicate: (RuleData) -> Boolean) : Rule<RuleData> {
 
+    @Description("Hvis behandlingsdager er angitt sendes meldingen til manuell behandling.")
+    NUMBER_OF_TREATMENT_DAYS_SET(1260, Status.MANUAL_PROCESSING, { (_, healthInformation) ->
+        healthInformation.aktivitet.periode.any { it.behandlingsdager != null }
+    }),
+
     @Description("Hvis pasienten ikke finnes i infotrygd")
     PATIENT_NOT_IN_IP(1501, Status.MANUAL_PROCESSING, { (infotrygdForesp) ->
         when (infotrygdForesp.pasient?.isFinnes) {

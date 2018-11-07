@@ -28,7 +28,25 @@ object PostInfotrygdForespSpek : Spek({
         }
     }
 
-    describe("Testing infotrygd rules and checking the outcome") {
+    describe("Testing infotrygd rules and checking the rule outcomes") {
+        it("Should check rule 1260") {
+            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
+            healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
+                behandlingsdager = HelseOpplysningerArbeidsuforhet.Aktivitet.Periode.Behandlingsdager().apply {
+                    antallBehandlingsdagerUke = 1
+                }
+            })
+
+            val infotrygdForespResponse = deafaultInfotrygdForesp()
+
+            val ruleData = RuleData(infotrygdForespResponse, healthInformation)
+            val results = listOf<List<Rule<RuleData>>>(
+                    ValidationRules.values().toList()
+            ).flatten().filter { rule -> rule.predicate(ruleData) }
+
+            results.any { it == ValidationRules.NUMBER_OF_TREATMENT_DAYS_SET } shouldEqual true
+        }
+
         it("Should check rule 1501") {
             val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
             val infotrygdForespResponse = deafaultInfotrygdForesp()
