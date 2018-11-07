@@ -41,15 +41,15 @@ enum class ValidationRules(override val ruleId: Int?, override val status: Statu
 
     @Description("Hvis delvis sammenfallende sykmeldingsperiode er registrert i Infotrygd")
     PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE(1513, Status.MANUAL_PROCESSING, { (infotrygdForesp, healthInformation) ->
-        val healthInformationPeriodeFomdato: LocalDate? = healthInformation.aktivitet.periode.firstOrNull()?.periodeFOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
         val infotrygdforespArbuforFom: LocalDate? = infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.arbufoerFOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
 
-        if (healthInformationPeriodeFomdato != null &&
-                infotrygdforespArbuforFom != null) {
-            healthInformationPeriodeFomdato.isBefore(infotrygdforespArbuforFom)
-        } else {
-            false
-        }
+        healthInformation.aktivitet.periode?.any { periode ->
+            if (periode.periodeFOMDato != null && infotrygdforespArbuforFom != null) {
+            periode.periodeFOMDato.toGregorianCalendar().toZonedDateTime().toLocalDate().isBefore(infotrygdforespArbuforFom)
+            } else {
+                false
+            }
+        } ?: false
     }),
 
     @Description("Hvis sykmeldingsperioden er større enn 1 år")
