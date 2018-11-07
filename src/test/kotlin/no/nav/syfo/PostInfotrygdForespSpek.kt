@@ -94,17 +94,12 @@ object PostInfotrygdForespSpek : Spek({
 
         it("Should check rule 1514") {
             val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
+            healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
+                periodeFOMDato = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2017, 5, 1))
+                periodeTOMDato = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 6, 1))
+            })
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
-            infotrygdForespResponse.sMhistorikk =
-                    InfotrygdForesp.SMhistorikk().apply {
-                        sykmelding.add(TypeSMinfo().apply {
-                            periode = TypeSMinfo.Periode().apply {
-                                arbufoerFOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 5, 1))
-                                arbufoerTOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2019, 6, 31))
-                            }
-                        })
-                    }
 
             val ruleData = RuleData(infotrygdForespResponse, healthInformation)
             val results = listOf<List<Rule<RuleData>>>(
@@ -116,17 +111,12 @@ object PostInfotrygdForespSpek : Spek({
 
         it("Should check rule 1514") {
             val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
+            healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
+                periodeFOMDato = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2017, 5, 1))
+                periodeTOMDato = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 6, 1))
+            })
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
-            infotrygdForespResponse.sMhistorikk =
-                    InfotrygdForesp.SMhistorikk().apply {
-                        sykmelding.add(TypeSMinfo().apply {
-                            periode = TypeSMinfo.Periode().apply {
-                                arbufoerFOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 5, 1))
-                                arbufoerTOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2019, 6, 31))
-                            }
-                        })
-                    }
 
             val ruleData = RuleData(infotrygdForespResponse, healthInformation)
             val results = listOf<List<Rule<RuleData>>>(
@@ -138,15 +128,17 @@ object PostInfotrygdForespSpek : Spek({
 
         it("Should check rule 1514") {
             val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
+            healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
+                periodeFOMDato = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2017, 5, 1))
+                periodeTOMDato = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 6, 1))
+            })
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk =
                     InfotrygdForesp.SMhistorikk().apply {
                         sykmelding.add(TypeSMinfo().apply {
                             periode = TypeSMinfo.Periode().apply {
-                                arbufoerFOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 5, 1))
-                                arbufoerTOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2019, 6, 31))
-                                maxDato = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2019, 5, 31))
+                                maxDato = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 4, 31))
                             }
                         })
                     }
