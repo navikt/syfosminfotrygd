@@ -31,8 +31,9 @@ enum class ValidationRules(override val ruleId: Int?, override val status: Statu
         val healthInformationSyketilfelleStartDato: LocalDate? = healthInformation.syketilfelleStartDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
         val healthInformationPeriodeFomdato: LocalDate? = healthInformation.aktivitet.periode.firstOrNull()?.periodeFOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
 
-        if (healthInformationPeriodeFomdato != null && healthInformationSyketilfelleStartDato != null) {
-            !infotrygdforespSmHistFinnes && healthInformationSyketilfelleStartDato.compareTo(healthInformationPeriodeFomdato) >= 1
+        if (healthInformationPeriodeFomdato != null &&
+                healthInformationSyketilfelleStartDato != null) {
+            !infotrygdforespSmHistFinnes && healthInformationSyketilfelleStartDato != (healthInformationPeriodeFomdato)
         } else {
             false
         }
@@ -43,7 +44,8 @@ enum class ValidationRules(override val ruleId: Int?, override val status: Statu
         val healthInformationPeriodeFomdato: LocalDate? = healthInformation.aktivitet.periode.firstOrNull()?.periodeFOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
         val infotrygdforespArbuforFom: LocalDate? = infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.arbufoerFOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
 
-        if (healthInformationPeriodeFomdato != null && infotrygdforespArbuforFom != null) {
+        if (healthInformationPeriodeFomdato != null &&
+                infotrygdforespArbuforFom != null) {
             healthInformationPeriodeFomdato.isBefore(infotrygdforespArbuforFom)
         } else {
             false
@@ -236,7 +238,13 @@ enum class ValidationRules(override val ruleId: Int?, override val status: Statu
             historikk?.tilltak?.type == "FA"
         }?.tilltak?.tom?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
 
-        sMhistorikkTilltakTypeFA ?: false && healthInformationPeriodeFomdato?.isAfter(sMhistorikkTilltakTypeFATomDato) ?: false
+        if (sMhistorikkTilltakTypeFA != null &&
+                healthInformationPeriodeFomdato != null &&
+                sMhistorikkTilltakTypeFATomDato != null) {
+            sMhistorikkTilltakTypeFA && healthInformationPeriodeFomdato.isAfter(sMhistorikkTilltakTypeFATomDato)
+        } else {
+            false
+        }
     }),
 
     @Description("Hvis personen har stanskode DØD i Infotrygd")
@@ -307,7 +315,7 @@ enum class ValidationRules(override val ruleId: Int?, override val status: Statu
 }
 
 /* TODO only count work days
-fun workdaysBetween(a: LocalDate, b: LocalDate): Int = (1..(ChronoUnit.DAYS.between(a, b) - 1))
+fun workdaysBetween(a: LocalDate, b: LocalDate): Int = (1..(DAYS.between(a, b) - 1))
         .map { a.plusDays(it) }
         .filter { it.dayOfWeek !in arrayOf(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY) }
         .count()
