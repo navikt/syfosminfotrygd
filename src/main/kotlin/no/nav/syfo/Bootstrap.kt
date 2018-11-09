@@ -156,7 +156,7 @@ suspend fun blockingApplicationLogic(
                     setFollowUpText("") // TODO
                 }))
 
-                results.any { rule -> rule.status == Status.INVALID } -> httpClient.sendApprec(env, inputMessageText)
+                results.any { rule -> rule.status == Status.INVALID } -> httpClient.sendApprec(env, fellesformatMarshaller.toString(fellesformat))
                 else -> sendInfotrygdOppdatering(infotrygdOppdateringProducer, session, createInfotrygdInfo(fellesformat, InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation)))
             }
         }
