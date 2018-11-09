@@ -2,6 +2,7 @@ package no.nav.syfo
 
 import io.confluent.kafka.serializers.KafkaAvroSerializer
 import io.ktor.application.Application
+import io.ktor.client.HttpClient
 import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
@@ -19,12 +20,13 @@ import no.nav.helse.sm2013.KontrollsystemBlokkType
 import no.nav.model.infotrygdSporing.InfotrygdForesp
 import no.nav.model.infotrygdSporing.TypeSMinfo
 import no.nav.model.sm2013.HelseOpplysningerArbeidsuforhet
+import no.nav.syfo.api.createHttpClient
+import no.nav.syfo.api.sendApprec
 import no.nav.syfo.api.registerNaisApi
 import no.nav.syfo.model.Status
 import no.nav.syfo.rules.RuleData
 import no.nav.syfo.rules.ValidationRules
 import no.nav.syfo.sak.avro.ProduceTask
-import no.trygdeetaten.xml.eiff._1.XMLEIFellesformat
 import no.trygdeetaten.xml.eiff._1.XMLMottakenhetBlokk
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -75,8 +77,9 @@ fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCo
                     val infotrygdSporringQueue = session.createQueue("queue:///${env.infotrygdSporringQueue}?targetClient=1")
                     val infotrygdOppdateringProducer = session.createProducer(infotrygdOppdateringQueue)
                     val infotrygdSporringProducer = session.createProducer(infotrygdSporringQueue)
+                    val httpClient = createHttpClient(env)
 
-                    blockingApplicationLogic(applicationState, kafkaconsumer, kafkaproducer, infotrygdOppdateringProducer, infotrygdSporringProducer, session)
+                    blockingApplicationLogic(applicationState, kafkaconsumer, kafkaproducer, infotrygdOppdateringProducer, infotrygdSporringProducer, session, env, httpClient)
                 }
             }.toList()
 
@@ -98,7 +101,9 @@ suspend fun blockingApplicationLogic(
     kafkaProducer: KafkaProducer<String, ProduceTask>,
     infotrygdOppdateringProducer: MessageProducer,
     infotrygdSporringProducer: MessageProducer,
-    session: Session
+    session: Session,
+    env: Environment,
+    httpClient: HttpClient
 ) {
     while (applicationState.running) {
         kafkaConsumer.poll(Duration.ofMillis(0)).forEach {
@@ -150,6 +155,8 @@ suspend fun blockingApplicationLogic(
                     setResponsibleUnit("") // TODO the rules should send the NAV office that is found on the person
                     setFollowUpText("") // TODO
                 }))
+
+                results.any { rule -> rule.status == Status.INVALID } -> httpClient.sendApprec(env, inputMessageText)
                 else -> sendInfotrygdOppdatering(infotrygdOppdateringProducer, session, createInfotrygdInfo(fellesformat, InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation)))
             }
         }
@@ -279,5 +286,3 @@ fun findOprasjonstype(periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode
         throw RuntimeException("Could not determined operasjonstype")
     }
 }
-
-inline fun <reified T> XMLEIFellesformat.get() = this.any.find { it is T } as T

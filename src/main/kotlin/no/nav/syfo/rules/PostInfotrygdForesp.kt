@@ -19,7 +19,12 @@ enum class ValidationRules(override val ruleId: Int?, override val status: Statu
 
     @Description("Hvis behandlingsdager er angitt sendes meldingen til manuell behandling.")
     NUMBER_OF_TREATMENT_DAYS_SET(1260, Status.MANUAL_PROCESSING, { (_, healthInformation) ->
-        healthInformation.aktivitet.periode.any { it.behandlingsdager != null }
+        healthInformation.aktivitet?.periode?.any { it?.behandlingsdager != null } ?: false
+    }),
+
+    @Description("Hvis sykmeldingen angir reisetilskudd går meldingen til manuell behandling.")
+    TRAVEL_SUBSIDY_SPECIFIED(1270, Status.MANUAL_PROCESSING, { (_, healthInformation) ->
+        healthInformation.aktivitet?.periode?.any { it?.isReisetilskudd ?: false } ?: false
     }),
 
     @Description("Hvis pasienten ikke finnes i infotrygd")
@@ -119,8 +124,8 @@ enum class ValidationRules(override val ruleId: Int?, override val status: Statu
                 !infotrygdforespFriskKode.isNullOrBlank()) {
                     infotrygdforespHistArbuforFom.isBefore(healthInformationPeriodeFomdato) &&
                             infotrygdforespHistUtbetalingTOM?.isAfter(healthInformationPeriodeFomdato) ?: false &&
-                            !infotrygdforespDiagnoseKode.equals("000") &&
-                            !infotrygdforespFriskKode.equals("H")
+                            infotrygdforespDiagnoseKode != "000" &&
+                            infotrygdforespFriskKode != "H"
         } else {
             false
         }
@@ -201,7 +206,7 @@ enum class ValidationRules(override val ruleId: Int?, override val status: Statu
         }
     }),
 
-    @Description("Hvis en sykmelding fra manuellterapeut overstiger 12 uker regnet fra første sykefraværsdag")
+    @Description("Hvis en sykmelding fra kiropraktor overstiger 12 uker regnet fra første sykefraværsdag")
     DOCTOR_IS_KI_AND_OVER_12_WEEKS(1519, Status.INVALID, { (infotrygdForesp, healthInformation) ->
         val samhandlerType = infotrygdForesp.behandlerInfo?.behandler?.firstOrNull()?.mottakerKode
         val healthInformationPeriodeFomdato: LocalDate? = healthInformation.aktivitet.periode.firstOrNull()?.periodeFOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
@@ -266,6 +271,13 @@ enum class ValidationRules(override val ruleId: Int?, override val status: Statu
         } ?: false
         }),
 
+    @Description("Tilfellet er reisetilskott")
+    CASE_STOP_KODE_RT(1547, Status.MANUAL_PROCESSING, { (infotrygdForesp) ->
+        infotrygdForesp.sMhistorikk?.sykmelding?.any { sykmelding ->
+            sykmelding?.periode?.stans == "RT"
+        } ?: false
+    }),
+
     @Description("Hvis perioden er avsluttet-død(AD)")
     PERIOD_ENDED_DEAD(1548, Status.MANUAL_PROCESSING, { (infotrygdForesp) ->
         infotrygdForesp.sMhistorikk?.sykmelding?.any { sykemelding ->
@@ -304,24 +316,51 @@ enum class ValidationRules(override val ruleId: Int?, override val status: Statu
     }),
 
     @Description("Infotrygd returnerte en feil, vi kan ikke automatisk oppdatere Infotrygd")
-    ERROR_FROM_IT(1591, Status.MANUAL_PROCESSING, { (infotrygdForesp) ->
-        val hovedStatusKodemelding: Int? = infotrygdForesp.hovedStatus.kodeMelding.toIntOrNull()
-        val sMhistorikktStatusKodemelding: Int? = infotrygdForesp.sMhistorikk?.status?.kodeMelding?.toIntOrNull()
-        val parallelleYtelserStatusKodemelding: kotlin.Int? = infotrygdForesp.parallelleYtelser?.status?.kodeMelding?.toIntOrNull()
-        val diagnoseOKUttrekkStatusKodemelding: kotlin.Int? = infotrygdForesp.diagnosekodeOK?.status?.kodeMelding?.toIntOrNull()
-        val pasientUttrekkStatusKodemelding: kotlin.Int? = infotrygdForesp.pasient?.status?.kodeMelding?.toIntOrNull()
+    ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING(1591, Status.MANUAL_PROCESSING, { (infotrygdForesp) ->
+        val hovedStatusKodemelding: Int? = infotrygdForesp.hovedStatus?.kodeMelding?.toIntOrNull()
+        when (hovedStatusKodemelding) {
+            null -> false
+            else -> hovedStatusKodemelding > 4
+        }
+    }),
 
-        hovedStatusKodemelding ?: 0 > 4 ||
-                sMhistorikktStatusKodemelding ?: 0 > 4 ||
-                parallelleYtelserStatusKodemelding ?: 0 > 4 ||
-                diagnoseOKUttrekkStatusKodemelding ?: 0 > 4 ||
-                pasientUttrekkStatusKodemelding ?: 0 > 4
+    @Description("Infotrygd returnerte en feil, vi kan ikke automatisk oppdatere Infotrygd")
+    ERROR_FROM_IT_SMHISTORIKK_STATUS_KODEMELDING(1591, Status.MANUAL_PROCESSING, { (infotrygdForesp) ->
+        val sMhistorikktStatusKodemelding: Int? = infotrygdForesp.sMhistorikk?.status?.kodeMelding?.toIntOrNull()
+
+        when (sMhistorikktStatusKodemelding) {
+            null -> false
+            else -> sMhistorikktStatusKodemelding > 4
+        }
+    }),
+
+    @Description("Infotrygd returnerte en feil, vi kan ikke automatisk oppdatere Infotrygd")
+    ERROR_FROM_IT_PARALELLYTELSER_STATUS_KODEMELDING(1591, Status.MANUAL_PROCESSING, { (infotrygdForesp) ->
+        val parallelleYtelserStatusKodemelding: Int? = infotrygdForesp.parallelleYtelser?.status?.kodeMelding?.toIntOrNull()
+
+        when (parallelleYtelserStatusKodemelding) {
+            null -> false
+            else -> parallelleYtelserStatusKodemelding > 4
+        }
+    }),
+
+    @Description("Infotrygd returnerte en feil, vi kan ikke automatisk oppdatere Infotrygd")
+    ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING(1591, Status.MANUAL_PROCESSING, { (infotrygdForesp) ->
+        val diagnoseOKUttrekkStatusKodemelding: Int? = infotrygdForesp.diagnosekodeOK?.status?.kodeMelding?.toIntOrNull()
+
+        when (diagnoseOKUttrekkStatusKodemelding) {
+            null -> false
+            else -> diagnoseOKUttrekkStatusKodemelding > 4
+        }
+    }),
+
+    @Description("Infotrygd returnerte en feil, vi kan ikke automatisk oppdatere Infotrygd")
+    ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING(1591, Status.MANUAL_PROCESSING, { (infotrygdForesp) ->
+        val pasientUttrekkStatusKodemelding: Int? = infotrygdForesp.pasient?.status?.kodeMelding?.toIntOrNull()
+
+        when (pasientUttrekkStatusKodemelding) {
+            null -> false
+            else -> pasientUttrekkStatusKodemelding > 4
+        }
     }),
 }
-
-/* TODO only count work days
-fun workdaysBetween(a: LocalDate, b: LocalDate): Int = (1..(DAYS.between(a, b) - 1))
-        .map { a.plusDays(it) }
-        .filter { it.dayOfWeek !in arrayOf(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY) }
-        .count()
-*/

@@ -47,6 +47,22 @@ object PostInfotrygdForespSpek : Spek({
             results.any { it == ValidationRules.NUMBER_OF_TREATMENT_DAYS_SET } shouldEqual true
         }
 
+        it("Should check rule 1270") {
+            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
+            healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
+                isReisetilskudd = true
+            })
+
+            val infotrygdForespResponse = deafaultInfotrygdForesp()
+
+            val ruleData = RuleData(infotrygdForespResponse, healthInformation)
+            val results = listOf<List<Rule<RuleData>>>(
+                    ValidationRules.values().toList()
+            ).flatten().filter { rule -> rule.predicate(ruleData) }
+
+            results.any { it == ValidationRules.TRAVEL_SUBSIDY_SPECIFIED } shouldEqual true
+        }
+
         it("Should check rule 1501") {
             val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
             val infotrygdForespResponse = deafaultInfotrygdForesp()
@@ -406,6 +422,26 @@ object PostInfotrygdForespSpek : Spek({
             results.any { it == ValidationRules.PERSON_MOVING_KODE_FL } shouldEqual true
         }
 
+        it("Should check rule 1547") {
+            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
+
+            val infotrygdForespResponse = deafaultInfotrygdForesp()
+            infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
+                sykmelding.add(TypeSMinfo().apply {
+                    periode = TypeSMinfo.Periode().apply {
+                        stans = "RT"
+                    }
+                })
+            }
+
+            val ruleData = RuleData(infotrygdForespResponse, healthInformation)
+            val results = listOf<List<Rule<RuleData>>>(
+                    ValidationRules.values().toList()
+            ).flatten().filter { rule -> rule.predicate(ruleData) }
+
+            results.any { it == ValidationRules.CASE_STOP_KODE_RT } shouldEqual true
+        }
+
         it("Should check rule 1548") {
             val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
 
@@ -511,28 +547,22 @@ object PostInfotrygdForespSpek : Spek({
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.hovedStatus = StatusType().apply {
-                kodeMelding = "3"
+                kodeMelding = "5"
             }
+
+            val ruleData = RuleData(infotrygdForespResponse, healthInformation)
+            val results = listOf<List<Rule<RuleData>>>(
+                    ValidationRules.values().toList()
+            ).flatten().filter { rule -> rule.predicate(ruleData) }
+
+            results.any { it == ValidationRules.ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING } shouldEqual true
+        }
+
+        it("Should check rule 1591") {
+            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
+            val infotrygdForespResponse = deafaultInfotrygdForesp()
 
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
-                status = StatusType().apply {
-                    kodeMelding = "3"
-                }
-            }
-
-            infotrygdForespResponse.parallelleYtelser = InfotrygdForesp.ParallelleYtelser().apply {
-                status = StatusType().apply {
-                    kodeMelding = "3"
-                }
-            }
-
-            infotrygdForespResponse.diagnosekodeOK = InfotrygdForesp.DiagnosekodeOK().apply {
-                status = StatusType().apply {
-                    kodeMelding = "3"
-                }
-            }
-
-            infotrygdForespResponse.pasient = InfotrygdForesp.Pasient().apply {
                 status = StatusType().apply {
                     kodeMelding = "5"
                 }
@@ -543,8 +573,62 @@ object PostInfotrygdForespSpek : Spek({
                     ValidationRules.values().toList()
             ).flatten().filter { rule -> rule.predicate(ruleData) }
 
-            results.any { it == ValidationRules.ERROR_FROM_IT } shouldEqual true
+            results.any { it == ValidationRules.ERROR_FROM_IT_SMHISTORIKK_STATUS_KODEMELDING } shouldEqual true
         }
+
+        it("Should check rule 1591") {
+            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
+
+            val infotrygdForespResponse = deafaultInfotrygdForesp()
+            infotrygdForespResponse.parallelleYtelser = InfotrygdForesp.ParallelleYtelser().apply {
+                status = StatusType().apply {
+                    kodeMelding = "5"
+                }
+            }
+
+            val ruleData = RuleData(infotrygdForespResponse, healthInformation)
+            val results = listOf<List<Rule<RuleData>>>(
+                    ValidationRules.values().toList()
+            ).flatten().filter { rule -> rule.predicate(ruleData) }
+
+            results.any { it == ValidationRules.ERROR_FROM_IT_PARALELLYTELSER_STATUS_KODEMELDING } shouldEqual true
+        }
+
+        it("Should check rule 1591") {
+            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
+
+            val infotrygdForespResponse = deafaultInfotrygdForesp()
+            infotrygdForespResponse.diagnosekodeOK = InfotrygdForesp.DiagnosekodeOK().apply {
+                status = StatusType().apply {
+                    kodeMelding = "5"
+                }
+            }
+
+            val ruleData = RuleData(infotrygdForespResponse, healthInformation)
+            val results = listOf<List<Rule<RuleData>>>(
+                    ValidationRules.values().toList()
+            ).flatten().filter { rule -> rule.predicate(ruleData) }
+
+            results.any { it == ValidationRules.ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING } shouldEqual true
+        }
+
+        it("Should check rule 1591") {
+            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
+
+            val infotrygdForespResponse = deafaultInfotrygdForesp()
+            infotrygdForespResponse.pasient = InfotrygdForesp.Pasient().apply {
+                status = StatusType().apply {
+                    kodeMelding = "5"
+                }
+            }
+
+                val ruleData = RuleData(infotrygdForespResponse, healthInformation)
+                val results = listOf<List<Rule<RuleData>>>(
+                        ValidationRules.values().toList()
+                ).flatten().filter { rule -> rule.predicate(ruleData) }
+
+                results.any { it == ValidationRules.ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING } shouldEqual true
+            }
 
         it("Should check rule 1519") {
             val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
