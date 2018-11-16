@@ -32,7 +32,7 @@ fun createHttpClient(env: Environment) = HttpClient(CIO.config {
 
 suspend fun HttpClient.sendApprec(env: Environment, payload: String): Boolean = post {
 
-    //TODO create the complete apprec with fellesformat here createApprec()
+    // TODO create the complete apprec with fellesformat here createApprec()
     body = payload
     accept(ContentType.Application.Json)
 
