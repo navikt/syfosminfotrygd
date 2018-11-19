@@ -1,14 +1,11 @@
 package no.nav.syfo.rules
 
 import no.nav.model.infotrygdSporing.InfotrygdForesp
-import no.nav.model.infotrygdSporing.TypeMottakerKode
 import no.nav.model.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.syfo.Description
 import no.nav.syfo.Rule
 import no.nav.syfo.model.Status
 import java.time.LocalDate
-import java.time.temporal.ChronoUnit.DAYS
-import java.time.temporal.ChronoUnit.YEARS
 
 data class RuleData(
     val infotrygdForesp: InfotrygdForesp,
@@ -37,13 +34,12 @@ enum class ValidationRules(override val ruleId: Int?, override val status: Statu
 
     @Description("Hvis meldingen ikke kan knyttes til noe registrert tilfelle i Infotrygd, og legen har spesifisert syketilfellets startdato forskjellig fra første fraværsdag")
     MESSAGE_NOT_IN_INFOTRYGD(1510, Status.MANUAL_PROCESSING, { (infotrygdForesp, healthInformation) ->
-        val infotrygdforespSmHistFinnes: kotlin.Boolean = infotrygdForesp.sMhistorikk?.status?.kodeMelding != "04"
-        val healthInformationSyketilfelleStartDato: LocalDate? = healthInformation.syketilfelleStartDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
+        val infotrygdforespSmHistFinnes: Boolean = infotrygdForesp.sMhistorikk?.status?.kodeMelding != "04"
         val healthInformationPeriodeFomdato: LocalDate? = healthInformation.aktivitet.periode.firstOrNull()?.periodeFOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
+        val infortrygdsmhistorikkTom: LocalDate? = infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.arbufoerTOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
 
-        if (healthInformationPeriodeFomdato != null &&
-                healthInformationSyketilfelleStartDato != null) {
-            !infotrygdforespSmHistFinnes && healthInformationSyketilfelleStartDato != (healthInformationPeriodeFomdato)
+        if (healthInformationPeriodeFomdato != null && infortrygdsmhistorikkTom != null) {
+            !infotrygdforespSmHistFinnes && healthInformationPeriodeFomdato.isBefore(infortrygdsmhistorikkTom)
         } else {
             false
         }
@@ -62,55 +58,7 @@ enum class ValidationRules(override val ruleId: Int?, override val status: Statu
         } ?: false
     }),
 
-    @Description("Hvis sykmeldingsperioden er større enn 1 år")
-    SICK_LEAVE_PERIOD_OVER_1_YEAR_NO_HISTORY(1514, Status.MANUAL_PROCESSING, { (infotrygdForesp, healthInformation) ->
-        val sMhistorikkArbuforFOM: LocalDate? = infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.arbufoerFOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
-        val sMhistorikkArbuforTOM: LocalDate? = infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.arbufoerTOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
-        val healthInformationPeriodeFomdato: LocalDate? = healthInformation.aktivitet.periode.firstOrNull()?.periodeFOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
-        val healthInformationPeriodeTomdato: LocalDate? = healthInformation.aktivitet.periode.firstOrNull()?.periodeTOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
-
-        if (healthInformationPeriodeFomdato != null &&
-                healthInformationPeriodeTomdato != null &&
-                sMhistorikkArbuforFOM == null &&
-                sMhistorikkArbuforTOM == null) {
-            YEARS.between(healthInformationPeriodeFomdato, healthInformationPeriodeTomdato) >= 1
-        } else {
-            false
-        }
-    }),
-
-    @Description("Hvis sykmeldingsperioden er større enn 1 år")
-    SICK_LEAVE_PERIOD_OVER_1_YEAR_NO_MAXDATO(1514, Status.MANUAL_PROCESSING, { (infotrygdForesp, healthInformation) ->
-        val healthInformationPeriodeFomdato: java.time.LocalDate? = healthInformation.aktivitet.periode.firstOrNull()?.periodeFOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
-        val healthInformationPeriodeTomdato: java.time.LocalDate? = healthInformation.aktivitet.periode.firstOrNull()?.periodeTOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
-        val sMhistorikkMaxDato: java.time.LocalDate? = infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.maxDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
-
-        if (healthInformationPeriodeFomdato != null &&
-                healthInformationPeriodeTomdato != null &&
-                sMhistorikkMaxDato == null) {
-            YEARS.between(healthInformationPeriodeFomdato, healthInformationPeriodeTomdato) >= 1
-        } else {
-            false
-        }
-    }),
-
-    @Description("Hvis sykmeldingsperioden er større enn 1 år")
-    SICK_LEAVE_PERIOD_OVER_1_YEAR_MAXDATO(1514, Status.MANUAL_PROCESSING, { (infotrygdForesp, healthInformation) ->
-        val healthInformationPeriodeFomdato: java.time.LocalDate? = healthInformation.aktivitet.periode.firstOrNull()?.periodeFOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
-        val healthInformationPeriodeTomdato: java.time.LocalDate? = healthInformation.aktivitet.periode.firstOrNull()?.periodeTOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
-        val sMhistorikkMaxDato: java.time.LocalDate? = infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.maxDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
-
-        if (healthInformationPeriodeFomdato != null &&
-                healthInformationPeriodeTomdato != null &&
-                sMhistorikkMaxDato != null) {
-            YEARS.between(healthInformationPeriodeFomdato, healthInformationPeriodeTomdato) >= 1 &&
-                    sMhistorikkMaxDato.isBefore(healthInformationPeriodeTomdato)
-        } else {
-            false
-        }
-    }),
-
-    @Description("Hvis sykmeldingen er forlengelse av registrert sykepengehistorikk fra annet kontor så medlingen gå til manuell behandling slik at  saksbehandler kan registrere sykepengetilfellet på ny identdato og  send oppgave til Nav forvaltning for registrering av inntektsopplysninger")
+    @Description("Hvis sykmeldingen er forlengelse av registrert sykepengehistorikk fra annet kontor så medlingen gå til manuell behandling slik at saksbehandler kan registrere sykepengetilfellet på ny identdato og  send oppgave til Nav forvaltning for registrering av inntektsopplysninger")
     SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_1(1515, Status.MANUAL_PROCESSING, { (infotrygdForesp, healthInformation) ->
         val infotrygdforespHistArbuforFom: LocalDate? = infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.arbufoerFOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
         val healthInformationPeriodeFomdato: LocalDate? = healthInformation.aktivitet?.periode?.firstOrNull()?.periodeFOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
@@ -206,27 +154,9 @@ enum class ValidationRules(override val ruleId: Int?, override val status: Statu
         }
     }),
 
-    @Description("Hvis en sykmelding fra kiropraktor overstiger 12 uker regnet fra første sykefraværsdag")
-    DOCTOR_IS_KI_AND_OVER_12_WEEKS(1519, Status.INVALID, { (infotrygdForesp, healthInformation) ->
-        val samhandlerType = infotrygdForesp.behandlerInfo?.behandler?.firstOrNull()?.mottakerKode
-        val healthInformationPeriodeFomdato: LocalDate? = healthInformation.aktivitet.periode.firstOrNull()?.periodeFOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
-        val healthInformationPeriodeTomdato: LocalDate? = healthInformation.aktivitet.periode.firstOrNull()?.periodeTOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
-
-        samhandlerType == TypeMottakerKode.KI && DAYS.between(healthInformationPeriodeFomdato, healthInformationPeriodeTomdato) > 84
-    }),
-
-    @Description("Hvis en sykmelding fra manuellterapeut overstiger 12 uker regnet fra første sykefraværsdag")
-    DOCTOR_IS_MT_AND_OVER_12_WEEKS(1520, Status.INVALID, { (infotrygdForesp, healthInformation) ->
-        val samhandlerType = infotrygdForesp.behandlerInfo?.behandler?.firstOrNull()?.mottakerKode
-        val healthInformationPeriodeFomdato: LocalDate? = healthInformation.aktivitet.periode.firstOrNull()?.periodeFOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
-        val healthInformationPeriodeTomdato: LocalDate? = healthInformation.aktivitet.periode.firstOrNull()?.periodeTOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
-
-        samhandlerType == TypeMottakerKode.MT && DAYS.between(healthInformationPeriodeFomdato, healthInformationPeriodeTomdato) > 84
-    }),
-
     @Description("Hvis uføregrad er endret")
     DIABILITY_GRADE_CANGED(1530, Status.MANUAL_PROCESSING, { (infotrygdForesp, healthInformation) ->
-        val disabilityGradeIT: kotlin.Int? = infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.ufoeregrad?.toInt()
+        val disabilityGradeIT: Int? = infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.ufoeregrad?.toInt()
         val healthInformationDisabilityGrade: Int? = healthInformation.aktivitet.periode.firstOrNull()?.gradertSykmelding?.sykmeldingsgrad
         val sMhistorikkArbuforFOM: LocalDate? = infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.arbufoerFOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
         val healthInformationPeriodeFOMDato: LocalDate? = healthInformation.aktivitet.periode.firstOrNull()?.periodeFOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
