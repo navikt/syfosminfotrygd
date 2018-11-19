@@ -27,7 +27,18 @@ import no.nav.syfo.model.Status
 import no.nav.syfo.rules.RuleData
 import no.nav.syfo.rules.ValidationRules
 import no.nav.syfo.sak.avro.ProduceTask
+import no.nav.syfo.ws.configureSTSFor
+import no.nav.tjeneste.virksomhet.organisasjonenhet.v2.binding.OrganisasjonEnhetV2
+import no.nav.tjeneste.virksomhet.organisasjonenhet.v2.informasjon.Geografi
+import no.nav.tjeneste.virksomhet.organisasjonenhet.v2.meldinger.FinnNAVKontorRequest
+import no.nav.tjeneste.virksomhet.person.v3.binding.PersonV3
+import no.nav.tjeneste.virksomhet.person.v3.informasjon.NorskIdent
+import no.nav.tjeneste.virksomhet.person.v3.informasjon.PersonIdent
+import no.nav.tjeneste.virksomhet.person.v3.informasjon.Personidenter
+import no.nav.tjeneste.virksomhet.person.v3.meldinger.HentGeografiskTilknytningRequest
 import no.trygdeetaten.xml.eiff._1.XMLMottakenhetBlokk
+import org.apache.cxf.ext.logging.LoggingFeature
+import org.apache.cxf.jaxws.JaxWsProxyFactoryBean
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
@@ -79,7 +90,23 @@ fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCo
                     val infotrygdSporringProducer = session.createProducer(infotrygdSporringQueue)
                     val httpClient = createHttpClient(env)
 
-                    blockingApplicationLogic(applicationState, kafkaconsumer, kafkaproducer, infotrygdOppdateringProducer, infotrygdSporringProducer, session, env, httpClient)
+                    val personV3 = JaxWsProxyFactoryBean().apply {
+                        address = env.personV3EndpointURL
+                        features.add(LoggingFeature())
+                        serviceClass = PersonV3::class.java
+                    }.create() as PersonV3
+                    configureSTSFor(personV3, env.srvsminfotrygdUsername,
+                            env.srvsminfotrygdPassword, env.securityTokenServiceUrl)
+
+                    val orgnaisasjonEnhet = JaxWsProxyFactoryBean().apply {
+                        address = env.organisasjonEnhetV2EndpointURL
+                        features.add(LoggingFeature())
+                        serviceClass = OrganisasjonEnhetV2::class.java
+                    }.create() as OrganisasjonEnhetV2
+                    configureSTSFor(personV3, env.srvsminfotrygdUsername,
+                            env.srvsminfotrygdPassword, env.securityTokenServiceUrl)
+
+                    blockingApplicationLogic(applicationState, kafkaconsumer, kafkaproducer, infotrygdOppdateringProducer, infotrygdSporringProducer, session, env, httpClient, personV3, orgnaisasjonEnhet)
                 }
             }.toList()
 
@@ -103,7 +130,9 @@ suspend fun blockingApplicationLogic(
     infotrygdSporringProducer: MessageProducer,
     session: Session,
     env: Environment,
-    httpClient: HttpClient
+    httpClient: HttpClient,
+    personV3: PersonV3,
+    organisasjonEnhetV2: OrganisasjonEnhetV2
 ) {
     while (applicationState.running) {
         kafkaConsumer.poll(Duration.ofMillis(0)).forEach {
@@ -141,20 +170,7 @@ suspend fun blockingApplicationLogic(
             log.info("Outcomes: " + results.joinToString(", ", prefix = "\"", postfix = "\""))
 
             when {
-                results.any { rule -> rule.status == Status.MANUAL_PROCESSING } -> kafkaProducer.send(ProducerRecord("aapen-syfo-oppgave-produserOppgave", ProduceTask().apply {
-                    setMessageId(msgHead.msgInfo.msgId)
-                    setUserIdent(healthInformation.pasient.fodselsnummer.id)
-                    setUserTypeCode("PERSON")
-                    setTaskType("SYK")
-                    setFieldCode("SYK")
-                    setSubcategoryType("SYK_SYK")
-                    setPriorityCode("NORM_SYK")
-                    setDescription("Kunne ikkje oppdatere Infotrygd automatisk, på grunn av følgende: ${results.joinToString(", ", prefix = "\"", postfix = "\"")}")
-                    setStartsInDays(0)
-                    setEndsInDays(21)
-                    setResponsibleUnit("") // TODO the rules should send the NAV office that is found on the person
-                    setFollowUpText("") // TODO
-                }))
+                results.any { rule -> rule.status == Status.MANUAL_PROCESSING } -> produceManualTask(kafkaProducer, msgHead, healthInformation, results, personV3, organisasjonEnhetV2)
 
                 results.any { rule -> rule.status == Status.INVALID } -> httpClient.sendApprec(env, fellesformatMarshaller.toString(fellesformat))
                 else -> sendInfotrygdOppdatering(infotrygdOppdateringProducer, session, createInfotrygdInfo(fellesformat, InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation)))
@@ -285,4 +301,33 @@ fun findOprasjonstype(periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode
     } else {
         throw RuntimeException("Could not determined operasjonstype")
     }
+}
+
+fun produceManualTask(kafkaProducer: KafkaProducer<String, ProduceTask>, msgHead: XMLMsgHead, healthInformation: HelseOpplysningerArbeidsuforhet, results: List<Rule<RuleData>>, personV3: PersonV3, organisasjonEnhetV2: OrganisasjonEnhetV2) {
+
+    val geografiskTilknytning = personV3.hentGeografiskTilknytning(HentGeografiskTilknytningRequest().withAktoer(PersonIdent().withIdent(
+    NorskIdent()
+            .withIdent(healthInformation.pasient.fodselsnummer.id)
+            .withType(Personidenter().withValue(healthInformation.pasient.fodselsnummer.typeId.v))))).geografiskTilknytning
+
+    val navkontorEnhetid = organisasjonEnhetV2.finnNAVKontor(FinnNAVKontorRequest().apply {
+        this.geografiskTilknytning = Geografi().apply {
+            this.value = geografiskTilknytning.geografiskTilknytning ?: "0"
+        }
+    }).navKontor.enhetId
+
+    kafkaProducer.send(ProducerRecord("aapen-syfo-oppgave-produserOppgave", ProduceTask().apply {
+        setMessageId(msgHead.msgInfo.msgId)
+        setUserIdent(healthInformation.pasient.fodselsnummer.id)
+        setUserTypeCode("PERSON")
+        setTaskType("SYK")
+        setFieldCode("SYK")
+        setSubcategoryType("SYK_SYK")
+        setPriorityCode("NORM_SYK")
+        setDescription("Kunne ikkje oppdatere Infotrygd automatisk, på grunn av følgende: ${results.joinToString(", ", prefix = "\"", postfix = "\"")}")
+        setStartsInDays(0)
+        setEndsInDays(21)
+        setResponsibleUnit(navkontorEnhetid)
+        setFollowUpText("") // TODO
+    }))
 }

@@ -31,7 +31,10 @@ data class Environment(
     val mqChannelName: String = config.getProperty("mq.channel.name"),
     val mqUsername: String = config.getProperty("mq.username"),
     val mqPassword: String = config.getProperty("mq.password"),
-    val syfoSmRegelerApiURL: String = config.getProperty("http.syfosmapprec.url")
+    val syfoSmRegelerApiURL: String = config.getProperty("http.syfosmapprec.url"),
+    val personV3EndpointURL: String = config.getProperty("ws.personV3.endpoint.url"),
+    val securityTokenServiceUrl: String = config.getProperty("ws.security.token.service.endpoint.url"),
+    val organisasjonEnhetV2EndpointURL: String = config.getProperty("ws.organisasjons.enhet.v2.endpoint.url")
     /*
     TODO
     Getting fasit values:

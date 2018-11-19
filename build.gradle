@@ -21,6 +21,10 @@ buildscript {
     ext.felleformavV1_version = '1.0.0'
     ext.kotlinx_serialization_version= '0.9.0'
     ext.kith_apprec_version = '1.1'
+    ext.cxf_version = '3.2.5'
+    ext.nav_person_v3_version = '3.2.0'
+    ext.nav_organisasjonEnhet_v2 = '2.1.0'
+    ext.javax_jaxws_api_version = '2.2.1'
 
     ext.jaxb2SourceDir = file("$buildDir/generated-sources/jaxb2")
 }
@@ -149,16 +153,14 @@ dependencies {
     generateJaxb2 "javax.activation:activation:$javax_activation_version"
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_version"
+
     implementation "io.prometheus:simpleclient_hotspot:$prometheus_version"
     implementation "io.prometheus:simpleclient_common:$prometheus_version"
     implementation "io.ktor:ktor-server-netty:$ktor_version"
 
     implementation "ch.qos.logback:logback-classic:$logback_version"
     implementation "net.logstash.logback:logstash-logback-encoder:$logstash_logback_encoder"
-
-    implementation "org.apache.kafka:kafka_2.12:$kafka_version"
 
     implementation "org.glassfish.jaxb:jaxb-runtime:$jaxb_version"
     implementation "javax.xml.bind:jaxb-api:$jaxb_api_version"
@@ -167,17 +169,25 @@ dependencies {
     implementation "no.nav.syfo.tjenester:fellesformat:$fellesformat_version"
     implementation "no.nav.syfo.tjenester:kith-hodemelding:$kith_hodemelding_version"
     implementation "no.nav.syfo.tjenester:kith-apprec:$kith_apprec_version"
-
     implementation "io.confluent:kafka-avro-serializer:$confluent_version"
     implementation "org.apache.avro:avro:$avro_version"
     implementation "no.nav.syfo:syfooppgave-schemas:$syfooppgave_schemas_version"
-
-    implementation "com.ibm.mq:com.ibm.mq.allclient:$ibm_mq_version"
+    implementation "no.nav.tjenester:nav-person-v3-tjenestespesifikasjon:$nav_person_v3_version"
+    implementation "no.nav.tjenester:nav-organisasjonEnhet-v2-tjenestespesifikasjon:$nav_organisasjonEnhet_v2:jaxws"
     implementation "no.nav.helse.xml:fellesformat:$felleformavV1_version"
 
+    // Communication libraries
+    implementation "org.apache.cxf:cxf-rt-frontend-jaxws:$cxf_version"
+    implementation "org.apache.cxf:cxf-rt-features-logging:$cxf_version"
+    implementation "org.apache.cxf:cxf-rt-transports-http:$cxf_version"
+    implementation "org.apache.cxf:cxf-rt-ws-security:$cxf_version"
     implementation "io.ktor:ktor-client-cio:$ktor_version"
     implementation "io.ktor:ktor-client-auth-basic:$ktor_version"
     implementation "io.ktor:ktor-client-gson:$ktor_version"
+    implementation "com.ibm.mq:com.ibm.mq.allclient:$ibm_mq_version"
+    implementation "org.apache.kafka:kafka_2.12:$kafka_version"
+    implementation "javax.xml.ws:jaxws-api:$javax_jaxws_api_version"
+
 
     testImplementation "org.amshove.kluent:kluent:$kluent_version"
     testImplementation "org.spekframework.spek2:spek-dsl-jvm:$spek_version"
