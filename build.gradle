@@ -187,6 +187,7 @@ dependencies {
     implementation "com.ibm.mq:com.ibm.mq.allclient:$ibm_mq_version"
     implementation "org.apache.kafka:kafka_2.12:$kafka_version"
     implementation "javax.xml.ws:jaxws-api:$javax_jaxws_api_version"
+    implementation"com.sun.xml.messaging.saaj:saaj-impl:$saaj_version"
 
 
     testImplementation "org.amshove.kluent:kluent:$kluent_version"

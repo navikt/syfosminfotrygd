@@ -2,7 +2,6 @@ package no.nav.syfo
 
 import io.confluent.kafka.serializers.KafkaAvroSerializer
 import io.ktor.application.Application
-import io.ktor.client.HttpClient
 import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
@@ -20,8 +19,6 @@ import no.nav.helse.sm2013.KontrollsystemBlokkType
 import no.nav.model.infotrygdSporing.InfotrygdForesp
 import no.nav.model.infotrygdSporing.TypeSMinfo
 import no.nav.model.sm2013.HelseOpplysningerArbeidsuforhet
-import no.nav.syfo.api.createHttpClient
-import no.nav.syfo.api.sendApprec
 import no.nav.syfo.api.registerNaisApi
 import no.nav.syfo.model.Status
 import no.nav.syfo.rules.RuleData
@@ -88,7 +85,6 @@ fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCo
                     val infotrygdSporringQueue = session.createQueue("queue:///${env.infotrygdSporringQueue}?targetClient=1")
                     val infotrygdOppdateringProducer = session.createProducer(infotrygdOppdateringQueue)
                     val infotrygdSporringProducer = session.createProducer(infotrygdSporringQueue)
-                    val httpClient = createHttpClient(env)
 
                     val personV3 = JaxWsProxyFactoryBean().apply {
                         address = env.personV3EndpointURL
@@ -106,7 +102,7 @@ fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCo
                     configureSTSFor(personV3, env.srvsminfotrygdUsername,
                             env.srvsminfotrygdPassword, env.securityTokenServiceUrl)
 
-                    blockingApplicationLogic(applicationState, kafkaconsumer, kafkaproducer, infotrygdOppdateringProducer, infotrygdSporringProducer, session, env, httpClient, personV3, orgnaisasjonEnhet)
+                    blockingApplicationLogic(applicationState, kafkaconsumer, kafkaproducer, infotrygdOppdateringProducer, infotrygdSporringProducer, session, personV3, orgnaisasjonEnhet)
                 }
             }.toList()
 
@@ -129,8 +125,6 @@ suspend fun blockingApplicationLogic(
     infotrygdOppdateringProducer: MessageProducer,
     infotrygdSporringProducer: MessageProducer,
     session: Session,
-    env: Environment,
-    httpClient: HttpClient,
     personV3: PersonV3,
     organisasjonEnhetV2: OrganisasjonEnhetV2
 ) {
@@ -170,9 +164,8 @@ suspend fun blockingApplicationLogic(
             log.info("Outcomes: " + results.joinToString(", ", prefix = "\"", postfix = "\""))
 
             when {
-                results.any { rule -> rule.status == Status.MANUAL_PROCESSING } -> produceManualTask(kafkaProducer, msgHead, healthInformation, results, personV3, organisasjonEnhetV2)
-
-                results.any { rule -> rule.status == Status.INVALID } -> httpClient.sendApprec(env, fellesformatMarshaller.toString(fellesformat))
+                results.any { rule -> rule.status == Status.MANUAL_PROCESSING } ->
+                    produceManualTask(kafkaProducer, msgHead, healthInformation, results, personV3, organisasjonEnhetV2)
                 else -> sendInfotrygdOppdatering(infotrygdOppdateringProducer, session, createInfotrygdInfo(fellesformat, InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation)))
             }
         }
