@@ -9,6 +9,7 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.launch
+import net.logstash.logback.argument.StructuredArgument
 import net.logstash.logback.argument.StructuredArguments.keyValue
 import no.kith.xmlstds.msghead._2006_05_24.XMLMsgHead
 import no.kith.xmlstds.msghead._2006_05_24.XMLOrganisation
@@ -165,8 +166,8 @@ suspend fun blockingApplicationLogic(
 
             when {
                 results.any { rule -> rule.status == Status.MANUAL_PROCESSING } ->
-                    produceManualTask(kafkaProducer, msgHead, healthInformation, results, personV3, organisasjonEnhetV2)
-                else -> sendInfotrygdOppdatering(infotrygdOppdateringProducer, session, createInfotrygdInfo(fellesformat, InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation)))
+                    produceManualTask(kafkaProducer, msgHead, healthInformation, results, personV3, organisasjonEnhetV2, logKeys, logValues)
+                else -> sendInfotrygdOppdatering(infotrygdOppdateringProducer, session, createInfotrygdInfo(fellesformat, InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation)), logKeys, logValues)
             }
         }
         delay(100)
@@ -217,9 +218,12 @@ fun sendInfotrygdSporring(
 fun sendInfotrygdOppdatering(
     producer: MessageProducer,
     session: Session,
-    fellesformat: EIFellesformat
+    fellesformat: EIFellesformat,
+    logKeys: String,
+    logValues: Array<StructuredArgument>
 ) = producer.send(session.createTextMessage().apply {
     text = fellesformatMarshaller.toString(fellesformat)
+    log.info("Message is manual outcome $logKeys", *logValues)
     log.info("Updating Infotrygd, text sendt to Infotrygd + $text")
 })
 
@@ -296,8 +300,8 @@ fun findOprasjonstype(periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode
     }
 }
 
-fun produceManualTask(kafkaProducer: KafkaProducer<String, ProduceTask>, msgHead: XMLMsgHead, healthInformation: HelseOpplysningerArbeidsuforhet, results: List<Rule<RuleData>>, personV3: PersonV3, organisasjonEnhetV2: OrganisasjonEnhetV2) {
-
+fun produceManualTask(kafkaProducer: KafkaProducer<String, ProduceTask>, msgHead: XMLMsgHead, healthInformation: HelseOpplysningerArbeidsuforhet, results: List<Rule<RuleData>>, personV3: PersonV3, organisasjonEnhetV2: OrganisasjonEnhetV2, logKeys: String, logValues: Array<StructuredArgument>) {
+    log.info("Message is manual outcome $logKeys", *logValues)
     val geografiskTilknytning = personV3.hentGeografiskTilknytning(HentGeografiskTilknytningRequest().withAktoer(PersonIdent().withIdent(
                 NorskIdent()
                         .withIdent(healthInformation.pasient.fodselsnummer.id)
@@ -323,4 +327,5 @@ fun produceManualTask(kafkaProducer: KafkaProducer<String, ProduceTask>, msgHead
         setResponsibleUnit(navKontor.enhetId)
         setFollowUpText("") // TODO
     }))
+    log.info("Message sendt to topic: aapen-syfo-oppgave-produserOppgave $logKeys", *logValues)
 }
