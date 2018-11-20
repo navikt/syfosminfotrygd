@@ -99,7 +99,7 @@ fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCo
                         features.add(LoggingFeature())
                         serviceClass = OrganisasjonEnhetV2::class.java
                     }.create() as OrganisasjonEnhetV2
-                    configureSTSFor(personV3, env.srvsminfotrygdUsername,
+                    configureSTSFor(orgnaisasjonEnhet, env.srvsminfotrygdUsername,
                             env.srvsminfotrygdPassword, env.securityTokenServiceUrl)
 
                     blockingApplicationLogic(applicationState, kafkaconsumer, kafkaproducer, infotrygdOppdateringProducer, infotrygdSporringProducer, session, personV3, orgnaisasjonEnhet)
