@@ -25,6 +25,7 @@ buildscript {
     ext.nav_person_v3_version = '3.2.0'
     ext.nav_organisasjonEnhet_v2 = '2.1.0'
     ext.javax_jaxws_api_version = '2.2.1'
+    ext.saaj_version = "1.4.0"
 
     ext.jaxb2SourceDir = file("$buildDir/generated-sources/jaxb2")
 }
@@ -187,7 +188,7 @@ dependencies {
     implementation "com.ibm.mq:com.ibm.mq.allclient:$ibm_mq_version"
     implementation "org.apache.kafka:kafka_2.12:$kafka_version"
     implementation "javax.xml.ws:jaxws-api:$javax_jaxws_api_version"
-    implementation"com.sun.xml.messaging.saaj:saaj-impl:$saaj_version"
+    implementation "com.sun.xml.messaging.saaj:saaj-impl:$saaj_version"
 
 
     testImplementation "org.amshove.kluent:kluent:$kluent_version"
