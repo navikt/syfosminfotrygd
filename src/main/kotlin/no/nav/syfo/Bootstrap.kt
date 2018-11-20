@@ -299,15 +299,15 @@ fun findOprasjonstype(periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode
 fun produceManualTask(kafkaProducer: KafkaProducer<String, ProduceTask>, msgHead: XMLMsgHead, healthInformation: HelseOpplysningerArbeidsuforhet, results: List<Rule<RuleData>>, personV3: PersonV3, organisasjonEnhetV2: OrganisasjonEnhetV2) {
 
     val geografiskTilknytning = personV3.hentGeografiskTilknytning(HentGeografiskTilknytningRequest().withAktoer(PersonIdent().withIdent(
-    NorskIdent()
-            .withIdent(healthInformation.pasient.fodselsnummer.id)
-            .withType(Personidenter().withValue(healthInformation.pasient.fodselsnummer.typeId.v))))).geografiskTilknytning
+                NorskIdent()
+                        .withIdent(healthInformation.pasient.fodselsnummer.id)
+                        .withType(Personidenter().withValue(healthInformation.pasient.fodselsnummer.typeId.v))))).geografiskTilknytning
 
-    val navkontorEnhetid = organisasjonEnhetV2.finnNAVKontor(FinnNAVKontorRequest().apply {
-        this.geografiskTilknytning = Geografi().apply {
-            this.value = geografiskTilknytning.geografiskTilknytning ?: "0"
-        }
-    }).navKontor.enhetId
+    val navKontor = organisasjonEnhetV2.finnNAVKontor(FinnNAVKontorRequest().apply {
+            this.geografiskTilknytning = Geografi().apply {
+                this.value = geografiskTilknytning?.geografiskTilknytning ?: "0"
+            }
+        }).navKontor
 
     kafkaProducer.send(ProducerRecord("aapen-syfo-oppgave-produserOppgave", ProduceTask().apply {
         setMessageId(msgHead.msgInfo.msgId)
@@ -320,7 +320,7 @@ fun produceManualTask(kafkaProducer: KafkaProducer<String, ProduceTask>, msgHead
         setDescription("Kunne ikkje oppdatere Infotrygd automatisk, på grunn av følgende: ${results.joinToString(", ", prefix = "\"", postfix = "\"")}")
         setStartsInDays(0)
         setEndsInDays(21)
-        setResponsibleUnit(navkontorEnhetid)
+        setResponsibleUnit(navKontor.enhetId)
         setFollowUpText("") // TODO
     }))
 }
