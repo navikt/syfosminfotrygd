@@ -160,7 +160,7 @@ suspend fun blockingApplicationLogic(
             val ruleData = RuleData(infotrygdForespResponse, healthInformation)
             val results = listOf<List<Rule<RuleData>>>(
                     ValidationRules.values().toList()
-            ).flatten().filter { rule -> rule.predicate(ruleData) }.onEach { RULE_HIT_COUNTER.labels(it.name) }
+            ).flatten().filter { rule -> rule.predicate(ruleData) }.onEach { RULE_HIT_COUNTER.labels(it.name).inc() }
 
             log.info("Outcomes: " + results.joinToString(", ", prefix = "\"", postfix = "\""))
 
