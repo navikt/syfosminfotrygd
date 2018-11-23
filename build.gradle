@@ -50,7 +50,13 @@ repositories {
     maven { url "https://kotlin.bintray.com/kotlinx" }
 }
 
-jar.manifest.attributes("Main-Class" : "no.nav.syfo.BootstrapKt")
+jar.manifest {
+    attributes("Main-Class" : "no.nav.syfo.BootstrapKt")
+}
+
+shadowJar {
+    mergeServiceFiles("META-INF/cxf")
+}
 
 test {
     useJUnitPlatform {
