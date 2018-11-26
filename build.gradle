@@ -1,4 +1,5 @@
 buildscript {
+    ext.artemis_version = '2.6.2'
     ext.avro_version = '1.8.2'
     ext.confluent_version = '4.1.1'
     ext.syfooppgave_schemas_version = '1.0-SNAPSHOT'
@@ -25,6 +26,7 @@ buildscript {
     ext.nav_organisasjonEnhet_v2 = '2.1.0'
     ext.javax_jaxws_api_version = '2.2.1'
     ext.saaj_version = "1.4.0"
+    ext.mockito_core_version = "2.23.4"
 
     ext.jaxb2SourceDir = file("$buildDir/generated-sources/jaxb2")
 }
@@ -180,12 +182,16 @@ dependencies {
     implementation "org.apache.kafka:kafka_2.12:$kafka_version"
     implementation "javax.xml.ws:jaxws-api:$javax_jaxws_api_version"
     implementation "com.sun.xml.messaging.saaj:saaj-impl:$saaj_version"
+    implementation "org.mockito:mockito-core:$mockito_core_version"
 
 
     testImplementation "org.amshove.kluent:kluent:$kluent_version"
     testImplementation "org.spekframework.spek2:spek-dsl-jvm:$spek_version"
     testImplementation "io.ktor:ktor-server-test-host:$ktor_version"
     testImplementation "no.nav:kafka-embedded-env:$kafka_embedded_version"
+    testImplementation "org.apache.activemq:artemis-server:$artemis_version"
+    testImplementation "org.apache.activemq:artemis-jms-client:$artemis_version"
+    testImplementation "org.mockito:mockito-core:$mockito_core_version"
 
     testRuntimeOnly "org.spekframework.spek2:spek-runtime-jvm:$spek_version"
     testRuntimeOnly "org.spekframework.spek2:spek-runner-junit5:$spek_version"
