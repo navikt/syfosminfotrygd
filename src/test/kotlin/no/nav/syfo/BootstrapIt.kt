@@ -1,25 +1,40 @@
 package no.nav.syfo
 
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.lang.Exception
+import java.util.concurrent.Executors
 
-object BootstrapIt : Spek({
+object BootstrapIt : Spek({ runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()) {
+
     val e = EmbeddedEnvironment()
-    beforeGroup { e.start() }
+    beforeGroup {
+        launch {
+            try {
+                e.doBlockingApplicationLogic()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
     afterEachTest {
         e.resetMocks()
     }
-        afterGroup {
-            e.shutdown()
-        }
+    afterGroup {
+        e.shutdown()
+    }
 
-    describe("Full flow exception") {
-        /*it("Ends on backout queue") {
+    describe("Testing") {
+        it("Testing read for kafaka") {
             e.produceKafaMessageOnTopic(e.sm2013AutomaticHandlingTopic, "test")
             val message = e.consumeKafaMessageOnTopic()
             message.size shouldEqual 1
-            message[0].value() shouldEqual message
+            message[0].value() shouldEqual "test"
             println("I am here")
-        } */
+        }
     }
-})
+} })

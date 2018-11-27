@@ -1,8 +1,6 @@
 package no.nav.syfo
 
 import io.confluent.kafka.serializers.KafkaAvroSerializer
-import io.prometheus.client.CollectorRegistry
-import kotlinx.coroutines.runBlocking
 import no.nav.common.KafkaEnvironment
 import no.nav.syfo.sak.avro.ProduceTask
 import no.nav.tjeneste.virksomhet.organisasjonenhet.v2.binding.OrganisasjonEnhetV2
@@ -20,6 +18,7 @@ import org.apache.cxf.transports.http.configuration.HTTPClientPolicy
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
+import org.apache.kafka.common.serialization.StringDeserializer
 import org.apache.kafka.common.serialization.StringSerializer
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.servlet.ServletContextHandler
@@ -29,47 +28,62 @@ import java.net.ServerSocket
 import java.time.Duration
 import javax.jms.Connection
 import javax.jms.ConnectionFactory
+import javax.jms.MessageProducer
+import javax.jms.Queue
 import javax.jms.Session
 import javax.naming.InitialContext
 import javax.xml.ws.Endpoint
 
 class EmbeddedEnvironment {
-    private val env = Environment()
     private val applicationState = ApplicationState()
     private val personV3Mock: PersonV3 = Mockito.mock(PersonV3::class.java)
     private val organisasjonEnhetV2Mock: OrganisasjonEnhetV2 = Mockito.mock(OrganisasjonEnhetV2::class.java)
 
-    val sm2013AutomaticHandlingTopic = env.sm2013AutomaticHandlingTopic
-
     private val wsMockPort = randomPort()
     private val wsBaseUrl = "http://localhost:$wsMockPort"
 
-    private lateinit var activeMQServer: ActiveMQServer
-    private lateinit var connectionFactory: ConnectionFactory
-    private lateinit var queueConnection: Connection
-    private lateinit var initialContext: InitialContext
-
-    private lateinit var session: Session
-
-    private lateinit var server: Server
+    private val activeMQServer: ActiveMQServer = ActiveMQServers.newActiveMQServer(ConfigurationImpl()
+            .setPersistenceEnabled(false)
+            .setJournalDirectory("target/data/journal")
+            .setSecurityEnabled(false)
+            .addAcceptorConfiguration("invm", "vm://0"))
+    private val connectionFactory: ConnectionFactory
+    private val queueConnection: Connection
+    private val initialContext: InitialContext
+    private val session: Session
+    private val server: Server
+    val infotrygdOppdateringQueue: Queue
+    val infotrygdSporringQueue: Queue
+    val infotrygdOppdateringProducer: MessageProducer
+    val infotrygdSporringProducer: MessageProducer
 
     private val embeddedKafkaEnvironment = KafkaEnvironment(
             autoStart = false,
-            topics = listOf(env.sm2013AutomaticHandlingTopic, env.smPaperAutomaticHandlingTopic)
+            topics = listOf("privat-syfo-sm2013-automatiskBehandling", "privat-syfo-smpapir-automatiskBehandling")
     )
 
-    private lateinit var kafkaproducerInput: KafkaProducer<String, String>
+    private val env = Environment(
+            kafkaBootstrapServers = embeddedKafkaEnvironment.brokersURL,
+            organisasjonEnhetV2EndpointURL = "$wsBaseUrl/ws/norg2",
+            personV3EndpointURL = "$wsBaseUrl/ws/tps",
+            securityTokenServiceUrl = "$wsBaseUrl/ws/sts",
+            infotrygdSporringQueue = "infotrygd_foresporsel_queue",
+            infotrygdOppdateringQueue = "infotrygd_oppdatering_queue",
+            mqHostname = "mqgateway",
+            mqQueueManagerName = "mqgatewayname",
+            mqChannelName = "mqchannel")
 
-    private lateinit var kafkaconsumer: KafkaConsumer<String, String>
+    val sm2013AutomaticHandlingTopic = env.sm2013AutomaticHandlingTopic
 
-        fun start() = runBlocking {
+    private val kafkaproducerInput: KafkaProducer<String, String>
+    private val kafkaproducerOutput: KafkaProducer<String, ProduceTask>
+    private val kafkaconsumer: KafkaConsumer<String, String>
 
-            activeMQServer = ActiveMQServers.newActiveMQServer(ConfigurationImpl()
-                    .setPersistenceEnabled(false)
-                    .setJournalDirectory("target/data/journal")
-                    .setSecurityEnabled(false)
-                    .addAcceptorConfiguration("invm", "vm://0"))
-            activeMQServer.start()
+    private val organisasjonEnhetV2Client: OrganisasjonEnhetV2
+    private val personV3: PersonV3
+
+    init {
+        activeMQServer.start()
             initialContext = InitialContext()
             connectionFactory = initialContext.lookup("ConnectionFactory") as ConnectionFactory
 
@@ -79,19 +93,19 @@ class EmbeddedEnvironment {
             queueConnection.start()
 
             session = queueConnection.createSession(false, Session.AUTO_ACKNOWLEDGE)
-            val infotrygdOppdateringQueue = session.createQueue("infotrygd_foresporsel_queue")
-            val infotrygdSporringQueue = session.createQueue("infotrygd_oppdatering_queue")
-            val infotrygdOppdateringProducer = session.createProducer(infotrygdOppdateringQueue)
-            val infotrygdSporringProducer = session.createProducer(infotrygdSporringQueue)
+            infotrygdOppdateringQueue = session.createQueue("infotrygd_foresporsel_queue")
+            infotrygdSporringQueue = session.createQueue("infotrygd_oppdatering_queue")
+            infotrygdOppdateringProducer = session.createProducer(infotrygdOppdateringQueue)
+            infotrygdSporringProducer = session.createProducer(infotrygdSporringQueue)
 
             embeddedKafkaEnvironment.start()
-            kafkaconsumer = KafkaConsumer(readProducerConfig(env, StringSerializer::class).apply {
+            kafkaconsumer = KafkaConsumer(readConsumerConfig(env, StringDeserializer::class).apply {
                 remove("security.protocol")
                 remove("sasl.mechanism")
             })
             kafkaconsumer.subscribe(listOf(env.sm2013AutomaticHandlingTopic, env.smPaperAutomaticHandlingTopic))
 
-            val kafkaproducerOutput = KafkaProducer<String, ProduceTask>(readProducerConfig(env, KafkaAvroSerializer::class).apply {
+            kafkaproducerOutput = KafkaProducer(readProducerConfig(env, KafkaAvroSerializer::class).apply {
                 remove("security.protocol")
                 remove("sasl.mechanism")
             })
@@ -101,22 +115,24 @@ class EmbeddedEnvironment {
                 remove("sasl.mechanism")
             })
 
-            val personV3 = JaxWsProxyFactoryBean().apply {
+            personV3 = JaxWsProxyFactoryBean().apply {
                 address = "$wsBaseUrl/ws/tps"
                 features.add(LoggingFeature())
                 serviceClass = PersonV3::class.java
             }.create() as PersonV3
             configureTimeout(personV3)
 
-            val organisasjonEnhetV2Client = JaxWsProxyFactoryBean().apply {
+            organisasjonEnhetV2Client = JaxWsProxyFactoryBean().apply {
                 address = "$wsBaseUrl/ws/norg2"
                 features.add(LoggingFeature())
                 serviceClass = OrganisasjonEnhetV2::class.java
             }.create() as OrganisasjonEnhetV2
             configureTimeout(organisasjonEnhetV2Client)
-
-            blockingApplicationLogic(applicationState, kafkaconsumer, kafkaproducerOutput, infotrygdOppdateringProducer, infotrygdSporringProducer, session, personV3, organisasjonEnhetV2Client)
         }
+
+    suspend fun doBlockingApplicationLogic() {
+        blockingApplicationLogic(applicationState, kafkaconsumer, kafkaproducerOutput, infotrygdOppdateringProducer, infotrygdSporringProducer, session, personV3, organisasjonEnhetV2Client)
+    }
 
     private fun configureTimeout(service: Any) {
         val client = ClientProxy.getClient(service)
@@ -132,8 +148,13 @@ class EmbeddedEnvironment {
     }
 
     fun shutdown() {
+        applicationState.running = false
         activeMQServer.stop(true)
-        CollectorRegistry.defaultRegistry.clear()
+        embeddedKafkaEnvironment.stop()
+        kafkaconsumer.close()
+        kafkaproducerInput.close()
+        kafkaproducerOutput.close()
+        server.stop()
     }
 
     fun produceKafaMessageOnTopic(topic: String, message: String) {

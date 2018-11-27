@@ -27,6 +27,7 @@ buildscript {
     ext.javax_jaxws_api_version = '2.2.1'
     ext.saaj_version = "1.4.0"
     ext.mockito_core_version = "2.23.4"
+    ext.jetty_version = '9.4.11.v20180605'
 
     ext.jaxb2SourceDir = file("$buildDir/generated-sources/jaxb2")
 }
@@ -191,6 +192,7 @@ dependencies {
     testImplementation "no.nav:kafka-embedded-env:$kafka_embedded_version"
     testImplementation "org.apache.activemq:artemis-server:$artemis_version"
     testImplementation "org.apache.activemq:artemis-jms-client:$artemis_version"
+    testImplementation "org.eclipse.jetty:jetty-servlet:$jetty_version"
     testImplementation "org.mockito:mockito-core:$mockito_core_version"
 
     testRuntimeOnly "org.spekframework.spek2:spek-runtime-jvm:$spek_version"

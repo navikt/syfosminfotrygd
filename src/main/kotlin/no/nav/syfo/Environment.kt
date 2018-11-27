@@ -29,13 +29,13 @@ data class Environment(
     val mqPassword: String = config.getProperty("mq.password"),
     val syfoSmRegelerApiURL: String = config.getProperty("http.syfosmapprec.url"),
 
-    val organisasjonEnhetV2EndpointURL: String = getEnvVar("VIRKSOMHET_ORGANISASJONENHET_V2_ENDPOINTURL", "http://norg2"),
-    val personV3EndpointURL: String = getEnvVar("VIRKSOMHET_PERSON_V3_ENDPOINTURL", "http://TPS"),
-    val securityTokenServiceUrl: String = getEnvVar("SECURITYTOKENSERVICE_URL", "http://sts"),
-    val kafkaBootstrapServers: String = getEnvVar("KAFKA_BOOTSTRAP_SERVERS_URL", "SSL://12345.test.local:8443"),
-    val infotrygdSporringQueue: String = getEnvVar("EIA_QUEUE_INFOTRYGD_REQUEST_QUEUENAME", "infotrygdSporringQueue"),
-    val infotrygdOppdateringQueue: String = getEnvVar("EIA_QUEUE_INFOTRYGD_OUTBOUND_QUEUENAME", "infotrygdOppdateringQueue"),
-    val mqHostname: String = getEnvVar("MQGATEWAY03_HOSTNAME", "mqHostname"),
-    val mqQueueManagerName: String = getEnvVar("MQGATEWAY03_NAME", "mqQueueManagerName"),
-    val mqChannelName: String = getEnvVar("SYFOSMINFOTRYGD_CHANNEL_NAME", "mqChannelName")
+    val organisasjonEnhetV2EndpointURL: String = getEnvVar("VIRKSOMHET_ORGANISASJONENHET_V2_ENDPOINTURL"),
+    val personV3EndpointURL: String = getEnvVar("VIRKSOMHET_PERSON_V3_ENDPOINTURL"),
+    val securityTokenServiceUrl: String = getEnvVar("SECURITYTOKENSERVICE_URL"),
+    val kafkaBootstrapServers: String = getEnvVar("KAFKA_BOOTSTRAP_SERVERS_URL"),
+    val infotrygdSporringQueue: String = getEnvVar("EIA_QUEUE_INFOTRYGD_REQUEST_QUEUENAME"),
+    val infotrygdOppdateringQueue: String = getEnvVar("EIA_QUEUE_INFOTRYGD_OUTBOUND_QUEUENAME"),
+    val mqHostname: String = getEnvVar("MQGATEWAY03_HOSTNAME"),
+    val mqQueueManagerName: String = getEnvVar("MQGATEWAY03_NAME"),
+    val mqChannelName: String = getEnvVar("SYFOSMINFOTRYGD_CHANNEL_NAME")
 )
