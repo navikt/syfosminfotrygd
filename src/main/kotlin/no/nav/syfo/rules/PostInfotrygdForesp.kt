@@ -14,6 +14,21 @@ data class RuleData(
 
 enum class ValidationRules(override val ruleId: Int?, override val status: Status, override val predicate: (RuleData) -> Boolean) : Rule<RuleData> {
 
+    @Description("Hvis gradert sykmelding og reisetilskudd er oppgitt for samme periode sendes meldingen til manuell behandling.")
+    GRADUAL_SYKMELDING_COMBINED_WITH_TRAVEL(1250, Status.MANUAL_PROCESSING, { (_, healthInformation) ->
+        healthInformation.aktivitet.periode.any { it.gradertSykmelding != null && it?.isReisetilskudd ?: false }
+    }),
+
+    @Description("Hvis behandlingsdager er angitt sendes meldingen til manuell behandling.")
+    NUMBER_OF_TREATMENT_DAYS_SET(1260, Status.MANUAL_PROCESSING, { (_, healthInformation) ->
+        healthInformation.aktivitet.periode.any { it.behandlingsdager != null }
+    }),
+
+    @Description("Hvis sykmeldingen angir reisetilskudd går meldingen til manuell behandling.")
+    TRAVEL_SUBSIDY_SPECIFIED(1270, Status.MANUAL_PROCESSING, { (_, healthInformation) ->
+        healthInformation.aktivitet.periode.any { it.isReisetilskudd == true } // Can be null, so use equality
+    }),
+
     @Description("Hvis pasienten ikke finnes i infotrygd")
     PATIENT_NOT_IN_IP(1501, Status.MANUAL_PROCESSING, { (infotrygdForesp) ->
         when (infotrygdForesp.pasient?.isFinnes) {
@@ -283,5 +298,5 @@ enum class ValidationRules(override val ruleId: Int?, override val status: Statu
             null -> false
             else -> pasientUttrekkStatusKodemelding > 4
         }
-    }),
+    })
 }
