@@ -191,6 +191,7 @@ enum class ValidationRules(override val ruleId: Int?, override val status: Statu
         } ?: false
         }),
 
+    // TODO Har alldri oppstått
     @Description("Tilfellet er reisetilskott")
     CASE_STOP_KODE_RT(1547, Status.MANUAL_PROCESSING, { (infotrygdForesp) ->
         infotrygdForesp.sMhistorikk?.sykmelding?.any { sykmelding ->
