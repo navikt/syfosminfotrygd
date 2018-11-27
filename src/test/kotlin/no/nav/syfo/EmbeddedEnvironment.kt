@@ -70,8 +70,6 @@ class EmbeddedEnvironment {
                     .setSecurityEnabled(false)
                     .addAcceptorConfiguration("invm", "vm://0"))
             activeMQServer.start()
-            // val properties = Properties()
-            // properties.setProperty(Context.INITIAL_CONTEXT_FACTORY,"org.apache.activemq.artemis.jndi.ActiveMQInitialContextFactory")
             initialContext = InitialContext()
             connectionFactory = initialContext.lookup("ConnectionFactory") as ConnectionFactory
 
@@ -81,8 +79,8 @@ class EmbeddedEnvironment {
             queueConnection.start()
 
             session = queueConnection.createSession(false, Session.AUTO_ACKNOWLEDGE)
-            val infotrygdOppdateringQueue = session.createQueue("queue:///${env.infotrygdOppdateringQueue}?targetClient=1")
-            val infotrygdSporringQueue = session.createQueue("queue:///${env.infotrygdSporringQueue}?targetClient=1")
+            val infotrygdOppdateringQueue = session.createQueue("infotrygd_foresporsel_queue")
+            val infotrygdSporringQueue = session.createQueue("infotrygd_oppdatering_queue")
             val infotrygdOppdateringProducer = session.createProducer(infotrygdOppdateringQueue)
             val infotrygdSporringProducer = session.createProducer(infotrygdSporringQueue)
 
