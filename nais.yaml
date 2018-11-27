@@ -35,27 +35,27 @@ resources:
 secrets: true
 fasitResources:
   used:
-  - alias: kafka_bootstrap_servers
-    resourceType: baseurl
-  - alias: eia_queue_infotrygd_request
-    resourceType: Queue
-    propertyMap:
-      queueName: EIA_QUEUE_INFOTRYGD_REQUEST_QUEUENAME
-  - alias: eia_queue_infotrygd_outbound
-    resourceType: Queue
-    propertyMap:
-      queueName: EIA_QUEUE_INFOTRYGD_OUTBOUND_QUEUENAME
-  - alias: mqGateway03
-    resourceType: QueueManager
-  - alias: syfosminfotrygd_channel
-    resourceType: Channel
-  - alias: securityTokenService
+    - alias: kafka_bootstrap_servers
+      resourceType: baseurl
+    - alias: eia_queue_infotrygd_request
+      resourceType: Queue
+      propertyMap:
+        queueName: EIA_QUEUE_INFOTRYGD_REQUEST_QUEUENAME
+    - alias: eia_queue_infotrygd_outbound
+      resourceType: Queue
+      propertyMap:
+        queueName: EIA_QUEUE_INFOTRYGD_OUTBOUND_QUEUENAME
+    - alias: mqGateway03
+      resourceType: QueueManager
+    - alias: syfosminfotrygd_channel
+      resourceType: Channel
+    - alias: securityTokenService
       resourceType: BaseUrl
-  - alias: virksomhet:OrganisasjonEnhet_v2
+    - alias: virksomhet:OrganisasjonEnhet_v2
       resourceType: Webserviceendpoint
       propertyMap:
         url: VIRKSOMHET_ORGANISASJONENHET_V2_ENDPOINTURL
-  - alias: virksomhet:Person_v3
+    - alias: virksomhet:Person_v3
       resourceType: Webserviceendpoint
-  - alias: mqGateway03
+    - alias: mqGateway03
       resourceType: QueueManager
