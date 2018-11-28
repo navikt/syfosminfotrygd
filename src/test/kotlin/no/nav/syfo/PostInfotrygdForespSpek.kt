@@ -1,9 +1,9 @@
 package no.nav.syfo
 
-import no.nav.model.infotrygdSporing.InfotrygdForesp
-import no.nav.model.infotrygdSporing.StatusType
-import no.nav.model.infotrygdSporing.TypeSMinfo
-import no.nav.model.sm2013.HelseOpplysningerArbeidsuforhet
+import no.nav.helse.infotrygd.foresp.InfotrygdForesp
+import no.nav.helse.infotrygd.foresp.StatusType
+import no.nav.helse.infotrygd.foresp.TypeSMinfo
+import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.syfo.rules.RuleData
 import no.nav.syfo.rules.ValidationRules
 

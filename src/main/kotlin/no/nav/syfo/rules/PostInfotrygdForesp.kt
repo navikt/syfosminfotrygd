@@ -10,8 +10,8 @@ import java.time.LocalDate
 import javax.xml.datatype.XMLGregorianCalendar
 
 data class RuleData(
-        val infotrygdForesp: InfotrygdForesp,
-        val healthInformation: HelseOpplysningerArbeidsuforhet
+    val infotrygdForesp: InfotrygdForesp,
+    val healthInformation: HelseOpplysningerArbeidsuforhet
 )
 
 enum class ValidationRules(override val ruleId: Int?, override val status: Status, override val predicate: (RuleData) -> Boolean) : Rule<RuleData> {
