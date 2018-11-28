@@ -16,9 +16,6 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.launch
 import net.logstash.logback.argument.StructuredArgument
 import net.logstash.logback.argument.StructuredArguments.keyValue
-import no.kith.xmlstds.msghead._2006_05_24.XMLMsgHead
-import no.kith.xmlstds.msghead._2006_05_24.XMLOrganisation
-import no.kith.xmlstds.msghead._2006_05_24.XMLRefDoc
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.infotrygd.foresp.TypeSMinfo
 import no.nav.helse.sm2013.EIFellesformat
@@ -181,13 +178,6 @@ data class InfotrygdForespAndHealthInformation(
     val infotrygdForesp: InfotrygdForesp,
     val healthInformation: HelseOpplysningerArbeidsuforhet
 )
-
-fun XMLOrganisation.extractOrganizationNumber(): String? = ident.find { it.typeId.v == "ENH" }?.id
-
-inline fun <reified T> EIFellesformat.get(): T = any.find { it is T } as T
-
-inline fun <reified T> XMLRefDoc.Content.get() = this.any.find { it is T } as T
-fun extractHelseopplysninger(msgHead: XMLMsgHead) = msgHead.document[0].refDoc.content.get<HelseOpplysningerArbeidsuforhet>()
 
 fun Application.initRouting(applicationState: ApplicationState) {
     routing {
