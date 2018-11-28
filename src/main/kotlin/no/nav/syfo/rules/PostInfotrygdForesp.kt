@@ -1,17 +1,17 @@
 package no.nav.syfo.rules
 
+import no.nav.helse.infotrygd.foresp.InfotrygdForesp
+import no.nav.helse.infotrygd.foresp.TypeSMinfo
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
-import no.nav.model.infotrygdSporing.InfotrygdForesp
 import no.nav.syfo.Description
 import no.nav.syfo.Rule
 import no.nav.syfo.model.Status
 import java.time.LocalDate
-import no.nav.model.infotrygdSporing.TypeSMinfo
 import javax.xml.datatype.XMLGregorianCalendar
 
 data class RuleData(
-    val infotrygdForesp: InfotrygdForesp,
-    val healthInformation: HelseOpplysningerArbeidsuforhet
+        val infotrygdForesp: InfotrygdForesp,
+        val healthInformation: HelseOpplysningerArbeidsuforhet
 )
 
 enum class ValidationRules(override val ruleId: Int?, override val status: Status, override val predicate: (RuleData) -> Boolean) : Rule<RuleData> {

@@ -19,12 +19,12 @@ import net.logstash.logback.argument.StructuredArguments.keyValue
 import no.kith.xmlstds.msghead._2006_05_24.XMLMsgHead
 import no.kith.xmlstds.msghead._2006_05_24.XMLOrganisation
 import no.kith.xmlstds.msghead._2006_05_24.XMLRefDoc
+import no.nav.helse.infotrygd.foresp.InfotrygdForesp
+import no.nav.helse.infotrygd.foresp.TypeSMinfo
 import no.nav.helse.sm2013.EIFellesformat
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.helse.sm2013.KontrollSystemBlokk
 import no.nav.helse.sm2013.KontrollsystemBlokkType
-import no.nav.model.infotrygdSporing.InfotrygdForesp
-import no.nav.model.infotrygdSporing.TypeSMinfo
 import no.nav.syfo.api.registerNaisApi
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.model.Status

@@ -5,9 +5,9 @@ buildscript {
     ext.syfooppgave_schemas_version = '1.0-SNAPSHOT'
     ext.coroutines_version = '1.0.0'
     ext.fellesformat_version = '1.0'
+    ext.infotrygd_foresp_version = "1.0.0"
     ext.jackson_version = "2.9.7"
     ext.jaxb_version = '2.3.0.1'
-    ext.jaxb_basic_ant_version = '1.11.1'
     ext.jaxb_api_version = '2.1'
     ext.kafka_version = '2.0.0'
     ext.kafka_embedded_version = '1.0.0'
@@ -30,8 +30,6 @@ buildscript {
     ext.sykmelding_version = "1.0-SNAPSHOT"
     ext.mockito_core_version = "2.23.4"
     ext.jetty_version = '9.4.11.v20180605'
-
-    ext.jaxb2SourceDir = file("$buildDir/generated-sources/jaxb2")
 }
 
 plugins {
@@ -72,62 +70,11 @@ test {
     }
 }
 
-configurations {
-    generateJaxb2
-}
-
-class Jaxb2Task extends DefaultTask {
-    @OutputDirectory
-    File outputDir
-    @InputDirectory
-    File sourceDir
-
-    @TaskAction
-    def generateFiles() {
-        outputDir.deleteDir()
-        outputDir.mkdirs()
-        ant.taskdef(
-                'classpath': project.configurations.generateJaxb2.asPath,
-                'name': 'xjc',
-                'classname': 'org.jvnet.jaxb2_commons.xjc.XJC2Task'
-        )
-
-        ant.xjc(
-                'destdir': outputDir,
-                'package': 'no.nav.model.infotrygdSporing',
-                'schema': "$sourceDir/RTV_IT_IFT.v14.xsd",
-                'encoding': 'UTF-8',
-                'fork': 'true'
-        )
-    }
-}
-
-task generateJaxb2(type: Jaxb2Task) {
-    outputDir = jaxb2SourceDir
-    sourceDir = file("$projectDir/src/main/resources/xsd")
-}
-
-sourceSets {
-    main {
-        java {
-            srcDir jaxb2SourceDir
-        }
-    }
-}
-
 compileKotlin {
-    dependsOn generateJaxb2
     kotlinOptions.jvmTarget = "1.8"
 }
 
 dependencies {
-
-    generateJaxb2 "com.sun.xml.bind:jaxb-xjc:$jaxb_version"
-    generateJaxb2 "org.glassfish.jaxb:jaxb-runtime:$jaxb_version"
-    generateJaxb2 "javax.xml.bind:jaxb-api:$jaxb_api_version"
-    generateJaxb2 "org.jvnet.jaxb2_commons:jaxb2-basics-ant:$jaxb_basic_ant_version"
-    generateJaxb2 "javax.activation:activation:$javax_activation_version"
-
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_version"
 
@@ -155,6 +102,7 @@ dependencies {
     implementation "no.nav.tjenester:nav-organisasjonEnhet-v2-tjenestespesifikasjon:$nav_organisasjonEnhet_v2:jaxws"
     implementation "no.nav.helse.xml:fellesformat:$felleformavV1_version"
     implementation "no.nav.helse.xml:sm2013:$sykmelding_version"
+    implementation "no.nav.helse.xml:infotrygd-foresp:$infotrygd_foresp_version"
 
     // Communication libraries
     implementation "org.apache.cxf:cxf-rt-frontend-jaxws:$cxf_version"
