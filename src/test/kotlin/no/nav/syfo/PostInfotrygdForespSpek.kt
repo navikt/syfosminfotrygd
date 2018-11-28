@@ -131,15 +131,16 @@ object PostInfotrygdForespSpek : Spek({
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
                 sykmelding.add(TypeSMinfo().apply {
                     periode = TypeSMinfo.Periode().apply {
-                        arbufoerFOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar())
+                        arbufoerFOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 0, 2))
+                        arbufoerTOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 0, 8))
                     }
                 })
             }
 
             val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
             healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                periodeFOMDato = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar())
-                periodeFOMDato.year = infotrygdForespResponse.sMhistorikk.sykmelding.first().periode.arbufoerFOM.year - 1
+                periodeFOMDato = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 0, 7))
+                periodeTOMDato = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 0, 9))
             })
 
             val ruleData = RuleData(infotrygdForespResponse, healthInformation)
