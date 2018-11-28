@@ -1,5 +1,10 @@
 package no.nav.syfo
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.confluent.kafka.serializers.KafkaAvroSerializer
 import io.ktor.application.Application
 import io.ktor.routing.routing
@@ -15,12 +20,13 @@ import no.kith.xmlstds.msghead._2006_05_24.XMLMsgHead
 import no.kith.xmlstds.msghead._2006_05_24.XMLOrganisation
 import no.kith.xmlstds.msghead._2006_05_24.XMLRefDoc
 import no.nav.helse.sm2013.EIFellesformat
+import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.helse.sm2013.KontrollSystemBlokk
 import no.nav.helse.sm2013.KontrollsystemBlokkType
 import no.nav.model.infotrygdSporing.InfotrygdForesp
 import no.nav.model.infotrygdSporing.TypeSMinfo
-import no.nav.model.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.syfo.api.registerNaisApi
+import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.model.Status
 import no.nav.syfo.rules.RuleData
 import no.nav.syfo.rules.ValidationRules
@@ -34,7 +40,6 @@ import no.nav.tjeneste.virksomhet.person.v3.informasjon.NorskIdent
 import no.nav.tjeneste.virksomhet.person.v3.informasjon.PersonIdent
 import no.nav.tjeneste.virksomhet.person.v3.informasjon.Personidenter
 import no.nav.tjeneste.virksomhet.person.v3.meldinger.HentGeografiskTilknytningRequest
-import no.trygdeetaten.xml.eiff._1.XMLMottakenhetBlokk
 import org.apache.cxf.jaxws.JaxWsProxyFactoryBean
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -56,10 +61,16 @@ import javax.jms.Session
 import javax.jms.TemporaryQueue
 import javax.jms.TextMessage
 import javax.xml.bind.Marshaller
+import javax.xml.stream.XMLInputFactory
 
 data class ApplicationState(var running: Boolean = true, var initialized: Boolean = false)
 
 val log: Logger = LoggerFactory.getLogger("no.nav.syfo.sminfotrygd")
+val objectMapper: ObjectMapper = ObjectMapper().apply {
+    registerKotlinModule()
+    registerModule(JavaTimeModule())
+    configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+}
 
 fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCoroutineDispatcher()) {
     val env = Environment()
@@ -128,19 +139,16 @@ suspend fun blockingApplicationLogic(
 ) {
     while (applicationState.running) {
         kafkaConsumer.poll(Duration.ofMillis(0)).forEach {
-            val fellesformat = fellesformatUnmarshaller.unmarshal(StringReader(it.value())) as EIFellesformat
-            val msgHead: XMLMsgHead = fellesformat.get()
-            val mottakEnhetBlokk: XMLMottakenhetBlokk = fellesformat.get()
-            val healthInformation = extractHelseopplysninger(msgHead)
+            val receivedSykmelding: ReceivedSykmelding = objectMapper.readValue(it.value())
             val logValues = arrayOf(
-                    keyValue("smId", mottakEnhetBlokk.ediLoggId),
-                    keyValue("msgId", msgHead.msgInfo.msgId),
-                    keyValue("orgNr", msgHead.msgInfo.sender.organisation.extractOrganizationNumber())
+                    keyValue("smId", receivedSykmelding.navLogId),
+                    keyValue("msgId", receivedSykmelding.msgId),
+                    keyValue("orgNr", receivedSykmelding.legekontorOrgNr)
             )
             val logKeys = logValues.joinToString(prefix = "(", postfix = ")", separator = ",") { "{}" }
             log.info("Received a SM2013, going through rules and persisting in infotrygd $logKeys", *logValues)
 
-            val infotrygdForespRequest = createInfotrygdForesp(healthInformation)
+            val infotrygdForespRequest = createInfotrygdForesp(receivedSykmelding.sykmelding)
             val temporaryQueue = session.createTemporaryQueue()
             sendInfotrygdSporring(infotrygdSporringProducer, session, infotrygdForespRequest, temporaryQueue)
             val tmpConsumer = session.createConsumer(temporaryQueue)
@@ -152,7 +160,7 @@ suspend fun blockingApplicationLogic(
             val infotrygdForespResponse = infotrygdSporringUnmarshaller.unmarshal(StringReader(inputMessageText)) as InfotrygdForesp
 
             log.info("Executing Infotrygd rules $logKeys", *logValues)
-            val ruleData = RuleData(infotrygdForespResponse, healthInformation)
+            val ruleData = RuleData(infotrygdForespResponse, receivedSykmelding.sykmelding)
             val results = listOf<List<Rule<RuleData>>>(
                     ValidationRules.values().toList()
             ).flatten().filter { rule -> rule.predicate(ruleData) }.onEach { RULE_HIT_COUNTER.labels(it.name).inc() }
@@ -161,8 +169,8 @@ suspend fun blockingApplicationLogic(
 
             when {
                 results.any { rule -> rule.status == Status.MANUAL_PROCESSING } ->
-                    produceManualTask(kafkaProducer, msgHead, healthInformation, results, personV3, organisasjonEnhetV2, logKeys, logValues)
-                else -> sendInfotrygdOppdatering(infotrygdOppdateringProducer, session, createInfotrygdInfo(fellesformat, InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation)), logKeys, logValues)
+                    produceManualTask(kafkaProducer, receivedSykmelding.msgId, receivedSykmelding.sykmelding, results, personV3, organisasjonEnhetV2, logKeys, logValues)
+                else -> sendInfotrygdOppdatering(infotrygdOppdateringProducer, session, createInfotrygdInfo(receivedSykmelding.fellesformat, InfotrygdForespAndHealthInformation(infotrygdForespResponse, receivedSykmelding.sykmelding)), logKeys, logValues)
             }
         }
         delay(100)
@@ -250,7 +258,11 @@ fun createInfotrygdForesp(healthInformation: HelseOpplysningerArbeidsuforhet) = 
     tkNrFraDato = newInstance.newXMLGregorianCalendar(gregorianCalendarMinus1Year)
 }
 
-fun createInfotrygdInfo(fellesformat: EIFellesformat, itfh: InfotrygdForespAndHealthInformation) = fellesformat.apply { any.add(KontrollSystemBlokk().apply {
+val inputFactory = XMLInputFactory.newInstance()
+inline fun <reified T> unmarshal(text: String): T = fellesformatUnmarshaller.unmarshal(inputFactory.createXMLEventReader(StringReader(text)), T::class.java).value
+
+fun createInfotrygdInfo(marshalledFellesformat: String, itfh: InfotrygdForespAndHealthInformation) = unmarshal<EIFellesformat>(marshalledFellesformat).apply {
+    any.add(KontrollSystemBlokk().apply {
     itfh.healthInformation.aktivitet.periode.forEachIndexed { index, periode ->
     infotrygdBlokk.add(KontrollsystemBlokkType.InfotrygdBlokk().apply {
         fodselsnummer = itfh.healthInformation.pasient.fodselsnummer.id
@@ -293,7 +305,7 @@ fun findOprasjonstype(periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode
     }
 }
 
-fun produceManualTask(kafkaProducer: KafkaProducer<String, ProduceTask>, msgHead: XMLMsgHead, healthInformation: HelseOpplysningerArbeidsuforhet, results: List<Rule<RuleData>>, personV3: PersonV3, organisasjonEnhetV2: OrganisasjonEnhetV2, logKeys: String, logValues: Array<StructuredArgument>) {
+fun produceManualTask(kafkaProducer: KafkaProducer<String, ProduceTask>, msgId: String, healthInformation: HelseOpplysningerArbeidsuforhet, results: List<Rule<RuleData>>, personV3: PersonV3, organisasjonEnhetV2: OrganisasjonEnhetV2, logKeys: String, logValues: Array<StructuredArgument>) {
     log.info("Message is manual outcome $logKeys", *logValues)
     val geografiskTilknytning = personV3.hentGeografiskTilknytning(HentGeografiskTilknytningRequest().withAktoer(PersonIdent().withIdent(
                 NorskIdent()
@@ -307,7 +319,7 @@ fun produceManualTask(kafkaProducer: KafkaProducer<String, ProduceTask>, msgHead
         }).navKontor
 
     kafkaProducer.send(ProducerRecord("aapen-syfo-oppgave-produserOppgave", ProduceTask().apply {
-        setMessageId(msgHead.msgInfo.msgId)
+        setMessageId(msgId)
         setUserIdent(healthInformation.pasient.fodselsnummer.id)
         setUserTypeCode("PERSON")
         setTaskType("SYK")

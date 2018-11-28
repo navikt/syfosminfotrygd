@@ -2,8 +2,8 @@ package no.nav.syfo
 
 import no.kith.xmlstds.msghead._2006_05_24.XMLMsgHead
 import no.nav.helse.sm2013.EIFellesformat
+import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.model.infotrygdSporing.InfotrygdForesp
-import no.nav.model.sm2013.HelseOpplysningerArbeidsuforhet
 import no.trygdeetaten.xml.eiff._1.XMLMottakenhetBlokk
 
 import javax.xml.bind.JAXBContext

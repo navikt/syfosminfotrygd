@@ -5,6 +5,7 @@ buildscript {
     ext.syfooppgave_schemas_version = '1.0-SNAPSHOT'
     ext.coroutines_version = '1.0.0'
     ext.fellesformat_version = '1.0'
+    ext.jackson_version = "2.9.7"
     ext.jaxb_version = '2.3.0.1'
     ext.jaxb_basic_ant_version = '1.11.1'
     ext.jaxb_api_version = '2.1'
@@ -26,6 +27,7 @@ buildscript {
     ext.nav_organisasjonEnhet_v2 = '2.1.0'
     ext.javax_jaxws_api_version = '2.2.1'
     ext.saaj_version = "1.4.0"
+    ext.sykmelding_version = "1.0-SNAPSHOT"
     ext.mockito_core_version = "2.23.4"
     ext.jetty_version = '9.4.11.v20180605'
 
@@ -97,28 +99,6 @@ class Jaxb2Task extends DefaultTask {
                 'encoding': 'UTF-8',
                 'fork': 'true'
         )
-
-        ant.xjc(
-                'destdir': outputDir,
-                'package': 'no.nav.model.sm2013',
-                'schema': "$sourceDir/HelseOpplysningerArbeidsuforhet_2013-10-01.xsd",
-                'encoding': 'UTF-8',
-                'fork': 'true'
-        )
-        ant.xjc(
-                'destdir': outputDir,
-                'package': 'no.nav.model.kith',
-                'schema': "$sourceDir/kith.xsd",
-                'encoding': 'UTF-8',
-                'fork': 'true'
-        )
-        ant.xjc(
-                'destdir': outputDir,
-                'package': 'no.nav.model.felleskomponent1',
-                'schema': "$sourceDir/felleskomponent1.xsd",
-                'encoding': 'UTF-8',
-                'fork': 'true'
-        )
     }
 }
 
@@ -162,6 +142,10 @@ dependencies {
     implementation "javax.xml.bind:jaxb-api:$jaxb_api_version"
     implementation "javax.activation:activation:$javax_activation_version"
 
+    implementation "com.fasterxml.jackson.module:jackson-module-kotlin:$jackson_version"
+    implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:$jackson_version"
+    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jackson_version"
+
     implementation "no.nav.syfo.tjenester:fellesformat:$fellesformat_version"
     implementation "no.nav.syfo.tjenester:kith-hodemelding:$kith_hodemelding_version"
     implementation "io.confluent:kafka-avro-serializer:$confluent_version"
@@ -170,6 +154,7 @@ dependencies {
     implementation "no.nav.tjenester:nav-person-v3-tjenestespesifikasjon:$nav_person_v3_version"
     implementation "no.nav.tjenester:nav-organisasjonEnhet-v2-tjenestespesifikasjon:$nav_organisasjonEnhet_v2:jaxws"
     implementation "no.nav.helse.xml:fellesformat:$felleformavV1_version"
+    implementation "no.nav.helse.xml:sm2013:$sykmelding_version"
 
     // Communication libraries
     implementation "org.apache.cxf:cxf-rt-frontend-jaxws:$cxf_version"

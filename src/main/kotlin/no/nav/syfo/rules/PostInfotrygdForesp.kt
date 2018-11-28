@@ -1,7 +1,7 @@
 package no.nav.syfo.rules
 
+import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.model.infotrygdSporing.InfotrygdForesp
-import no.nav.model.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.syfo.Description
 import no.nav.syfo.Rule
 import no.nav.syfo.model.Status
