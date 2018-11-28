@@ -1,16 +1,12 @@
 package no.nav.syfo
 
 import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
-import java.lang.Exception
 import java.util.concurrent.Executors
 
 object BootstrapIt : Spek({ runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()) {
-
+/*
     val e = EmbeddedEnvironment()
     beforeGroup {
         launch {
@@ -36,5 +32,5 @@ object BootstrapIt : Spek({ runBlocking(Executors.newFixedThreadPool(4).asCorout
             message[0].value() shouldEqual "test"
             println("I am here")
         }
-    }
+    }*/
 } })

@@ -41,7 +41,8 @@ fasitResources:
       resourceType: Queue
       propertyMap:
         queueName: EIA_QUEUE_INFOTRYGD_REQUEST_QUEUENAME
-    - alias: eia_queue_infotrygd_outbound
+    #- alias: eia_queue_infotrygd_outbound TODO fiks når vi skal gå i prod for real
+    - alias: syfosminfotrygd_infotrygd_oppdatering
       resourceType: Queue
       propertyMap:
         queueName: EIA_QUEUE_INFOTRYGD_OUTBOUND_QUEUENAME

@@ -1,6 +1,7 @@
 package no.nav.syfo
 
 import io.confluent.kafka.serializers.KafkaAvroSerializer
+import io.prometheus.client.CollectorRegistry
 import no.nav.common.KafkaEnvironment
 import no.nav.syfo.sak.avro.ProduceTask
 import no.nav.tjeneste.virksomhet.organisasjonenhet.v2.binding.OrganisasjonEnhetV2
@@ -83,7 +84,7 @@ class EmbeddedEnvironment {
     private val personV3: PersonV3
 
     init {
-        activeMQServer.start()
+            activeMQServer.start()
             initialContext = InitialContext()
             connectionFactory = initialContext.lookup("ConnectionFactory") as ConnectionFactory
 
@@ -155,6 +156,7 @@ class EmbeddedEnvironment {
         kafkaproducerInput.close()
         kafkaproducerOutput.close()
         server.stop()
+        CollectorRegistry.defaultRegistry.clear()
     }
 
     fun produceKafaMessageOnTopic(topic: String, message: String) {

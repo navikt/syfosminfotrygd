@@ -35,7 +35,6 @@ import no.nav.tjeneste.virksomhet.person.v3.informasjon.PersonIdent
 import no.nav.tjeneste.virksomhet.person.v3.informasjon.Personidenter
 import no.nav.tjeneste.virksomhet.person.v3.meldinger.HentGeografiskTilknytningRequest
 import no.trygdeetaten.xml.eiff._1.XMLMottakenhetBlokk
-import org.apache.cxf.ext.logging.LoggingFeature
 import org.apache.cxf.jaxws.JaxWsProxyFactoryBean
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -89,7 +88,6 @@ fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCo
 
                     val personV3 = JaxWsProxyFactoryBean().apply {
                         address = env.personV3EndpointURL
-                        features.add(LoggingFeature())
                         serviceClass = PersonV3::class.java
                     }.create() as PersonV3
                     configureSTSFor(personV3, env.srvsminfotrygdUsername,
@@ -97,7 +95,6 @@ fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCo
 
                     val orgnaisasjonEnhet = JaxWsProxyFactoryBean().apply {
                         address = env.organisasjonEnhetV2EndpointURL
-                        features.add(LoggingFeature())
                         serviceClass = OrganisasjonEnhetV2::class.java
                     }.create() as OrganisasjonEnhetV2
                     configureSTSFor(orgnaisasjonEnhet, env.srvsminfotrygdUsername,
@@ -152,8 +149,6 @@ suspend fun blockingApplicationLogic(
                 is TextMessage -> consumedMessage.text
                 else -> throw RuntimeException("Incoming message needs to be a byte message or text message, JMS type:" + consumedMessage.jmsType)
             }
-            log.info("Query Infotrygd response $inputMessageText $logKeys", *logValues)
-
             val infotrygdForespResponse = infotrygdSporringUnmarshaller.unmarshal(StringReader(inputMessageText)) as InfotrygdForesp
 
             log.info("Executing Infotrygd rules $logKeys", *logValues)
@@ -211,7 +206,6 @@ fun sendInfotrygdSporring(
     temporaryQueue: TemporaryQueue
 ) = producer.send(session.createTextMessage().apply {
     text = infotrygdSporringMarshaller.toString(infotrygdForesp)
-    log.info("Query Infotrygd request, text sendt to Infotrygd + $text")
     jmsReplyTo = temporaryQueue
 })
 
@@ -223,8 +217,7 @@ fun sendInfotrygdOppdatering(
     logValues: Array<StructuredArgument>
 ) = producer.send(session.createTextMessage().apply {
     text = fellesformatMarshaller.toString(fellesformat)
-    log.info("Message is manual outcome $logKeys", *logValues)
-    log.info("Updating Infotrygd, text sendt to Infotrygd + $text")
+    log.info("Message is automatic outcome $logKeys", *logValues)
 })
 
 fun createInfotrygdForesp(healthInformation: HelseOpplysningerArbeidsuforhet) = InfotrygdForesp().apply {
