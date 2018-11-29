@@ -49,8 +49,7 @@ import java.io.StringWriter
 import java.math.BigInteger
 import java.time.Duration
 import java.time.LocalDate
-import java.util.Calendar
-import java.util.GregorianCalendar
+import java.time.LocalDateTime
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import javax.jms.MessageProducer
@@ -219,18 +218,16 @@ fun sendInfotrygdOppdatering(
 })
 
 fun createInfotrygdForesp(healthInformation: HelseOpplysningerArbeidsuforhet) = InfotrygdForesp().apply {
-    val gregorianCalendarMinus1Year = GregorianCalendar()
-    gregorianCalendarMinus1Year.add(Calendar.YEAR, -1)
+    val dateMinus1Year = LocalDate.now().minusYears(1)
 
-    val gregorianCalendarMinus4Year = GregorianCalendar()
-    gregorianCalendarMinus4Year.add(Calendar.YEAR, -4)
+    val dateMinus4Years = LocalDate.now().minusYears(4)
 
     fodselsnummer = healthInformation.pasient.fodselsnummer.id
-    tkNrFraDato = newInstance.newXMLGregorianCalendar(gregorianCalendarMinus1Year)
+    tkNrFraDato = dateMinus1Year
     forespNr = 1.toBigInteger()
-    forespTidsStempel = newInstance.newXMLGregorianCalendar(GregorianCalendar())
-    fraDato = newInstance.newXMLGregorianCalendar(gregorianCalendarMinus1Year)
-    eldsteFraDato = newInstance.newXMLGregorianCalendar(gregorianCalendarMinus4Year)
+    forespTidsStempel = LocalDateTime.now()
+    fraDato = dateMinus1Year
+    eldsteFraDato = dateMinus4Years
     hovedDiagnosekode = healthInformation.medisinskVurdering.hovedDiagnose.diagnosekode.v
     hovedDiagnosekodeverk = Diagnosekode.values().first {
         it.kithCode == healthInformation.medisinskVurdering.hovedDiagnose.diagnosekode.s
@@ -245,7 +242,7 @@ fun createInfotrygdForesp(healthInformation: HelseOpplysningerArbeidsuforhet) = 
             it.kithCode == healthInformation.medisinskVurdering.biDiagnoser.diagnosekode.first().s
         }.infotrygdCode
     }
-    tkNrFraDato = newInstance.newXMLGregorianCalendar(gregorianCalendarMinus1Year)
+    tkNrFraDato = dateMinus1Year
 }
 
 val inputFactory = XMLInputFactory.newInstance()
@@ -278,11 +275,11 @@ fun createInfotrygdInfo(marshalledFellesformat: String, itfh: InfotrygdForespAnd
 
 fun findOprasjonstype(periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode, itfh: InfotrygdForespAndHealthInformation, typeSMinfo: TypeSMinfo): BigInteger {
     val infotrygdforespSmHistFinnes: Boolean = itfh.infotrygdForesp.sMhistorikk.status.kodeMelding != "04"
-    val sMhistorikkArbuforFOM: LocalDate? = typeSMinfo.periode?.arbufoerFOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
-    val sMhistorikkArbuforTOM: LocalDate? = typeSMinfo.periode?.arbufoerTOM?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
-    val syketilfelleStartDatoFraSykemelding = itfh.healthInformation.syketilfelleStartDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
-    val healthInformationPeriodeTOMDato: LocalDate? = periode.periodeTOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
-    val healthInformationPeriodeFOMDato: LocalDate? = periode.periodeFOMDato?.toGregorianCalendar()?.toZonedDateTime()?.toLocalDate()
+    val sMhistorikkArbuforFOM = typeSMinfo.periode?.arbufoerFOM
+    val sMhistorikkArbuforTOM = typeSMinfo.periode?.arbufoerTOM
+    val syketilfelleStartDatoFraSykemelding = itfh.healthInformation.syketilfelleStartDato
+    val healthInformationPeriodeTOMDato = periode.periodeTOMDato
+    val healthInformationPeriodeFOMDato = periode.periodeFOMDato
 
     return if (!infotrygdforespSmHistFinnes && syketilfelleStartDatoFraSykemelding == healthInformationPeriodeFOMDato) {
         "1".toBigInteger()

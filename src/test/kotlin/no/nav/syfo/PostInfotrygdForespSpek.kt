@@ -10,12 +10,9 @@ import no.nav.syfo.rules.ValidationRules
 import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.util.GregorianCalendar
-import javax.xml.datatype.DatatypeFactory
+import java.time.LocalDate
 
 object PostInfotrygdForespSpek : Spek({
-    val datatypeFactory: DatatypeFactory = DatatypeFactory.newInstance()
-
     fun deafaultHelseOpplysningerArbeidsuforhet() = HelseOpplysningerArbeidsuforhet().apply {
         aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
         }
@@ -100,9 +97,9 @@ object PostInfotrygdForespSpek : Spek({
 
         it("Should check rule 1510") {
             val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
-            healthInformation.syketilfelleStartDato = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar())
+            healthInformation.syketilfelleStartDato = LocalDate.now()
             healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                periodeFOMDato = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 0, 1))
+                periodeFOMDato = LocalDate.of(2018, 0, 1)
             })
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
@@ -112,7 +109,7 @@ object PostInfotrygdForespSpek : Spek({
                 }
                 sykmelding.add(TypeSMinfo().apply {
                     periode = TypeSMinfo.Periode().apply {
-                        arbufoerTOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 5, 1))
+                        arbufoerTOM = LocalDate.of(2018, 5, 1)
                     }
                 })
             }
@@ -131,16 +128,16 @@ object PostInfotrygdForespSpek : Spek({
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
                 sykmelding.add(TypeSMinfo().apply {
                     periode = TypeSMinfo.Periode().apply {
-                        arbufoerFOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 0, 2))
-                        arbufoerTOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 0, 8))
+                        arbufoerFOM = LocalDate.of(2018, 0, 2)
+                        arbufoerTOM = LocalDate.of(2018, 0, 8)
                     }
                 })
             }
 
             val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
             healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                periodeFOMDato = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 0, 7))
-                periodeTOMDato = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 0, 9))
+                periodeFOMDato = LocalDate.of(2018, 0, 7)
+                periodeTOMDato = LocalDate.of(2018, 0, 9)
             })
 
             val ruleData = RuleData(infotrygdForespResponse, healthInformation)
@@ -154,17 +151,17 @@ object PostInfotrygdForespSpek : Spek({
         it("Should check rule 1515") {
             val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
             healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                periodeFOMDato = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 0, 2))
+                periodeFOMDato = LocalDate.of(2018, 0, 2)
             })
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
                     sykmelding.add(TypeSMinfo().apply {
                         periode = TypeSMinfo.Periode().apply {
-                            arbufoerFOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 0, 1))
+                            arbufoerFOM = LocalDate.of(2018, 0, 1)
                             friskKode = "J"
                             hovedDiagnosekode = "001"
-                            utbetTOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 0, 3))
+                            utbetTOM = LocalDate.of(2018, 0, 3)
                         }
                     })
             }
@@ -180,7 +177,7 @@ object PostInfotrygdForespSpek : Spek({
         it("Should check rule 1515") {
             val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
             healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                periodeFOMDato = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 0, 4))
+                periodeFOMDato = LocalDate.of(2018, 0, 4)
             })
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
@@ -189,7 +186,7 @@ object PostInfotrygdForespSpek : Spek({
                     periode = TypeSMinfo.Periode().apply {
                         friskKode = "J"
                         hovedDiagnosekode = "001"
-                        utbetTOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 0, 3))
+                        utbetTOM = LocalDate.of(2018, 0, 3)
                     }
                 })
             }
@@ -205,7 +202,7 @@ object PostInfotrygdForespSpek : Spek({
         it("Should check rule 1515") {
             val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
             healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                periodeFOMDato = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 10, 11))
+                periodeFOMDato = LocalDate.of(2018, 10, 11)
             })
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
@@ -214,7 +211,7 @@ object PostInfotrygdForespSpek : Spek({
                     periode = TypeSMinfo.Periode().apply {
                         friskKode = "J"
                         hovedDiagnosekode = "001"
-                        utbetTOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 10, 9))
+                        utbetTOM = LocalDate.of(2018, 10, 9)
                     }
                 })
             }
@@ -234,8 +231,8 @@ object PostInfotrygdForespSpek : Spek({
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
                 sykmelding.add(TypeSMinfo().apply {
                     periode = TypeSMinfo.Periode().apply {
-                        friskmeldtDato = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2017, 0, 1))
-                        arbufoerTOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 0, 1))
+                        friskmeldtDato = LocalDate.of(2017, 0, 1)
+                        arbufoerTOM = LocalDate.of(2018, 0, 1)
                     }
                 })
             }
@@ -255,8 +252,8 @@ object PostInfotrygdForespSpek : Spek({
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
                 sykmelding.add(TypeSMinfo().apply {
                     periode = TypeSMinfo.Periode().apply {
-                        friskmeldtDato = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2017, 0, 1))
-                        utbetTOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 0, 1))
+                        friskmeldtDato = LocalDate.of(2017, 0, 1)
+                        utbetTOM = LocalDate.of(2018, 0, 1)
                     }
                 })
             }
@@ -276,12 +273,12 @@ object PostInfotrygdForespSpek : Spek({
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
                 sykmelding.add(TypeSMinfo().apply {
                     periode = TypeSMinfo.Periode().apply {
-                        friskmeldtDato = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 0, 1))
+                        friskmeldtDato = LocalDate.of(2018, 0, 1)
                     }
                 })
                 sykmelding.add(TypeSMinfo().apply {
                     periode = TypeSMinfo.Periode().apply {
-                        friskmeldtDato = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2017, 0, 1))
+                        friskmeldtDato = LocalDate.of(2017, 0, 1)
                     }
                 })
             }
@@ -300,8 +297,8 @@ object PostInfotrygdForespSpek : Spek({
                 gradertSykmelding = HelseOpplysningerArbeidsuforhet.Aktivitet.Periode.GradertSykmelding().apply {
                     sykmeldingsgrad = 100
                 }
-                periodeFOMDato = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2017, 0, 1))
-                periodeTOMDato = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 1, 1))
+                periodeFOMDato = LocalDate.of(2017, 0, 1)
+                periodeTOMDato = LocalDate.of(2018, 1, 1)
             })
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
@@ -309,7 +306,7 @@ object PostInfotrygdForespSpek : Spek({
                 sykmelding.add(TypeSMinfo().apply {
                     periode = TypeSMinfo.Periode().apply {
                         ufoeregrad = "90".toBigInteger()
-                        arbufoerFOM = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 0, 1))
+                        arbufoerFOM = LocalDate.of(2018, 0, 1)
                     }
                 })
             }
@@ -325,7 +322,7 @@ object PostInfotrygdForespSpek : Spek({
         it("Should check rule 1544") {
             val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
             healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                periodeFOMDato = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2018, 0, 1))
+                periodeFOMDato = LocalDate.of(2018, 0, 1)
             })
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
@@ -334,7 +331,7 @@ object PostInfotrygdForespSpek : Spek({
                     historikk.add(TypeSMinfo.Historikk().apply {
                         tilltak = TypeSMinfo.Historikk.Tilltak().apply {
                             type = "FA"
-                            tom = datatypeFactory.newXMLGregorianCalendar(GregorianCalendar(2017, 0, 1))
+                            tom = LocalDate.of(2017, 0, 1)
                         }
                     })
                 })

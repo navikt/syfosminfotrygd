@@ -5,7 +5,7 @@ buildscript {
     ext.syfooppgave_schemas_version = '1.0-SNAPSHOT'
     ext.coroutines_version = '1.0.0'
     ext.fellesformat_version = '1.0'
-    ext.infotrygd_foresp_version = "1.0.0"
+    ext.infotrygd_foresp_version = "1.0.1-SNAPSHOT"
     ext.jackson_version = "2.9.7"
     ext.jaxb_version = '2.3.0.1'
     ext.jaxb_api_version = '2.1'
@@ -20,14 +20,14 @@ buildscript {
     ext.spek_version = "2.0.0-rc.1"
     ext.javax_activation_version = '1.1.1'
     ext.ibm_mq_version = '9.0.5.0'
-    ext.felleformavV1_version = '1.0.0'
+    ext.felleformavV1_version = '1.1-SNAPSHOT'
     ext.kotlinx_serialization_version= '0.9.0'
     ext.cxf_version = '3.2.5'
     ext.nav_person_v3_version = '3.2.0'
     ext.nav_organisasjonEnhet_v2 = '2.1.0'
     ext.javax_jaxws_api_version = '2.2.1'
     ext.saaj_version = "1.4.0"
-    ext.sykmelding_version = "1.0-SNAPSHOT"
+    ext.sykmelding_version = "1.1-SNAPSHOT"
     ext.mockito_core_version = "2.23.4"
     ext.jetty_version = '9.4.11.v20180605'
 }
