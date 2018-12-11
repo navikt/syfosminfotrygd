@@ -14,16 +14,7 @@ pipeline {
     stages {
         stage('initialize') {
             steps {
-                script {
-                    init action: 'default'
-                    sh './gradlew clean'
-                    applicationVersionGradle = sh(script: './gradlew -q printVersion', returnStdout: true).trim()
-                    env.APPLICATION_VERSION = "${applicationVersionGradle}"
-                    if (applicationVersionGradle.endsWith('-SNAPSHOT')) {
-                        env.APPLICATION_VERSION = "${applicationVersionGradle}.${env.BUILD_ID}-${env.COMMIT_HASH_SHORT}"
-                    }
-                    init action: 'updateStatus'
-                }
+                init action: 'gradle'
             }
         }
         stage('build') {
@@ -42,20 +33,35 @@ pipeline {
                 slackStatus status: 'passed'
             }
         }
+       stage('push docker image') {
+              steps {
+                  dockerUtils action: 'createPushImage'
+              }
+         }
         stage('Create kafka topics') {
             steps {
                 sh 'echo TODO'
                 // TODO
             }
         }
-        stage('deploy') {
+        stage('validate & upload nais.yaml to nexus m2internal') {
+             steps {
+                 nais action: 'validate'
+                 nais action: 'upload'
+             }
+         }
+        stage('deploy to preprod') {
+             steps {
+                     deployApp action: 'jiraPreprod'
+             }
+         }
+        stage('deploy to production') {
+            when { environment name: 'DEPLOY_TO', value: 'production' }
             steps {
-                dockerUtils action: 'createPushImage'
-                nais action: 'validate'
-                nais action: 'upload'
-                deployApp action: 'jiraPreprod'
+                deployApp action: 'jiraProd'
+                githubStatus action: 'tagRelease'
             }
-        }
+         }
     }
     post {
         always {
