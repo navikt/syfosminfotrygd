@@ -27,7 +27,6 @@ data class Environment(
     val mqPort: Int = config.getProperty("mq.port").toInt(),
     val mqUsername: String = config.getProperty("mq.username"),
     val mqPassword: String = config.getProperty("mq.password"),
-    val syfoSmRegelerApiURL: String = config.getProperty("http.syfosmapprec.url"),
 
     val organisasjonEnhetV2EndpointURL: String = getEnvVar("VIRKSOMHET_ORGANISASJONENHET_V2_ENDPOINTURL"),
     val personV3EndpointURL: String = getEnvVar("VIRKSOMHET_PERSON_V3_ENDPOINTURL"),
