@@ -24,7 +24,6 @@ data class Environment(
     val srvsminfotrygdPassword: String = config.getProperty("serviceuser.password"),
     val sm2013AutomaticHandlingTopic: String = config.getProperty("kafka.syfo.sm2013.automatiskBehandling.topic"),
     val smPaperAutomaticHandlingTopic: String = config.getProperty("kafka.syfo.smpapir.automatiskBehandling.topic"),
-    val mqPort: Int = config.getProperty("mq.port").toInt(),
     val mqUsername: String = config.getProperty("mq.username"),
     val mqPassword: String = config.getProperty("mq.password"),
 
@@ -36,5 +35,6 @@ data class Environment(
     val infotrygdOppdateringQueue: String = getEnvVar("EIA_QUEUE_INFOTRYGD_OUTBOUND_QUEUENAME"),
     val mqHostname: String = getEnvVar("MQGATEWAY03_HOSTNAME"),
     val mqQueueManagerName: String = getEnvVar("MQGATEWAY03_NAME"),
-    val mqChannelName: String = getEnvVar("SYFOSMINFOTRYGD_CHANNEL_NAME")
+    val mqChannelName: String = getEnvVar("SYFOSMINFOTRYGD_CHANNEL_NAME"),
+    val mqPort: Int = getEnvVar("MQGATEWAY03_PORT").toInt()
 )
