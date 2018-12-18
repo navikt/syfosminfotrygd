@@ -15,7 +15,7 @@ data class RuleData(
 
 enum class ValidationRules(override val ruleId: Int?, override val status: Status, override val predicate: (RuleData) -> Boolean) : Rule<RuleData> {
 
-    @Description("Hvis gradert sykmelding og reisetilskudd er oppgitt for samme periode sendes meldingen til manuell behandling.")
+    @Description("Hvis gradert sykmelding og reisetilskudd er oppgitt for samme periode")
     GRADUAL_SYKMELDING_COMBINED_WITH_TRAVEL(1250, Status.MANUAL_PROCESSING, { (_, healthInformation) ->
         healthInformation.aktivitet.periode.any { it.gradertSykmelding != null && it?.isReisetilskudd ?: false }
     }),
@@ -35,19 +35,6 @@ enum class ValidationRules(override val ruleId: Int?, override val status: Statu
         when (infotrygdForesp.pasient?.isFinnes) {
             null -> false
             else -> !infotrygdForesp.pasient.isFinnes
-        }
-    }),
-
-    @Description("Hvis meldingen ikke kan knyttes til noe registrert tilfelle i Infotrygd, og legen har spesifisert syketilfellets startdato forskjellig fra første fraværsdag")
-    MESSAGE_NOT_IN_INFOTRYGD(1510, Status.MANUAL_PROCESSING, { (infotrygdForesp, healthInformation) ->
-        val infotrygdforespSmHistFinnes: Boolean = infotrygdForesp.sMhistorikk?.status?.kodeMelding != "04"
-        val healthInformationPeriodeFomdato: LocalDate? = healthInformation.aktivitet.periode.firstOrNull()?.periodeFOMDato
-        val infortrygdsmhistorikkTom: LocalDate? = infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.arbufoerTOM
-
-        if (healthInformationPeriodeFomdato != null && infortrygdsmhistorikkTom != null) {
-            !infotrygdforespSmHistFinnes && healthInformationPeriodeFomdato.isBefore(infortrygdsmhistorikkTom)
-        } else {
-            false
         }
     }),
 
@@ -123,6 +110,8 @@ enum class ValidationRules(override val ruleId: Int?, override val status: Statu
         }
     }),
 
+    // TODO Endre på å gå igjennom alle periodene, og gjør den sjekken
+    // firskmeldtdato kommer fra sykemldingen
     @Description("Hvis ny friskmeldingsdato er mindre enn arbuforTOM registrert i Infotrygd")
     NEW_CLEAN_BILL_DATE_BEFORE_ARBUFORTOM(1516, Status.MANUAL_PROCESSING, { (infotrygdForesp) ->
         val sMhistorikkfriskmeldtDato: LocalDate? = infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.friskmeldtDato
@@ -135,6 +124,8 @@ enum class ValidationRules(override val ruleId: Int?, override val status: Statu
         }
     }),
 
+    // TODO Endre på å gå igjennom alle periodene, og gjør den sjekken
+    // firskmeldtdato kommer fra sykemldingen
     @Description("Hvis ny friskmeldingsdato er mindre enn utbetalingTOM registrert i Infotrygd")
     NEW_CLEAN_BILL_DATE_BEFORE_PAYOUT(1517, Status.MANUAL_PROCESSING, { (infotrygdForesp) ->
         val sMhistorikkfriskmeldtDato: LocalDate? = infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.friskmeldtDato
@@ -146,6 +137,7 @@ enum class ValidationRules(override val ruleId: Int?, override val status: Statu
         }
     }),
 
+    // TODO firskmeldtdato kommer fra sykemldingen
     @Description("Hvis ny friskmeldingsdato er tidligere enn registrert friskmeldingsdato i Infotrygd")
     NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE(1518, Status.MANUAL_PROCESSING, { (infotrygdForesp) ->
         val newfriskmeldtDato: LocalDate? = infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.friskmeldtDato
@@ -155,19 +147,6 @@ enum class ValidationRules(override val ruleId: Int?, override val status: Statu
             null -> false
             else -> newfriskmeldtDato?.isAfter(secoundfriskmeldtDato) ?: false
         }
-    }),
-
-    @Description("Hvis uføregrad er endret")
-    DIABILITY_GRADE_CANGED(1530, Status.MANUAL_PROCESSING, { (infotrygdForesp, healthInformation) ->
-        val disabilityGradeIT: Int? = infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.ufoeregrad?.toInt()
-        val healthInformationDisabilityGrade: Int? = healthInformation.aktivitet.periode.firstOrNull()?.gradertSykmelding?.sykmeldingsgrad
-        val sMhistorikkArbuforFOM: LocalDate? = infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.arbufoerFOM
-        val healthInformationPeriodeFOMDato: LocalDate? = healthInformation.aktivitet.periode.firstOrNull()?.periodeFOMDato
-        val healthInformationPeriodeTOMDato: LocalDate? = healthInformation.aktivitet.periode.firstOrNull()?.periodeTOMDato
-
-        disabilityGradeIT != healthInformationDisabilityGrade &&
-                sMhistorikkArbuforFOM?.isAfter(healthInformationPeriodeFOMDato) ?: false &&
-                sMhistorikkArbuforFOM?.isBefore(healthInformationPeriodeTOMDato) ?: false
     }),
 
     @Description("Hvis forlengelse utover registrert tiltak FA tiltak")
@@ -190,13 +169,6 @@ enum class ValidationRules(override val ruleId: Int?, override val status: Statu
         }
     }),
 
-    @Description("Hvis personen har stanskode DØD i Infotrygd")
-    PATIENT_DEAD(1545, Status.MANUAL_PROCESSING, { (infotrygdForesp) ->
-        infotrygdForesp.sMhistorikk?.sykmelding?.any { sykmelding ->
-            sykmelding?.periode?.stans == "DØD"
-        } ?: false
-    }),
-
     @Description("Personen har flyttet ( stanskode FL i Infotrygd)")
     PERSON_MOVING_KODE_FL(1546, Status.MANUAL_PROCESSING, { (infotrygdForesp) ->
         infotrygdForesp.sMhistorikk?.sykmelding?.any { sykmelding ->
@@ -204,21 +176,7 @@ enum class ValidationRules(override val ruleId: Int?, override val status: Statu
         } ?: false
         }),
 
-    // TODO Har alldri oppstått
-    @Description("Tilfellet er reisetilskott")
-    CASE_STOP_KODE_RT(1547, Status.MANUAL_PROCESSING, { (infotrygdForesp) ->
-        infotrygdForesp.sMhistorikk?.sykmelding?.any { sykmelding ->
-            sykmelding?.periode?.stans == "RT"
-        } ?: false
-    }),
-
-    @Description("Hvis perioden er avsluttet-død(AD)")
-    PERIOD_ENDED_DEAD(1548, Status.MANUAL_PROCESSING, { (infotrygdForesp) ->
-        infotrygdForesp.sMhistorikk?.sykmelding?.any { sykemelding ->
-            sykemelding?.periode?.stans == "AD"
-        } ?: false
-    }),
-
+    //TODO gå igjennom alle perioder
     @Description("Hvis perioden er avsluttet (AA)")
     PERIOD_FOR_AA_ENDED(1549, Status.MANUAL_PROCESSING, { (infotrygdForesp) ->
         when (infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.stans) {
@@ -227,6 +185,7 @@ enum class ValidationRules(override val ruleId: Int?, override val status: Statu
         }
     }),
 
+    //TODO gå igjennom alle perioder
     @Description("Hvis perioden er avsluttet-frisk (AF)")
     PERIOD_IS_AF(1550, Status.MANUAL_PROCESSING, { (infotrygdForesp) ->
         when (infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.stans) {
