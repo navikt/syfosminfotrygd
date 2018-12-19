@@ -176,7 +176,7 @@ enum class ValidationRules(override val ruleId: Int?, override val status: Statu
         } ?: false
         }),
 
-    //TODO gå igjennom alle perioder
+    // TODO gå igjennom alle perioder
     @Description("Hvis perioden er avsluttet (AA)")
     PERIOD_FOR_AA_ENDED(1549, Status.MANUAL_PROCESSING, { (infotrygdForesp) ->
         when (infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.stans) {
@@ -185,7 +185,7 @@ enum class ValidationRules(override val ruleId: Int?, override val status: Statu
         }
     }),
 
-    //TODO gå igjennom alle perioder
+    // TODO gå igjennom alle perioder
     @Description("Hvis perioden er avsluttet-frisk (AF)")
     PERIOD_IS_AF(1550, Status.MANUAL_PROCESSING, { (infotrygdForesp) ->
         when (infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.stans) {
