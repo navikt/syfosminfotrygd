@@ -171,33 +171,29 @@ enum class ValidationRules(override val ruleId: Int?, override val status: Statu
 
     @Description("Personen har flyttet ( stanskode FL i Infotrygd)")
     PERSON_MOVING_KODE_FL(1546, Status.MANUAL_PROCESSING, { (infotrygdForesp) ->
-        infotrygdForesp.sMhistorikk?.sykmelding?.any { sykmelding ->
-            sykmelding?.periode?.stans == "FL"
-        } ?: false
+        infotrygdForesp.sMhistorikk?.sykmelding?.find {
+            it.periode.arbufoerFOM == infotrygdForesp.sMhistorikk?.sykmelding?.sortedFOMDate()?.last()
+        }?.periode?.stans == "FL"
         }),
 
     @Description("Hvis perioden er avsluttet (AA)")
     PERIOD_FOR_AA_ENDED(1549, Status.MANUAL_PROCESSING, { (infotrygdForesp) ->
-        infotrygdForesp.sMhistorikk?.sykmelding?.any { it.periode.stans == "AA" } ?: false
+        infotrygdForesp.sMhistorikk?.sykmelding?.find {
+            it.periode.arbufoerFOM == infotrygdForesp.sMhistorikk?.sykmelding?.sortedFOMDate()?.last()
+        }?.periode?.stans == "AA"
     }),
 
     @Description("Hvis perioden er avsluttet-frisk (AF)")
     PERIOD_IS_AF(1550, Status.MANUAL_PROCESSING, { (infotrygdForesp) ->
-        infotrygdForesp.sMhistorikk?.sykmelding?.any { it.periode?.stans == "AF" } ?: false
+        infotrygdForesp.sMhistorikk?.sykmelding?.find {
+            it.periode.arbufoerFOM == infotrygdForesp.sMhistorikk?.sykmelding?.sortedFOMDate()?.last()
+        }?.periode?.stans == "AF"
     }),
 
     @Description("Hvis maks sykepenger er utbetalt")
     MAX_SICK_LEAVE_PAYOUT(1551, Status.MANUAL_PROCESSING, { (infotrygdForesp) ->
-        infotrygdForesp.sMhistorikk?.sykmelding?.any { sykemelding ->
-            sykemelding?.periode?.stans == "MAX"
-        } ?: false
-    }),
-
-    @Description("Hvis det er registrert avslag i IT")
-    REFUSAL_IS_REGISTERED(1552, Status.MANUAL_PROCESSING, { (infotrygdForesp) ->
-        infotrygdForesp.sMhistorikk?.sykmelding?.any { sykemelding ->
-            !sykemelding?.periode?.avslag.isNullOrEmpty()
-        } ?: false
+        infotrygdForesp.sMhistorikk?.sykmelding?.first()?.periode?.stans == "MAX"
+        // TODO korte ned sykmeldingen til maks dato??
     }),
 
     @Description("Infotrygd returnerte en feil, vi kan ikke automatisk oppdatere Infotrygd")
@@ -255,3 +251,6 @@ fun TypeSMinfo.range(): ClosedRange<LocalDate> =
 
 fun List<HelseOpplysningerArbeidsuforhet.Aktivitet.Periode>.sortedTOMDate(): List<LocalDate> =
         map { it.periodeTOMDato }.sorted()
+
+fun List<TypeSMinfo>.sortedFOMDate(): List<LocalDate> =
+        map { it.periode.arbufoerFOM }.sorted()

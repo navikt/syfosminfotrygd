@@ -370,26 +370,6 @@ object PostInfotrygdForespSpek : Spek({
             results.any { it == ValidationRules.MAX_SICK_LEAVE_PAYOUT } shouldEqual true
         }
 
-        it("Should check rule 1552") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
-
-            val infotrygdForespResponse = deafaultInfotrygdForesp()
-            infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
-                sykmelding.add(TypeSMinfo().apply {
-                    periode = TypeSMinfo.Periode().apply {
-                        avslag = "Fordi"
-                    }
-                })
-            }
-
-            val ruleData = RuleData(infotrygdForespResponse, healthInformation)
-            val results = listOf<List<Rule<RuleData>>>(
-                    ValidationRules.values().toList()
-            ).flatten().filter { rule -> rule.predicate(ruleData) }
-
-            results.any { it == ValidationRules.REFUSAL_IS_REGISTERED } shouldEqual true
-        }
-
         it("Should check rule 1591") {
             val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
 
