@@ -63,18 +63,15 @@ class EmbeddedEnvironment {
             topics = listOf("privat-syfo-sm2013-automatiskBehandling", "privat-syfo-smpapir-automatiskBehandling")
     )
 
-    private val env = Environment(
-            kafkaBootstrapServers = embeddedKafkaEnvironment.brokersURL,
-            organisasjonEnhetV2EndpointURL = "$wsBaseUrl/ws/norg2",
-            personV3EndpointURL = "$wsBaseUrl/ws/tps",
-            securityTokenServiceUrl = "$wsBaseUrl/ws/sts",
-            infotrygdSporringQueue = "infotrygd_foresporsel_queue",
-            infotrygdOppdateringQueue = "infotrygd_oppdatering_queue",
-            mqHostname = "mqgateway",
-            mqQueueManagerName = "mqgatewayname",
-            mqChannelName = "mqchannel")
+    val credentials = VaultCredentials("", "", "", "")
+    val config = ApplicationConfig(mqHostname = "mqhost", mqPort = 2,
+            mqGatewayName = "mqGateway", kafkaBootstrapServers = embeddedKafkaEnvironment.brokersURL,
+            mqChannelName = "syfomottak", infotrygdOppdateringQueue = "apprequeue",
+            infotrygdSporringQueue = "infotrygdqueue", organisasjonEnhetV2EndpointURL = "orgApi",
+            personV3EndpointURL = "personApi", securityTokenServiceUrl = "secApi"
+    )
 
-    val sm2013AutomaticHandlingTopic = env.sm2013AutomaticHandlingTopic
+    val sm2013AutomaticHandlingTopic = config.sm2013AutomaticHandlingTopic
 
     private val kafkaproducerInput: KafkaProducer<String, String>
     private val kafkaproducerOutput: KafkaProducer<String, ProduceTask>
@@ -100,18 +97,18 @@ class EmbeddedEnvironment {
             infotrygdSporringProducer = session.createProducer(infotrygdSporringQueue)
 
             embeddedKafkaEnvironment.start()
-            kafkaconsumer = KafkaConsumer(readConsumerConfig(env, StringDeserializer::class).apply {
+            kafkaconsumer = KafkaConsumer(readConsumerConfig(config, credentials, StringDeserializer::class).apply {
                 remove("security.protocol")
                 remove("sasl.mechanism")
             })
-            kafkaconsumer.subscribe(listOf(env.sm2013AutomaticHandlingTopic, env.smPaperAutomaticHandlingTopic))
+            kafkaconsumer.subscribe(listOf(config.sm2013AutomaticHandlingTopic, config.smPaperAutomaticHandlingTopic))
 
-            kafkaproducerOutput = KafkaProducer(readProducerConfig(env, KafkaAvroSerializer::class).apply {
+            kafkaproducerOutput = KafkaProducer(readProducerConfig(config, credentials, KafkaAvroSerializer::class).apply {
                 remove("security.protocol")
                 remove("sasl.mechanism")
             })
 
-            kafkaproducerInput = KafkaProducer(readProducerConfig(env, StringSerializer::class).apply {
+            kafkaproducerInput = KafkaProducer(readProducerConfig(config, credentials, StringSerializer::class).apply {
                 remove("security.protocol")
                 remove("sasl.mechanism")
             })

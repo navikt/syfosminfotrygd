@@ -3,12 +3,13 @@
 pipeline {
     agent any
 
+     tools {
+            jdk 'openjdk11'
+        }
+
     environment {
         APPLICATION_NAME = 'syfosminfotrygd'
-        ZONE = 'fss'
-        DOCKER_SLUG='syfo'
-        FASIT_ENVIRONMENT='q1'
-        DISABLE_SLACK_MESSAGES = true
+        DOCKER_SLUG = 'syfo'
     }
 
     stages {
@@ -33,35 +34,26 @@ pipeline {
                 slackStatus status: 'passed'
             }
         }
-       stage('push docker image') {
-              steps {
-                  dockerUtils action: 'createPushImage'
-              }
-         }
         stage('Create kafka topics') {
             steps {
                 sh 'echo TODO'
                 // TODO
             }
         }
-        stage('validate & upload nais.yaml to nexus m2internal') {
-             steps {
-                 nais action: 'validate'
-                 nais action: 'upload'
-             }
-         }
-        stage('deploy to preprod') {
-             steps {
-                     deployApp action: 'jiraPreprod'
-             }
-         }
+      stage('deploy to preprod') {
+            steps {
+                dockerUtils action: 'createPushImage'
+                deployApp action: 'kubectlDeploy', cluster: 'preprod-fss'
+            }
+        }
         stage('deploy to production') {
             when { environment name: 'DEPLOY_TO', value: 'production' }
             steps {
-                deployApp action: 'jiraProd'
+                deployApp action: 'kubectlApply', cluster: 'prod-fss', file: 'redis.yaml'
+                deployApp action: 'kubectlDeploy', cluster: 'prod-fss', file: 'naiserator-prod.yaml'
                 githubStatus action: 'tagRelease'
             }
-         }
+        }
     }
     post {
         always {

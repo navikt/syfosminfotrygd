@@ -23,26 +23,20 @@ object KafkaITSpek : Spek({
             topics = listOf(topic)
     )
 
-    val env = Environment(
-            applicationPort = getRandomPort(),
-            srvsminfotrygdUsername = "unused",
-            srvsminfotrygdPassword = "unused",
-            kafkaBootstrapServers = embeddedEnvironment.brokersURL,
-            infotrygdOppdateringQueue = "TODO",
-            infotrygdSporringQueue = "TODO",
-            mqHostname = "TODO",
-            mqChannelName = "TODO",
-            mqPort = 1234,
-            mqQueueManagerName = "TODO",
-            mqPassword = "TODO",
-            mqUsername = "TODO"
+    val credentials = VaultCredentials("", "", "", "")
+    val config = ApplicationConfig(mqHostname = "mqhost", mqPort = getRandomPort(),
+            mqGatewayName = "mqGateway", kafkaBootstrapServers = embeddedEnvironment.brokersURL,
+            mqChannelName = "syfomottak", infotrygdOppdateringQueue = "apprequeue",
+            infotrygdSporringQueue = "infotrygdqueue", organisasjonEnhetV2EndpointURL = "orgApi",
+            personV3EndpointURL = "personApi", securityTokenServiceUrl = "secApi"
     )
-    val producer = KafkaProducer<String, String>(readProducerConfig(env, StringSerializer::class).apply {
+
+    val producer = KafkaProducer<String, String>(readProducerConfig(config, credentials, StringSerializer::class).apply {
         remove("security.protocol")
         remove("sasl.mechanism")
     })
 
-    val consumer = KafkaConsumer<String, String>(readConsumerConfig(env, StringDeserializer::class).apply {
+    val consumer = KafkaConsumer<String, String>(readConsumerConfig(config, credentials, StringDeserializer::class).apply {
         remove("security.protocol")
         remove("sasl.mechanism")
     })

@@ -1,0 +1,12 @@
+{
+  "mqHostname": "a01apvl062.adeo.no",
+  "mqPort": 1414,
+  "mqGatewayName": "MPLSC03",
+  "mqChannelName": "P_SYFOSMINFOTRYGD",
+  "kafkaBootstrapServers": "SASL_SSL://a01apvl00145.adeo.no:8443,SASL_SSL://a01apvl00146.adeo.no:8443,SASL_SSL://a01apvl00147.adeo.no:8443,SASL_SSL://a01apvl00149.adeo.no:8443",
+  "organisasjonEnhetV2EndpointURL" : "https://app.adeo.no/norg2/ws/OrganisasjonEnhet/v2",
+  "personV3EndpointURL" : "https://wasapp.adeo.no/tpsws/ws/Person/v3",
+  "securityTokenServiceUrl" : "https://sts.adeo.no/SecurityTokenServiceProvider/",
+  "infotrygdSporringQueue" : "QA.P278.IT00_FORESPORSEL_XML",
+  "infotrygdOppdateringQueue" : "QA.P_SYFOSMITOPPDATERING.INFOTRYGD_OPPDATERING"
+}

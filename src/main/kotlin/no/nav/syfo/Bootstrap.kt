@@ -44,6 +44,7 @@ import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.io.File
 import java.io.StringReader
 import java.io.StringWriter
 import java.math.BigInteger
@@ -69,43 +70,44 @@ val objectMapper: ObjectMapper = ObjectMapper().apply {
 }
 
 fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCoroutineDispatcher()) {
-    val env = Environment()
+    val config: ApplicationConfig = objectMapper.readValue(File(System.getenv("CONFIG_FILE")))
+    val credentials: VaultCredentials = objectMapper.readValue(vaultApplicationPropertiesPath.toFile())
     val applicationState = ApplicationState()
 
-    val applicationServer = embeddedServer(Netty, env.applicationPort) {
+    val applicationServer = embeddedServer(Netty, config.applicationPort) {
         initRouting(applicationState)
     }.start(wait = false)
 
-    connectionFactory(env).createConnection(env.mqUsername, env.mqPassword).use { connection ->
+    connectionFactory(config).createConnection(credentials.mqUsername, credentials.mqPassword).use { connection ->
         connection.start()
 
         try {
-            val listeners = (1..env.applicationThreads).map {
+            val listeners = (1..config.applicationThreads).map {
                 launch {
-                    val consumerProperties = readConsumerConfig(env, valueDeserializer = StringDeserializer::class)
-                    val producerProperties = readProducerConfig(env, valueSerializer = KafkaAvroSerializer::class)
+                    val consumerProperties = readConsumerConfig(config, credentials, valueDeserializer = StringDeserializer::class)
+                    val producerProperties = readProducerConfig(config, credentials, valueSerializer = KafkaAvroSerializer::class)
                     val kafkaconsumer = KafkaConsumer<String, String>(consumerProperties)
-                    kafkaconsumer.subscribe(listOf(env.sm2013AutomaticHandlingTopic, env.smPaperAutomaticHandlingTopic))
+                    kafkaconsumer.subscribe(listOf(config.sm2013AutomaticHandlingTopic, config.smPaperAutomaticHandlingTopic))
                     val kafkaproducer = KafkaProducer<String, ProduceTask>(producerProperties)
                     val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
-                    val infotrygdOppdateringQueue = session.createQueue("queue:///${env.infotrygdOppdateringQueue}?targetClient=1")
-                    val infotrygdSporringQueue = session.createQueue("queue:///${env.infotrygdSporringQueue}?targetClient=1")
+                    val infotrygdOppdateringQueue = session.createQueue("queue:///${config.infotrygdOppdateringQueue}?targetClient=1")
+                    val infotrygdSporringQueue = session.createQueue("queue:///${config.infotrygdSporringQueue}?targetClient=1")
                     val infotrygdOppdateringProducer = session.createProducer(infotrygdOppdateringQueue)
                     val infotrygdSporringProducer = session.createProducer(infotrygdSporringQueue)
 
                     val personV3 = JaxWsProxyFactoryBean().apply {
-                        address = env.personV3EndpointURL
+                        address = config.personV3EndpointURL
                         serviceClass = PersonV3::class.java
                     }.create() as PersonV3
-                    configureSTSFor(personV3, env.srvsminfotrygdUsername,
-                            env.srvsminfotrygdPassword, env.securityTokenServiceUrl)
+                    configureSTSFor(personV3, credentials.serviceuserUsername,
+                            credentials.serviceuserPassword, config.securityTokenServiceUrl)
 
                     val orgnaisasjonEnhet = JaxWsProxyFactoryBean().apply {
-                        address = env.organisasjonEnhetV2EndpointURL
+                        address = config.organisasjonEnhetV2EndpointURL
                         serviceClass = OrganisasjonEnhetV2::class.java
                     }.create() as OrganisasjonEnhetV2
-                    configureSTSFor(orgnaisasjonEnhet, env.srvsminfotrygdUsername,
-                            env.srvsminfotrygdPassword, env.securityTokenServiceUrl)
+                    configureSTSFor(orgnaisasjonEnhet, credentials.serviceuserUsername,
+                            credentials.serviceuserPassword, config.securityTokenServiceUrl)
 
                     blockingApplicationLogic(applicationState, kafkaconsumer, kafkaproducer, infotrygdOppdateringProducer, infotrygdSporringProducer, session, personV3, orgnaisasjonEnhet)
                 }
