@@ -101,16 +101,16 @@ object PostInfotrygdForespSpek : Spek({
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
                 sykmelding.add(TypeSMinfo().apply {
                     periode = TypeSMinfo.Periode().apply {
-                        arbufoerFOM = LocalDate.of(2018, 0, 2)
-                        arbufoerTOM = LocalDate.of(2018, 0, 8)
+                        arbufoerFOM = LocalDate.of(2018, 1, 2)
+                        arbufoerTOM = LocalDate.of(2018, 1, 8)
                     }
                 })
             }
 
             val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
             healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                periodeFOMDato = LocalDate.of(2018, 0, 7)
-                periodeTOMDato = LocalDate.of(2018, 0, 9)
+                periodeFOMDato = LocalDate.of(2018, 1, 7)
+                periodeTOMDato = LocalDate.of(2018, 1, 9)
             })
 
             val ruleData = RuleData(infotrygdForespResponse, healthInformation)
@@ -124,17 +124,17 @@ object PostInfotrygdForespSpek : Spek({
         it("Should check rule 1515") {
             val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
             healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                periodeFOMDato = LocalDate.of(2018, 0, 2)
+                periodeFOMDato = LocalDate.of(2018, 1, 2)
             })
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
                     sykmelding.add(TypeSMinfo().apply {
                         periode = TypeSMinfo.Periode().apply {
-                            arbufoerFOM = LocalDate.of(2018, 0, 1)
+                            arbufoerFOM = LocalDate.of(2018, 1, 1)
                             friskKode = "J"
                             hovedDiagnosekode = "001"
-                            utbetTOM = LocalDate.of(2018, 0, 3)
+                            utbetTOM = LocalDate.of(2018, 1, 3)
                         }
                     })
             }
@@ -150,7 +150,7 @@ object PostInfotrygdForespSpek : Spek({
         it("Should check rule 1515") {
             val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
             healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                periodeFOMDato = LocalDate.of(2018, 0, 4)
+                periodeFOMDato = LocalDate.of(2018, 1, 4)
             })
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
@@ -159,7 +159,7 @@ object PostInfotrygdForespSpek : Spek({
                     periode = TypeSMinfo.Periode().apply {
                         friskKode = "J"
                         hovedDiagnosekode = "001"
-                        utbetTOM = LocalDate.of(2018, 0, 3)
+                        utbetTOM = LocalDate.of(2018, 1, 3)
                     }
                 })
             }
@@ -175,7 +175,7 @@ object PostInfotrygdForespSpek : Spek({
         it("Should check rule 1515") {
             val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
             healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                periodeFOMDato = LocalDate.of(2018, 10, 11)
+                periodeFOMDato = LocalDate.of(2018, 1, 6)
             })
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
@@ -184,7 +184,7 @@ object PostInfotrygdForespSpek : Spek({
                     periode = TypeSMinfo.Periode().apply {
                         friskKode = "J"
                         hovedDiagnosekode = "001"
-                        utbetTOM = LocalDate.of(2018, 10, 9)
+                        utbetTOM = LocalDate.of(2018, 1, 5)
                     }
                 })
             }
@@ -199,13 +199,21 @@ object PostInfotrygdForespSpek : Spek({
 
         it("Should check rule 1516") {
             val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
+            healthInformation.aktivitet.periode.add(
+                    HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
+                        periodeTOMDato = LocalDate.of(2017, 1, 2)
+                    }
+            )
+            healthInformation.prognose = HelseOpplysningerArbeidsuforhet.Prognose().apply {
+                isArbeidsforEtterEndtPeriode = true
+            }
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
                 sykmelding.add(TypeSMinfo().apply {
                     periode = TypeSMinfo.Periode().apply {
-                        friskmeldtDato = LocalDate.of(2017, 0, 1)
-                        arbufoerTOM = LocalDate.of(2018, 0, 1)
+                        friskmeldtDato = LocalDate.of(2017, 1, 1)
+                        arbufoerTOM = LocalDate.of(2018, 1, 1)
                     }
                 })
             }
@@ -220,13 +228,21 @@ object PostInfotrygdForespSpek : Spek({
 
         it("Should check rule 1517") {
             val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
+            healthInformation.aktivitet.periode.add(
+                    HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
+                        periodeTOMDato = LocalDate.of(2017, 1, 2)
+                    }
+            )
+            healthInformation.prognose = HelseOpplysningerArbeidsuforhet.Prognose().apply {
+                isArbeidsforEtterEndtPeriode = true
+            }
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
                 sykmelding.add(TypeSMinfo().apply {
                     periode = TypeSMinfo.Periode().apply {
-                        friskmeldtDato = LocalDate.of(2017, 0, 1)
-                        utbetTOM = LocalDate.of(2018, 0, 1)
+                        friskmeldtDato = LocalDate.of(2017, 1, 1)
+                        utbetTOM = LocalDate.of(2018, 1, 1)
                     }
                 })
             }
@@ -241,17 +257,25 @@ object PostInfotrygdForespSpek : Spek({
 
         it("Should check rule 1518") {
             val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
+            healthInformation.aktivitet.periode.add(
+                    HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
+                        periodeTOMDato = LocalDate.of(2017, 1, 2)
+                    }
+            )
+            healthInformation.prognose = HelseOpplysningerArbeidsuforhet.Prognose().apply {
+                isArbeidsforEtterEndtPeriode = true
+            }
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
                 sykmelding.add(TypeSMinfo().apply {
                     periode = TypeSMinfo.Periode().apply {
-                        friskmeldtDato = LocalDate.of(2018, 0, 1)
+                        friskmeldtDato = LocalDate.of(2018, 1, 1)
                     }
                 })
                 sykmelding.add(TypeSMinfo().apply {
                     periode = TypeSMinfo.Periode().apply {
-                        friskmeldtDato = LocalDate.of(2017, 0, 1)
+                        friskmeldtDato = LocalDate.of(2017, 1, 1)
                     }
                 })
             }
@@ -267,7 +291,7 @@ object PostInfotrygdForespSpek : Spek({
         it("Should check rule 1544") {
             val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
             healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                periodeFOMDato = LocalDate.of(2018, 0, 1)
+                periodeFOMDato = LocalDate.of(2018, 1, 1)
             })
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
@@ -276,7 +300,7 @@ object PostInfotrygdForespSpek : Spek({
                     historikk.add(TypeSMinfo.Historikk().apply {
                         tilltak = TypeSMinfo.Historikk.Tilltak().apply {
                             type = "FA"
-                            tom = LocalDate.of(2017, 0, 1)
+                            tom = LocalDate.of(2017, 1, 1)
                         }
                     })
                 })
@@ -298,6 +322,12 @@ object PostInfotrygdForespSpek : Spek({
                 sykmelding.add(TypeSMinfo().apply {
                     periode = TypeSMinfo.Periode().apply {
                         stans = "FL"
+                        arbufoerFOM = LocalDate.of(2017, 2, 1)
+                    }
+                })
+                sykmelding.add(TypeSMinfo().apply {
+                    periode = TypeSMinfo.Periode().apply {
+                        arbufoerFOM = LocalDate.of(2017, 1, 1)
                     }
                 })
             }
@@ -318,6 +348,13 @@ object PostInfotrygdForespSpek : Spek({
                 sykmelding.add(TypeSMinfo().apply {
                     periode = TypeSMinfo.Periode().apply {
                         stans = "AA"
+                        arbufoerFOM = LocalDate.of(2017, 2, 1)
+                    }
+                })
+
+                sykmelding.add(TypeSMinfo().apply {
+                    periode = TypeSMinfo.Periode().apply {
+                        arbufoerFOM = LocalDate.of(2017, 1, 1)
                     }
                 })
             }
@@ -338,6 +375,13 @@ object PostInfotrygdForespSpek : Spek({
                 sykmelding.add(TypeSMinfo().apply {
                     periode = TypeSMinfo.Periode().apply {
                         stans = "AF"
+                        arbufoerFOM = LocalDate.of(2017, 2, 1)
+                    }
+                })
+
+                sykmelding.add(TypeSMinfo().apply {
+                    periode = TypeSMinfo.Periode().apply {
+                        arbufoerFOM = LocalDate.of(2017, 1, 1)
                     }
                 })
             }

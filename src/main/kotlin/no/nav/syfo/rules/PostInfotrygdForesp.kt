@@ -41,10 +41,18 @@ enum class ValidationRules(override val ruleId: Int?, override val status: Statu
     @Description("Hvis delvis sammenfallende sykmeldingsperiode er registrert i Infotrygd")
     PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE(1513, Status.MANUAL_PROCESSING, { (infotrygdForesp, healthInformation) ->
         healthInformation.aktivitet.periode.any { healthInformationPeriods ->
+            if (infotrygdForesp.sMhistorikk?.sykmelding != null) {
             infotrygdForesp.sMhistorikk.sykmelding
                     .any { infotrygdForespSykmelding ->
+                        if (infotrygdForespSykmelding.periode?.arbufoerFOM != null && infotrygdForespSykmelding.periode?.arbufoerTOM != null) {
                         healthInformationPeriods.periodeFOMDato in infotrygdForespSykmelding.range() || healthInformationPeriods.periodeTOMDato in infotrygdForespSykmelding.range()
-                    }
+                        } else {
+                            false
+                        }
+                        }
+            } else {
+                false
+            }
         }
     }),
 
@@ -88,7 +96,7 @@ enum class ValidationRules(override val ruleId: Int?, override val status: Statu
         }
     }),
 
-    @Description("Hvis sykmeldingen er forlengelse av registrert sykepengehistorikk fra annet kontor så medlingen gå til manuell behandling slik at  saksbehandler kan registrere sykepengetilfellet på ny identdato og  send oppgave til Nav forvaltning for registrering av inntektsopplysninger")
+    @Description("Hvis sykmeldingen er forlengelse av registrert sykepengehistorikk fra annet kontor så medlingen gå til manuell behandling slik at  saksbehandler kan registrere sykepengetilfellet på ny identdato og send oppgave til Nav forvaltning for registrering av inntektsopplysninger")
     SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_3(1515, Status.MANUAL_PROCESSING, { (infotrygdForesp, healthInformation) ->
         val healthInformationPeriodeFomdato: LocalDate? = healthInformation.aktivitet?.periode?.firstOrNull()?.periodeFOMDato
         val infotrygdforespHistUtbetalingTOM: LocalDate? = infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.utbetTOM
@@ -101,7 +109,7 @@ enum class ValidationRules(override val ruleId: Int?, override val status: Statu
                 !infotrygdforespDiagnoseKode.isNullOrBlank()) {
                     infotrygdforespHistUtbetalingTOM.isBefore(healthInformationPeriodeFomdato) &&
                             infotrygdforespHistUtbetalingTOM.plusDays(3).isAfter(healthInformationPeriodeFomdato) &&
-                            infotrygdforespHistUtbetalingTOM.dayOfWeek == java.time.DayOfWeek.FRIDAY &&
+                            infotrygdforespHistUtbetalingTOM.dayOfWeek >= java.time.DayOfWeek.FRIDAY &&
                             healthInformationPeriodeFomdato.dayOfWeek in arrayOf(java.time.DayOfWeek.SATURDAY, java.time.DayOfWeek.SUNDAY, java.time.DayOfWeek.MONDAY) &&
                             infotrygdforespDiagnoseKode != "000" &&
                             infotrygdforespFriskKode != "H"
@@ -112,11 +120,10 @@ enum class ValidationRules(override val ruleId: Int?, override val status: Statu
 
     @Description("Hvis ny friskmeldingsdato er mindre enn arbuforTOM registrert i Infotrygd")
     NEW_CLEAN_BILL_DATE_BEFORE_ARBUFORTOM(1516, Status.MANUAL_PROCESSING, { (infotrygdForesp, healthInformation) ->
-        val friskmeldtetterEndtPeriode = healthInformation.prognose.isArbeidsforEtterEndtPeriode
-        val friskmeldtDato: LocalDate? = healthInformation.aktivitet.periode.sortedTOMDate().last()
+        val friskmeldtDato: LocalDate? = healthInformation.aktivitet.periode.sortedTOMDate().lastOrNull()
         val sMhistorikkArbuforTom: LocalDate? = infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.arbufoerTOM
 
-        if (friskmeldtetterEndtPeriode && sMhistorikkArbuforTom != null && friskmeldtDato != null) {
+        if (healthInformation.prognose?.isArbeidsforEtterEndtPeriode != null && healthInformation.prognose.isArbeidsforEtterEndtPeriode && sMhistorikkArbuforTom != null && friskmeldtDato != null) {
             friskmeldtDato.isBefore(sMhistorikkArbuforTom)
         } else {
             false
@@ -125,11 +132,10 @@ enum class ValidationRules(override val ruleId: Int?, override val status: Statu
 
     @Description("Hvis ny friskmeldingsdato er mindre enn utbetalingTOM registrert i Infotrygd")
     NEW_CLEAN_BILL_DATE_BEFORE_PAYOUT(1517, Status.MANUAL_PROCESSING, { (infotrygdForesp, healthInformation) ->
-        val friskmeldtetterEndtPeriode = healthInformation.prognose.isArbeidsforEtterEndtPeriode
-        val friskmeldtDato: LocalDate? = healthInformation.aktivitet.periode.sortedTOMDate().last()
+        val friskmeldtDato: LocalDate? = healthInformation.aktivitet.periode.sortedTOMDate().lastOrNull()
         val sMhistorikkutbetTOM: LocalDate? = infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.utbetTOM
 
-        if (sMhistorikkutbetTOM != null && friskmeldtetterEndtPeriode) {
+        if (sMhistorikkutbetTOM != null && healthInformation.prognose?.isArbeidsforEtterEndtPeriode != null && healthInformation.prognose.isArbeidsforEtterEndtPeriode) {
             friskmeldtDato?.isBefore(sMhistorikkutbetTOM) ?: false
         } else {
             false
@@ -138,11 +144,10 @@ enum class ValidationRules(override val ruleId: Int?, override val status: Statu
 
     @Description("Hvis ny friskmeldingsdato er tidligere enn registrert friskmeldingsdato i Infotrygd")
     NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE(1518, Status.MANUAL_PROCESSING, { (infotrygdForesp, healthInformation) ->
-        val friskmeldtetterEndtPeriode = healthInformation.prognose.isArbeidsforEtterEndtPeriode
-        val friskmeldtDato: LocalDate? = healthInformation.aktivitet.periode.sortedTOMDate().last()
+        val friskmeldtDato: LocalDate? = healthInformation.aktivitet.periode.sortedTOMDate().lastOrNull()
         val newfriskmeldtDato: LocalDate? = infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.friskmeldtDato
 
-        if (newfriskmeldtDato != null && friskmeldtetterEndtPeriode && friskmeldtDato != null) {
+        if (newfriskmeldtDato != null && healthInformation.prognose?.isArbeidsforEtterEndtPeriode != null && healthInformation.prognose.isArbeidsforEtterEndtPeriode && friskmeldtDato != null) {
             friskmeldtDato.isBefore(newfriskmeldtDato)
         } else {
             false
@@ -172,27 +177,39 @@ enum class ValidationRules(override val ruleId: Int?, override val status: Statu
     @Description("Personen har flyttet ( stanskode FL i Infotrygd)")
     PERSON_MOVING_KODE_FL(1546, Status.MANUAL_PROCESSING, { (infotrygdForesp) ->
         infotrygdForesp.sMhistorikk?.sykmelding?.find {
-            it.periode.arbufoerFOM == infotrygdForesp.sMhistorikk?.sykmelding?.sortedFOMDate()?.last()
-        }?.periode?.stans == "FL"
+            if (it.periode?.arbufoerFOM != null) {
+                it.periode.arbufoerFOM == infotrygdForesp.sMhistorikk?.sykmelding?.sortedFOMDate()?.lastOrNull()
+            } else {
+                false
+            }
+            }?.periode?.stans == "FL"
         }),
 
     @Description("Hvis perioden er avsluttet (AA)")
     PERIOD_FOR_AA_ENDED(1549, Status.MANUAL_PROCESSING, { (infotrygdForesp) ->
         infotrygdForesp.sMhistorikk?.sykmelding?.find {
-            it.periode.arbufoerFOM == infotrygdForesp.sMhistorikk?.sykmelding?.sortedFOMDate()?.last()
+            if (it.periode?.arbufoerFOM != null) {
+                it.periode.arbufoerFOM == infotrygdForesp.sMhistorikk?.sykmelding?.sortedFOMDate()?.lastOrNull()
+            } else {
+                false
+            }
         }?.periode?.stans == "AA"
     }),
 
     @Description("Hvis perioden er avsluttet-frisk (AF)")
     PERIOD_IS_AF(1550, Status.MANUAL_PROCESSING, { (infotrygdForesp) ->
         infotrygdForesp.sMhistorikk?.sykmelding?.find {
-            it.periode.arbufoerFOM == infotrygdForesp.sMhistorikk?.sykmelding?.sortedFOMDate()?.last()
+            if (it.periode?.arbufoerFOM != null && infotrygdForesp.sMhistorikk?.sykmelding?.sortedFOMDate()?.last() != null) {
+                it.periode.arbufoerFOM == infotrygdForesp.sMhistorikk?.sykmelding?.sortedFOMDate()?.last()
+            } else {
+                false
+            }
         }?.periode?.stans == "AF"
     }),
 
     @Description("Hvis maks sykepenger er utbetalt")
     MAX_SICK_LEAVE_PAYOUT(1551, Status.MANUAL_PROCESSING, { (infotrygdForesp) ->
-        infotrygdForesp.sMhistorikk?.sykmelding?.first()?.periode?.stans == "MAX"
+        infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.stans == "MAX"
         // TODO korte ned sykmeldingen til maks dato??
     }),
 
