@@ -49,7 +49,6 @@ pipeline {
         stage('deploy to production') {
             when { environment name: 'DEPLOY_TO', value: 'production' }
             steps {
-                deployApp action: 'kubectlApply', cluster: 'prod-fss', file: 'redis.yaml'
                 deployApp action: 'kubectlDeploy', cluster: 'prod-fss', file: 'naiserator-prod.yaml'
                 githubStatus action: 'tagRelease'
             }
