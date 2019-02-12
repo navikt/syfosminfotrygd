@@ -17,7 +17,6 @@ import kotlinx.coroutines.launch
 import net.logstash.logback.argument.StructuredArgument
 import net.logstash.logback.argument.StructuredArguments.keyValue
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
-import no.nav.helse.infotrygd.foresp.TypeSMinfo
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.helse.sm2013.KontrollSystemBlokk
 import no.nav.helse.sm2013.KontrollsystemBlokkType
@@ -259,7 +258,7 @@ fun createInfotrygdInfo(marshalledFellesformat: String, itfh: InfotrygdForespAnd
         forsteFravaersDag = periode.periodeFOMDato
         mottakerKode = itfh.infotrygdForesp.behandlerInfo.behandler.first().mottakerKode.value()
         operasjonstype = when (index) {
-            0 -> findOprasjonstype(periode, itfh, itfh.infotrygdForesp.sMhistorikk.sykmelding.first())
+            0 -> findOprasjonstype(periode, itfh)
             else -> "2".toBigInteger()
         }
         hovedDiagnose = itfh.infotrygdForesp.hovedDiagnosekode
@@ -275,19 +274,20 @@ fun createInfotrygdInfo(marshalledFellesformat: String, itfh: InfotrygdForespAnd
     })
 }
 
-fun findOprasjonstype(periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode, itfh: InfotrygdForespAndHealthInformation, typeSMinfo: TypeSMinfo): BigInteger {
-    val infotrygdforespSmHistFinnes: Boolean = itfh.infotrygdForesp.sMhistorikk.status.kodeMelding != "04"
-    val sMhistorikkArbuforFOM = typeSMinfo.periode?.arbufoerFOM
-    val sMhistorikkArbuforTOM = typeSMinfo.periode?.arbufoerTOM
-    val syketilfelleStartDatoFraSykemelding = itfh.healthInformation.syketilfelleStartDato
-    val healthInformationPeriodeTOMDato = periode.periodeTOMDato
-    val healthInformationPeriodeFOMDato = periode.periodeFOMDato
+fun findOprasjonstype(periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode, itfh: InfotrygdForespAndHealthInformation): BigInteger {
+    // FORSTEGANGS = 1, PAFOLGENDE = 2, ENDRING = 3
+    val typeSMinfo = itfh.infotrygdForesp.sMhistorikk.sykmelding.firstOrNull()
 
-    return if (!infotrygdforespSmHistFinnes && syketilfelleStartDatoFraSykemelding == healthInformationPeriodeFOMDato) {
+    return if (itfh.infotrygdForesp.sMhistorikk.status.kodeMelding == "04" &&
+            itfh.healthInformation.syketilfelleStartDato == periode.periodeFOMDato) {
         "1".toBigInteger()
-    } else if (infotrygdforespSmHistFinnes && syketilfelleStartDatoFraSykemelding == sMhistorikkArbuforFOM) {
+    } else if (itfh.infotrygdForesp.sMhistorikk.status.kodeMelding != "04" && typeSMinfo?.periode?.arbufoerFOM != null &&
+            itfh.healthInformation.syketilfelleStartDato == typeSMinfo.periode.arbufoerFOM) {
         "2".toBigInteger()
-    } else if (infotrygdforespSmHistFinnes && sMhistorikkArbuforFOM != null && sMhistorikkArbuforTOM != null && sMhistorikkArbuforTOM == healthInformationPeriodeTOMDato || sMhistorikkArbuforTOM?.isBefore(healthInformationPeriodeTOMDato) != null) {
+    } else if (itfh.infotrygdForesp.sMhistorikk.status.kodeMelding != "04" &&
+            typeSMinfo?.periode?.arbufoerFOM != null && typeSMinfo.periode?.arbufoerTOM != null &&
+            typeSMinfo.periode?.arbufoerTOM == periode.periodeTOMDato ||
+            typeSMinfo?.periode?.arbufoerTOM?.isBefore(periode.periodeTOMDato) != null) {
         "3".toBigInteger()
     } else {
         throw RuntimeException("Could not determined operasjonstype")
