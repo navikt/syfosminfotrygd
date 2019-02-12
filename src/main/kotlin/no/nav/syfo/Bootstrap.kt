@@ -145,7 +145,7 @@ suspend fun blockingApplicationLogic(
             val logKeys = logValues.joinToString(prefix = "(", postfix = ")", separator = ",") { "{}" }
             log.info("Received a SM2013, going through rules and persisting in infotrygd $logKeys", *logValues)
 
-            val infotrygdForespRequest = createInfotrygdForesp(receivedSykmelding.sykmelding)
+            val infotrygdForespRequest = createInfotrygdForesp(receivedSykmelding.sykmelding, receivedSykmelding.personNrLege)
             val temporaryQueue = session.createTemporaryQueue()
             sendInfotrygdSporring(infotrygdSporringProducer, session, infotrygdForespRequest, temporaryQueue)
             val tmpConsumer = session.createConsumer(temporaryQueue)
@@ -218,9 +218,8 @@ fun sendInfotrygdOppdatering(
     log.info("Message is automatic outcome $logKeys", *logValues)
 })
 
-fun createInfotrygdForesp(healthInformation: HelseOpplysningerArbeidsuforhet) = InfotrygdForesp().apply {
+fun createInfotrygdForesp(healthInformation: HelseOpplysningerArbeidsuforhet, doctorFnr: String) = InfotrygdForesp().apply {
     val dateMinus1Year = LocalDate.now().minusYears(1)
-
     val dateMinus4Years = LocalDate.now().minusYears(4)
 
     fodselsnummer = healthInformation.pasient.fodselsnummer.id
@@ -233,9 +232,7 @@ fun createInfotrygdForesp(healthInformation: HelseOpplysningerArbeidsuforhet) = 
     hovedDiagnosekodeverk = Diagnosekode.values().first {
         it.kithCode == healthInformation.medisinskVurdering.hovedDiagnose.diagnosekode.s
     }.infotrygdCode
-    fodselsnrBehandler = healthInformation.behandler.id.first {
-        it.typeId.v == "FNR"
-    }.id // TODO maybe get the fnr from xmlmsg its mandatorie to be there
+    fodselsnrBehandler = doctorFnr
     if (healthInformation.medisinskVurdering.biDiagnoser?.diagnosekode?.firstOrNull()?.v != null &&
             healthInformation.medisinskVurdering.biDiagnoser?.diagnosekode?.firstOrNull()?.s != null) {
         biDiagnoseKode = healthInformation.medisinskVurdering.biDiagnoser.diagnosekode.first().v
