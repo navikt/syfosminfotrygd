@@ -258,7 +258,7 @@ fun createInfotrygdInfo(marshalledFellesformat: String, itfh: InfotrygdForespAnd
         forsteFravaersDag = periode.periodeFOMDato
         mottakerKode = itfh.infotrygdForesp.behandlerInfo.behandler.first().mottakerKode.value()
         operasjonstype = when (index) {
-            0 -> findOprasjonstype(periode, itfh)
+            0 -> "1".toBigInteger() // TODO findOprasjonstype(periode, itfh)
             else -> "2".toBigInteger()
         }
         hovedDiagnose = itfh.infotrygdForesp.hovedDiagnosekode
@@ -278,11 +278,14 @@ fun findOprasjonstype(periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode
     // FORSTEGANGS = 1, PAFOLGENDE = 2, ENDRING = 3
     val typeSMinfo = itfh.infotrygdForesp.sMhistorikk.sykmelding.firstOrNull()
 
+    // TODO fixed this to implementet corretly
     return if (itfh.infotrygdForesp.sMhistorikk.status.kodeMelding == "04" &&
             itfh.healthInformation.syketilfelleStartDato == periode.periodeFOMDato) {
         "1".toBigInteger()
     } else if (itfh.infotrygdForesp.sMhistorikk.status.kodeMelding != "04" && typeSMinfo?.periode?.arbufoerFOM != null &&
-            itfh.healthInformation.syketilfelleStartDato == typeSMinfo.periode.arbufoerFOM) {
+            typeSMinfo.periode?.arbufoerTOM != null &&
+            typeSMinfo.periode.arbufoerFOM.isBefore(periode.periodeFOMDato) &&
+            typeSMinfo.periode.arbufoerTOM.isBefore(periode.periodeTOMDato)) {
         "2".toBigInteger()
     } else if (itfh.infotrygdForesp.sMhistorikk.status.kodeMelding != "04" &&
             typeSMinfo?.periode?.arbufoerFOM != null && typeSMinfo.periode?.arbufoerTOM != null &&
