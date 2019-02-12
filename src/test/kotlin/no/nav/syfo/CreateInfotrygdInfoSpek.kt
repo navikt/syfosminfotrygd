@@ -32,7 +32,6 @@ object CreateInfotrygdInfoSpek : Spek({
                                 periodeTOMDato = LocalDate.now().plusDays(4)
                                 aktivitetIkkeMulig = HelseOpplysningerArbeidsuforhet.Aktivitet.Periode.AktivitetIkkeMulig().apply {
                                     medisinskeArsaker = ArsakType().apply {
-                                        
                                     }
                                 }
                             }
@@ -94,18 +93,17 @@ object CreateInfotrygdInfoSpek : Spek({
                             }
                     )
                 }
-                sMhistorikk =  InfotrygdForesp.SMhistorikk().apply {
-                     sykmelding.add(TypeSMinfo().apply {
-                                status = StatusType().apply {
-                                    returStatus = "0".toBigInteger()
-                                    kodeMelding = "00"
-                                    tidsStempel = LocalDateTime.now()
-                                }
-                                periode = TypeSMinfo.Periode().apply {
-                                    arbufoerFOM = LocalDate.now()
-                                }
-                            }
-                    )
+                sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
+                    sykmelding.add(TypeSMinfo().apply {
+                        status = StatusType().apply {
+                            returStatus = "0".toBigInteger()
+                            kodeMelding = "00"
+                            tidsStempel = LocalDateTime.now()
+                        }
+                        periode = TypeSMinfo.Periode().apply {
+                            arbufoerFOM = LocalDate.now()
+                        }
+                    })
                     tidsstempel = LocalDateTime.now()
                 }
                 hovedDiagnosekodeverk = "5"
