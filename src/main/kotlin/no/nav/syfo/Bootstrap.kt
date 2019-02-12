@@ -18,7 +18,6 @@ import net.logstash.logback.argument.StructuredArgument
 import net.logstash.logback.argument.StructuredArguments.keyValue
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.infotrygd.foresp.TypeSMinfo
-import no.nav.helse.sm2013.EIFellesformat
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.helse.sm2013.KontrollSystemBlokk
 import no.nav.helse.sm2013.KontrollsystemBlokkType
@@ -37,6 +36,7 @@ import no.nav.tjeneste.virksomhet.person.v3.informasjon.NorskIdent
 import no.nav.tjeneste.virksomhet.person.v3.informasjon.PersonIdent
 import no.nav.tjeneste.virksomhet.person.v3.informasjon.Personidenter
 import no.nav.tjeneste.virksomhet.person.v3.meldinger.HentGeografiskTilknytningRequest
+import no.trygdeetaten.xml.eiff._1.XMLEIFellesformat
 import org.apache.cxf.jaxws.JaxWsProxyFactoryBean
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -211,7 +211,7 @@ fun sendInfotrygdSporring(
 fun sendInfotrygdOppdatering(
     producer: MessageProducer,
     session: Session,
-    fellesformat: EIFellesformat,
+    fellesformat: XMLEIFellesformat,
     logKeys: String,
     logValues: Array<StructuredArgument>
 ) = producer.send(session.createTextMessage().apply {
@@ -250,7 +250,7 @@ fun createInfotrygdForesp(healthInformation: HelseOpplysningerArbeidsuforhet) = 
 val inputFactory = XMLInputFactory.newInstance()
 inline fun <reified T> unmarshal(text: String): T = fellesformatUnmarshaller.unmarshal(inputFactory.createXMLEventReader(StringReader(text)), T::class.java).value
 
-fun createInfotrygdInfo(marshalledFellesformat: String, itfh: InfotrygdForespAndHealthInformation) = unmarshal<EIFellesformat>(marshalledFellesformat).apply {
+fun createInfotrygdInfo(marshalledFellesformat: String, itfh: InfotrygdForespAndHealthInformation) = unmarshal<XMLEIFellesformat>(marshalledFellesformat).apply {
     any.add(KontrollSystemBlokk().apply {
     itfh.healthInformation.aktivitet.periode.forEachIndexed { index, periode ->
     infotrygdBlokk.add(KontrollsystemBlokkType.InfotrygdBlokk().apply {
@@ -285,7 +285,7 @@ fun findOprasjonstype(periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode
 
     return if (!infotrygdforespSmHistFinnes && syketilfelleStartDatoFraSykemelding == healthInformationPeriodeFOMDato) {
         "1".toBigInteger()
-    } else if (infotrygdforespSmHistFinnes && healthInformationPeriodeTOMDato == sMhistorikkArbuforFOM && healthInformationPeriodeTOMDato == sMhistorikkArbuforTOM) {
+    } else if (infotrygdforespSmHistFinnes && syketilfelleStartDatoFraSykemelding == sMhistorikkArbuforFOM) {
         "2".toBigInteger()
     } else if (infotrygdforespSmHistFinnes && sMhistorikkArbuforFOM != null && sMhistorikkArbuforTOM != null && sMhistorikkArbuforTOM == healthInformationPeriodeTOMDato || sMhistorikkArbuforTOM?.isBefore(healthInformationPeriodeTOMDato) != null) {
         "3".toBigInteger()
