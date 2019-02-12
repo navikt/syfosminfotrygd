@@ -162,8 +162,6 @@ suspend fun blockingApplicationLogic(
                     ValidationRules.values().toList()
             ).flatten().filter { rule -> rule.predicate(ruleData) }.onEach { RULE_HIT_COUNTER.labels(it.name).inc() }
 
-            log.info("Outcomes: " + results.joinToString(", ", prefix = "\"", postfix = "\""))
-
             when {
                 results.any { rule -> rule.status == Status.MANUAL_PROCESSING } ->
                     produceManualTask(kafkaProducer, receivedSykmelding.msgId, receivedSykmelding.sykmelding, results, personV3, organisasjonEnhetV2, logKeys, logValues)
