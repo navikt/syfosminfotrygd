@@ -143,7 +143,7 @@ suspend fun blockingApplicationLogic(
                     keyValue("orgNr", receivedSykmelding.legekontorOrgNr)
             )
             val logKeys = logValues.joinToString(prefix = "(", postfix = ")", separator = ",") { "{}" }
-            log.info("Received a SM2013, going through rules and persisting in infotrygd $logKeys", *logValues)
+            log.info("Received a SM2013 $logKeys", *logValues)
 
             val infotrygdForespRequest = createInfotrygdForesp(receivedSykmelding.sykmelding, receivedSykmelding.personNrLege)
             val temporaryQueue = session.createTemporaryQueue()
@@ -156,11 +156,13 @@ suspend fun blockingApplicationLogic(
             }
             val infotrygdForespResponse = infotrygdSporringUnmarshaller.unmarshal(StringReader(inputMessageText)) as InfotrygdForesp
 
-            log.info("Executing Infotrygd rules $logKeys", *logValues)
+            log.info("Going through rulesrules $logKeys", *logValues)
             val ruleData = RuleData(infotrygdForespResponse, receivedSykmelding.sykmelding)
             val results = listOf<List<Rule<RuleData>>>(
                     ValidationRules.values().toList()
             ).flatten().filter { rule -> rule.predicate(ruleData) }.onEach { RULE_HIT_COUNTER.labels(it.name).inc() }
+
+            log.info("Rules hit {}, $logKeys", results.map { it.name }, *logValues)
 
             when {
                 results.any { rule -> rule.status == Status.MANUAL_PROCESSING } ->
