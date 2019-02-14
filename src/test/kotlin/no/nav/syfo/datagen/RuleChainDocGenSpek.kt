@@ -2,7 +2,7 @@ package no.nav.syfo.datagen
 
 import no.nav.syfo.Description
 import no.nav.syfo.Rule
-import no.nav.syfo.rules.ValidationRules
+import no.nav.syfo.rules.ValidationRuleChain
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.nio.file.Files
@@ -20,7 +20,7 @@ object RuleChainDocGenSpek : Spek({
         it("Generates a CSV file with rule chain") {
             val basePath = Paths.get("build", "reports")
             Files.createDirectories(basePath)
-            val ruleCSV = arrayOf("Rule name;Status;Rule ID;Description").union(listOf<List<Rule<*>>>(ValidationRules.values().toList()).flatten()
+            val ruleCSV = arrayOf("Rule name;Status;Rule ID;Description").union(listOf<List<Rule<*>>>(ValidationRuleChain.values().toList()).flatten()
                     .map { rule ->
                         "${rule.name};${rule.status};${rule.ruleId
                                 ?: ""};${rule.enumAnnotationValue(Description::class, rule.name)?.description ?: ""}"

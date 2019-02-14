@@ -24,7 +24,7 @@ import no.nav.syfo.api.registerNaisApi
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.model.Status
 import no.nav.syfo.rules.RuleData
-import no.nav.syfo.rules.ValidationRules
+import no.nav.syfo.rules.ValidationRuleChain
 import no.nav.syfo.sak.avro.ProduceTask
 import no.nav.syfo.ws.configureSTSFor
 import no.nav.tjeneste.virksomhet.organisasjonenhet.v2.binding.OrganisasjonEnhetV2
@@ -159,8 +159,8 @@ suspend fun blockingApplicationLogic(
             log.info("Going through rulesrules $logKeys", *logValues)
             val ruleData = RuleData(infotrygdForespResponse, receivedSykmelding.sykmelding)
             val results = listOf<List<Rule<RuleData>>>(
-                    ValidationRules.values().toList()
-            ).flatten().filter { rule -> rule.predicate(ruleData) }.onEach { RULE_HIT_COUNTER.labels(it.name).inc() }
+                    ValidationRuleChain.values().toList()
+            ).flatten().filter { rule -> rule.predicate(ruleData) }
 
             log.info("Rules hit {}, $logKeys", results.map { it.name }, *logValues)
 
@@ -215,6 +215,7 @@ fun sendInfotrygdOppdatering(
     logValues: Array<StructuredArgument>
 ) = producer.send(session.createTextMessage().apply {
     text = fellesformatMarshaller.toString(fellesformat)
+    RULE_HIT_STATUS_COUNTER.labels(Status.OK.name)
     log.info("Message is automatic outcome $logKeys", *logValues)
 })
 
@@ -296,6 +297,7 @@ fun findOprasjonstype(periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode
 
 fun produceManualTask(kafkaProducer: KafkaProducer<String, ProduceTask>, msgId: String, healthInformation: HelseOpplysningerArbeidsuforhet, results: List<Rule<RuleData>>, personV3: PersonV3, organisasjonEnhetV2: OrganisasjonEnhetV2, logKeys: String, logValues: Array<StructuredArgument>) {
     log.info("Message is manual outcome $logKeys", *logValues)
+    RULE_HIT_STATUS_COUNTER.labels(Status.MANUAL_PROCESSING.name)
     val geografiskTilknytning = personV3.hentGeografiskTilknytning(HentGeografiskTilknytningRequest().withAktoer(PersonIdent().withIdent(
                 NorskIdent()
                         .withIdent(healthInformation.pasient.fodselsnummer.id)

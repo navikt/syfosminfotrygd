@@ -13,7 +13,7 @@ data class RuleData(
     val healthInformation: HelseOpplysningerArbeidsuforhet
 )
 
-enum class ValidationRules(override val ruleId: Int?, override val status: Status, override val predicate: (RuleData) -> Boolean) : Rule<RuleData> {
+enum class ValidationRuleChain(override val ruleId: Int?, override val status: Status, override val predicate: (RuleData) -> Boolean) : Rule<RuleData> {
 
     @Description("Hvis gradert sykmelding og reisetilskudd er oppgitt for samme periode")
     GRADUAL_SYKMELDING_COMBINED_WITH_TRAVEL(1250, Status.MANUAL_PROCESSING, { (_, healthInformation) ->
@@ -120,7 +120,7 @@ enum class ValidationRules(override val ruleId: Int?, override val status: Statu
 
     @Description("Hvis ny friskmeldingsdato er mindre enn arbuforTOM registrert i Infotrygd")
     NEW_CLEAN_BILL_DATE_BEFORE_ARBUFORTOM(1516, Status.MANUAL_PROCESSING, { (infotrygdForesp, healthInformation) ->
-        val friskmeldtDato: LocalDate? = healthInformation.aktivitet.periode.sortedTOMDate().lastOrNull()
+        val friskmeldtDato: LocalDate? = healthInformation.aktivitet.periode.sortedPeriodeTOMDate().lastOrNull()
         val sMhistorikkArbuforTom: LocalDate? = infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.arbufoerTOM
 
         if (healthInformation.prognose?.isArbeidsforEtterEndtPeriode != null && healthInformation.prognose.isArbeidsforEtterEndtPeriode && sMhistorikkArbuforTom != null && friskmeldtDato != null) {
@@ -132,7 +132,7 @@ enum class ValidationRules(override val ruleId: Int?, override val status: Statu
 
     @Description("Hvis ny friskmeldingsdato er mindre enn utbetalingTOM registrert i Infotrygd")
     NEW_CLEAN_BILL_DATE_BEFORE_PAYOUT(1517, Status.MANUAL_PROCESSING, { (infotrygdForesp, healthInformation) ->
-        val friskmeldtDato: LocalDate? = healthInformation.aktivitet.periode.sortedTOMDate().lastOrNull()
+        val friskmeldtDato: LocalDate? = healthInformation.aktivitet.periode.sortedPeriodeTOMDate().lastOrNull()
         val sMhistorikkutbetTOM: LocalDate? = infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.utbetTOM
 
         if (sMhistorikkutbetTOM != null && healthInformation.prognose?.isArbeidsforEtterEndtPeriode != null && healthInformation.prognose.isArbeidsforEtterEndtPeriode) {
@@ -144,7 +144,7 @@ enum class ValidationRules(override val ruleId: Int?, override val status: Statu
 
     @Description("Hvis ny friskmeldingsdato er tidligere enn registrert friskmeldingsdato i Infotrygd")
     NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE(1518, Status.MANUAL_PROCESSING, { (infotrygdForesp, healthInformation) ->
-        val friskmeldtDato: LocalDate? = healthInformation.aktivitet.periode.sortedTOMDate().lastOrNull()
+        val friskmeldtDato: LocalDate? = healthInformation.aktivitet.periode.sortedPeriodeTOMDate().lastOrNull()
         val newfriskmeldtDato: LocalDate? = infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.friskmeldtDato
 
         if (newfriskmeldtDato != null && healthInformation.prognose?.isArbeidsforEtterEndtPeriode != null && healthInformation.prognose.isArbeidsforEtterEndtPeriode && friskmeldtDato != null) {
@@ -208,9 +208,10 @@ enum class ValidationRules(override val ruleId: Int?, override val status: Statu
     }),
 
     @Description("Hvis maks sykepenger er utbetalt")
-    MAX_SICK_LEAVE_PAYOUT(1551, Status.MANUAL_PROCESSING, { (infotrygdForesp) ->
-        infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.stans == "MAX"
+    MAX_SICK_LEAVE_PAYOUT(1551, Status.MANUAL_PROCESSING, { (infotrygdForesp, healthInformation) ->
+        // TODO innkomende sykmeldings peridode, overlapper med nyeste max dato
         // TODO korte ned sykmeldingen til maks dato??
+        infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().lastOrNull()?.periode?.stans == "MAX"
     }),
 
     @Description("Infotrygd returnerte en feil, vi kan ikke automatisk oppdatere Infotrygd")
@@ -266,8 +267,14 @@ enum class ValidationRules(override val ruleId: Int?, override val status: Statu
 fun TypeSMinfo.range(): ClosedRange<LocalDate> =
         periode.arbufoerFOM.rangeTo(periode.arbufoerTOM)
 
-fun List<HelseOpplysningerArbeidsuforhet.Aktivitet.Periode>.sortedTOMDate(): List<LocalDate> =
+fun List<HelseOpplysningerArbeidsuforhet.Aktivitet.Periode>.sortedPeriodeTOMDate(): List<LocalDate> =
         map { it.periodeTOMDato }.sorted()
+
+fun List<TypeSMinfo>.sortedSMInfos(): List<TypeSMinfo> =
+        sortedBy { it.periode.arbufoerTOM }
 
 fun List<TypeSMinfo>.sortedFOMDate(): List<LocalDate> =
         map { it.periode.arbufoerFOM }.sorted()
+
+fun HelseOpplysningerArbeidsuforhet.Aktivitet.Periode.range(): ClosedRange<LocalDate> =
+        periodeTOMDato.rangeTo(periodeTOMDato)

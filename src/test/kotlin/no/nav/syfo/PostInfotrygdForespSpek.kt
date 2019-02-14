@@ -5,7 +5,7 @@ import no.nav.helse.infotrygd.foresp.StatusType
 import no.nav.helse.infotrygd.foresp.TypeSMinfo
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.syfo.rules.RuleData
-import no.nav.syfo.rules.ValidationRules
+import no.nav.syfo.rules.ValidationRuleChain
 
 import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
@@ -24,6 +24,11 @@ object PostInfotrygdForespSpek : Spek({
         }
     }
 
+    fun ruleData(
+        infotrygdForesp: InfotrygdForesp,
+        healthInformation: HelseOpplysningerArbeidsuforhet
+    ): RuleData = RuleData(infotrygdForesp, healthInformation)
+
     describe("Testing infotrygd rules and checking the rule outcomes") {
 
         it("Should check rule 1250") {
@@ -38,12 +43,7 @@ object PostInfotrygdForespSpek : Spek({
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
 
-            val ruleData = RuleData(infotrygdForespResponse, healthInformation)
-            val results = listOf<List<Rule<RuleData>>>(
-                    ValidationRules.values().toList()
-            ).flatten().filter { rule -> rule.predicate(ruleData) }
-
-            results.any { it == ValidationRules.GRADUAL_SYKMELDING_COMBINED_WITH_TRAVEL } shouldEqual true
+            ValidationRuleChain.GRADUAL_SYKMELDING_COMBINED_WITH_TRAVEL(ruleData(infotrygdForespResponse, healthInformation)) shouldEqual true
         }
 
         it("Should check rule 1260") {
@@ -56,12 +56,7 @@ object PostInfotrygdForespSpek : Spek({
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
 
-            val ruleData = RuleData(infotrygdForespResponse, healthInformation)
-            val results = listOf<List<Rule<RuleData>>>(
-                    ValidationRules.values().toList()
-            ).flatten().filter { rule -> rule.predicate(ruleData) }
-
-            results.any { it == ValidationRules.NUMBER_OF_TREATMENT_DAYS_SET } shouldEqual true
+            ValidationRuleChain.NUMBER_OF_TREATMENT_DAYS_SET(ruleData(infotrygdForespResponse, healthInformation)) shouldEqual true
         }
 
         it("Should check rule 1270") {
@@ -72,12 +67,7 @@ object PostInfotrygdForespSpek : Spek({
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
 
-            val ruleData = RuleData(infotrygdForespResponse, healthInformation)
-            val results = listOf<List<Rule<RuleData>>>(
-                    ValidationRules.values().toList()
-            ).flatten().filter { rule -> rule.predicate(ruleData) }
-
-            results.any { it == ValidationRules.TRAVEL_SUBSIDY_SPECIFIED } shouldEqual true
+            ValidationRuleChain.TRAVEL_SUBSIDY_SPECIFIED(ruleData(infotrygdForespResponse, healthInformation)) shouldEqual true
         }
 
         it("Should check rule 1501") {
@@ -87,12 +77,7 @@ object PostInfotrygdForespSpek : Spek({
                 isFinnes = false
             }
 
-            val ruleData = RuleData(infotrygdForespResponse, healthInformation)
-            val results = listOf<List<Rule<RuleData>>>(
-                    ValidationRules.values().toList()
-            ).flatten().filter { rule -> rule.predicate(ruleData) }
-
-            results.any { it == ValidationRules.PATIENT_NOT_IN_IP } shouldEqual true
+            ValidationRuleChain.PATIENT_NOT_IN_IP(ruleData(infotrygdForespResponse, healthInformation)) shouldEqual true
             }
 
         it("Should check rule 1513") {
@@ -113,12 +98,7 @@ object PostInfotrygdForespSpek : Spek({
                 periodeTOMDato = LocalDate.of(2018, 1, 9)
             })
 
-            val ruleData = RuleData(infotrygdForespResponse, healthInformation)
-            val results = listOf<List<Rule<RuleData>>>(
-                    ValidationRules.values().toList()
-            ).flatten().filter { rule -> rule.predicate(ruleData) }
-
-            results.any { it == ValidationRules.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE } shouldEqual true
+            ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE(ruleData(infotrygdForespResponse, healthInformation)) shouldEqual true
         }
 
         it("Should check rule 1515") {
@@ -139,12 +119,7 @@ object PostInfotrygdForespSpek : Spek({
                     })
             }
 
-            val ruleData = RuleData(infotrygdForespResponse, healthInformation)
-            val results = listOf<List<Rule<RuleData>>>(
-                    ValidationRules.values().toList()
-            ).flatten().filter { rule -> rule.predicate(ruleData) }
-
-            results.any { it == ValidationRules.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_1 } shouldEqual true
+            ValidationRuleChain.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_1(ruleData(infotrygdForespResponse, healthInformation)) shouldEqual true
         }
 
         it("Should check rule 1515") {
@@ -164,12 +139,7 @@ object PostInfotrygdForespSpek : Spek({
                 })
             }
 
-            val ruleData = RuleData(infotrygdForespResponse, healthInformation)
-            val results = listOf<List<Rule<RuleData>>>(
-                    ValidationRules.values().toList()
-            ).flatten().filter { rule -> rule.predicate(ruleData) }
-
-            results.any { it == ValidationRules.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_2 } shouldEqual true
+            ValidationRuleChain.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_2(ruleData(infotrygdForespResponse, healthInformation)) shouldEqual true
         }
 
         it("Should check rule 1515") {
@@ -189,12 +159,7 @@ object PostInfotrygdForespSpek : Spek({
                 })
             }
 
-            val ruleData = RuleData(infotrygdForespResponse, healthInformation)
-            val results = listOf<List<Rule<RuleData>>>(
-                    ValidationRules.values().toList()
-            ).flatten().filter { rule -> rule.predicate(ruleData) }
-
-            results.any { it == ValidationRules.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_3 } shouldEqual true
+            ValidationRuleChain.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_3(ruleData(infotrygdForespResponse, healthInformation)) shouldEqual true
         }
 
         it("Should check rule 1516") {
@@ -218,12 +183,7 @@ object PostInfotrygdForespSpek : Spek({
                 })
             }
 
-            val ruleData = RuleData(infotrygdForespResponse, healthInformation)
-            val results = listOf<List<Rule<RuleData>>>(
-                    ValidationRules.values().toList()
-            ).flatten().filter { rule -> rule.predicate(ruleData) }
-
-            results.any { it == ValidationRules.NEW_CLEAN_BILL_DATE_BEFORE_ARBUFORTOM } shouldEqual true
+            ValidationRuleChain.NEW_CLEAN_BILL_DATE_BEFORE_ARBUFORTOM(ruleData(infotrygdForespResponse, healthInformation)) shouldEqual true
         }
 
         it("Should check rule 1517") {
@@ -247,12 +207,7 @@ object PostInfotrygdForespSpek : Spek({
                 })
             }
 
-            val ruleData = RuleData(infotrygdForespResponse, healthInformation)
-            val results = listOf<List<Rule<RuleData>>>(
-                    ValidationRules.values().toList()
-            ).flatten().filter { rule -> rule.predicate(ruleData) }
-
-            results.any { it == ValidationRules.NEW_CLEAN_BILL_DATE_BEFORE_PAYOUT } shouldEqual true
+            ValidationRuleChain.NEW_CLEAN_BILL_DATE_BEFORE_PAYOUT(ruleData(infotrygdForespResponse, healthInformation)) shouldEqual true
         }
 
         it("Should check rule 1518") {
@@ -279,13 +234,7 @@ object PostInfotrygdForespSpek : Spek({
                     }
                 })
             }
-
-            val ruleData = RuleData(infotrygdForespResponse, healthInformation)
-            val results = listOf<List<Rule<RuleData>>>(
-                    ValidationRules.values().toList()
-            ).flatten().filter { rule -> rule.predicate(ruleData) }
-
-                results.any { it == ValidationRules.NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE } shouldEqual true
+            ValidationRuleChain.NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE(ruleData(infotrygdForespResponse, healthInformation)) shouldEqual true
             }
 
         it("Should check rule 1544") {
@@ -305,13 +254,7 @@ object PostInfotrygdForespSpek : Spek({
                     })
                 })
             }
-
-            val ruleData = RuleData(infotrygdForespResponse, healthInformation)
-            val results = listOf<List<Rule<RuleData>>>(
-                    ValidationRules.values().toList()
-            ).flatten().filter { rule -> rule.predicate(ruleData) }
-
-            results.any { it == ValidationRules.EXTANION_OVER_FA } shouldEqual true
+            ValidationRuleChain.EXTANION_OVER_FA(ruleData(infotrygdForespResponse, healthInformation)) shouldEqual true
         }
 
         it("Should check rule 1546") {
@@ -332,12 +275,7 @@ object PostInfotrygdForespSpek : Spek({
                 })
             }
 
-            val ruleData = RuleData(infotrygdForespResponse, healthInformation)
-            val results = listOf<List<Rule<RuleData>>>(
-                    ValidationRules.values().toList()
-            ).flatten().filter { rule -> rule.predicate(ruleData) }
-
-            results.any { it == ValidationRules.PERSON_MOVING_KODE_FL } shouldEqual true
+            ValidationRuleChain.PERSON_MOVING_KODE_FL(ruleData(infotrygdForespResponse, healthInformation)) shouldEqual true
         }
 
         it("Should check rule 1549") {
@@ -359,12 +297,7 @@ object PostInfotrygdForespSpek : Spek({
                 })
             }
 
-            val ruleData = RuleData(infotrygdForespResponse, healthInformation)
-            val results = listOf<List<Rule<RuleData>>>(
-                    ValidationRules.values().toList()
-            ).flatten().filter { rule -> rule.predicate(ruleData) }
-
-            results.any { it == ValidationRules.PERIOD_FOR_AA_ENDED } shouldEqual true
+            ValidationRuleChain.PERIOD_FOR_AA_ENDED(ruleData(infotrygdForespResponse, healthInformation)) shouldEqual true
         }
 
         it("Should check rule 1550") {
@@ -386,12 +319,7 @@ object PostInfotrygdForespSpek : Spek({
                 })
             }
 
-            val ruleData = RuleData(infotrygdForespResponse, healthInformation)
-            val results = listOf<List<Rule<RuleData>>>(
-                    ValidationRules.values().toList()
-            ).flatten().filter { rule -> rule.predicate(ruleData) }
-
-            results.any { it == ValidationRules.PERIOD_IS_AF } shouldEqual true
+            ValidationRuleChain.PERIOD_IS_AF(ruleData(infotrygdForespResponse, healthInformation)) shouldEqual true
         }
 
         it("Should check rule 1551") {
@@ -406,12 +334,7 @@ object PostInfotrygdForespSpek : Spek({
                 })
             }
 
-            val ruleData = RuleData(infotrygdForespResponse, healthInformation)
-            val results = listOf<List<Rule<RuleData>>>(
-                    ValidationRules.values().toList()
-            ).flatten().filter { rule -> rule.predicate(ruleData) }
-
-            results.any { it == ValidationRules.MAX_SICK_LEAVE_PAYOUT } shouldEqual true
+            ValidationRuleChain.MAX_SICK_LEAVE_PAYOUT(ruleData(infotrygdForespResponse, healthInformation)) shouldEqual true
         }
 
         it("Should check rule 1591") {
@@ -422,12 +345,7 @@ object PostInfotrygdForespSpek : Spek({
                 kodeMelding = "5"
             }
 
-            val ruleData = RuleData(infotrygdForespResponse, healthInformation)
-            val results = listOf<List<Rule<RuleData>>>(
-                    ValidationRules.values().toList()
-            ).flatten().filter { rule -> rule.predicate(ruleData) }
-
-            results.any { it == ValidationRules.ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING } shouldEqual true
+            ValidationRuleChain.ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING(ruleData(infotrygdForespResponse, healthInformation)) shouldEqual true
         }
 
         it("Should check rule 1591") {
@@ -440,12 +358,7 @@ object PostInfotrygdForespSpek : Spek({
                 }
             }
 
-            val ruleData = RuleData(infotrygdForespResponse, healthInformation)
-            val results = listOf<List<Rule<RuleData>>>(
-                    ValidationRules.values().toList()
-            ).flatten().filter { rule -> rule.predicate(ruleData) }
-
-            results.any { it == ValidationRules.ERROR_FROM_IT_SMHISTORIKK_STATUS_KODEMELDING } shouldEqual true
+            ValidationRuleChain.ERROR_FROM_IT_SMHISTORIKK_STATUS_KODEMELDING(ruleData(infotrygdForespResponse, healthInformation)) shouldEqual true
         }
 
         it("Should check rule 1591") {
@@ -458,12 +371,7 @@ object PostInfotrygdForespSpek : Spek({
                 }
             }
 
-            val ruleData = RuleData(infotrygdForespResponse, healthInformation)
-            val results = listOf<List<Rule<RuleData>>>(
-                    ValidationRules.values().toList()
-            ).flatten().filter { rule -> rule.predicate(ruleData) }
-
-            results.any { it == ValidationRules.ERROR_FROM_IT_PARALELLYTELSER_STATUS_KODEMELDING } shouldEqual true
+            ValidationRuleChain.ERROR_FROM_IT_PARALELLYTELSER_STATUS_KODEMELDING(ruleData(infotrygdForespResponse, healthInformation)) shouldEqual true
         }
 
         it("Should check rule 1591") {
@@ -476,12 +384,7 @@ object PostInfotrygdForespSpek : Spek({
                 }
             }
 
-            val ruleData = RuleData(infotrygdForespResponse, healthInformation)
-            val results = listOf<List<Rule<RuleData>>>(
-                    ValidationRules.values().toList()
-            ).flatten().filter { rule -> rule.predicate(ruleData) }
-
-            results.any { it == ValidationRules.ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING } shouldEqual true
+            ValidationRuleChain.ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING(ruleData(infotrygdForespResponse, healthInformation)) shouldEqual true
         }
 
         it("Should check rule 1591") {
@@ -494,12 +397,7 @@ object PostInfotrygdForespSpek : Spek({
                 }
             }
 
-                val ruleData = RuleData(infotrygdForespResponse, healthInformation)
-                val results = listOf<List<Rule<RuleData>>>(
-                        ValidationRules.values().toList()
-                ).flatten().filter { rule -> rule.predicate(ruleData) }
-
-                results.any { it == ValidationRules.ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING } shouldEqual true
+                ValidationRuleChain.ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING(ruleData(infotrygdForespResponse, healthInformation)) shouldEqual true
             }
     }
 })
