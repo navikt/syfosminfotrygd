@@ -135,44 +135,48 @@ suspend fun blockingApplicationLogic(
     organisasjonEnhetV2: OrganisasjonEnhetV2
 ) {
     while (applicationState.running) {
-        kafkaConsumer.poll(Duration.ofMillis(0)).forEach {
-            val receivedSykmelding: ReceivedSykmelding = objectMapper.readValue(it.value())
-            val logValues = arrayOf(
-                    keyValue("smId", receivedSykmelding.navLogId),
-                    keyValue("msgId", receivedSykmelding.msgId),
-                    keyValue("orgNr", receivedSykmelding.legekontorOrgNr)
-            )
-            val logKeys = logValues.joinToString(prefix = "(", postfix = ")", separator = ",") { "{}" }
-            log.info("Received a SM2013 $logKeys", *logValues)
+        try {
+            kafkaConsumer.poll(Duration.ofMillis(0)).forEach {
+                val receivedSykmelding: ReceivedSykmelding = objectMapper.readValue(it.value())
+                val logValues = arrayOf(
+                        keyValue("smId", receivedSykmelding.navLogId),
+                        keyValue("msgId", receivedSykmelding.msgId),
+                        keyValue("orgNr", receivedSykmelding.legekontorOrgNr)
+                )
+                val logKeys = logValues.joinToString(prefix = "(", postfix = ")", separator = ",") { "{}" }
+                log.info("Received a SM2013 $logKeys", *logValues)
 
-            val infotrygdForespRequest = createInfotrygdForesp(receivedSykmelding.sykmelding, receivedSykmelding.personNrLege)
-            val temporaryQueue = session.createTemporaryQueue()
-            sendInfotrygdSporring(infotrygdSporringProducer, session, infotrygdForespRequest, temporaryQueue)
-            val tmpConsumer = session.createConsumer(temporaryQueue)
-            val consumedMessage = tmpConsumer.receive(15000)
-            val inputMessageText = when (consumedMessage) {
-                is TextMessage -> consumedMessage.text
-                else -> throw RuntimeException("Incoming message needs to be a byte message or text message, JMS type:" + consumedMessage.jmsType)
+                val infotrygdForespRequest = createInfotrygdForesp(receivedSykmelding.sykmelding, receivedSykmelding.personNrLege)
+                val temporaryQueue = session.createTemporaryQueue()
+                sendInfotrygdSporring(infotrygdSporringProducer, session, infotrygdForespRequest, temporaryQueue)
+                val tmpConsumer = session.createConsumer(temporaryQueue)
+                val consumedMessage = tmpConsumer.receive(15000)
+                val inputMessageText = when (consumedMessage) {
+                    is TextMessage -> consumedMessage.text
+                    else -> throw RuntimeException("Incoming message needs to be a byte message or text message, JMS type:" + consumedMessage.jmsType)
+                }
+                val infotrygdForespResponse = infotrygdSporringUnmarshaller.unmarshal(StringReader(inputMessageText)) as InfotrygdForesp
+
+                log.info("Going through rulesrules $logKeys", *logValues)
+                val ruleData = RuleData(infotrygdForespResponse, receivedSykmelding.sykmelding)
+                val results = listOf<List<Rule<RuleData>>>(
+                        ValidationRuleChain.values().toList()
+                ).flatten().filter { rule -> rule.predicate(ruleData) }
+
+                log.info("Rules hit {}, $logKeys", results.map { it.name }, *logValues)
+
+                when {
+                    results.any { rule -> rule.status == Status.MANUAL_PROCESSING } ->
+                        produceManualTask(kafkaProducer, receivedSykmelding.msgId, receivedSykmelding.sykmelding, results, personV3, organisasjonEnhetV2, logKeys, logValues)
+                    else -> sendInfotrygdOppdatering(infotrygdOppdateringProducer, session, createInfotrygdInfo(receivedSykmelding.fellesformat, InfotrygdForespAndHealthInformation(infotrygdForespResponse, receivedSykmelding.sykmelding)), logKeys, logValues)
+                }
             }
-            val infotrygdForespResponse = infotrygdSporringUnmarshaller.unmarshal(StringReader(inputMessageText)) as InfotrygdForesp
-
-            log.info("Going through rulesrules $logKeys", *logValues)
-            val ruleData = RuleData(infotrygdForespResponse, receivedSykmelding.sykmelding)
-            val results = listOf<List<Rule<RuleData>>>(
-                    ValidationRuleChain.values().toList()
-            ).flatten().filter { rule -> rule.predicate(ruleData) }
-
-            log.info("Rules hit {}, $logKeys", results.map { it.name }, *logValues)
-
-            when {
-                results.any { rule -> rule.status == Status.MANUAL_PROCESSING } ->
-                    produceManualTask(kafkaProducer, receivedSykmelding.msgId, receivedSykmelding.sykmelding, results, personV3, organisasjonEnhetV2, logKeys, logValues)
-                else -> sendInfotrygdOppdatering(infotrygdOppdateringProducer, session, createInfotrygdInfo(receivedSykmelding.fellesformat, InfotrygdForespAndHealthInformation(infotrygdForespResponse, receivedSykmelding.sykmelding)), logKeys, logValues)
-            }
+        } catch (e: Exception) {
+            log.error("Exception caught while handling message", e)
+        }
         }
         delay(100)
     }
-}
 
 data class InfotrygdForespAndHealthInformation(
     val infotrygdForesp: InfotrygdForesp,
