@@ -323,12 +323,20 @@ object PostInfotrygdForespSpek : Spek({
         }
 
         it("Should check rule 1551") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
+            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet().apply {
+                aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
+                    periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
+                        periodeFOMDato = LocalDate.now()
+                        periodeTOMDato = LocalDate.now().plusDays(10)
+                    })
+                }
+            }
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
                 sykmelding.add(TypeSMinfo().apply {
                     periode = TypeSMinfo.Periode().apply {
+                        arbufoerFOM = LocalDate.now()
                         stans = "MAX"
                     }
                 })

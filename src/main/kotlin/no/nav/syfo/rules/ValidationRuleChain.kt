@@ -6,6 +6,7 @@ import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.syfo.Description
 import no.nav.syfo.Rule
 import no.nav.syfo.model.Status
+import java.time.DayOfWeek
 import java.time.LocalDate
 
 data class RuleData(
@@ -210,8 +211,7 @@ enum class ValidationRuleChain(override val ruleId: Int?, override val status: S
     @Description("Hvis maks sykepenger er utbetalt")
     MAX_SICK_LEAVE_PAYOUT(1551, Status.MANUAL_PROCESSING, { (infotrygdForesp, healthInformation) ->
         // TODO innkomende sykmeldings peridode, overlapper med nyeste max dato
-        // TODO korte ned sykmeldingen til maks dato??
-        infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().lastOrNull()?.periode?.stans == "MAX"
+        infotrygdForesp.sMhistorikk.sykmelding.findOverlapping(healthInformation.aktivitet.periode.toRange())?.periode?.stans == "MAX"
     }),
 
     @Description("Infotrygd returnerte en feil, vi kan ikke automatisk oppdatere Infotrygd")
@@ -263,6 +263,25 @@ enum class ValidationRuleChain(override val ruleId: Int?, override val status: S
         }
     })
 }
+
+private fun List<HelseOpplysningerArbeidsuforhet.Aktivitet.Periode>.toRange(): ClosedRange<LocalDate> =
+        map { it.periodeFOMDato }.sorted().first().rangeTo(map { it.periodeTOMDato }.sorted().first())
+
+// TODO: This should probably be tested better
+private fun List<TypeSMinfo>.findOverlapping(smRange: ClosedRange<LocalDate>): TypeSMinfo? =
+        firstOrNull { // Whenever the start of the period is the same
+            smRange.start == it.periode.arbufoerFOM
+        } ?: firstOrNull { // Whenever it starts before and overlaps the period
+            it.periode.arbufoerFOM < smRange.start && it.periode.arbufoerTOM >= smRange.start
+        } ?: firstOrNull { // Whenever the period is within the range
+            it.periode.arbufoerFOM > smRange.start && it.periode.arbufoerTOM <= smRange.endInclusive
+        } ?: sortedBy { it.periode.arbufoerFOM }.firstOrNull { // Find the first period that is an extension from the next day
+            it.periode.arbufoerTOM.plusDays(1) == smRange.start
+        } ?: firstOrNull { // Whenever its an extension from the next day over a weekend
+            it.periode.arbufoerFOM.dayOfWeek in arrayOf(DayOfWeek.FRIDAY, DayOfWeek.SATURDAY, DayOfWeek.SUNDAY) &&
+                    smRange.start.dayOfWeek in arrayOf(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY, DayOfWeek.MONDAY) &&
+                    it.periode.arbufoerTOM.plusDays(3) >= smRange.start
+        }
 
 fun TypeSMinfo.range(): ClosedRange<LocalDate> =
         periode.arbufoerFOM.rangeTo(periode.arbufoerTOM)
