@@ -50,7 +50,6 @@ import java.math.BigInteger
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.Base64
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import javax.jms.MessageProducer
@@ -155,7 +154,7 @@ suspend fun blockingApplicationLogic(
                     is TextMessage -> consumedMessage.text
                     else -> throw RuntimeException("Incoming message needs to be a byte message or text message, JMS type:" + consumedMessage.jmsType)
                 }
-                log.info(Base64.getEncoder().encodeToString(inputMessageText.toByteArray(Charsets.UTF_8)))
+
                 val infotrygdForespResponse = infotrygdSporringUnmarshaller.unmarshal(StringReader(inputMessageText)) as InfotrygdForesp
 
                 log.info("Going through rulesrules $logKeys", *logValues)
