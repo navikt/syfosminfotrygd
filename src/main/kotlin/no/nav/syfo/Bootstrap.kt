@@ -41,6 +41,7 @@ import no.nav.tjeneste.virksomhet.person.v3.informasjon.PersonIdent
 import no.nav.tjeneste.virksomhet.person.v3.informasjon.Personidenter
 import no.nav.tjeneste.virksomhet.person.v3.meldinger.HentGeografiskTilknytningRequest
 import no.trygdeetaten.xml.eiff._1.XMLEIFellesformat
+import org.apache.cxf.ext.logging.LoggingFeature
 import org.apache.cxf.jaxws.JaxWsProxyFactoryBean
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -111,6 +112,7 @@ fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCo
 
                     val orgnaisasjonEnhet = JaxWsProxyFactoryBean().apply {
                         address = config.organisasjonEnhetV2EndpointURL
+                        features.add(LoggingFeature())
                         serviceClass = OrganisasjonEnhetV2::class.java
                     }.create() as OrganisasjonEnhetV2
                     configureSTSFor(orgnaisasjonEnhet, credentials.serviceuserUsername,
