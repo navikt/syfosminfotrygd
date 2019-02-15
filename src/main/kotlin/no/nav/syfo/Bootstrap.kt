@@ -27,7 +27,6 @@ import no.nav.helse.sm2013.KontrollsystemBlokkType
 import no.nav.syfo.api.registerNaisApi
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.model.Status
-import no.nav.syfo.rules.RuleData
 import no.nav.syfo.rules.ValidationRuleChain
 import no.nav.syfo.sak.avro.ProduceTask
 import no.nav.syfo.ws.configureSTSFor
@@ -168,11 +167,10 @@ suspend fun CoroutineScope.blockingApplicationLogic(
                 val infotrygdForespResponse = infotrygdSporringUnmarshaller.unmarshal(StringReader(inputMessageText)) as InfotrygdForesp
 
                 log.info("Going through rules $logKeys", *logValues)
-                val ruleData = RuleData(infotrygdForespResponse, receivedSykmelding.sykmelding)
-                val results = listOf<List<Rule<RuleData>>>(
-                        ValidationRuleChain.values().toList()
-                ).flatten().filter { rule -> rule.predicate(ruleData) }
 
+                val validationRuleResults = ValidationRuleChain.values().executeFlow(receivedSykmelding.sykmelding, infotrygdForespResponse)
+
+                val results = listOf(validationRuleResults).flatten()
                 log.info("Rules hit {}, $logKeys", results.map { it.name }, *logValues)
 
                 when {
@@ -306,7 +304,7 @@ fun findOprasjonstype(periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode
     }
 }
 
-suspend fun CoroutineScope.produceManualTask(kafkaProducer: KafkaProducer<String, ProduceTask>, receivedSykmelding: ReceivedSykmelding, results: List<Rule<RuleData>>, personV3: PersonV3, organisasjonEnhetV2: OrganisasjonEnhetV2, logKeys: String, logValues: Array<StructuredArgument>) {
+suspend fun CoroutineScope.produceManualTask(kafkaProducer: KafkaProducer<String, ProduceTask>, receivedSykmelding: ReceivedSykmelding, results: List<Rule<Any>>, personV3: PersonV3, organisasjonEnhetV2: OrganisasjonEnhetV2, logKeys: String, logValues: Array<StructuredArgument>) {
     log.info("Message is manual outcome $logKeys", *logValues)
     RULE_HIT_STATUS_COUNTER.labels(Status.MANUAL_PROCESSING.name)
 
