@@ -211,7 +211,7 @@ enum class ValidationRuleChain(override val ruleId: Int?, override val status: S
     @Description("Hvis maks sykepenger er utbetalt")
     MAX_SICK_LEAVE_PAYOUT(1551, Status.MANUAL_PROCESSING, { (infotrygdForesp, healthInformation) ->
         // TODO innkomende sykmeldings peridode, overlapper med nyeste max dato
-        infotrygdForesp.sMhistorikk.sykmelding.findOverlapping(healthInformation.aktivitet.periode.toRange())?.periode?.stans == "MAX"
+        infotrygdForesp.sMhistorikk?.sykmelding != null && infotrygdForesp.sMhistorikk.sykmelding.findOverlapping(healthInformation.aktivitet.periode.toRange())?.periode?.stans == "MAX"
     }),
 
     @Description("Infotrygd returnerte en feil, vi kan ikke automatisk oppdatere Infotrygd")

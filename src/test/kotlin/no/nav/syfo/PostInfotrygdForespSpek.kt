@@ -390,6 +390,21 @@ object PostInfotrygdForespSpek : Spek({
             ValidationRuleChain.MAX_SICK_LEAVE_PAYOUT(ruleData(infotrygdForespResponse, healthInformation)) shouldEqual false
         }
 
+        it("Should check rule MAX_SICK_LEAVE_PAYOUT, should NOT trigger rule") {
+            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet().apply {
+                aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
+                    periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
+                        periodeFOMDato = LocalDate.now()
+                        periodeTOMDato = LocalDate.now().plusDays(10)
+                    })
+                }
+            }
+
+            val infotrygdForespResponse = deafaultInfotrygdForesp()
+
+            ValidationRuleChain.MAX_SICK_LEAVE_PAYOUT(ruleData(infotrygdForespResponse, healthInformation)) shouldEqual false
+        }
+
         it("Should check rule 1591") {
             val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
 
