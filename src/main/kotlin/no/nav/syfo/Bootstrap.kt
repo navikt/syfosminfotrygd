@@ -167,7 +167,7 @@ suspend fun CoroutineScope.blockingApplicationLogic(
 
                 val infotrygdForespResponse = infotrygdSporringUnmarshaller.unmarshal(StringReader(inputMessageText)) as InfotrygdForesp
 
-                log.info("Going through rulesrules $logKeys", *logValues)
+                log.info("Going through rules $logKeys", *logValues)
                 val ruleData = RuleData(infotrygdForespResponse, receivedSykmelding.sykmelding)
                 val results = listOf<List<Rule<RuleData>>>(
                         ValidationRuleChain.values().toList()
