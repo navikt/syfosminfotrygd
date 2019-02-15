@@ -30,7 +30,6 @@ fun createSystemUserSTSClient(client: Client, username: String, password: String
 
     isEnableAppliesTo = false
     isAllowRenewing = false
-    features = listOf(LoggingFeature())
     setPolicy(STS_CLIENT_AUTHENTICATION_POLICY)
 
     requestContext[SecurityConstants.CACHE_ISSUED_TOKEN_IN_ENDPOINT] = cacheTokenInEndpoint
