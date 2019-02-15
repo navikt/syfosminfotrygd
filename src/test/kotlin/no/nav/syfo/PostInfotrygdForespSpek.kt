@@ -382,16 +382,7 @@ object PostInfotrygdForespSpek : Spek({
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
                 sykmelding.add(TypeSMinfo().apply {
                     periode = TypeSMinfo.Periode().apply {
-                        arbufoerFOM = LocalDate.now()
-                        arbufoerTOM = LocalDate.now()
-                        stans = "DOD"
-                    }
-                })
-
-                sykmelding.add(TypeSMinfo().apply {
-                    periode = TypeSMinfo.Periode().apply {
-                        arbufoerFOM = LocalDate.now()
-                        stans = "DOD"
+                        arbufoerFOM = LocalDate.now().plusDays(15)
                     }
                 })
             }
