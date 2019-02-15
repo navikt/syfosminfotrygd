@@ -11,6 +11,7 @@ import io.ktor.application.Application
 import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import io.prometheus.client.hotspot.DefaultExports
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.asCoroutineDispatcher
@@ -82,6 +83,8 @@ fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCo
     val applicationServer = embeddedServer(Netty, config.applicationPort) {
         initRouting(applicationState)
     }.start(wait = false)
+
+    DefaultExports.initialize()
 
     connectionFactory(config).createConnection(credentials.mqUsername, credentials.mqPassword).use { connection ->
         connection.start()
