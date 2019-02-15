@@ -312,8 +312,8 @@ suspend fun CoroutineScope.produceManualTask(kafkaProducer: KafkaProducer<String
 
     val navKontor = fetchNAVKontor(organisasjonEnhetV2, geografiskTilknytning.await()).await()
 
-    when (navKontor) {
-        null -> log.error("Nav kontor is null, where to send the task to???") // TODO
+    when (navKontor.enhetId.isEmpty() || navKontor.enhetId.isNullOrBlank()) {
+        true -> log.error("Nav kontor is null, where to send the task to???") // TODO
         else -> createTask(kafkaProducer, receivedSykmelding, results, navKontor, logKeys, logValues)
     }
 }
