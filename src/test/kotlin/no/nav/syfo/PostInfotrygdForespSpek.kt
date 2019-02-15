@@ -396,8 +396,6 @@ object PostInfotrygdForespSpek : Spek({
                 })
             }
 
-
-
             ValidationRuleChain.MAX_SICK_LEAVE_PAYOUT(ruleData(infotrygdForespResponse, healthInformation)) shouldEqual false
         }
 
