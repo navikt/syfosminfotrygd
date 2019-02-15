@@ -314,9 +314,13 @@ suspend fun CoroutineScope.produceManualTask(kafkaProducer: KafkaProducer<String
 
     val navKontor = fetchNAVKontor(organisasjonEnhetV2, geografiskTilknytning.await()).await()
 
-    log.info("Creating object to send to kafka topic $logKeys", *logValues)
-    log.info("NavOffice ${objectMapper.writeValueAsString(navKontor)} $logKeys", *logValues)
+    when (navKontor) {
+        null -> log.error("Nav kontor is null, where to send the task to???") // TODO
+        else -> createTask(kafkaProducer, receivedSykmelding, results, navKontor, logKeys, logValues)
+    }
+}
 
+fun createTask(kafkaProducer: KafkaProducer<String, ProduceTask>, receivedSykmelding: ReceivedSykmelding, results: List<Rule<Any>>, navKontor: Organisasjonsenhet, logKeys: String, logValues: Array<StructuredArgument>) {
     kafkaProducer.send(ProducerRecord("aapen-syfo-oppgave-produserOppgave", ProduceTask().apply {
         setMessageId(receivedSykmelding.msgId)
         setUserIdent(receivedSykmelding.personNrPasient)
