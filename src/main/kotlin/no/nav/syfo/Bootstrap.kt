@@ -310,10 +310,10 @@ suspend fun CoroutineScope.produceManualTask(kafkaProducer: KafkaProducer<String
 
     val geografiskTilknytning = fetchGeografiskTilknytning(personV3, receivedSykmelding)
 
-    val navKontor = fetchNAVKontor(organisasjonEnhetV2, geografiskTilknytning.await())
+    val navKontor = fetchNAVKontor(organisasjonEnhetV2, geografiskTilknytning.await()).await()
 
     log.info("Creating object to send to kafka topic $logKeys", *logValues)
-    log.info("NavOffice ${navKontor.await().enhetId} $logKeys", *logValues)
+    log.info("NavOffice ${navKontor.enhetId} $logKeys", *logValues)
 
     kafkaProducer.send(ProducerRecord("aapen-syfo-oppgave-produserOppgave", ProduceTask().apply {
         setMessageId(receivedSykmelding.msgId)
@@ -326,7 +326,7 @@ suspend fun CoroutineScope.produceManualTask(kafkaProducer: KafkaProducer<String
         setDescription("Kunne ikkje oppdatere Infotrygd automatisk, på grunn av følgende: ${results.joinToString(", ", prefix = "\"", postfix = "\"")}")
         setStartsInDays(0)
         setEndsInDays(21)
-        setResponsibleUnit(navKontor.await().enhetId)
+        setResponsibleUnit(navKontor.enhetId)
         setFollowUpText("Se beskrivelse")
     }))
     log.info("Message sendt to topic: aapen-syfo-oppgave-produserOppgave $logKeys", *logValues)
