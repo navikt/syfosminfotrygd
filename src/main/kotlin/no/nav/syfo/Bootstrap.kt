@@ -328,7 +328,7 @@ suspend fun CoroutineScope.produceManualTask(kafkaProducer: KafkaProducer<String
         setStartsInDays(0)
         setEndsInDays(21)
         setResponsibleUnit(navKontor.await().enhetId)
-        setFollowUpText("") // TODO
+        setFollowUpText("Se beskrivelse")
     }))
     log.info("Message sendt to topic: aapen-syfo-oppgave-produserOppgave $logKeys", *logValues)
 }
