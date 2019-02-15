@@ -1,5 +1,6 @@
 package no.nav.syfo
 
+import com.ctc.wstx.exc.WstxException
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
@@ -10,6 +11,8 @@ import io.ktor.application.Application
 import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -29,8 +32,10 @@ import no.nav.syfo.sak.avro.ProduceTask
 import no.nav.syfo.ws.configureSTSFor
 import no.nav.tjeneste.virksomhet.organisasjonenhet.v2.binding.OrganisasjonEnhetV2
 import no.nav.tjeneste.virksomhet.organisasjonenhet.v2.informasjon.Geografi
+import no.nav.tjeneste.virksomhet.organisasjonenhet.v2.informasjon.Organisasjonsenhet
 import no.nav.tjeneste.virksomhet.organisasjonenhet.v2.meldinger.FinnNAVKontorRequest
 import no.nav.tjeneste.virksomhet.person.v3.binding.PersonV3
+import no.nav.tjeneste.virksomhet.person.v3.informasjon.GeografiskTilknytning
 import no.nav.tjeneste.virksomhet.person.v3.informasjon.NorskIdent
 import no.nav.tjeneste.virksomhet.person.v3.informasjon.PersonIdent
 import no.nav.tjeneste.virksomhet.person.v3.informasjon.Personidenter
@@ -44,6 +49,7 @@ import org.apache.kafka.common.serialization.StringDeserializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.io.IOException
 import java.io.StringReader
 import java.io.StringWriter
 import java.math.BigInteger
@@ -124,7 +130,7 @@ fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCo
     }
 }
 
-suspend fun blockingApplicationLogic(
+suspend fun CoroutineScope.blockingApplicationLogic(
     applicationState: ApplicationState,
     kafkaConsumer: KafkaConsumer<String, String>,
     kafkaProducer: KafkaProducer<String, ProduceTask>,
@@ -168,7 +174,7 @@ suspend fun blockingApplicationLogic(
 
                 when {
                     results.any { rule -> rule.status == Status.MANUAL_PROCESSING } ->
-                        produceManualTask(kafkaProducer, receivedSykmelding.msgId, receivedSykmelding.sykmelding, results, personV3, organisasjonEnhetV2, logKeys, logValues)
+                        produceManualTask(kafkaProducer, receivedSykmelding.msgId, receivedSykmelding, results, personV3, organisasjonEnhetV2, logKeys, logValues)
                     else -> sendInfotrygdOppdatering(infotrygdOppdateringProducer, session, createInfotrygdInfo(receivedSykmelding.fellesformat, InfotrygdForespAndHealthInformation(infotrygdForespResponse, receivedSykmelding.sykmelding)), logKeys, logValues)
                 }
             }
@@ -297,23 +303,17 @@ fun findOprasjonstype(periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode
     }
 }
 
-fun produceManualTask(kafkaProducer: KafkaProducer<String, ProduceTask>, msgId: String, healthInformation: HelseOpplysningerArbeidsuforhet, results: List<Rule<RuleData>>, personV3: PersonV3, organisasjonEnhetV2: OrganisasjonEnhetV2, logKeys: String, logValues: Array<StructuredArgument>) {
+suspend fun CoroutineScope.produceManualTask(kafkaProducer: KafkaProducer<String, ProduceTask>, msgId: String, receivedSykmelding: ReceivedSykmelding, results: List<Rule<RuleData>>, personV3: PersonV3, organisasjonEnhetV2: OrganisasjonEnhetV2, logKeys: String, logValues: Array<StructuredArgument>) {
     log.info("Message is manual outcome $logKeys", *logValues)
     RULE_HIT_STATUS_COUNTER.labels(Status.MANUAL_PROCESSING.name)
-    val geografiskTilknytning = personV3.hentGeografiskTilknytning(HentGeografiskTilknytningRequest().withAktoer(PersonIdent().withIdent(
-                NorskIdent()
-                        .withIdent(healthInformation.pasient.fodselsnummer.id)
-                        .withType(Personidenter().withValue(healthInformation.pasient.fodselsnummer.typeId.v))))).geografiskTilknytning
 
-    val navKontor = organisasjonEnhetV2.finnNAVKontor(FinnNAVKontorRequest().apply {
-            this.geografiskTilknytning = Geografi().apply {
-                this.value = geografiskTilknytning?.geografiskTilknytning ?: "0"
-            }
-        }).navKontor
+    val geografiskTilknytning = fetchGeografiskTilknytning(personV3, receivedSykmelding)
+
+    val navKontor = fetchNAVKontor(organisasjonEnhetV2, geografiskTilknytning.await())
 
     kafkaProducer.send(ProducerRecord("aapen-syfo-oppgave-produserOppgave", ProduceTask().apply {
         setMessageId(msgId)
-        setUserIdent(healthInformation.pasient.fodselsnummer.id)
+        setUserIdent(receivedSykmelding.personNrPasient)
         setUserTypeCode("PERSON")
         setTaskType("SYK")
         setFieldCode("SYK")
@@ -322,8 +322,25 @@ fun produceManualTask(kafkaProducer: KafkaProducer<String, ProduceTask>, msgId: 
         setDescription("Kunne ikkje oppdatere Infotrygd automatisk, på grunn av følgende: ${results.joinToString(", ", prefix = "\"", postfix = "\"")}")
         setStartsInDays(0)
         setEndsInDays(21)
-        setResponsibleUnit(navKontor.enhetId)
+        setResponsibleUnit(navKontor.await().enhetId)
         setFollowUpText("") // TODO
     }))
     log.info("Message sendt to topic: aapen-syfo-oppgave-produserOppgave $logKeys", *logValues)
 }
+
+fun CoroutineScope.fetchGeografiskTilknytning(personV3: PersonV3, receivedSykmelding: ReceivedSykmelding): Deferred<GeografiskTilknytning> =
+        retryAsync("tps_hent_geografisktilknytning", IOException::class, WstxException::class) {
+            personV3.hentGeografiskTilknytning(HentGeografiskTilknytningRequest().withAktoer(PersonIdent().withIdent(
+                    NorskIdent()
+                            .withIdent(receivedSykmelding.sykmelding.pasient.fodselsnummer.id)
+                            .withType(Personidenter().withValue(receivedSykmelding.sykmelding.pasient.fodselsnummer.typeId.v))))).geografiskTilknytning
+        }
+
+fun CoroutineScope.fetchNAVKontor(organisasjonEnhetV2: OrganisasjonEnhetV2, geografiskTilknytning: GeografiskTilknytning): Deferred<Organisasjonsenhet> =
+        retryAsync("finn_nav_kontor", IOException::class, WstxException::class) {
+            organisasjonEnhetV2.finnNAVKontor(FinnNAVKontorRequest().apply {
+                this.geografiskTilknytning = Geografi().apply {
+                    this.value = geografiskTilknytning.geografiskTilknytning ?: "0"
+                }
+            }).navKontor
+        }
