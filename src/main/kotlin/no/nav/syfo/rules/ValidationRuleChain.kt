@@ -276,7 +276,7 @@ private fun List<TypeSMinfo>.findOverlapping(smRange: ClosedRange<LocalDate>): T
         } ?: firstOrNull { // Whenever the period is within the range
             it.periode.arbufoerFOM > smRange.start && it.periode.arbufoerTOM != null && it.periode.arbufoerTOM <= smRange.endInclusive
         } ?: sortedBy { it.periode.arbufoerFOM }.firstOrNull { // Find the first period that is an extension from the next day
-            it.periode.arbufoerTOM.plusDays(1) == smRange.start
+            it.periode.arbufoerTOM != null && it.periode.arbufoerTOM.plusDays(1) == smRange.start
         } ?: firstOrNull { // Whenever its an extension from the next day over a weekend
             it.periode.arbufoerFOM.dayOfWeek in arrayOf(DayOfWeek.FRIDAY, DayOfWeek.SATURDAY, DayOfWeek.SUNDAY) &&
                     smRange.start.dayOfWeek in arrayOf(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY, DayOfWeek.MONDAY) &&

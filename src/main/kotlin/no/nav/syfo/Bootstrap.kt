@@ -145,11 +145,12 @@ suspend fun blockingApplicationLogic(
                 val logKeys = logValues.joinToString(prefix = "(", postfix = ")", separator = ",") { "{}" }
                 log.info("Received a SM2013 $logKeys", *logValues)
 
+                // TODO add retry to tempQueue
                 val infotrygdForespRequest = createInfotrygdForesp(receivedSykmelding.sykmelding, receivedSykmelding.personNrLege)
                 val temporaryQueue = session.createTemporaryQueue()
                 sendInfotrygdSporring(infotrygdSporringProducer, session, infotrygdForespRequest, temporaryQueue)
                 val tmpConsumer = session.createConsumer(temporaryQueue)
-                val consumedMessage = tmpConsumer.receive(15000)
+                val consumedMessage = tmpConsumer.receive(20000)
                 val inputMessageText = when (consumedMessage) {
                     is TextMessage -> consumedMessage.text
                     else -> throw RuntimeException("Incoming message needs to be a byte message or text message, JMS type:" + consumedMessage.jmsType)
