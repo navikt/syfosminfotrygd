@@ -177,7 +177,7 @@ suspend fun CoroutineScope.blockingApplicationLogic(
 
                 when {
                     results.any { rule -> rule.status == Status.MANUAL_PROCESSING } ->
-                        produceManualTask(kafkaProducer, receivedSykmelding.msgId, receivedSykmelding, results, personV3, organisasjonEnhetV2, logKeys, logValues)
+                        produceManualTask(kafkaProducer, receivedSykmelding, results, personV3, organisasjonEnhetV2, logKeys, logValues)
                     else -> sendInfotrygdOppdatering(infotrygdOppdateringProducer, session, createInfotrygdInfo(receivedSykmelding.fellesformat, InfotrygdForespAndHealthInformation(infotrygdForespResponse, receivedSykmelding.sykmelding)), logKeys, logValues)
                 }
             }
@@ -306,7 +306,7 @@ fun findOprasjonstype(periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode
     }
 }
 
-suspend fun CoroutineScope.produceManualTask(kafkaProducer: KafkaProducer<String, ProduceTask>, msgId: String, receivedSykmelding: ReceivedSykmelding, results: List<Rule<RuleData>>, personV3: PersonV3, organisasjonEnhetV2: OrganisasjonEnhetV2, logKeys: String, logValues: Array<StructuredArgument>) {
+suspend fun CoroutineScope.produceManualTask(kafkaProducer: KafkaProducer<String, ProduceTask>, receivedSykmelding: ReceivedSykmelding, results: List<Rule<RuleData>>, personV3: PersonV3, organisasjonEnhetV2: OrganisasjonEnhetV2, logKeys: String, logValues: Array<StructuredArgument>) {
     log.info("Message is manual outcome $logKeys", *logValues)
     RULE_HIT_STATUS_COUNTER.labels(Status.MANUAL_PROCESSING.name)
 
@@ -314,10 +314,11 @@ suspend fun CoroutineScope.produceManualTask(kafkaProducer: KafkaProducer<String
 
     val navKontor = fetchNAVKontor(organisasjonEnhetV2, geografiskTilknytning.await())
 
-    log.info("Creating object to send to kafka topic")
+    log.info("Creating object to send to kafka topic $logKeys", *logValues)
+    log.info("NavOffice ${navKontor.await().enhetId} $logKeys", *logValues)
 
     kafkaProducer.send(ProducerRecord("aapen-syfo-oppgave-produserOppgave", ProduceTask().apply {
-        setMessageId(msgId)
+        setMessageId(receivedSykmelding.msgId)
         setUserIdent(receivedSykmelding.personNrPasient)
         setUserTypeCode("PERSON")
         setTaskType("SYK")
