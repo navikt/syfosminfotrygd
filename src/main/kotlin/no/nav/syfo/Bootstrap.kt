@@ -312,7 +312,7 @@ suspend fun CoroutineScope.produceManualTask(kafkaProducer: KafkaProducer<String
 
     val navKontor = fetchNAVKontor(organisasjonEnhetV2, geografiskTilknytning.await()).await()
 
-    if (navKontor.enhetId != null && navKontor.enhetId.isNotEmpty() && navKontor.enhetId.isNotBlank()) {
+    if (navKontor?.enhetId != null) {
         createTask(kafkaProducer, receivedSykmelding, results, navKontor, logKeys, logValues)
     } else {
         log.error("Nav kontor is null, where to send the task to??? $logKeys", *logValues) // TODO
@@ -345,7 +345,7 @@ fun CoroutineScope.fetchGeografiskTilknytning(personV3: PersonV3, receivedSykmel
                             .withType(Personidenter().withValue(receivedSykmelding.sykmelding.pasient.fodselsnummer.typeId.v))))).geografiskTilknytning
         }
 
-fun CoroutineScope.fetchNAVKontor(organisasjonEnhetV2: OrganisasjonEnhetV2, geografiskTilknytning: GeografiskTilknytning): Deferred<Organisasjonsenhet> =
+fun CoroutineScope.fetchNAVKontor(organisasjonEnhetV2: OrganisasjonEnhetV2, geografiskTilknytning: GeografiskTilknytning): Deferred<Organisasjonsenhet?> =
         retryAsync("finn_nav_kontor", IOException::class, WstxException::class) {
             organisasjonEnhetV2.finnNAVKontor(FinnNAVKontorRequest().apply {
                 this.geografiskTilknytning = Geografi().apply {
