@@ -311,6 +311,8 @@ suspend fun CoroutineScope.produceManualTask(kafkaProducer: KafkaProducer<String
 
     val navKontor = fetchNAVKontor(organisasjonEnhetV2, geografiskTilknytning.await())
 
+    log.info("Creating object to send to kafka topic")
+
     kafkaProducer.send(ProducerRecord("aapen-syfo-oppgave-produserOppgave", ProduceTask().apply {
         setMessageId(msgId)
         setUserIdent(receivedSykmelding.personNrPasient)

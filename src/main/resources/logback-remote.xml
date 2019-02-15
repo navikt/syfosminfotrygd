@@ -6,9 +6,8 @@
         </encoder>
     </appender>
 
-    <logger name="org.apache.cxf.service.invoker.AbstractInvoker" level="DEBUG" />
-    <logger name="org.apache.cxf.services" level="WARN" additivity="false"/>
     <logger name="no.nav" level="INFO"/>
+    <logger name="org.apache.kafka" level="INFO" />
 
     <root level="INFO">
         <appender-ref ref="stdout_json"/>
