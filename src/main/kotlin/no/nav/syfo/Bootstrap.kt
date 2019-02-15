@@ -272,9 +272,10 @@ fun createInfotrygdInfo(marshalledFellesformat: String, itfh: InfotrygdForespAnd
         hovedDiagnoseGruppe = itfh.infotrygdForesp.hovedDiagnosekodeverk.toBigInteger()
         hovedDiagnoseTekst = itfh.healthInformation.medisinskVurdering.hovedDiagnose.diagnosekode.dn
         arbeidsufoerTOM = periode.periodeTOMDato
-        ufoeregrad = when (periode.aktivitetIkkeMulig) {
-            null -> periode.gradertSykmelding.sykmeldingsgrad.toBigInteger()
-            else -> "100".toBigInteger()
+        ufoeregrad = when {
+            periode.gradertSykmelding != null -> periode.gradertSykmelding.sykmeldingsgrad.toBigInteger()
+            periode.aktivitetIkkeMulig != null -> 100.toBigInteger()
+            else -> 0.toBigInteger()
             }
         })
         }
@@ -310,6 +311,7 @@ suspend fun CoroutineScope.produceManualTask(kafkaProducer: KafkaProducer<String
 
     val geografiskTilknytning = fetchGeografiskTilknytning(personV3, receivedSykmelding)
 
+    // TODO use rest: https://confluence.adeo.no/pages/viewpage.action?pageId=277344236
     val navKontor = fetchNAVKontor(organisasjonEnhetV2, geografiskTilknytning.await()).await()
 
     if (navKontor?.enhetId != null) {
