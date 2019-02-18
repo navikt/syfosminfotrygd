@@ -5,7 +5,6 @@ import no.kith.xmlstds.msghead._2006_05_24.XMLMsgHead
 import no.kith.xmlstds.msghead._2006_05_24.XMLRefDoc
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.infotrygd.foresp.StatusType
-import no.nav.helse.infotrygd.foresp.TypeMottakerKode
 import no.nav.helse.infotrygd.foresp.TypeNavn
 import no.nav.helse.infotrygd.foresp.TypeSMinfo
 import no.nav.helse.sm2013.ArsakType
@@ -89,7 +88,6 @@ object CreateInfotrygdInfoSpek : Spek({
                                     fornavn = "Per"
                                     etternavn = "Hansne"
                                 }
-                                mottakerKode = TypeMottakerKode.LE
                             }
                     )
                 }

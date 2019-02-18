@@ -154,7 +154,7 @@ suspend fun CoroutineScope.blockingApplicationLogic(
                 log.info("Received a SM2013 $logKeys", *logValues)
 
                 // TODO add retry to tempQueue
-                val infotrygdForespRequest = createInfotrygdForesp(receivedSykmelding.sykmelding, receivedSykmelding.personNrLege)
+                val infotrygdForespRequest = createInfotrygdForesp(receivedSykmelding.personNrPasient, receivedSykmelding.sykmelding, receivedSykmelding.personNrLege)
                 val temporaryQueue = session.createTemporaryQueue()
                 sendInfotrygdSporring(infotrygdSporringProducer, session, infotrygdForespRequest, temporaryQueue)
                 val tmpConsumer = session.createConsumer(temporaryQueue)
@@ -228,11 +228,11 @@ fun sendInfotrygdOppdatering(
     log.info("Message is automatic outcome $logKeys", *logValues)
 })
 
-fun createInfotrygdForesp(healthInformation: HelseOpplysningerArbeidsuforhet, doctorFnr: String) = InfotrygdForesp().apply {
+fun createInfotrygdForesp(personNrPasient: String, healthInformation: HelseOpplysningerArbeidsuforhet, doctorFnr: String) = InfotrygdForesp().apply {
     val dateMinus1Year = LocalDate.now().minusYears(1)
     val dateMinus4Years = LocalDate.now().minusYears(4)
 
-    fodselsnummer = healthInformation.pasient.fodselsnummer.id
+    fodselsnummer = personNrPasient
     tkNrFraDato = dateMinus1Year
     forespNr = 1.toBigInteger()
     forespTidsStempel = LocalDateTime.now()
@@ -263,9 +263,9 @@ fun createInfotrygdInfo(marshalledFellesformat: String, itfh: InfotrygdForespAnd
         fodselsnummer = itfh.healthInformation.pasient.fodselsnummer.id
         tkNummer = ""
         forsteFravaersDag = periode.periodeFOMDato
-        mottakerKode = itfh.infotrygdForesp.behandlerInfo.behandler.first().mottakerKode.value()
+        mottakerKode = itfh.infotrygdForesp.behandlerInfo.behandler.firstOrNull()?.mottakerKode?.value() ?: ""
         operasjonstype = when (index) {
-            0 -> "1".toBigInteger() // TODO findOprasjonstype(periode, itfh)
+            0 -> findOprasjonstype(periode, itfh)
             else -> "2".toBigInteger()
         }
         hovedDiagnose = itfh.infotrygdForesp.hovedDiagnosekode
@@ -287,7 +287,7 @@ fun findOprasjonstype(periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode
     val typeSMinfo = itfh.infotrygdForesp.sMhistorikk.sykmelding.firstOrNull()
 
     // TODO fixed this to implementet corretly
-    return if (itfh.infotrygdForesp.sMhistorikk.status.kodeMelding == "04" &&
+    return if (itfh.infotrygdForesp.sMhistorikk.status.kodeMelding == "00" &&
             itfh.healthInformation.syketilfelleStartDato == periode.periodeFOMDato) {
         "1".toBigInteger()
     } else if (itfh.infotrygdForesp.sMhistorikk.status.kodeMelding != "04" && typeSMinfo?.periode?.arbufoerFOM != null &&
