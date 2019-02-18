@@ -32,7 +32,6 @@ import no.nav.syfo.sak.avro.ProduceTask
 import no.nav.syfo.ws.configureSTSFor
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.binding.ArbeidsfordelingV1
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.ArbeidsfordelingKriterier
-import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.Behandlingstema
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.Oppgavetyper
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.Tema
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.meldinger.FinnBehandlendeEnhetListeRequest
