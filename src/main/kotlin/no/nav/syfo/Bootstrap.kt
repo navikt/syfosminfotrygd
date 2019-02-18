@@ -35,6 +35,7 @@ import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.Arbeidsfordeli
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.Oppgavetyper
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.Tema
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.meldinger.FinnBehandlendeEnhetListeRequest
+import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.meldinger.FinnBehandlendeEnhetListeResponse
 import no.nav.tjeneste.virksomhet.organisasjonenhet.v2.binding.OrganisasjonEnhetV2
 import no.nav.tjeneste.virksomhet.organisasjonenhet.v2.informasjon.Geografi
 import no.nav.tjeneste.virksomhet.organisasjonenhet.v2.informasjon.Organisasjonsenhet
@@ -323,24 +324,7 @@ suspend fun CoroutineScope.produceManualTask(kafkaProducer: KafkaProducer<String
 
     val geografiskTilknytning = fetchGeografiskTilknytning(personV3, receivedSykmelding)
 
-    log.info("GeografiskTilknytning: $geografiskTilknytning $logKeys", *logValues)
-
-    // confluence.adeo.no/display/SDFS/tjeneste_v3%3Avirksomhet%3AArbeidsfordeling_v1#tjeneste_v3:virksomhet:Arbeidsfordeling_v1-Operasjon:FinnBehandlendeEnhetListe
-    val request = FinnBehandlendeEnhetListeRequest().apply {
-        val afk = ArbeidsfordelingKriterier()
-        afk.geografiskTilknytning = no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.Geografi().apply {
-            kodeverksRef = geografiskTilknytning.await().geografiskTilknytning
-        }
-        afk.tema = Tema().apply {
-            kodeverksRef = "SYM"
-        }
-        afk.oppgavetype = Oppgavetyper().apply {
-            kodeverksRef = "BEH_EL_SYM"
-        }
-                arbeidsfordelingKriterier = afk
-    }
-
-    val finnBehandlendeEnhetListeResponse = arbeidsfordelingV1.finnBehandlendeEnhetListe(request)
+    val finnBehandlendeEnhetListeResponse = fetchBehandlendeEnhet(arbeidsfordelingV1, geografiskTilknytning.await()).await()
     log.info("finnBehandlendeEnhetListeResponse: ", objectMapper.writeValueAsString(finnBehandlendeEnhetListeResponse))
 
     // TODO remove and use finnBehandlendeEnhetListeResponse
@@ -386,4 +370,21 @@ fun CoroutineScope.fetchNAVKontor(organisasjonEnhetV2: OrganisasjonEnhetV2, geog
                     this.value = geografiskTilknytning.geografiskTilknytning ?: "0"
                 }
             }).navKontor
+        }
+
+fun CoroutineScope.fetchBehandlendeEnhet(arbeidsfordelingV1: ArbeidsfordelingV1, geografiskTilknytning: GeografiskTilknytning): Deferred<FinnBehandlendeEnhetListeResponse?> =
+        retryAsync("finn_nav_kontor", IOException::class, WstxException::class) {
+            arbeidsfordelingV1.finnBehandlendeEnhetListe(FinnBehandlendeEnhetListeRequest().apply {
+                val afk = ArbeidsfordelingKriterier()
+                afk.geografiskTilknytning = no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.Geografi().apply {
+                    kodeverksRef = geografiskTilknytning.geografiskTilknytning
+                }
+                afk.tema = Tema().apply {
+                    kodeverksRef = "SYM"
+                }
+                afk.oppgavetype = Oppgavetyper().apply {
+                    kodeverksRef = "BEH_EL_SYM"
+                }
+                arbeidsfordelingKriterier = afk
+            })
         }
