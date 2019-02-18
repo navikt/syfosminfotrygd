@@ -33,6 +33,8 @@ import no.nav.syfo.ws.configureSTSFor
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.binding.ArbeidsfordelingV1
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.ArbeidsfordelingKriterier
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.Behandlingstema
+import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.Oppgavetyper
+import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.Tema
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.meldinger.FinnBehandlendeEnhetListeRequest
 import no.nav.tjeneste.virksomhet.organisasjonenhet.v2.binding.OrganisasjonEnhetV2
 import no.nav.tjeneste.virksomhet.organisasjonenhet.v2.informasjon.Geografi
@@ -330,8 +332,11 @@ suspend fun CoroutineScope.produceManualTask(kafkaProducer: KafkaProducer<String
         afk.geografiskTilknytning = no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.Geografi().apply {
             kodeverksRef = geografiskTilknytning.await().geografiskTilknytning
         }
-        afk.behandlingstema = Behandlingstema().apply {
+        afk.tema = Tema().apply {
             kodeverksRef = "SYM"
+        }
+        afk.oppgavetype = Oppgavetyper().apply {
+            kodeverksRef = "BEH_EL_SYM"
         }
                 arbeidsfordelingKriterier = afk
     }
@@ -354,8 +359,8 @@ fun createTask(kafkaProducer: KafkaProducer<String, ProduceTask>, receivedSykmel
         setMessageId(receivedSykmelding.msgId)
         setUserIdent(receivedSykmelding.personNrPasient)
         setUserTypeCode("PERSON")
-        setTaskType("SYK")
-        setFieldCode("SYK")
+        setTaskType("SYM")
+        setFieldCode("SYM")
         setSubcategoryType("SYK_SYK")
         setPriorityCode("NORM_SYK")
         setDescription("Kunne ikkje oppdatere Infotrygd automatisk, på grunn av følgende: ${results.joinToString(", ", prefix = "\"", postfix = "\"")}")
