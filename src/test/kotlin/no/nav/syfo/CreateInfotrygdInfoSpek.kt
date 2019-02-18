@@ -95,7 +95,7 @@ object CreateInfotrygdInfoSpek : Spek({
                     sykmelding.add(TypeSMinfo().apply {
                         status = StatusType().apply {
                             returStatus = "0".toBigInteger()
-                            kodeMelding = "00"
+                            kodeMelding = "04"
                             tidsStempel = LocalDateTime.now()
                         }
                         periode = TypeSMinfo.Periode().apply {

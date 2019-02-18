@@ -30,6 +30,10 @@ import no.nav.syfo.model.Status
 import no.nav.syfo.rules.ValidationRuleChain
 import no.nav.syfo.sak.avro.ProduceTask
 import no.nav.syfo.ws.configureSTSFor
+import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.binding.ArbeidsfordelingV1
+import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.ArbeidsfordelingKriterier
+import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.Behandlingstema
+import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.meldinger.FinnBehandlendeEnhetListeRequest
 import no.nav.tjeneste.virksomhet.organisasjonenhet.v2.binding.OrganisasjonEnhetV2
 import no.nav.tjeneste.virksomhet.organisasjonenhet.v2.informasjon.Geografi
 import no.nav.tjeneste.virksomhet.organisasjonenhet.v2.informasjon.Organisasjonsenhet
@@ -109,6 +113,13 @@ fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCo
                     configureSTSFor(personV3, credentials.serviceuserUsername,
                             credentials.serviceuserPassword, config.securityTokenServiceUrl)
 
+                    val arbeidsfordelingV1 = JaxWsProxyFactoryBean().apply {
+                        address = config.arbeidsfordelingV1EndpointURL
+                        serviceClass = ArbeidsfordelingV1::class.java
+                    }.create() as ArbeidsfordelingV1
+                    configureSTSFor(arbeidsfordelingV1, credentials.serviceuserUsername,
+                            credentials.serviceuserPassword, config.securityTokenServiceUrl)
+
                     val orgnaisasjonEnhet = JaxWsProxyFactoryBean().apply {
                         address = config.organisasjonEnhetV2EndpointURL
                         serviceClass = OrganisasjonEnhetV2::class.java
@@ -116,7 +127,7 @@ fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCo
                     configureSTSFor(orgnaisasjonEnhet, credentials.serviceuserUsername,
                             credentials.serviceuserPassword, config.securityTokenServiceUrl)
 
-                    blockingApplicationLogic(applicationState, kafkaconsumer, kafkaproducer, infotrygdOppdateringProducer, infotrygdSporringProducer, session, personV3, orgnaisasjonEnhet)
+                    blockingApplicationLogic(applicationState, kafkaconsumer, kafkaproducer, infotrygdOppdateringProducer, infotrygdSporringProducer, session, personV3, orgnaisasjonEnhet, arbeidsfordelingV1)
                 }
             }.toList()
 
@@ -140,7 +151,8 @@ suspend fun CoroutineScope.blockingApplicationLogic(
     infotrygdSporringProducer: MessageProducer,
     session: Session,
     personV3: PersonV3,
-    organisasjonEnhetV2: OrganisasjonEnhetV2
+    organisasjonEnhetV2: OrganisasjonEnhetV2,
+    arbeidsfordelingV1: ArbeidsfordelingV1
 ) {
     while (applicationState.running) {
             kafkaConsumer.poll(Duration.ofMillis(0)).forEach {
@@ -175,7 +187,7 @@ suspend fun CoroutineScope.blockingApplicationLogic(
 
                 when {
                     results.any { rule -> rule.status == Status.MANUAL_PROCESSING } ->
-                        produceManualTask(kafkaProducer, receivedSykmelding, results, personV3, organisasjonEnhetV2, logKeys, logValues)
+                        produceManualTask(kafkaProducer, receivedSykmelding, results, personV3, organisasjonEnhetV2, arbeidsfordelingV1, logKeys, logValues)
                     else -> sendInfotrygdOppdatering(infotrygdOppdateringProducer, session, createInfotrygdInfo(receivedSykmelding.fellesformat, InfotrygdForespAndHealthInformation(infotrygdForespResponse, receivedSykmelding.sykmelding)), logKeys, logValues)
                 }
             }
@@ -287,8 +299,7 @@ fun findOprasjonstype(periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode
     val typeSMinfo = itfh.infotrygdForesp.sMhistorikk.sykmelding.firstOrNull()
 
     // TODO fixed this to implementet corretly
-    return if (itfh.infotrygdForesp.sMhistorikk.status.kodeMelding == "00" &&
-            itfh.healthInformation.syketilfelleStartDato == periode.periodeFOMDato) {
+    return if (itfh.infotrygdForesp.sMhistorikk.status.kodeMelding == "04") {
         "1".toBigInteger()
     } else if (itfh.infotrygdForesp.sMhistorikk.status.kodeMelding != "04" && typeSMinfo?.periode?.arbufoerFOM != null &&
             typeSMinfo.periode?.arbufoerTOM != null &&
@@ -305,13 +316,30 @@ fun findOprasjonstype(periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode
     }
 }
 
-suspend fun CoroutineScope.produceManualTask(kafkaProducer: KafkaProducer<String, ProduceTask>, receivedSykmelding: ReceivedSykmelding, results: List<Rule<Any>>, personV3: PersonV3, organisasjonEnhetV2: OrganisasjonEnhetV2, logKeys: String, logValues: Array<StructuredArgument>) {
+suspend fun CoroutineScope.produceManualTask(kafkaProducer: KafkaProducer<String, ProduceTask>, receivedSykmelding: ReceivedSykmelding, results: List<Rule<Any>>, personV3: PersonV3, organisasjonEnhetV2: OrganisasjonEnhetV2, arbeidsfordelingV1: ArbeidsfordelingV1, logKeys: String, logValues: Array<StructuredArgument>) {
     log.info("Message is manual outcome $logKeys", *logValues)
     RULE_HIT_STATUS_COUNTER.labels(Status.MANUAL_PROCESSING.name)
 
     val geografiskTilknytning = fetchGeografiskTilknytning(personV3, receivedSykmelding)
 
-    // TODO use rest: https://confluence.adeo.no/pages/viewpage.action?pageId=277344236
+    log.info("GeografiskTilknytning: $geografiskTilknytning $logKeys", *logValues)
+
+    // confluence.adeo.no/display/SDFS/tjeneste_v3%3Avirksomhet%3AArbeidsfordeling_v1#tjeneste_v3:virksomhet:Arbeidsfordeling_v1-Operasjon:FinnBehandlendeEnhetListe
+    val request = FinnBehandlendeEnhetListeRequest().apply {
+        val afk = ArbeidsfordelingKriterier()
+        afk.geografiskTilknytning = no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.Geografi().apply {
+            kodeverksRef = geografiskTilknytning.await().geografiskTilknytning
+        }
+        afk.behandlingstema = Behandlingstema().apply {
+            kodeverksRef = "SYM"
+        }
+                arbeidsfordelingKriterier = afk
+    }
+
+    val finnBehandlendeEnhetListeResponse = arbeidsfordelingV1.finnBehandlendeEnhetListe(request)
+    log.info("finnBehandlendeEnhetListeResponse: ", objectMapper.writeValueAsString(finnBehandlendeEnhetListeResponse))
+
+    // TODO remove and use finnBehandlendeEnhetListeResponse
     val navKontor = fetchNAVKontor(organisasjonEnhetV2, geografiskTilknytning.await()).await()
 
     if (navKontor?.enhetId != null) {

@@ -30,6 +30,7 @@ buildscript {
     ext.sykmelding_version = "1.1-SNAPSHOT"
     ext.mockito_core_version = "2.23.4"
     ext.jetty_version = '9.4.11.v20180605'
+    ext.nav_arbeidsfordelingv1_version = '1.1.0'
 }
 
 plugins {
@@ -103,6 +104,7 @@ dependencies {
     implementation "no.nav.helse.xml:fellesformat:$felleformavV1_version"
     implementation "no.nav.helse.xml:sm2013:$sykmelding_version"
     implementation "no.nav.helse.xml:infotrygd-foresp:$infotrygd_foresp_version"
+    implementation "no.nav.tjenester:nav-arbeidsfordeling-v1-tjenestespesifikasjon:$nav_arbeidsfordelingv1_version:jaxws"
 
     // Communication libraries
     implementation "org.apache.cxf:cxf-rt-frontend-jaxws:$cxf_version"

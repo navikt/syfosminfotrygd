@@ -19,7 +19,8 @@ data class ApplicationConfig(
     val personV3EndpointURL: String,
     val securityTokenServiceUrl: String,
     val infotrygdSporringQueue: String,
-    val infotrygdOppdateringQueue: String
+    val infotrygdOppdateringQueue: String,
+    val arbeidsfordelingV1EndpointURL: String
 )
 
 data class VaultCredentials(

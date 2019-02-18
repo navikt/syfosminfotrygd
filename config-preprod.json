@@ -8,5 +8,6 @@
   "personV3EndpointURL" : "https://wasapp-q1.adeo.no/tpsws/ws/Person/v3",
   "securityTokenServiceUrl" : "https://sts-q1.preprod.local/SecurityTokenServiceProvider/",
   "infotrygdSporringQueue" : "QA.Q291.IT00_FORESPORSEL_XML",
-  "infotrygdOppdateringQueue" : "QA.Q1_SYFOSMINFOTRYGD.INFOTRYGD_OPPDATERING"
+  "infotrygdOppdateringQueue" : "QA.Q1_SYFOSMINFOTRYGD.INFOTRYGD_OPPDATERING",
+  "arbeidsfordelingV1EndpointURL" : "https://app-q1.adeo.no/norg2/ws/Arbeidsfordeling/v1"
 }
