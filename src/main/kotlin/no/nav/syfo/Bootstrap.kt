@@ -327,7 +327,9 @@ suspend fun CoroutineScope.produceManualTask(kafkaProducer: KafkaProducer<String
     val geografiskTilknytning = fetchGeografiskTilknytning(personV3, receivedSykmelding)
 
     val finnBehandlendeEnhetListeResponse = fetchBehandlendeEnhet(arbeidsfordelingV1, geografiskTilknytning.await()).await()
-
+    if (finnBehandlendeEnhetListeResponse?.behandlendeEnhetListe?.firstOrNull()?.enhetId == null) {
+         log.error("finnBehandlendeEnhetListeResponse is null, where to send the task to??? $logKeys", *logValues)
+    }
     // TODO remove and use finnBehandlendeEnhetListeResponse
     val navKontor = fetchNAVKontor(organisasjonEnhetV2, geografiskTilknytning.await()).await()
 
