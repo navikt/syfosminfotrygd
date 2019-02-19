@@ -299,13 +299,13 @@ fun findOprasjonstype(periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode
         "1".toBigInteger()
     } else if (itfh.infotrygdForesp.sMhistorikk.status.kodeMelding != "04" && typeSMinfo?.periode?.arbufoerFOM != null &&
             typeSMinfo.periode?.arbufoerTOM != null &&
-            typeSMinfo.periode.arbufoerFOM.isBefore(periode.periodeFOMDato) &&
-            typeSMinfo.periode.arbufoerTOM.isBefore(periode.periodeTOMDato)) {
+            periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerTOM)) {
         "2".toBigInteger()
     } else if (itfh.infotrygdForesp.sMhistorikk.status.kodeMelding != "04" &&
             typeSMinfo?.periode?.arbufoerFOM != null && typeSMinfo.periode?.arbufoerTOM != null &&
-            typeSMinfo.periode?.arbufoerTOM == periode.periodeTOMDato ||
-            typeSMinfo?.periode?.arbufoerTOM?.isBefore(periode.periodeTOMDato) != null) {
+            typeSMinfo.periode?.arbufoerTOM == periode.periodeTOMDato || (
+            typeSMinfo?.periode?.arbufoerTOM != null &&
+            typeSMinfo.periode.arbufoerTOM.isBefore(periode.periodeTOMDato))) {
         "3".toBigInteger()
     } else {
         throw RuntimeException("Could not determined operasjonstype")
