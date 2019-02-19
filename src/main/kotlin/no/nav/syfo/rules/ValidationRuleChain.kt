@@ -109,16 +109,13 @@ enum class ValidationRuleChain(override val ruleId: Int?, override val status: S
 
     @Description("Hvis ny friskmeldingsdato er mindre enn arbuforTOM registrert i Infotrygd")
     NEW_CLEAN_BILL_DATE_BEFORE_ARBUFORTOM(1516, Status.MANUAL_PROCESSING, { (healthInformation, infotrygdForesp) ->
-        val friskmeldtDato: LocalDate? = healthInformation.aktivitet.periode.sortedPeriodeTOMDate().lastOrNull()
-        val sMhistorikkArbuforTom: LocalDate? = infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.arbufoerTOM
-
-        if (healthInformation.prognose?.isArbeidsforEtterEndtPeriode != null &&
+        healthInformation.prognose?.isArbeidsforEtterEndtPeriode != null &&
                 healthInformation.prognose.isArbeidsforEtterEndtPeriode &&
-                sMhistorikkArbuforTom != null && friskmeldtDato != null) {
-            friskmeldtDato.isBefore(sMhistorikkArbuforTom)
-        } else {
-            false
-        }
+                infotrygdForesp.sMhistorikk?.sykmelding != null &&
+                infotrygdForesp.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()?.periode?.arbufoerTOM != null &&
+                healthInformation.aktivitet.periode.sortedPeriodeTOMDate().lastOrNull() != null &&
+                healthInformation.aktivitet.periode.sortedPeriodeTOMDate().last() == (infotrygdForesp.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()?.periode?.arbufoerTOM) ||
+                healthInformation.aktivitet.periode.sortedPeriodeTOMDate().last().isBefore(infotrygdForesp.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()?.periode?.arbufoerTOM)
     }),
 
     @Description("Hvis ny friskmeldingsdato er mindre enn utbetalingTOM registrert i Infotrygd")
@@ -136,15 +133,11 @@ enum class ValidationRuleChain(override val ruleId: Int?, override val status: S
 
     @Description("Hvis ny friskmeldingsdato er tidligere enn registrert friskmeldingsdato i Infotrygd")
     NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE(1518, Status.MANUAL_PROCESSING, { (healthInformation, infotrygdForesp) ->
-        val friskmeldtDato: LocalDate? = healthInformation.aktivitet.periode.sortedPeriodeTOMDate().lastOrNull()
-        val newfriskmeldtDato: LocalDate? = infotrygdForesp.sMhistorikk?.sykmelding?.firstOrNull()?.periode?.friskmeldtDato
-
-        if (newfriskmeldtDato != null && healthInformation.prognose?.isArbeidsforEtterEndtPeriode != null &&
-                healthInformation.prognose.isArbeidsforEtterEndtPeriode && friskmeldtDato != null) {
-            friskmeldtDato.isBefore(newfriskmeldtDato)
-        } else {
-            false
-        }
+        infotrygdForesp.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()?.periode?.friskmeldtDato != null &&
+                healthInformation.prognose?.isArbeidsforEtterEndtPeriode != null &&
+                healthInformation.prognose.isArbeidsforEtterEndtPeriode &&
+                healthInformation.aktivitet.periode.sortedPeriodeTOMDate().lastOrNull() != null &&
+                healthInformation.aktivitet.periode.sortedPeriodeTOMDate().last().isBefore(infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.friskmeldtDato)
     }),
 
     @Description("Hvis forlengelse utover registrert tiltak FA tiltak")

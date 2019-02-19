@@ -181,7 +181,7 @@ object PostInfotrygdForespSpek : Spek({
             ValidationRuleChain.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_3(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
         }
 
-        it("Should check rule 1516") {
+        it("Should check rule NEW_CLEAN_BILL_DATE_BEFORE_ARBUFORTOM, should trigger rule") {
             val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
             healthInformation.aktivitet.periode.add(
                     HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
@@ -196,13 +196,35 @@ object PostInfotrygdForespSpek : Spek({
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
                 sykmelding.add(TypeSMinfo().apply {
                     periode = TypeSMinfo.Periode().apply {
-                        friskmeldtDato = LocalDate.of(2017, 1, 1)
                         arbufoerTOM = LocalDate.of(2018, 1, 1)
                     }
                 })
             }
 
             ValidationRuleChain.NEW_CLEAN_BILL_DATE_BEFORE_ARBUFORTOM(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
+        }
+
+        it("Should check rule NEW_CLEAN_BILL_DATE_BEFORE_ARBUFORTOM, should NOT trigger rule") {
+            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
+            healthInformation.aktivitet.periode.add(
+                    HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
+                        periodeTOMDato = LocalDate.of(2017, 1, 2)
+                    }
+            )
+            healthInformation.prognose = HelseOpplysningerArbeidsuforhet.Prognose().apply {
+                isArbeidsforEtterEndtPeriode = true
+            }
+
+            val infotrygdForespResponse = deafaultInfotrygdForesp()
+            infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
+                sykmelding.add(TypeSMinfo().apply {
+                    periode = TypeSMinfo.Periode().apply {
+                        arbufoerTOM = LocalDate.of(2017, 1, 1)
+                    }
+                })
+            }
+
+            ValidationRuleChain.NEW_CLEAN_BILL_DATE_BEFORE_ARBUFORTOM(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
         }
 
         it("Should check rule 1517") {
@@ -229,11 +251,33 @@ object PostInfotrygdForespSpek : Spek({
             ValidationRuleChain.NEW_CLEAN_BILL_DATE_BEFORE_PAYOUT(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
         }
 
-        it("Should check rule 1518") {
+        it("Should check rule NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE, should trigger rule") {
             val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
             healthInformation.aktivitet.periode.add(
                     HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                        periodeTOMDato = LocalDate.of(2017, 1, 2)
+                        periodeTOMDato = LocalDate.of(2018, 1, 2)
+                    }
+            )
+            healthInformation.prognose = HelseOpplysningerArbeidsuforhet.Prognose().apply {
+                isArbeidsforEtterEndtPeriode = true
+            }
+
+            val infotrygdForespResponse = deafaultInfotrygdForesp()
+            infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
+                sykmelding.add(TypeSMinfo().apply {
+                    periode = TypeSMinfo.Periode().apply {
+                        friskmeldtDato = LocalDate.of(2018, 1, 3)
+                    }
+                })
+            }
+            ValidationRuleChain.NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
+            }
+
+        it("Should check rule NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE, should NOT trigger rule") {
+            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
+            healthInformation.aktivitet.periode.add(
+                    HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
+                        periodeTOMDato = LocalDate.of(2018, 1, 2)
                     }
             )
             healthInformation.prognose = HelseOpplysningerArbeidsuforhet.Prognose().apply {
@@ -247,14 +291,9 @@ object PostInfotrygdForespSpek : Spek({
                         friskmeldtDato = LocalDate.of(2018, 1, 1)
                     }
                 })
-                sykmelding.add(TypeSMinfo().apply {
-                    periode = TypeSMinfo.Periode().apply {
-                        friskmeldtDato = LocalDate.of(2017, 1, 1)
-                    }
-                })
             }
-            ValidationRuleChain.NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
-            }
+            ValidationRuleChain.NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+        }
 
         it("Should check rule 1544") {
             val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
