@@ -423,19 +423,16 @@ object PostInfotrygdForespSpek : Spek({
 
         it("Should check rule PERIOD_FOR_AA_ENDED, should trigger rule") {
             val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
+            healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
+                periodeFOMDato = LocalDate.of(2017, 2, 1)
+            })
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
                 sykmelding.add(TypeSMinfo().apply {
                     periode = TypeSMinfo.Periode().apply {
                         stans = "AA"
-                        arbufoerFOM = LocalDate.of(2017, 2, 1)
-                    }
-                })
-
-                sykmelding.add(TypeSMinfo().apply {
-                    periode = TypeSMinfo.Periode().apply {
-                        arbufoerFOM = LocalDate.of(2017, 1, 1)
+                        arbufoerTOM = LocalDate.of(2017, 2, 2)
                     }
                 })
             }
@@ -445,19 +442,16 @@ object PostInfotrygdForespSpek : Spek({
 
         it("Should check rule PERIOD_FOR_AA_ENDED, should NOT trigger rule") {
             val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
+            healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
+                periodeFOMDato = LocalDate.of(2017, 2, 2)
+            })
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
                 sykmelding.add(TypeSMinfo().apply {
                     periode = TypeSMinfo.Periode().apply {
-                        stans = "NN"
-                        arbufoerFOM = LocalDate.of(2017, 2, 1)
-                    }
-                })
-
-                sykmelding.add(TypeSMinfo().apply {
-                    periode = TypeSMinfo.Periode().apply {
-                        arbufoerFOM = LocalDate.of(2017, 1, 1)
+                        stans = "AA"
+                        arbufoerTOM = LocalDate.of(2017, 2, 1)
                     }
                 })
             }

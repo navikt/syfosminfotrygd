@@ -172,14 +172,13 @@ enum class ValidationRuleChain(override val ruleId: Int?, override val status: S
         }),
 
     @Description("Hvis perioden er avsluttet (AA)")
-    PERIOD_FOR_AA_ENDED(1549, Status.MANUAL_PROCESSING, { (_, infotrygdForesp) ->
-        infotrygdForesp.sMhistorikk?.sykmelding?.find {
-            if (it.periode?.arbufoerFOM != null) {
-                it.periode.arbufoerFOM == infotrygdForesp.sMhistorikk?.sykmelding?.sortedFOMDate()?.lastOrNull()
-            } else {
-                false
-            }
-        }?.periode?.stans == "AA"
+    PERIOD_FOR_AA_ENDED(1549, Status.MANUAL_PROCESSING, { (healthInformation, infotrygdForesp) ->
+        healthInformation.aktivitet.periode.any {
+                    infotrygdForesp.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()?.periode?.stans != null &&
+                    infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode?.arbufoerTOM != null &&
+                    infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode?.stans == "AA" &&
+                    it.periodeFOMDato.isBefore(infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.arbufoerTOM)
+        }
     }),
 
     @Description("Hvis perioden er avsluttet-frisk (AF)")
