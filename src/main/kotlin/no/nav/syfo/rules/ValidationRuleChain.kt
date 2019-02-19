@@ -113,9 +113,9 @@ enum class ValidationRuleChain(override val ruleId: Int?, override val status: S
                 healthInformation.prognose.isArbeidsforEtterEndtPeriode &&
                 infotrygdForesp.sMhistorikk?.sykmelding != null &&
                 infotrygdForesp.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()?.periode?.arbufoerTOM != null &&
-                healthInformation.aktivitet.periode.sortedPeriodeTOMDate().lastOrNull() != null &&
-                healthInformation.aktivitet.periode.sortedPeriodeTOMDate().last() == (infotrygdForesp.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()?.periode?.arbufoerTOM) ||
-                healthInformation.aktivitet.periode.sortedPeriodeTOMDate().last().isBefore(infotrygdForesp.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()?.periode?.arbufoerTOM)
+                healthInformation.aktivitet.periode.sortedPeriodeTOMDate().lastOrNull() != null && (
+                healthInformation.aktivitet.periode.sortedPeriodeTOMDate().last() == (infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.arbufoerTOM) ||
+                healthInformation.aktivitet.periode.sortedPeriodeTOMDate().last().isBefore(infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.arbufoerTOM))
     }),
 
     @Description("Hvis ny friskmeldingsdato er mindre enn utbetalingTOM registrert i Infotrygd")
