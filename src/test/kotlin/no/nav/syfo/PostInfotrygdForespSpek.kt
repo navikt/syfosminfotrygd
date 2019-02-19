@@ -263,9 +263,9 @@ object PostInfotrygdForespSpek : Spek({
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
-              status = StatusType().apply {
-                  kodeMelding = "04"
-              }
+                status = StatusType().apply {
+                    kodeMelding = "04"
+                }
             }
 
             ValidationRuleChain.NEW_CLEAN_BILL_DATE_BEFORE_ARBUFORTOM(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
