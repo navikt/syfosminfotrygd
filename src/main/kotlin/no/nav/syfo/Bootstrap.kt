@@ -35,16 +35,13 @@ import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.Arbeidsfordeli
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.Tema
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.meldinger.FinnBehandlendeEnhetListeRequest
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.meldinger.FinnBehandlendeEnhetListeResponse
-import no.nav.tjeneste.virksomhet.organisasjonenhet.v2.binding.OrganisasjonEnhetV2
-import no.nav.tjeneste.virksomhet.organisasjonenhet.v2.informasjon.Geografi
-import no.nav.tjeneste.virksomhet.organisasjonenhet.v2.informasjon.Organisasjonsenhet
-import no.nav.tjeneste.virksomhet.organisasjonenhet.v2.meldinger.FinnNAVKontorRequest
 import no.nav.tjeneste.virksomhet.person.v3.binding.PersonV3
 import no.nav.tjeneste.virksomhet.person.v3.informasjon.GeografiskTilknytning
 import no.nav.tjeneste.virksomhet.person.v3.informasjon.NorskIdent
 import no.nav.tjeneste.virksomhet.person.v3.informasjon.PersonIdent
 import no.nav.tjeneste.virksomhet.person.v3.informasjon.Personidenter
 import no.nav.tjeneste.virksomhet.person.v3.meldinger.HentGeografiskTilknytningRequest
+import no.nav.tjeneste.virksomhet.person.v3.meldinger.HentGeografiskTilknytningResponse
 import no.trygdeetaten.xml.eiff._1.XMLEIFellesformat
 import org.apache.cxf.ext.logging.LoggingFeature
 import org.apache.cxf.jaxws.JaxWsProxyFactoryBean
@@ -124,15 +121,7 @@ fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCo
                     configureSTSFor(arbeidsfordelingV1, credentials.serviceuserUsername,
                             credentials.serviceuserPassword, config.securityTokenServiceUrl)
 
-                    val orgnaisasjonEnhet = JaxWsProxyFactoryBean().apply {
-                        address = config.organisasjonEnhetV2EndpointURL
-                        features.add(LoggingFeature())
-                        serviceClass = OrganisasjonEnhetV2::class.java
-                    }.create() as OrganisasjonEnhetV2
-                    configureSTSFor(orgnaisasjonEnhet, credentials.serviceuserUsername,
-                            credentials.serviceuserPassword, config.securityTokenServiceUrl)
-
-                    blockingApplicationLogic(applicationState, kafkaconsumer, kafkaproducer, infotrygdOppdateringProducer, infotrygdSporringProducer, session, personV3, orgnaisasjonEnhet, arbeidsfordelingV1)
+                    blockingApplicationLogic(applicationState, kafkaconsumer, kafkaproducer, infotrygdOppdateringProducer, infotrygdSporringProducer, session, personV3, arbeidsfordelingV1)
                 }
             }.toList()
 
@@ -156,7 +145,6 @@ suspend fun CoroutineScope.blockingApplicationLogic(
     infotrygdSporringProducer: MessageProducer,
     session: Session,
     personV3: PersonV3,
-    organisasjonEnhetV2: OrganisasjonEnhetV2,
     arbeidsfordelingV1: ArbeidsfordelingV1
 ) {
     while (applicationState.running) {
@@ -192,7 +180,7 @@ suspend fun CoroutineScope.blockingApplicationLogic(
 
                 when {
                     results.any { rule -> rule.status == Status.MANUAL_PROCESSING } ->
-                        produceManualTask(kafkaProducer, receivedSykmelding, results, personV3, organisasjonEnhetV2, arbeidsfordelingV1, logKeys, logValues)
+                        produceManualTask(kafkaProducer, receivedSykmelding, results, personV3, arbeidsfordelingV1, logKeys, logValues)
                     else -> sendInfotrygdOppdatering(infotrygdOppdateringProducer, session, createInfotrygdInfo(receivedSykmelding.fellesformat, InfotrygdForespAndHealthInformation(infotrygdForespResponse, receivedSykmelding.sykmelding)), logKeys, logValues)
                 }
             }
@@ -321,59 +309,45 @@ fun findOprasjonstype(periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode
     }
 }
 
-suspend fun CoroutineScope.produceManualTask(kafkaProducer: KafkaProducer<String, ProduceTask>, receivedSykmelding: ReceivedSykmelding, results: List<Rule<Any>>, personV3: PersonV3, organisasjonEnhetV2: OrganisasjonEnhetV2, arbeidsfordelingV1: ArbeidsfordelingV1, logKeys: String, logValues: Array<StructuredArgument>) {
+suspend fun CoroutineScope.produceManualTask(kafkaProducer: KafkaProducer<String, ProduceTask>, receivedSykmelding: ReceivedSykmelding, results: List<Rule<Any>>, personV3: PersonV3, arbeidsfordelingV1: ArbeidsfordelingV1, logKeys: String, logValues: Array<StructuredArgument>) {
     log.info("Message is manual outcome $logKeys", *logValues)
     RULE_HIT_STATUS_COUNTER.labels(Status.MANUAL_PROCESSING.name).inc()
     // TODO what if geografiskTilknytning is null??
     val geografiskTilknytning = fetchGeografiskTilknytning(personV3, receivedSykmelding)
-
-    val finnBehandlendeEnhetListeResponse = fetchBehandlendeEnhet(arbeidsfordelingV1, geografiskTilknytning.await())
+    val finnBehandlendeEnhetListeResponse = fetchBehandlendeEnhet(arbeidsfordelingV1, geografiskTilknytning.await().geografiskTilknytning)
     if (finnBehandlendeEnhetListeResponse.await()?.behandlendeEnhetListe?.firstOrNull()?.enhetId == null) {
         log.error("finnBehandlendeEnhetListeResponse is null, where to send the task to??? $logKeys", *logValues)
     }
-    // TODO remove and use finnBehandlendeEnhetListeResponse
-    val navKontor = fetchNAVKontor(organisasjonEnhetV2, geografiskTilknytning.await()).await()
-
-    if (navKontor?.enhetId != null) {
-        createTask(kafkaProducer, receivedSykmelding, results, navKontor, logKeys, logValues)
-    } else {
-        log.error("Nav kontor is null, where to send the task to??? $logKeys", *logValues) // TODO
+    when (geografiskTilknytning.await().diskresjonskode?.kodeverksRef) {
+        "SPSF" -> createTask(kafkaProducer, receivedSykmelding, results, "2103", logKeys, logValues)
+        else -> createTask(kafkaProducer, receivedSykmelding, results, findNavOffice(finnBehandlendeEnhetListeResponse.await()), logKeys, logValues)
     }
 }
 
-fun createTask(kafkaProducer: KafkaProducer<String, ProduceTask>, receivedSykmelding: ReceivedSykmelding, results: List<Rule<Any>>, navKontor: Organisasjonsenhet, logKeys: String, logValues: Array<StructuredArgument>) {
+fun createTask(kafkaProducer: KafkaProducer<String, ProduceTask>, receivedSykmelding: ReceivedSykmelding, results: List<Rule<Any>>, navKontor: String, logKeys: String, logValues: Array<StructuredArgument>) {
     kafkaProducer.send(ProducerRecord("aapen-syfo-oppgave-produserOppgave", ProduceTask().apply {
         setMessageId(receivedSykmelding.msgId)
         setUserIdent(receivedSykmelding.personNrPasient)
         setUserTypeCode("PERSON")
-        setTaskType("SYM")
+        setTaskType("BEH_EL_SYM")
         setFieldCode("SYM")
         setSubcategoryType("SYK_SYK")
         setPriorityCode("NORM_SYK")
         setDescription("Kunne ikkje oppdatere Infotrygd automatisk, på grunn av følgende: ${results.joinToString(", ", prefix = "\"", postfix = "\"")}")
         setStartsInDays(0)
         setEndsInDays(21)
-        setResponsibleUnit(navKontor.enhetId)
+        setResponsibleUnit(navKontor)
         setFollowUpText("Se beskrivelse")
     }))
     log.info("Message sendt to topic: aapen-syfo-oppgave-produserOppgave $logKeys", *logValues)
 }
 
-fun CoroutineScope.fetchGeografiskTilknytning(personV3: PersonV3, receivedSykmelding: ReceivedSykmelding): Deferred<GeografiskTilknytning> =
+fun CoroutineScope.fetchGeografiskTilknytning(personV3: PersonV3, receivedSykmelding: ReceivedSykmelding): Deferred<HentGeografiskTilknytningResponse> =
         retryAsync("tps_hent_geografisktilknytning", IOException::class, WstxException::class) {
             personV3.hentGeografiskTilknytning(HentGeografiskTilknytningRequest().withAktoer(PersonIdent().withIdent(
                     NorskIdent()
                             .withIdent(receivedSykmelding.sykmelding.pasient.fodselsnummer.id)
-                            .withType(Personidenter().withValue(receivedSykmelding.sykmelding.pasient.fodselsnummer.typeId.v))))).geografiskTilknytning
-        }
-
-fun CoroutineScope.fetchNAVKontor(organisasjonEnhetV2: OrganisasjonEnhetV2, geografiskTilknytning: GeografiskTilknytning?): Deferred<Organisasjonsenhet?> =
-        retryAsync("finn_nav_kontor", IOException::class, WstxException::class) {
-            organisasjonEnhetV2.finnNAVKontor(FinnNAVKontorRequest().apply {
-                this.geografiskTilknytning = Geografi().apply {
-                    this.value = geografiskTilknytning?.geografiskTilknytning ?: "0"
-                }
-            }).navKontor
+                            .withType(Personidenter().withValue(receivedSykmelding.sykmelding.pasient.fodselsnummer.typeId.v)))))
         }
 
 fun CoroutineScope.fetchBehandlendeEnhet(arbeidsfordelingV1: ArbeidsfordelingV1, geografiskTilknytning: GeografiskTilknytning?): Deferred<FinnBehandlendeEnhetListeResponse?> =
@@ -391,3 +365,11 @@ fun CoroutineScope.fetchBehandlendeEnhet(arbeidsfordelingV1: ArbeidsfordelingV1,
                 arbeidsfordelingKriterier = afk
             })
         }
+
+fun findNavOffice(finnBehandlendeEnhetListeResponse: FinnBehandlendeEnhetListeResponse?): String =
+    if (finnBehandlendeEnhetListeResponse?.behandlendeEnhetListe?.firstOrNull()?.enhetId == null) {
+        log.error("finnBehandlendeEnhetListeResponse is null, where to send the task to???")
+        "0393"
+    } else {
+        finnBehandlendeEnhetListeResponse.behandlendeEnhetListe.first().enhetId
+    }

@@ -24,7 +24,6 @@ buildscript {
     ext.kotlinx_serialization_version= '0.9.0'
     ext.cxf_version = '3.2.5'
     ext.nav_person_v3_version = '3.2.0'
-    ext.nav_organisasjonEnhet_v2 = '2.1.0'
     ext.javax_jaxws_api_version = '2.2.1'
     ext.saaj_version = "1.4.0"
     ext.sykmelding_version = "1.1-SNAPSHOT"
@@ -100,7 +99,6 @@ dependencies {
     implementation "org.apache.avro:avro:$avro_version"
     implementation "no.nav.syfo:syfooppgave-schemas:$syfooppgave_schemas_version"
     implementation "no.nav.tjenester:nav-person-v3-tjenestespesifikasjon:$nav_person_v3_version"
-    implementation "no.nav.tjenester:nav-organisasjonEnhet-v2-tjenestespesifikasjon:$nav_organisasjonEnhet_v2:jaxws"
     implementation "no.nav.helse.xml:fellesformat:$felleformavV1_version"
     implementation "no.nav.helse.xml:sm2013:$sykmelding_version"
     implementation "no.nav.helse.xml:infotrygd-foresp:$infotrygd_foresp_version"
