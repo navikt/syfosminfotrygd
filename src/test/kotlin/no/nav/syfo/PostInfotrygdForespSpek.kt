@@ -79,7 +79,7 @@ object PostInfotrygdForespSpek : Spek({
             ValidationRuleChain.PATIENT_NOT_IN_IP(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
             }
 
-        it("Should check rule 1513") {
+        it("Should check rule PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE, should trigger rule") {
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
@@ -93,8 +93,7 @@ object PostInfotrygdForespSpek : Spek({
 
             val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
             healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                periodeFOMDato = LocalDate.of(2018, 1, 7)
-                periodeTOMDato = LocalDate.of(2018, 1, 9)
+                periodeFOMDato = LocalDate.of(2018, 1, 1)
             })
 
             ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true

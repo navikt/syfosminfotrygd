@@ -38,18 +38,10 @@ enum class ValidationRuleChain(override val ruleId: Int?, override val status: S
     @Description("Hvis delvis sammenfallende sykmeldingsperiode er registrert i Infotrygd")
     PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE(1513, Status.MANUAL_PROCESSING, { (healthInformation, infotrygdForesp) ->
         healthInformation.aktivitet.periode.any { healthInformationPeriods ->
-            if (infotrygdForesp.sMhistorikk?.sykmelding != null) {
-            infotrygdForesp.sMhistorikk.sykmelding
+            infotrygdForesp.sMhistorikk?.sykmelding != null && infotrygdForesp.sMhistorikk.sykmelding
                     .any { infotrygdForespSykmelding ->
-                        if (infotrygdForespSykmelding.periode?.arbufoerFOM != null && infotrygdForespSykmelding.periode?.arbufoerTOM != null) {
-                        healthInformationPeriods.periodeFOMDato in infotrygdForespSykmelding.range() || healthInformationPeriods.periodeTOMDato in infotrygdForespSykmelding.range()
-                        } else {
-                            false
-                        }
-                        }
-            } else {
-                false
-            }
+                        infotrygdForespSykmelding.periode?.arbufoerFOM != null && healthInformationPeriods.periodeFOMDato.isBefore(infotrygdForespSykmelding.periode?.arbufoerFOM)
+                    }
         }
     }),
 
