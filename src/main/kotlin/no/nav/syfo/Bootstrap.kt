@@ -326,9 +326,7 @@ suspend fun CoroutineScope.produceManualTask(kafkaProducer: KafkaProducer<String
     RULE_HIT_STATUS_COUNTER.labels(Status.MANUAL_PROCESSING.name).inc()
     // TODO what if geografiskTilknytning is null??
     val geografiskTilknytning = fetchGeografiskTilknytning(personV3, receivedSykmelding)
-    if (geografiskTilknytning.await().geografiskTilknytning == null) {
-        log.error("geografiskTilknytning is null, where to send the task to??? $logKeys", *logValues)
-    }
+
     val finnBehandlendeEnhetListeResponse = fetchBehandlendeEnhet(arbeidsfordelingV1, geografiskTilknytning.await())
     if (finnBehandlendeEnhetListeResponse.await()?.behandlendeEnhetListe?.firstOrNull()?.enhetId == null) {
         log.error("finnBehandlendeEnhetListeResponse is null, where to send the task to??? $logKeys", *logValues)
@@ -378,12 +376,14 @@ fun CoroutineScope.fetchNAVKontor(organisasjonEnhetV2: OrganisasjonEnhetV2, geog
             }).navKontor
         }
 
-fun CoroutineScope.fetchBehandlendeEnhet(arbeidsfordelingV1: ArbeidsfordelingV1, geografiskTilknytning: GeografiskTilknytning): Deferred<FinnBehandlendeEnhetListeResponse?> =
+fun CoroutineScope.fetchBehandlendeEnhet(arbeidsfordelingV1: ArbeidsfordelingV1, geografiskTilknytning: GeografiskTilknytning?): Deferred<FinnBehandlendeEnhetListeResponse?> =
         retryAsync("finn_nav_kontor", IOException::class, WstxException::class) {
             arbeidsfordelingV1.finnBehandlendeEnhetListe(FinnBehandlendeEnhetListeRequest().apply {
                 val afk = ArbeidsfordelingKriterier()
-                afk.geografiskTilknytning = no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.Geografi().apply {
-                    kodeverksRef = geografiskTilknytning.geografiskTilknytning
+                if (geografiskTilknytning?.geografiskTilknytning != null) {
+                    afk.geografiskTilknytning = no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.Geografi().apply {
+                        kodeverksRef = geografiskTilknytning.geografiskTilknytning
+                    }
                 }
                 afk.tema = Tema().apply {
                     kodeverksRef = "SYM"
