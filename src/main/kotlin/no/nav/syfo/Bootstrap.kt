@@ -367,11 +367,11 @@ fun CoroutineScope.fetchGeografiskTilknytning(personV3: PersonV3, receivedSykmel
                             .withType(Personidenter().withValue(receivedSykmelding.sykmelding.pasient.fodselsnummer.typeId.v))))).geografiskTilknytning
         }
 
-fun CoroutineScope.fetchNAVKontor(organisasjonEnhetV2: OrganisasjonEnhetV2, geografiskTilknytning: GeografiskTilknytning): Deferred<Organisasjonsenhet?> =
+fun CoroutineScope.fetchNAVKontor(organisasjonEnhetV2: OrganisasjonEnhetV2, geografiskTilknytning: GeografiskTilknytning?): Deferred<Organisasjonsenhet?> =
         retryAsync("finn_nav_kontor", IOException::class, WstxException::class) {
             organisasjonEnhetV2.finnNAVKontor(FinnNAVKontorRequest().apply {
                 this.geografiskTilknytning = Geografi().apply {
-                    this.value = geografiskTilknytning.geografiskTilknytning ?: "0"
+                    this.value = geografiskTilknytning?.geografiskTilknytning ?: "0"
                 }
             }).navKontor
         }
