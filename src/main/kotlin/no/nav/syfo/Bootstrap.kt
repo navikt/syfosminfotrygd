@@ -110,6 +110,7 @@ fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCo
 
                     val personV3 = JaxWsProxyFactoryBean().apply {
                         address = config.personV3EndpointURL
+                        features.add(LoggingFeature())
                         serviceClass = PersonV3::class.java
                     }.create() as PersonV3
                     configureSTSFor(personV3, credentials.serviceuserUsername,
@@ -323,11 +324,13 @@ fun findOprasjonstype(periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode
 suspend fun CoroutineScope.produceManualTask(kafkaProducer: KafkaProducer<String, ProduceTask>, receivedSykmelding: ReceivedSykmelding, results: List<Rule<Any>>, personV3: PersonV3, organisasjonEnhetV2: OrganisasjonEnhetV2, arbeidsfordelingV1: ArbeidsfordelingV1, logKeys: String, logValues: Array<StructuredArgument>) {
     log.info("Message is manual outcome $logKeys", *logValues)
     RULE_HIT_STATUS_COUNTER.labels(Status.MANUAL_PROCESSING.name).inc()
-
+    // TODO what if geografiskTilknytning is null??
     val geografiskTilknytning = fetchGeografiskTilknytning(personV3, receivedSykmelding)
-
-    val finnBehandlendeEnhetListeResponse = fetchBehandlendeEnhet(arbeidsfordelingV1, geografiskTilknytning.await()).await()
-    if (finnBehandlendeEnhetListeResponse?.behandlendeEnhetListe?.firstOrNull()?.enhetId == null) {
+    if (geografiskTilknytning.await().geografiskTilknytning == null) {
+        log.error("geografiskTilknytning is null, where to send the task to??? $logKeys", *logValues)
+    }
+    val finnBehandlendeEnhetListeResponse = fetchBehandlendeEnhet(arbeidsfordelingV1, geografiskTilknytning.await())
+    if (finnBehandlendeEnhetListeResponse.await()?.behandlendeEnhetListe?.firstOrNull()?.enhetId == null) {
         log.error("finnBehandlendeEnhetListeResponse is null, where to send the task to??? $logKeys", *logValues)
     }
     // TODO remove and use finnBehandlendeEnhetListeResponse
