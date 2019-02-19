@@ -32,7 +32,6 @@ import no.nav.syfo.sak.avro.ProduceTask
 import no.nav.syfo.ws.configureSTSFor
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.binding.ArbeidsfordelingV1
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.ArbeidsfordelingKriterier
-import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.Oppgavetyper
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.Tema
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.meldinger.FinnBehandlendeEnhetListeRequest
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.meldinger.FinnBehandlendeEnhetListeResponse
@@ -328,7 +327,6 @@ suspend fun CoroutineScope.produceManualTask(kafkaProducer: KafkaProducer<String
     val geografiskTilknytning = fetchGeografiskTilknytning(personV3, receivedSykmelding)
 
     val finnBehandlendeEnhetListeResponse = fetchBehandlendeEnhet(arbeidsfordelingV1, geografiskTilknytning.await()).await()
-    log.info("finnBehandlendeEnhetListeResponse: ", objectMapper.writeValueAsString(finnBehandlendeEnhetListeResponse))
 
     // TODO remove and use finnBehandlendeEnhetListeResponse
     val navKontor = fetchNAVKontor(organisasjonEnhetV2, geografiskTilknytning.await()).await()
@@ -384,9 +382,6 @@ fun CoroutineScope.fetchBehandlendeEnhet(arbeidsfordelingV1: ArbeidsfordelingV1,
                 }
                 afk.tema = Tema().apply {
                     kodeverksRef = "SYM"
-                }
-                afk.oppgavetype = Oppgavetyper().apply {
-                    kodeverksRef = "BEH_EL_SYM"
                 }
                 arbeidsfordelingKriterier = afk
             })
