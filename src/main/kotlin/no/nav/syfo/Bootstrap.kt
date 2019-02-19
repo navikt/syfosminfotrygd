@@ -28,6 +28,7 @@ import no.nav.syfo.api.registerNaisApi
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.model.Status
 import no.nav.syfo.rules.ValidationRuleChain
+import no.nav.syfo.rules.sortedSMInfos
 import no.nav.syfo.sak.avro.ProduceTask
 import no.nav.syfo.ws.configureSTSFor
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.binding.ArbeidsfordelingV1
@@ -289,10 +290,11 @@ fun createInfotrygdInfo(marshalledFellesformat: String, itfh: InfotrygdForespAnd
 
 fun findOprasjonstype(periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode, itfh: InfotrygdForespAndHealthInformation): BigInteger {
     // FORSTEGANGS = 1, PAFOLGENDE = 2, ENDRING = 3
-    val typeSMinfo = itfh.infotrygdForesp.sMhistorikk.sykmelding.firstOrNull()
+    val typeSMinfo = itfh.infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().lastOrNull()
 
     // TODO fixed this to implementet corretly
-    return if (itfh.infotrygdForesp.sMhistorikk.status.kodeMelding == "04") {
+    return if (itfh.infotrygdForesp.sMhistorikk.status.kodeMelding == "04" ||
+            (typeSMinfo?.periode?.arbufoerTOM != null && periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerTOM))) {
         "1".toBigInteger()
     } else if (itfh.infotrygdForesp.sMhistorikk.status.kodeMelding != "04" && typeSMinfo?.periode?.arbufoerFOM != null &&
             typeSMinfo.periode?.arbufoerTOM != null &&
