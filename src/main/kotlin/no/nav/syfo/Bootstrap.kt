@@ -290,12 +290,10 @@ fun createInfotrygdInfo(marshalledFellesformat: String, itfh: InfotrygdForespAnd
 
 fun findOprasjonstype(periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode, itfh: InfotrygdForespAndHealthInformation): BigInteger {
     // FORSTEGANGS = 1, PAFOLGENDE = 2, ENDRING = 3
-    val typeSMinfo = itfh.infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().lastOrNull()
+    val typeSMinfo = itfh.infotrygdForesp.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()
 
     // TODO fixed this to implementet corretly
-    return if (itfh.infotrygdForesp.sMhistorikk.status.kodeMelding == "04" ||
-            (typeSMinfo?.periode?.arbufoerTOM != null && periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerTOM)) ||
-            (typeSMinfo?.periode?.arbufoerFOM != null && periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerFOM))) {
+    return if (itfh.infotrygdForesp.sMhistorikk.status.kodeMelding == "04") {
         "1".toBigInteger()
     } else if (itfh.infotrygdForesp.sMhistorikk.status.kodeMelding != "04" && typeSMinfo?.periode?.arbufoerFOM != null &&
             typeSMinfo.periode?.arbufoerTOM != null &&
@@ -303,7 +301,7 @@ fun findOprasjonstype(periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode
         "2".toBigInteger()
     } else if (itfh.infotrygdForesp.sMhistorikk.status.kodeMelding != "04" &&
             typeSMinfo?.periode?.arbufoerFOM != null && typeSMinfo.periode?.arbufoerTOM != null &&
-            typeSMinfo.periode?.arbufoerTOM == periode.periodeTOMDato || (
+            typeSMinfo.periode?.arbufoerFOM == periode.periodeFOMDato || (
             typeSMinfo?.periode?.arbufoerTOM != null &&
             typeSMinfo.periode.arbufoerTOM.isBefore(periode.periodeTOMDato))) {
         "3".toBigInteger()
