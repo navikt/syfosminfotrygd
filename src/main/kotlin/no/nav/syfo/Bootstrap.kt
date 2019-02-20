@@ -366,7 +366,6 @@ fun CoroutineScope.fetchBehandlendeEnhet(arbeidsfordelingV1: ArbeidsfordelingV1,
 
 fun findNavOffice(finnBehandlendeEnhetListeResponse: FinnBehandlendeEnhetListeResponse?): String =
     if (finnBehandlendeEnhetListeResponse?.behandlendeEnhetListe?.firstOrNull()?.enhetId == null) {
-        log.error("finnBehandlendeEnhetListeResponse is null, where to send the task to???")
         "0393"
     } else {
         finnBehandlendeEnhetListeResponse.behandlendeEnhetListe.first().enhetId
