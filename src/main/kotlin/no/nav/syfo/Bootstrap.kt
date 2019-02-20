@@ -291,19 +291,18 @@ fun createInfotrygdInfo(marshalledFellesformat: String, itfh: InfotrygdForespAnd
 fun findOprasjonstype(periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode, itfh: InfotrygdForespAndHealthInformation): BigInteger {
     // FORSTEGANGS = 1, PAFOLGENDE = 2, ENDRING = 3
     val typeSMinfo = itfh.infotrygdForesp.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()
+        ?: return 1.toBigInteger()
 
     // TODO fixed this to implementet corretly
     return if (itfh.infotrygdForesp.sMhistorikk.status.kodeMelding == "04") {
         "1".toBigInteger()
-    } else if (itfh.infotrygdForesp.sMhistorikk.status.kodeMelding != "04" && typeSMinfo?.periode?.arbufoerFOM != null &&
-            typeSMinfo.periode?.arbufoerTOM != null &&
-            periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerTOM)) {
+    } else if (typeSMinfo.periode.arbufoerTOM != null &&
+            (periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerTOM) ||
+                    periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerFOM))) {
         "2".toBigInteger()
-    } else if (itfh.infotrygdForesp.sMhistorikk.status.kodeMelding != "04" &&
-            typeSMinfo?.periode?.arbufoerFOM != null && typeSMinfo.periode?.arbufoerTOM != null &&
-            typeSMinfo.periode?.arbufoerFOM == periode.periodeFOMDato || (
-            typeSMinfo?.periode?.arbufoerTOM != null &&
-            typeSMinfo.periode.arbufoerTOM.isBefore(periode.periodeTOMDato))) {
+    } else if (typeSMinfo.periode.arbufoerTOM != null &&
+            (typeSMinfo.periode.arbufoerFOM == periode.periodeFOMDato ||
+                            typeSMinfo.periode.arbufoerTOM.isBefore(periode.periodeTOMDato))) {
         "3".toBigInteger()
     } else {
         throw RuntimeException("Could not determined operasjonstype")

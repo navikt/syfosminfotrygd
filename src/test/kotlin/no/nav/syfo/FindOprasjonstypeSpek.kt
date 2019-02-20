@@ -72,6 +72,36 @@ object FindOprasjonstypeSpek : Spek({
                     InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)) shouldEqual 2.toBigInteger()
         }
 
+        it("Should set oprasjonstype to 2") {
+            val healthInformation = HelseOpplysningerArbeidsuforhet().apply {
+                aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
+                    periode.add(
+                            HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
+                                periodeFOMDato = LocalDate.of(2019, 2, 20)
+                                periodeTOMDato = LocalDate.of(2019, 3, 29)
+                            }
+                    )
+                }
+            }
+
+            val infotrygdForesp = InfotrygdForesp().apply {
+                sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
+                    sykmelding.add(TypeSMinfo().apply {
+                        periode = TypeSMinfo.Periode().apply {
+                            arbufoerFOM = LocalDate.of(2017, 4, 20)
+                            arbufoerTOM = LocalDate.of(2017, 5, 29)
+                        }
+                    })
+                    status = StatusType().apply {
+                        kodeMelding = "00"
+                    }
+                }
+            }
+
+            findOprasjonstype(healthInformation.aktivitet.periode.first(),
+                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)) shouldEqual 2.toBigInteger()
+        }
+
         it("Should set oprasjonstype to 3") {
             val healthInformation = HelseOpplysningerArbeidsuforhet().apply {
                 aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
