@@ -20,6 +20,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.launch
 import net.logstash.logback.argument.StructuredArgument
 import net.logstash.logback.argument.StructuredArguments.keyValue
+import no.kith.xmlstds.msghead._2006_05_24.XMLMsgHead
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.helse.sm2013.KontrollSystemBlokk
@@ -160,7 +161,12 @@ suspend fun CoroutineScope.blockingApplicationLogic(
                 log.info("Received a SM2013 $logKeys", *logValues)
 
                 // TODO add retry to tempQueue
-                val infotrygdForespRequest = createInfotrygdForesp(receivedSykmelding.personNrPasient, receivedSykmelding.sykmelding, receivedSykmelding.personNrLege)
+
+                val fellesformat = fellesformatUnmarshaller.unmarshal(StringReader(receivedSykmelding.fellesformat)) as XMLEIFellesformat
+
+                val healthInformation = extractHelseOpplysningerArbeidsuforhet(fellesformat)
+
+                val infotrygdForespRequest = createInfotrygdForesp(receivedSykmelding.personNrPasient, healthInformation, receivedSykmelding.personNrLege)
                 val temporaryQueue = session.createTemporaryQueue()
                 sendInfotrygdSporring(infotrygdSporringProducer, session, infotrygdForespRequest, temporaryQueue)
                 val tmpConsumer = session.createConsumer(temporaryQueue)
@@ -174,7 +180,7 @@ suspend fun CoroutineScope.blockingApplicationLogic(
 
                 log.info("Going through rules $logKeys", *logValues)
 
-                val validationRuleResults = ValidationRuleChain.values().executeFlow(receivedSykmelding.sykmelding, infotrygdForespResponse)
+                val validationRuleResults = ValidationRuleChain.values().executeFlow(healthInformation, infotrygdForespResponse)
 
                 val results = listOf(validationRuleResults).flatten()
                 log.info("Rules hit {}, $logKeys", results.map { it.name }, *logValues)
@@ -182,7 +188,7 @@ suspend fun CoroutineScope.blockingApplicationLogic(
                 when {
                     results.any { rule -> rule.status == Status.MANUAL_PROCESSING } ->
                         produceManualTask(kafkaProducer, receivedSykmelding, results, personV3, arbeidsfordelingV1, logKeys, logValues)
-                    else -> sendInfotrygdOppdatering(infotrygdOppdateringProducer, session, createInfotrygdInfo(receivedSykmelding.fellesformat, InfotrygdForespAndHealthInformation(infotrygdForespResponse, receivedSykmelding.sykmelding)), logKeys, logValues)
+                    else -> sendInfotrygdOppdatering(infotrygdOppdateringProducer, session, createInfotrygdInfo(receivedSykmelding.fellesformat, InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation)), logKeys, logValues)
                 }
             }
         }
@@ -344,8 +350,8 @@ fun CoroutineScope.fetchGeografiskTilknytning(personV3: PersonV3, receivedSykmel
         retryAsync("tps_hent_geografisktilknytning", IOException::class, WstxException::class) {
             personV3.hentGeografiskTilknytning(HentGeografiskTilknytningRequest().withAktoer(PersonIdent().withIdent(
                     NorskIdent()
-                            .withIdent(receivedSykmelding.sykmelding.pasient.fodselsnummer.id)
-                            .withType(Personidenter().withValue(receivedSykmelding.sykmelding.pasient.fodselsnummer.typeId.v)))))
+                            .withIdent(receivedSykmelding.personNrPasient)
+                            .withType(Personidenter().withValue("FNR")))))
         }
 
 fun CoroutineScope.fetchBehandlendeEnhet(arbeidsfordelingV1: ArbeidsfordelingV1, geografiskTilknytning: GeografiskTilknytning?): Deferred<FinnBehandlendeEnhetListeResponse?> =
@@ -354,11 +360,11 @@ fun CoroutineScope.fetchBehandlendeEnhet(arbeidsfordelingV1: ArbeidsfordelingV1,
                 val afk = ArbeidsfordelingKriterier()
                 if (geografiskTilknytning?.geografiskTilknytning != null) {
                     afk.geografiskTilknytning = no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.Geografi().apply {
-                        kodeverksRef = geografiskTilknytning.geografiskTilknytning
+                        value = geografiskTilknytning.geografiskTilknytning
                     }
                 }
                 afk.tema = Tema().apply {
-                    kodeverksRef = "SYM"
+                    value = "SYM"
                 }
                 arbeidsfordelingKriterier = afk
             })
@@ -370,3 +376,8 @@ fun findNavOffice(finnBehandlendeEnhetListeResponse: FinnBehandlendeEnhetListeRe
     } else {
         finnBehandlendeEnhetListeResponse.behandlendeEnhetListe.first().enhetId
     }
+
+inline fun <reified T> XMLEIFellesformat.get() = this.any.find { it is T } as T
+
+fun extractHelseOpplysningerArbeidsuforhet(fellesformat: XMLEIFellesformat): HelseOpplysningerArbeidsuforhet =
+        fellesformat.get<XMLMsgHead>().document[0].refDoc.content.any[0] as HelseOpplysningerArbeidsuforhet

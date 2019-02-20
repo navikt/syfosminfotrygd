@@ -1,10 +1,9 @@
 package no.nav.syfo.model
 
-import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import java.time.LocalDateTime
 
 data class ReceivedSykmelding(
-    val sykmelding: HelseOpplysningerArbeidsuforhet,
+    val sykmelding: Sykmelding,
     val aktoerIdPasient: String,
     val personNrPasient: String,
     val aktoerIdLege: String,
