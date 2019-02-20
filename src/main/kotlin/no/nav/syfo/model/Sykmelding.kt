@@ -23,7 +23,7 @@ data class Sykmelding(
 )
 
 data class MedisinskVurdering(
-    val hovedDiagnose: Diagnose,
+    val hovedDiagnose: Diagnose?,
     val bidiagnoser: List<Diagnose>,
     val svangerskap: Boolean,
     val yrkesskade: Boolean,
