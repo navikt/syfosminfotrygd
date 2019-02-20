@@ -313,12 +313,10 @@ fun findOprasjonstype(periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode
 suspend fun CoroutineScope.produceManualTask(kafkaProducer: KafkaProducer<String, ProduceTask>, receivedSykmelding: ReceivedSykmelding, results: List<Rule<Any>>, personV3: PersonV3, arbeidsfordelingV1: ArbeidsfordelingV1, logKeys: String, logValues: Array<StructuredArgument>) {
     log.info("Message is manual outcome $logKeys", *logValues)
     RULE_HIT_STATUS_COUNTER.labels(Status.MANUAL_PROCESSING.name).inc()
-    // TODO what if geografiskTilknytning is null??
+
     val geografiskTilknytning = fetchGeografiskTilknytning(personV3, receivedSykmelding)
     val finnBehandlendeEnhetListeResponse = fetchBehandlendeEnhet(arbeidsfordelingV1, geografiskTilknytning.await().geografiskTilknytning)
-    if (finnBehandlendeEnhetListeResponse.await()?.behandlendeEnhetListe?.firstOrNull()?.enhetId == null) {
-        log.error("finnBehandlendeEnhetListeResponse is null, where to send the task to??? $logKeys", *logValues)
-    }
+
     when (geografiskTilknytning.await().diskresjonskode?.kodeverksRef) {
         "SPSF" -> createTask(kafkaProducer, receivedSykmelding, results, "2103", logKeys, logValues)
         else -> createTask(kafkaProducer, receivedSykmelding, results, findNavOffice(finnBehandlendeEnhetListeResponse.await()), logKeys, logValues)
