@@ -8,5 +8,7 @@
   "securityTokenServiceUrl" : "https://sts-q1.preprod.local/SecurityTokenServiceProvider/",
   "infotrygdSporringQueue" : "QA.Q291.IT00_FORESPORSEL_XML",
   "infotrygdOppdateringQueue" : "QA.Q1_SYFOSMINFOTRYGD.INFOTRYGD_OPPDATERING",
-  "arbeidsfordelingV1EndpointURL" : "https://app-q1.adeo.no/norg2/ws/Arbeidsfordeling/v1"
+  "arbeidsfordelingV1EndpointURL" : "https://app-q1.adeo.no/norg2/ws/Arbeidsfordeling/v1",
+  "sm2013AutomaticHandlingTopic" : "privat-syfo-sm2013-automatiskBehandling",
+  "smPaperAutomaticHandlingTopic" : "privat-syfo-smpapir-automatiskBehandling"
 }
