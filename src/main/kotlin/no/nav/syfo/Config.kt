@@ -15,7 +15,6 @@ data class ApplicationConfig(
     val kafkaBootstrapServers: String,
     val sm2013AutomaticHandlingTopic: String = "privat-syfo-sm2013-automatiskBehandling",
     val smPaperAutomaticHandlingTopic: String = "privat-syfo-smpapir-automatiskBehandling",
-    val organisasjonEnhetV2EndpointURL: String,
     val personV3EndpointURL: String,
     val securityTokenServiceUrl: String,
     val infotrygdSporringQueue: String,
