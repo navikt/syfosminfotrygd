@@ -37,7 +37,7 @@ data class Diagnose(
 )
 
 data class AnnenFraversArsak(
-    val beskrivelse: String,
+    val beskrivelse: String?,
     val grunn: List<AnnenFraverGrunn>
 )
 
