@@ -27,7 +27,8 @@ object KafkaITSpek : Spek({
             mqGatewayName = "mqGateway", kafkaBootstrapServers = embeddedEnvironment.brokersURL,
             mqChannelName = "syfomottak", infotrygdOppdateringQueue = "apprequeue",
             infotrygdSporringQueue = "infotrygdqueue",
-            personV3EndpointURL = "personApi", securityTokenServiceUrl = "secApi", arbeidsfordelingV1EndpointURL = "arkapi"
+            personV3EndpointURL = "personApi", securityTokenServiceUrl = "secApi", arbeidsfordelingV1EndpointURL = "arkapi",
+            sm2013AutomaticHandlingTopic = "topic1", smPaperAutomaticHandlingTopic = "topic2"
     )
 
     val producer = KafkaProducer<String, String>(readProducerConfig(config, credentials, StringSerializer::class).apply {
