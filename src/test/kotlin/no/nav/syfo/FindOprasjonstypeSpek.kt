@@ -149,7 +149,6 @@ object FindOprasjonstypeSpek : Spek({
                     sykmelding.add(TypeSMinfo().apply {
                         periode = TypeSMinfo.Periode().apply {
                             arbufoerFOM = LocalDate.of(2016, 7, 10)
-
                         }
                     })
                     status = StatusType().apply {

@@ -300,7 +300,7 @@ fun findOprasjonstype(periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode
 
     // TODO fixed this to implementet corretly
     return if (itfh.infotrygdForesp.sMhistorikk.status.kodeMelding == "04" ||
-            (typeSMinfo.periode.arbufoerFOM..periode.periodeFOMDato).daysBetween() > 280 ) {
+            (typeSMinfo.periode.arbufoerFOM..periode.periodeFOMDato).daysBetween() > 280) {
         "1".toBigInteger()
     } else if (typeSMinfo.periode.arbufoerTOM != null &&
             (periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerTOM) ||
