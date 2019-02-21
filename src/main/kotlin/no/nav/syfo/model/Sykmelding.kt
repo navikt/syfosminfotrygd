@@ -9,8 +9,8 @@ data class Sykmelding(
     val medisinskVurdering: MedisinskVurdering,
     val skjermesForPasient: Boolean,
     val perioder: List<Periode>,
-    val prognose: Prognose,
-    val utdypendeOpplysninger: Map<String, Map<String, SporsmalSvar>>,
+    val prognose: Prognose?,
+    val utdypendeOpplysninger: Map<String, Map<String, SporsmalSvar>>?,
     val tiltakArbeidsplassen: String?,
     val tiltakNAV: String?,
     val andreTiltak: String?,
@@ -62,7 +62,7 @@ data class ArbeidsrelatertArsak(
 )
 
 data class MedisinskArsak(
-    val beskrivelse: String,
+    val beskrivelse: String?,
     val arsak: List<MedisinskArsakType>
 )
 
