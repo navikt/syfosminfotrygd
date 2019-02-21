@@ -57,7 +57,7 @@ data class AktivitetIkkeMulig(
 )
 
 data class ArbeidsrelatertArsak(
-    val beskrivelse: String,
+    val beskrivelse: String?,
     val arsak: List<ArbeidsrelatertArsakType>
 )
 
