@@ -50,6 +50,7 @@ import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.StringDeserializer
+import org.joda.time.Days.daysBetween
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -60,6 +61,7 @@ import java.math.BigInteger
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import javax.jms.MessageProducer
@@ -297,7 +299,8 @@ fun findOprasjonstype(periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode
         ?: return 1.toBigInteger()
 
     // TODO fixed this to implementet corretly
-    return if (itfh.infotrygdForesp.sMhistorikk.status.kodeMelding == "04") {
+    return if (itfh.infotrygdForesp.sMhistorikk.status.kodeMelding == "04" ||
+            (typeSMinfo.periode.arbufoerFOM..periode.periodeFOMDato).daysBetween() > 280 ) {
         "1".toBigInteger()
     } else if (typeSMinfo.periode.arbufoerTOM != null &&
             (periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerTOM) ||
@@ -378,3 +381,5 @@ inline fun <reified T> XMLEIFellesformat.get() = this.any.find { it is T } as T
 
 fun extractHelseOpplysningerArbeidsuforhet(fellesformat: XMLEIFellesformat): HelseOpplysningerArbeidsuforhet =
         fellesformat.get<XMLMsgHead>().document[0].refDoc.content.any[0] as HelseOpplysningerArbeidsuforhet
+
+fun ClosedRange<LocalDate>.daysBetween(): Long = ChronoUnit.DAYS.between(start, endInclusive)
