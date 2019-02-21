@@ -45,7 +45,6 @@ import no.nav.tjeneste.virksomhet.person.v3.informasjon.Personidenter
 import no.nav.tjeneste.virksomhet.person.v3.meldinger.HentGeografiskTilknytningRequest
 import no.nav.tjeneste.virksomhet.person.v3.meldinger.HentGeografiskTilknytningResponse
 import no.trygdeetaten.xml.eiff._1.XMLEIFellesformat
-import org.apache.cxf.ext.logging.LoggingFeature
 import org.apache.cxf.jaxws.JaxWsProxyFactoryBean
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -109,7 +108,6 @@ fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCo
 
                     val personV3 = JaxWsProxyFactoryBean().apply {
                         address = config.personV3EndpointURL
-                        features.add(LoggingFeature())
                         serviceClass = PersonV3::class.java
                     }.create() as PersonV3
                     configureSTSFor(personV3, credentials.serviceuserUsername,
@@ -117,7 +115,6 @@ fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCo
 
                     val arbeidsfordelingV1 = JaxWsProxyFactoryBean().apply {
                         address = config.arbeidsfordelingV1EndpointURL
-                        features.add(LoggingFeature())
                         serviceClass = ArbeidsfordelingV1::class.java
                     }.create() as ArbeidsfordelingV1
                     configureSTSFor(arbeidsfordelingV1, credentials.serviceuserUsername,
