@@ -88,8 +88,8 @@ object FindOprasjonstypeSpek : Spek({
                 sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
                     sykmelding.add(TypeSMinfo().apply {
                         periode = TypeSMinfo.Periode().apply {
-                            arbufoerFOM = LocalDate.of(2017, 4, 20)
-                            arbufoerTOM = LocalDate.of(2017, 5, 29)
+                            arbufoerFOM = LocalDate.of(2019, 2, 10)
+                            arbufoerTOM = LocalDate.of(2019, 2, 20)
                         }
                     })
                     status = StatusType().apply {
