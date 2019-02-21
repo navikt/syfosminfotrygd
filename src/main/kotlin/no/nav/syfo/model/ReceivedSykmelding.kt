@@ -4,9 +4,7 @@ import java.time.LocalDateTime
 
 data class ReceivedSykmelding(
     val sykmelding: Sykmelding,
-    val aktoerIdPasient: String,
     val personNrPasient: String,
-    val aktoerIdLege: String,
     val personNrLege: String,
     val navLogId: String,
     val msgId: String,
@@ -16,6 +14,7 @@ data class ReceivedSykmelding(
     val legekontorOrgName: String,
     val mottattDato: LocalDateTime,
     val signaturDato: LocalDateTime,
+    val rulesetVersion: String?,
     /**
      * Full fellesformat as a XML payload, this is only used for infotrygd compat and should be removed in thefuture
      */
