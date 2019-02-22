@@ -159,27 +159,14 @@ suspend fun CoroutineScope.blockingApplicationLogic(
                 val logKeys = logValues.joinToString(prefix = "(", postfix = ")", separator = ",") { "{}" }
                 log.info("Received a SM2013 $logKeys", *logValues)
 
-                // TODO add retry to tempQueue
-
                 val fellesformat = fellesformatUnmarshaller.unmarshal(StringReader(receivedSykmelding.fellesformat)) as XMLEIFellesformat
-
                 val healthInformation = extractHelseOpplysningerArbeidsuforhet(fellesformat)
 
-                val infotrygdForespRequest = createInfotrygdForesp(receivedSykmelding.personNrPasient, healthInformation, receivedSykmelding.personNrLege)
-                val temporaryQueue = session.createTemporaryQueue()
-                sendInfotrygdSporring(infotrygdSporringProducer, session, infotrygdForespRequest, temporaryQueue)
-                val tmpConsumer = session.createConsumer(temporaryQueue)
-                val consumedMessage = tmpConsumer.receive(20000)
-                val inputMessageText = when (consumedMessage) {
-                    is TextMessage -> consumedMessage.text
-                    else -> throw RuntimeException("Incoming message needs to be a byte message or text message, JMS type:" + consumedMessage.jmsType)
-                }
-
-                val infotrygdForespResponse = infotrygdSporringUnmarshaller.unmarshal(StringReader(inputMessageText)) as InfotrygdForesp
+                val infotrygdForespResponse = fetchInfotrygdForesp(receivedSykmelding, healthInformation, session, infotrygdSporringProducer)
 
                 log.info("Going through rules $logKeys", *logValues)
 
-                val validationRuleResults = ValidationRuleChain.values().executeFlow(healthInformation, infotrygdForespResponse)
+                val validationRuleResults = ValidationRuleChain.values().executeFlow(healthInformation, infotrygdForespResponse.await())
 
                 val results = listOf(validationRuleResults).flatten()
                 log.info("Rules hit {}, $logKeys", results.map { it.name }, *logValues)
@@ -187,7 +174,7 @@ suspend fun CoroutineScope.blockingApplicationLogic(
                 when {
                     results.any { rule -> rule.status == Status.MANUAL_PROCESSING } ->
                         produceManualTask(kafkaProducer, receivedSykmelding, results, personV3, arbeidsfordelingV1, logKeys, logValues)
-                    else -> sendInfotrygdOppdatering(infotrygdOppdateringProducer, session, createInfotrygdInfo(receivedSykmelding.fellesformat, InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation)), logKeys, logValues)
+                    else -> sendInfotrygdOppdatering(infotrygdOppdateringProducer, session, createInfotrygdInfo(receivedSykmelding.fellesformat, InfotrygdForespAndHealthInformation(infotrygdForespResponse.await(), healthInformation)), logKeys, logValues)
                 }
             }
         }
@@ -383,3 +370,18 @@ fun extractHelseOpplysningerArbeidsuforhet(fellesformat: XMLEIFellesformat): Hel
         fellesformat.get<XMLMsgHead>().document[0].refDoc.content.any[0] as HelseOpplysningerArbeidsuforhet
 
 fun ClosedRange<LocalDate>.daysBetween(): Long = ChronoUnit.DAYS.between(start, endInclusive)
+
+fun CoroutineScope.fetchInfotrygdForesp(receivedSykmelding: ReceivedSykmelding, healthInformation: HelseOpplysningerArbeidsuforhet, session: Session, infotrygdSporringProducer: MessageProducer): Deferred<InfotrygdForesp> =
+        retryAsync("it_hent_infotrygdForesp", IOException::class, WstxException::class) {
+            val infotrygdForespRequest = createInfotrygdForesp(receivedSykmelding.personNrPasient, healthInformation, receivedSykmelding.personNrLege)
+            val temporaryQueue = session.createTemporaryQueue()
+            sendInfotrygdSporring(infotrygdSporringProducer, session, infotrygdForespRequest, temporaryQueue)
+            val tmpConsumer = session.createConsumer(temporaryQueue)
+            val consumedMessage = tmpConsumer.receive(20000)
+            val inputMessageText = when (consumedMessage) {
+                is TextMessage -> consumedMessage.text
+                else -> throw RuntimeException("Incoming message needs to be a byte message or text message, JMS type:" + consumedMessage.jmsType)
+            }
+
+            infotrygdSporringUnmarshaller.unmarshal(StringReader(inputMessageText)) as InfotrygdForesp
+        }
