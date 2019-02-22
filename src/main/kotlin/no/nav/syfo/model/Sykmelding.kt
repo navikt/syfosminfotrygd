@@ -24,7 +24,7 @@ data class Sykmelding(
 
 data class MedisinskVurdering(
     val hovedDiagnose: Diagnose?,
-    val bidiagnoser: List<Diagnose>,
+    val biDiagnoser: List<Diagnose>,
     val svangerskap: Boolean,
     val yrkesskade: Boolean,
     val yrkesskadeDato: LocalDate?,
@@ -85,7 +85,7 @@ data class Gradert(
 
 data class Prognose(
     val arbeidsforEtterPeriode: Boolean,
-    val hennsynArbeidsplassen: String?,
+    val hensynArbeidsplassen: String?,
     val erIArbeid: ErIArbeid?,
     val erIkkeIArbeid: ErIkkeIArbeid?
 )
