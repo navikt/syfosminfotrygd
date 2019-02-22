@@ -8,9 +8,10 @@ data class Sykmelding(
     val pasientAktoerId: String,
     val medisinskVurdering: MedisinskVurdering,
     val skjermesForPasient: Boolean,
+    val arbeidsgiver: Arbeidsgiver,
     val perioder: List<Periode>,
     val prognose: Prognose?,
-    val utdypendeOpplysninger: Map<String, Map<String, SporsmalSvar>>?,
+    val utdypendeOpplysninger: Map<String, Map<String, SporsmalSvar>>,
     val tiltakArbeidsplassen: String?,
     val tiltakNAV: String?,
     val andreTiltak: String?,
@@ -40,6 +41,19 @@ data class AnnenFraversArsak(
     val beskrivelse: String?,
     val grunn: List<AnnenFraverGrunn>
 )
+
+data class Arbeidsgiver(
+    val harArbeidsgiver: HarArbeidsgiver,
+    val navn: String?,
+    val yrkesbetegnelse: String?,
+    val stillingsprosent: Int?
+)
+
+enum class HarArbeidsgiver(val codeValue: String, val text: String, val oid: String = "2.16.578.1.12.4.1.1.8130") {
+    EN_ARBEIDSGIVER("1", "Én arbeidsgiver"),
+    FLERE_ARBEIDSGIVERE("2", "Flere arbeidsgivere"),
+    INGEN_ARBEIDSGIVER("3", "Ingen arbeidsgiver")
+}
 
 data class Periode(
     val fom: LocalDate,
