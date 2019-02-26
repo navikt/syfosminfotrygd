@@ -310,7 +310,7 @@ suspend fun CoroutineScope.produceManualTask(kafkaProducer: KafkaProducer<String
     val finnBehandlendeEnhetListeResponse = fetchBehandlendeEnhet(arbeidsfordelingV1, geografiskTilknytning.await().geografiskTilknytning)
 
     when (geografiskTilknytning.await().diskresjonskode?.kodeverksRef) {
-        "SPSF" -> createTask(kafkaProducer, receivedSykmelding, results, "2103", logKeys, logValues)
+        "SPSF" -> createTask(kafkaProducer, receivedSykmelding, results, "2106", logKeys, logValues)
         else -> createTask(kafkaProducer, receivedSykmelding, results, findNavOffice(finnBehandlendeEnhetListeResponse.await()), logKeys, logValues)
     }
 }
