@@ -222,7 +222,6 @@ fun sendInfotrygdOppdatering(
     logValues: Array<StructuredArgument>
 ) = producer.send(session.createTextMessage().apply {
     text = fellesformatMarshaller.toString(fellesformat)
-    RULE_HIT_STATUS_COUNTER.labels(Status.OK.name).inc()
     log.info("Message is automatic outcome $logKeys", *logValues)
 })
 
@@ -304,7 +303,6 @@ fun findOprasjonstype(periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode
 
 suspend fun CoroutineScope.produceManualTask(kafkaProducer: KafkaProducer<String, ProduceTask>, receivedSykmelding: ReceivedSykmelding, results: List<Rule<Any>>, personV3: PersonV3, arbeidsfordelingV1: ArbeidsfordelingV1, logKeys: String, logValues: Array<StructuredArgument>) {
     log.info("Message is manual outcome $logKeys", *logValues)
-    RULE_HIT_STATUS_COUNTER.labels(Status.MANUAL_PROCESSING.name).inc()
 
     val geografiskTilknytning = fetchGeografiskTilknytning(personV3, receivedSykmelding)
     val finnBehandlendeEnhetListeResponse = fetchBehandlendeEnhet(arbeidsfordelingV1, geografiskTilknytning.await().geografiskTilknytning)
