@@ -11,7 +11,7 @@ import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.time.LocalDate
 
-object PostInfotrygdForespSpek : Spek({
+object ValidationRuleChainSpek : Spek({
     fun deafaultHelseOpplysningerArbeidsuforhet() = HelseOpplysningerArbeidsuforhet().apply {
         aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
         }
