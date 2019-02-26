@@ -289,9 +289,11 @@ fun findOprasjonstype(periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode
     return if (itfh.infotrygdForesp.sMhistorikk.status.kodeMelding == "04" ||
             (typeSMinfo.periode.arbufoerFOM..periode.periodeFOMDato).daysBetween() > 280) {
         "1".toBigInteger()
-    } else if (typeSMinfo.periode.arbufoerTOM != null &&
+    } else if ((typeSMinfo.periode.arbufoerFOM..periode.periodeFOMDato).daysBetween() < 280 &&
+                    periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerFOM) ||
+            (typeSMinfo.periode.arbufoerTOM != null &&
             (periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerTOM) ||
-                    periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerFOM))) {
+                    periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerFOM)))) {
         "2".toBigInteger()
     } else if (typeSMinfo.periode.arbufoerTOM != null &&
             (typeSMinfo.periode.arbufoerFOM == periode.periodeFOMDato ||
