@@ -377,13 +377,17 @@ fun CoroutineScope.fetchInfotrygdForesp(receivedSykmelding: ReceivedSykmelding, 
         retryAsync("it_hent_infotrygdForesp", IOException::class, WstxException::class) {
             val infotrygdForespRequest = createInfotrygdForesp(receivedSykmelding.personNrPasient, healthInformation, receivedSykmelding.personNrLege)
             val temporaryQueue = session.createTemporaryQueue()
-            sendInfotrygdSporring(infotrygdSporringProducer, session, infotrygdForespRequest, temporaryQueue)
-            val tmpConsumer = session.createConsumer(temporaryQueue)
-            val consumedMessage = tmpConsumer.receive(20000)
-            val inputMessageText = when (consumedMessage) {
-                is TextMessage -> consumedMessage.text
-                else -> throw RuntimeException("Incoming message needs to be a byte message or text message, JMS type:" + consumedMessage.jmsType)
-            }
+            try {
+                sendInfotrygdSporring(infotrygdSporringProducer, session, infotrygdForespRequest, temporaryQueue)
+                val tmpConsumer = session.createConsumer(temporaryQueue)
+                val consumedMessage = tmpConsumer.receive(20000)
+                val inputMessageText = when (consumedMessage) {
+                    is TextMessage -> consumedMessage.text
+                    else -> throw RuntimeException("Incoming message needs to be a byte message or text message, JMS type:" + consumedMessage.jmsType)
+                }
 
-            infotrygdSporringUnmarshaller.unmarshal(StringReader(inputMessageText)) as InfotrygdForesp
+                infotrygdSporringUnmarshaller.unmarshal(StringReader(inputMessageText)) as InfotrygdForesp
+            } finally {
+                temporaryQueue.delete()
+            }
         }
