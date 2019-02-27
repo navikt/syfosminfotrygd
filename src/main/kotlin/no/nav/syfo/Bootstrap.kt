@@ -388,6 +388,7 @@ fun CoroutineScope.fetchInfotrygdForesp(receivedSykmelding: ReceivedSykmelding, 
 
                 infotrygdSporringUnmarshaller.unmarshal(StringReader(inputMessageText)) as InfotrygdForesp
             } finally {
+                session.close()
                 temporaryQueue.delete()
             }
         }
