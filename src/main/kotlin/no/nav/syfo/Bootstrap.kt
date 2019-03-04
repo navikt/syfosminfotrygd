@@ -177,8 +177,8 @@ suspend fun CoroutineScope.blockingApplicationLogic(
                     else -> sendInfotrygdOppdatering(infotrygdOppdateringProducer, session, createInfotrygdInfo(receivedSykmelding.fellesformat, InfotrygdForespAndHealthInformation(infotrygdForespResponse.await(), healthInformation)), logKeys, logValues)
                 }
             }
-        }
         delay(100)
+        }
     }
 
 data class InfotrygdForespAndHealthInformation(
