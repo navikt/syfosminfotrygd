@@ -30,6 +30,7 @@ import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.model.Status
 import no.nav.syfo.rules.ValidationRuleChain
 import no.nav.syfo.rules.sortedSMInfos
+import no.nav.syfo.sak.avro.PrioritetType
 import no.nav.syfo.sak.avro.ProduceTask
 import no.nav.syfo.ws.configureSTSFor
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.binding.ArbeidsfordelingV1
@@ -50,7 +51,6 @@ import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.StringDeserializer
-import org.joda.time.Days.daysBetween
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -169,7 +169,7 @@ suspend fun CoroutineScope.blockingApplicationLogic(
                 val validationRuleResults = ValidationRuleChain.values().executeFlow(healthInformation, infotrygdForespResponse.await())
 
                 val results = listOf(validationRuleResults).flatten()
-                log.info("Rules hit {}, $logKeys", results.map { it.name }, *logValues)
+                log.info("Rules hit {}, $logKeys", results.map { rule -> rule.name }, *logValues)
 
                 when {
                     results.any { rule -> rule.status == Status.MANUAL_PROCESSING } ->
@@ -285,7 +285,6 @@ fun findOprasjonstype(periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode
     val typeSMinfo = itfh.infotrygdForesp.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()
         ?: return 1.toBigInteger()
 
-    // TODO fixed this to implementet corretly
     return if (itfh.infotrygdForesp.sMhistorikk.status.kodeMelding == "04" ||
             (typeSMinfo.periode.arbufoerFOM..periode.periodeFOMDato).daysBetween() > 280) {
         "1".toBigInteger()
@@ -318,20 +317,15 @@ suspend fun CoroutineScope.produceManualTask(kafkaProducer: KafkaProducer<String
 }
 
 fun createTask(kafkaProducer: KafkaProducer<String, ProduceTask>, receivedSykmelding: ReceivedSykmelding, results: List<Rule<Any>>, navKontor: String, logKeys: String, logValues: Array<StructuredArgument>) {
-    kafkaProducer.send(ProducerRecord("aapen-syfo-oppgave-produserOppgave", ProduceTask().apply {
-        setMessageId(receivedSykmelding.msgId)
-        setUserIdent(receivedSykmelding.personNrPasient)
-        setUserTypeCode("PERSON")
-        setTaskType("BEH_EL_SYM")
-        setFieldCode("SYM")
-        setSubcategoryType("SYM_SYM")
-        setPriorityCode("NORM_SYM")
-        setDescription("Kunne ikkje oppdatere Infotrygd automatisk, på grunn av følgende: ${results.joinToString(", ", prefix = "\"", postfix = "\"")}")
-        setStartsInDays(0)
-        setEndsInDays(21)
-        setResponsibleUnit(navKontor)
-        setFollowUpText("Se beskrivelse")
-    }))
+    kafkaProducer.send(ProducerRecord("aapen-syfo-oppgave-produserOppgave", ProduceTask(
+            receivedSykmelding.msgId, receivedSykmelding.sykmelding.pasientAktoerId,
+            navKontor, "", "GOSYS", "",
+            receivedSykmelding.legekontorOrgNr, "Manuell behandling Sykmelding: ${results.joinToString(", ", prefix = "\"", postfix = "\"")}", "",
+            "SYM", "", "BEH_EL_SYM", "",
+            1, LocalDate.now().toString(), LocalDate.now().plusDays(10).toString(),
+            PrioritetType.NORM, mapOf<String, String>()
+
+    )))
     log.info("Message sendt to topic: aapen-syfo-oppgave-produserOppgave $logKeys", *logValues)
 }
 
