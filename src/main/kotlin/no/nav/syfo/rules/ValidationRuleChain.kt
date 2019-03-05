@@ -37,7 +37,7 @@ enum class ValidationRuleChain(override val ruleId: Int?, override val status: S
         healthInformation.aktivitet.periode.any { healthInformationPeriods ->
             infotrygdForesp.sMhistorikk?.sykmelding != null && infotrygdForesp.sMhistorikk.sykmelding
                     .any { infotrygdForespSykmelding ->
-                        infotrygdForespSykmelding.periode?.arbufoerFOM != null && healthInformationPeriods.periodeFOMDato.isBefore(infotrygdForespSykmelding.periode?.arbufoerFOM)
+                        infotrygdForespSykmelding.periode?.arbufoerFOM != null && healthInformationPeriods.periodeFOMDato.isBefore(infotrygdForespSykmelding.periode.arbufoerFOM)
                     }
         }
     }),
@@ -125,7 +125,7 @@ enum class ValidationRuleChain(override val ruleId: Int?, override val status: S
         infotrygdForesp.sMhistorikk.sykmelding.any { sykemelding ->
             sykemelding.historikk.firstOrNull()?.tilltak?.type == "FA" } &&
         healthInformation.aktivitet?.periode?.sortedPeriodeFOMDate()?.lastOrNull() != null &&
-        infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().lastOrNull()?.historikk?.sortedSMinfoHistorikk()?.lastOrNull()?.tilltak?.type != null
+        infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().lastOrNull()?.historikk?.sortedSMinfoHistorikk()?.lastOrNull()?.tilltak?.type != null &&
         infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().historikk.sortedSMinfoHistorikk().last().tilltak.type == "FA" &&
         infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().historikk.sortedSMinfoHistorikk().last().tilltak.tom != null &&
         healthInformation.aktivitet.periode.sortedPeriodeFOMDate().last().isAfter(
