@@ -61,6 +61,7 @@ import java.math.BigInteger
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -317,15 +318,25 @@ suspend fun CoroutineScope.produceManualTask(kafkaProducer: KafkaProducer<String
 }
 
 fun createTask(kafkaProducer: KafkaProducer<String, ProduceTask>, receivedSykmelding: ReceivedSykmelding, results: List<Rule<Any>>, navKontor: String, logKeys: String, logValues: Array<StructuredArgument>) {
-    kafkaProducer.send(ProducerRecord("aapen-syfo-oppgave-produserOppgave", ProduceTask(
-            receivedSykmelding.msgId, receivedSykmelding.sykmelding.pasientAktoerId,
-            navKontor, "9999", "FS22", "",
-            receivedSykmelding.legekontorOrgNr ?: "", "Manuell behandling Sykmelding: ${results.joinToString(", ", prefix = "\"", postfix = "\"")}", "",
-            "SYM", "", "BEH_EL_SYM", "",
-            1, LocalDate.now().toString(), LocalDate.now().plusDays(10).toString(),
-            PrioritetType.NORM, mapOf<String, String>()
-
-    )))
+    kafkaProducer.send(ProducerRecord("aapen-syfo-oppgave-produserOppgave",
+            ProduceTask().apply {
+                messageId = receivedSykmelding.msgId
+                aktoerId = receivedSykmelding.sykmelding.pasientAktoerId
+                tildeltEnhetsnr = navKontor
+                opprettetAvEnhetsnr = "9999"
+                behandlesAvApplikasjon = "FS22" // Gosys
+                orgnr = receivedSykmelding.legekontorOrgNr ?: ""
+                beskrivelse = "Manuell behandling Sykmelding: ${results.joinToString(", ", prefix = "\"", postfix = "\"")}"
+                temagruppe = "SYM"
+                tema = ""
+                behandlingstema = "BEH_EL_SYM"
+                oppgavetype = ""
+                mappeId = 1
+                aktivDato = DateTimeFormatter.ISO_DATE.format(LocalDate.now())
+                fristFerdigstillelse = DateTimeFormatter.ISO_DATE.format(LocalDate.now())
+                prioritet = PrioritetType.NORM
+                metadata = mapOf()
+            }))
     log.info("Message sendt to topic: aapen-syfo-oppgave-produserOppgave $logKeys", *logValues)
 }
 
