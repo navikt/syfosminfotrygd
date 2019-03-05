@@ -104,7 +104,7 @@ enum class ValidationRuleChain(override val ruleId: Int?, override val status: S
                 healthInformation.prognose.isArbeidsforEtterEndtPeriode &&
                 infotrygdForesp.sMhistorikk?.sykmelding != null &&
                 healthInformation.aktivitet.periode.sortedPeriodeTOMDate().lastOrNull() != null &&
-                infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().lastOrNull()?.periode?.utbetTOM != null
+                infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().lastOrNull()?.periode?.utbetTOM != null &&
                 healthInformation.aktivitet.periode.sortedPeriodeTOMDate().last().isBefore(
                 infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.utbetTOM)
     }),
@@ -115,6 +115,7 @@ enum class ValidationRuleChain(override val ruleId: Int?, override val status: S
                 healthInformation.prognose?.isArbeidsforEtterEndtPeriode != null &&
                 healthInformation.prognose.isArbeidsforEtterEndtPeriode &&
                 healthInformation.aktivitet.periode.sortedPeriodeTOMDate().lastOrNull() != null &&
+                infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().lastOrNull()?.periode?.friskmeldtDato != null &&
                 healthInformation.aktivitet.periode.sortedPeriodeTOMDate().last().isBefore(infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.friskmeldtDato)
     }),
 

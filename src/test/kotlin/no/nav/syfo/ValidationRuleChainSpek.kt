@@ -424,6 +424,25 @@ object ValidationRuleChainSpek : Spek({
             ValidationRuleChain.NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
         }
 
+        it("Should check rule NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE, should NOT trigger rule") {
+            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
+            healthInformation.aktivitet.periode.add(
+                    HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
+                        periodeTOMDato = LocalDate.of(2018, 1, 2)
+                    }
+            )
+            healthInformation.prognose = HelseOpplysningerArbeidsuforhet.Prognose().apply {
+                isArbeidsforEtterEndtPeriode = true
+            }
+
+            val infotrygdForespResponse = deafaultInfotrygdForesp()
+            infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
+                sykmelding.add(TypeSMinfo().apply {
+                })
+            }
+            ValidationRuleChain.NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+        }
+
         it("Should check rule EXTANION_OVER_FA, should trigger rule") {
             val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
             healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
