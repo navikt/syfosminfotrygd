@@ -57,6 +57,7 @@ import java.io.File
 import java.io.IOException
 import java.io.StringReader
 import java.io.StringWriter
+import java.lang.IllegalStateException
 import java.math.BigInteger
 import java.time.Duration
 import java.time.LocalDate
@@ -380,7 +381,8 @@ fun extractHelseOpplysningerArbeidsuforhet(fellesformat: XMLEIFellesformat): Hel
 fun ClosedRange<LocalDate>.daysBetween(): Long = ChronoUnit.DAYS.between(start, endInclusive)
 
 fun CoroutineScope.fetchInfotrygdForesp(receivedSykmelding: ReceivedSykmelding, healthInformation: HelseOpplysningerArbeidsuforhet, session: Session, infotrygdSporringProducer: MessageProducer): Deferred<InfotrygdForesp> =
-        retryAsync("it_hent_infotrygdForesp", IOException::class, WstxException::class) {
+        // TODO, retryAsync not working when consumedMessage is null, happens when infotrygd is down
+        retryAsync("it_hent_infotrygdForesp", IOException::class, WstxException::class, IllegalStateException::class) {
             val infotrygdForespRequest = createInfotrygdForesp(receivedSykmelding.personNrPasient, healthInformation, receivedSykmelding.personNrLege)
             val temporaryQueue = session.createTemporaryQueue()
             try {
