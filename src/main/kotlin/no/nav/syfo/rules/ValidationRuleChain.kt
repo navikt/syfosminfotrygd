@@ -151,11 +151,13 @@ enum class ValidationRuleChain(override val ruleId: Int?, override val status: S
     }),
 
     @Description("Hvis perioden er avsluttet-frisk (AF)")
-    PERIOD_IS_AF(1550, Status.MANUAL_PROCESSING, { (_, infotrygdForesp) ->
-        infotrygdForesp.sMhistorikk?.sykmelding?.find {
-            it.periode?.arbufoerFOM != null && infotrygdForesp.sMhistorikk?.sykmelding?.sortedFOMDate()?.lastOrNull() != null &&
-                    it.periode.arbufoerFOM == infotrygdForesp.sMhistorikk.sykmelding.sortedFOMDate().last()
-        }?.periode?.stans == "AF"
+    PERIOD_IS_AF(1550, Status.MANUAL_PROCESSING, { (healthInformation, infotrygdForesp) ->
+        healthInformation.aktivitet.periode.any {
+            !infotrygdForesp.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()?.periode?.stans.isNullOrBlank() &&
+                    infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.arbufoerTOM != null &&
+                    infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.stans == "AF" &&
+                    it.periodeFOMDato.isBefore(infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.arbufoerTOM)
+        }
     }),
 
     @Description("Hvis maks sykepenger er utbetalt")
