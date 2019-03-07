@@ -164,7 +164,7 @@ enum class ValidationRuleChain(override val ruleId: Int?, override val status: S
     MAX_SICK_LEAVE_PAYOUT(1551, Status.MANUAL_PROCESSING, { (healthInformation, infotrygdForesp) ->
         // TODO innkomende sykmeldings peridode, overlapper med nyeste max dato
         infotrygdForesp.sMhistorikk?.sykmelding != null &&
-                infotrygdForesp.sMhistorikk.sykmelding.findOverlapping(healthInformation.aktivitet.periode.toRange())?.periode?.stans == "MAX"
+                infotrygdForesp.sMhistorikk.sykmelding.findOverlapping(healthInformation.aktivitet.periode.toRange())?.periode?.stans.equals("MAX")
     }),
 
     @Description("Infotrygd returnerte en feil, vi kan ikke automatisk oppdatere Infotrygd")
@@ -208,6 +208,8 @@ private fun List<TypeSMinfo>.findOverlapping(smRange: ClosedRange<LocalDate>): T
             it.periode.arbufoerFOM < smRange.start && it.periode.arbufoerTOM != null && it.periode.arbufoerTOM >= smRange.start
         } ?: firstOrNull { // Whenever the period is within the range
             it.periode.arbufoerFOM > smRange.start && it.periode.arbufoerTOM != null && it.periode.arbufoerTOM <= smRange.endInclusive
+        } ?: firstOrNull { // Whenever the period is within the range
+            it.periode.arbufoerFOM > smRange.start
         } ?: sortedBy { it.periode.arbufoerFOM }.firstOrNull { // Find the first period that is an extension from the next day
             it.periode.arbufoerTOM != null && it.periode.arbufoerTOM.plusDays(1) == smRange.start
         } ?: firstOrNull { // Whenever its an extension from the next day over a weekend
