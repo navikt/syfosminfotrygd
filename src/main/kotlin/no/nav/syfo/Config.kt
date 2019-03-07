@@ -19,7 +19,8 @@ data class ApplicationConfig(
     val securityTokenServiceUrl: String,
     val infotrygdSporringQueue: String,
     val infotrygdOppdateringQueue: String,
-    val arbeidsfordelingV1EndpointURL: String
+    val arbeidsfordelingV1EndpointURL: String,
+    val applicationName: String
 )
 
 data class VaultCredentials(

@@ -99,8 +99,10 @@ fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCo
         try {
             val listeners = (1..config.applicationThreads).map {
                 launch {
-                    val consumerProperties = readConsumerConfig(config, credentials, valueDeserializer = StringDeserializer::class)
-                    val producerProperties = readProducerConfig(config, credentials, valueSerializer = KafkaAvroSerializer::class)
+                    val kafkaBaseConfig = loadBaseConfig(config, credentials)
+                    val consumerProperties = kafkaBaseConfig.toConsumerConfig("${config.applicationName}-consumer", valueDeserializer = StringDeserializer::class)
+                    val producerProperties = kafkaBaseConfig.toProducerConfig(config.applicationName, valueSerializer = KafkaAvroSerializer::class)
+
                     val kafkaconsumer = KafkaConsumer<String, String>(consumerProperties)
                     kafkaconsumer.subscribe(listOf(config.sm2013AutomaticHandlingTopic, config.smPaperAutomaticHandlingTopic))
                     val kafkaproducer = KafkaProducer<String, ProduceTask>(producerProperties)
