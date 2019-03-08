@@ -655,7 +655,6 @@ object ValidationRuleChainSpek : Spek({
             ValidationRuleChain.MAX_SICK_LEAVE_PAYOUT(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
         }
 
-
         it("Should check rule MAX_SICK_LEAVE_PAYOUT, should NOT trigger rule") {
             val healthInformation = deafaultHelseOpplysningerArbeidsuforhet().apply {
                 aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
