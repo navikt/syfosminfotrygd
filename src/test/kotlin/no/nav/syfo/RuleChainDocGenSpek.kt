@@ -1,7 +1,5 @@
-package no.nav.syfo.datagen
+package no.nav.syfo
 
-import no.nav.syfo.Description
-import no.nav.syfo.Rule
 import no.nav.syfo.rules.ValidationRuleChain
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
