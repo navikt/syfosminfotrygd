@@ -21,7 +21,7 @@ object KafkaITSpek : Spek({
 
     val embeddedEnvironment = KafkaEnvironment(
             autoStart = false,
-            topics = listOf(topic)
+            topicNames = listOf(topic)
     )
 
     val credentials = VaultCredentials("", "", "", "")
@@ -37,7 +37,6 @@ object KafkaITSpek : Spek({
     fun Properties.overrideForTest(): Properties = apply {
         remove("security.protocol")
         remove("sasl.mechanism")
-        put("schema.registry.url", embeddedEnvironment.schemaRegistry!!.url)
     }
 
     val baseConfig = loadBaseConfig(config, credentials).overrideForTest()
