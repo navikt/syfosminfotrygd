@@ -21,101 +21,108 @@ import java.time.LocalDateTime
 object CreateInfotrygdInfoSpek : Spek({
 
     describe("Testing mapping of fellesformat and InfotrygdInfo") {
-        it("Should map correctly") {
-            val healthInformation = HelseOpplysningerArbeidsuforhet().apply {
-                regelSettVersjon = "1"
-                aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
-                    periode.add(
-                            HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                                periodeFOMDato = LocalDate.now()
-                                periodeTOMDato = LocalDate.now().plusDays(4)
-                                aktivitetIkkeMulig = HelseOpplysningerArbeidsuforhet.Aktivitet.Periode.AktivitetIkkeMulig().apply {
-                                    medisinskeArsaker = ArsakType().apply {
-                                    }
+
+        val healthInformation = HelseOpplysningerArbeidsuforhet().apply {
+            regelSettVersjon = "1"
+            aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
+                periode.add(
+                        HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
+                            periodeFOMDato = LocalDate.now()
+                            periodeTOMDato = LocalDate.now().plusDays(4)
+                            aktivitetIkkeMulig = HelseOpplysningerArbeidsuforhet.Aktivitet.Periode.AktivitetIkkeMulig().apply {
+                                medisinskeArsaker = ArsakType().apply {
                                 }
                             }
-                    )
-                }
-                pasient = HelseOpplysningerArbeidsuforhet.Pasient().apply {
-                    fodselsnummer = Ident().apply {
-                        id = "12343567"
-                        typeId = CV().apply {
-                            dn = "Fødselsnummer"
-                            s = "2.16.578.1.12.4.1.1.8116"
-                            v = "FNR"
-                        }
-                    }
-                }
-                syketilfelleStartDato = LocalDate.now()
-                medisinskVurdering = HelseOpplysningerArbeidsuforhet.MedisinskVurdering().apply {
-                    hovedDiagnose = HelseOpplysningerArbeidsuforhet.MedisinskVurdering.HovedDiagnose().apply {
-                        diagnosekode = CV().apply {
-                            dn = "Problem med jus/politi"
-                            s = "2.16.578.1.12.4.1.1.7110"
-                            v = "Z09"
-                        }
-                    }
-                    }
-            }
-
-            val fellesformat = XMLEIFellesformat().apply {
-                any.add(
-                        XMLMsgHead().apply {
-                            document.add(
-                                    XMLDocument().apply {
-                                        refDoc = XMLRefDoc().apply {
-                                            content = XMLRefDoc.Content().apply {
-                                                any.add(
-                                                        healthInformation
-                                                )
-                                            }
-                                        }
-                                    }
-                            )
                         }
                 )
             }
-
-            val fellesFormatString = fellesformatMarshaller.toString(fellesformat)
-            val infotrygdForesp = InfotrygdForesp().apply {
-                hovedStatus = StatusType().apply {
-                    kodeMelding = "00"
+            pasient = HelseOpplysningerArbeidsuforhet.Pasient().apply {
+                fodselsnummer = Ident().apply {
+                    id = "12343567"
+                    typeId = CV().apply {
+                        dn = "Fødselsnummer"
+                        s = "2.16.578.1.12.4.1.1.8116"
+                        v = "FNR"
+                    }
                 }
-                behandlerInfo = InfotrygdForesp.BehandlerInfo().apply {
-                    behandler.add(
-                            InfotrygdForesp.BehandlerInfo.Behandler().apply {
-                                navn = TypeNavn().apply {
-                                    fornavn = "Per"
-                                    etternavn = "Hansne"
-                                }
-                            }
-                    )
-                }
-                sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
-                    sykmelding.add(TypeSMinfo().apply {
-                        status = StatusType().apply {
-                            returStatus = "0".toBigInteger()
-                            kodeMelding = "04"
-                            tidsStempel = LocalDateTime.now()
-                        }
-                        periode = TypeSMinfo.Periode().apply {
-                            arbufoerFOM = LocalDate.now()
-                        }
-                    })
-                    tidsstempel = LocalDateTime.now()
-                }
-                hovedDiagnosekodeverk = "5"
             }
+            syketilfelleStartDato = LocalDate.now()
+            medisinskVurdering = HelseOpplysningerArbeidsuforhet.MedisinskVurdering().apply {
+                hovedDiagnose = HelseOpplysningerArbeidsuforhet.MedisinskVurdering.HovedDiagnose().apply {
+                    diagnosekode = CV().apply {
+                        dn = "Problem med jus/politi"
+                        s = "2.16.578.1.12.4.1.1.7110"
+                        v = "Z09"
+                    }
+                }
+            }
+        }
+
+        val fellesformat = XMLEIFellesformat().apply {
+            any.add(
+                    XMLMsgHead().apply {
+                        document.add(
+                                XMLDocument().apply {
+                                    refDoc = XMLRefDoc().apply {
+                                        content = XMLRefDoc.Content().apply {
+                                            any.add(
+                                                    healthInformation
+                                            )
+                                        }
+                                    }
+                                }
+                        )
+                    }
+            )
+        }
+
+        val fellesFormatString = fellesformatMarshaller.toString(fellesformat)
+        val infotrygdForesp = InfotrygdForesp().apply {
+            hovedStatus = StatusType().apply {
+                kodeMelding = "00"
+            }
+            behandlerInfo = InfotrygdForesp.BehandlerInfo().apply {
+                behandler.add(
+                        InfotrygdForesp.BehandlerInfo.Behandler().apply {
+                            navn = TypeNavn().apply {
+                                fornavn = "Per"
+                                etternavn = "Hansne"
+                            }
+                        }
+                )
+            }
+            sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
+                sykmelding.add(TypeSMinfo().apply {
+                    status = StatusType().apply {
+                        returStatus = "0".toBigInteger()
+                        kodeMelding = "04"
+                        tidsStempel = LocalDateTime.now()
+                    }
+                    periode = TypeSMinfo.Periode().apply {
+                        arbufoerFOM = LocalDate.now()
+                    }
+                })
+                tidsstempel = LocalDateTime.now()
+            }
+            hovedDiagnosekodeverk = "5"
+        }
+
+        it("Should map regelSettVersjon correctly") {
+
             val itfh = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
             val infotrygdFellesformat = createInfotrygdInfo(fellesFormatString, itfh)
 
             extractHelseOpplysningerArbeidsuforhet(infotrygdFellesformat).regelSettVersjon shouldEqual
                     extractHelseOpplysningerArbeidsuforhet(fellesformat).regelSettVersjon
         }
+
+        it("Should map strekkode correctly") {
+
+            val itfh = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
+            val infotrygdFellesformat = createInfotrygdInfo(fellesFormatString, itfh)
+
+            extractHelseOpplysningerArbeidsuforhet(infotrygdFellesformat).aktivitet.periode.first().periodeTOMDato shouldEqual
+                    extractHelseOpplysningerArbeidsuforhet(fellesformat).aktivitet.periode.first().periodeTOMDato
+        }
     }
 })
-
-inline fun <reified T> XMLEIFellesformat.get() = this.any.find { it is T } as T
-
-fun extractHelseOpplysningerArbeidsuforhet(fellesformat: XMLEIFellesformat): HelseOpplysningerArbeidsuforhet =
-        fellesformat.get<XMLMsgHead>().document[0].refDoc.content.any[0] as HelseOpplysningerArbeidsuforhet
