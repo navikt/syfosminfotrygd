@@ -4,11 +4,14 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
+import net.logstash.logback.argument.StructuredArgument
 import java.io.IOException
 import kotlin.reflect.KClass
 
 inline fun <reified T> CoroutineScope.retryAsync(
     callName: String,
+    logKeys: String,
+    logValues: Array<StructuredArgument>,
     vararg legalExceptions: KClass<out Throwable> = arrayOf(IOException::class),
     exceptionCausedByDepth: Int = 3,
     retryIntervals: Array<Long> = arrayOf(500, 1000, 3000, 5000, 10000, 3600000, 14400000),
@@ -21,7 +24,7 @@ inline fun <reified T> CoroutineScope.retryAsync(
             if (!isCausedBy(e, exceptionCausedByDepth, legalExceptions)) {
                 throw e
             }
-            log.warn("Failed to execute call $callName, retrying in $interval ms", e)
+            log.warn("Failed to execute call $callName, retrying in $interval ms $logKeys", *logValues, e)
         }
         delay(interval)
     }

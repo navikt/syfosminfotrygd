@@ -166,7 +166,7 @@ suspend fun CoroutineScope.blockingApplicationLogic(
                 val fellesformat = fellesformatUnmarshaller.unmarshal(StringReader(receivedSykmelding.fellesformat)) as XMLEIFellesformat
                 val healthInformation = extractHelseOpplysningerArbeidsuforhet(fellesformat)
 
-                val infotrygdForespResponse = fetchInfotrygdForesp(receivedSykmelding, healthInformation, session, infotrygdSporringProducer)
+                val infotrygdForespResponse = fetchInfotrygdForesp(receivedSykmelding, healthInformation, session, infotrygdSporringProducer, logKeys, logValues)
 
                 log.info("Going through rules $logKeys", *logValues)
 
@@ -311,8 +311,8 @@ suspend fun CoroutineScope.produceManualTask(kafkaProducer: KafkaProducer<String
     log.info("Message is manual outcome $logKeys", *logValues)
     RULE_HIT_STATUS_COUNTER.labels(Status.MANUAL_PROCESSING.name).inc()
 
-    val geografiskTilknytning = fetchGeografiskTilknytning(personV3, receivedSykmelding)
-    val finnBehandlendeEnhetListeResponse = fetchBehandlendeEnhet(arbeidsfordelingV1, geografiskTilknytning.await().geografiskTilknytning)
+    val geografiskTilknytning = fetchGeografiskTilknytning(personV3, receivedSykmelding, logKeys, logValues)
+    val finnBehandlendeEnhetListeResponse = fetchBehandlendeEnhet(arbeidsfordelingV1, geografiskTilknytning.await().geografiskTilknytning, logKeys, logValues)
 
     when (geografiskTilknytning.await().diskresjonskode?.kodeverksRef) {
         "SPSF" -> createTask(kafkaProducer, receivedSykmelding, results, "2106", logKeys, logValues)
@@ -344,16 +344,26 @@ fun createTask(kafkaProducer: KafkaProducer<String, ProduceTask>, receivedSykmel
     log.info("Message sendt to topic: aapen-syfo-oppgave-produserOppgave $logKeys", *logValues)
 }
 
-fun CoroutineScope.fetchGeografiskTilknytning(personV3: PersonV3, receivedSykmelding: ReceivedSykmelding): Deferred<HentGeografiskTilknytningResponse> =
-        retryAsync("tps_hent_geografisktilknytning", IOException::class, WstxException::class) {
+fun CoroutineScope.fetchGeografiskTilknytning(
+    personV3: PersonV3,
+    receivedSykmelding: ReceivedSykmelding,
+    logKeys: String,
+    logValues: Array<StructuredArgument>
+): Deferred<HentGeografiskTilknytningResponse> =
+        retryAsync("tps_hent_geografisktilknytning", logKeys, logValues, IOException::class, WstxException::class) {
             personV3.hentGeografiskTilknytning(HentGeografiskTilknytningRequest().withAktoer(PersonIdent().withIdent(
                     NorskIdent()
                             .withIdent(receivedSykmelding.personNrPasient)
                             .withType(Personidenter().withValue("FNR")))))
         }
 
-fun CoroutineScope.fetchBehandlendeEnhet(arbeidsfordelingV1: ArbeidsfordelingV1, geografiskTilknytning: GeografiskTilknytning?): Deferred<FinnBehandlendeEnhetListeResponse?> =
-        retryAsync("finn_nav_kontor", IOException::class, WstxException::class) {
+fun CoroutineScope.fetchBehandlendeEnhet(
+    arbeidsfordelingV1: ArbeidsfordelingV1,
+    geografiskTilknytning: GeografiskTilknytning?,
+    logKeys: String,
+    logValues: Array<StructuredArgument>
+): Deferred<FinnBehandlendeEnhetListeResponse?> =
+        retryAsync("finn_nav_kontor", logKeys, logValues, IOException::class, WstxException::class) {
             arbeidsfordelingV1.finnBehandlendeEnhetListe(FinnBehandlendeEnhetListeRequest().apply {
                 val afk = ArbeidsfordelingKriterier()
                 if (geografiskTilknytning?.geografiskTilknytning != null) {
@@ -382,9 +392,16 @@ fun extractHelseOpplysningerArbeidsuforhet(fellesformat: XMLEIFellesformat): Hel
 
 fun ClosedRange<LocalDate>.daysBetween(): Long = ChronoUnit.DAYS.between(start, endInclusive)
 
-fun CoroutineScope.fetchInfotrygdForesp(receivedSykmelding: ReceivedSykmelding, healthInformation: HelseOpplysningerArbeidsuforhet, session: Session, infotrygdSporringProducer: MessageProducer): Deferred<InfotrygdForesp> =
+fun CoroutineScope.fetchInfotrygdForesp(
+    receivedSykmelding: ReceivedSykmelding,
+    healthInformation: HelseOpplysningerArbeidsuforhet,
+    session: Session,
+    infotrygdSporringProducer: MessageProducer,
+    logKeys: String,
+    logValues: Array<StructuredArgument>
+): Deferred<InfotrygdForesp> =
         // TODO, retryAsync not working when consumedMessage is null, happens when infotrygd is down
-        retryAsync("it_hent_infotrygdForesp", IOException::class, WstxException::class, IllegalStateException::class) {
+        retryAsync("it_hent_infotrygdForesp", logKeys, logValues, IOException::class, WstxException::class, IllegalStateException::class) {
             val infotrygdForespRequest = createInfotrygdForesp(receivedSykmelding.personNrPasient, healthInformation, receivedSykmelding.personNrLege)
             val temporaryQueue = session.createTemporaryQueue()
             try {
