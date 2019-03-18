@@ -1,10 +1,14 @@
-package no.nav.syfo
+package no.nav.syfo.util
 
 import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig
+import no.nav.syfo.ApplicationConfig
+import no.nav.syfo.VaultCredentials
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.serialization.Deserializer
 import org.apache.kafka.common.serialization.Serializer
+import org.apache.kafka.common.serialization.StringDeserializer
+import org.apache.kafka.common.serialization.StringSerializer
 
 import java.util.Properties
 import kotlin.reflect.KClass
@@ -20,7 +24,7 @@ fun loadBaseConfig(config: ApplicationConfig, credentials: VaultCredentials): Pr
 fun Properties.toConsumerConfig(
     groupId: String,
     valueDeserializer: KClass<out Deserializer<out Any>>,
-    keyDeserializer: KClass<out Deserializer<out Any>> = valueDeserializer
+    keyDeserializer: KClass<out Deserializer<out Any>> = StringDeserializer::class
 ): Properties = Properties().also {
     it.putAll(this)
     it[ConsumerConfig.GROUP_ID_CONFIG] = groupId
@@ -31,7 +35,7 @@ fun Properties.toConsumerConfig(
 fun Properties.toProducerConfig(
     groupId: String,
     valueSerializer: KClass<out Serializer<out Any>>,
-    keySerializer: KClass<out Serializer<out Any>> = valueSerializer
+    keySerializer: KClass<out Serializer<out Any>> = StringSerializer::class
 ): Properties = Properties().also {
     it.putAll(this)
     it[ConsumerConfig.GROUP_ID_CONFIG] = groupId

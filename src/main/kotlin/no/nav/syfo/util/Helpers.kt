@@ -1,10 +1,12 @@
-package no.nav.syfo
+package no.nav.syfo.util
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import net.logstash.logback.argument.StructuredArgument
+import no.nav.syfo.NETWORK_CALL_SUMMARY
+import no.nav.syfo.log
 import java.io.IOException
 import kotlin.reflect.KClass
 

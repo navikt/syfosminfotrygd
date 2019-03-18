@@ -1,4 +1,4 @@
-package no.nav.syfo
+package no.nav.syfo.util
 
 import no.kith.xmlstds.msghead._2006_05_24.XMLMsgHead
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
@@ -11,9 +11,6 @@ import no.trygdeetaten.xml.eiff._1.XMLMottakenhetBlokk
 import javax.xml.bind.JAXBContext
 import javax.xml.bind.Marshaller
 import javax.xml.bind.Unmarshaller
-import javax.xml.datatype.DatatypeFactory
-
-val newInstance: DatatypeFactory = DatatypeFactory.newInstance()
 
 val infotrygdSporringJaxBContext: JAXBContext = JAXBContext.newInstance(InfotrygdForesp::class.java)
 val infotrygdSporringMarshaller: Marshaller = infotrygdSporringJaxBContext.createMarshaller()

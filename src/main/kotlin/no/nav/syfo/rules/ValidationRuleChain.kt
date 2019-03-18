@@ -218,9 +218,6 @@ private fun List<TypeSMinfo>.findOverlapping(smRange: ClosedRange<LocalDate>): T
                     it.periode.arbufoerTOM.plusDays(3) >= smRange.start
         }
 
-fun TypeSMinfo.range(): ClosedRange<LocalDate> =
-        periode.arbufoerFOM.rangeTo(periode.arbufoerTOM)
-
 fun List<HelseOpplysningerArbeidsuforhet.Aktivitet.Periode>.sortedPeriodeTOMDate(): List<LocalDate> =
         map { it.periodeTOMDato }.sorted()
 

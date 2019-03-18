@@ -32,6 +32,15 @@ import no.nav.syfo.rules.ValidationRuleChain
 import no.nav.syfo.rules.sortedSMInfos
 import no.nav.syfo.sak.avro.PrioritetType
 import no.nav.syfo.sak.avro.ProduceTask
+import no.nav.syfo.util.connectionFactory
+import no.nav.syfo.util.fellesformatMarshaller
+import no.nav.syfo.util.fellesformatUnmarshaller
+import no.nav.syfo.util.infotrygdSporringMarshaller
+import no.nav.syfo.util.infotrygdSporringUnmarshaller
+import no.nav.syfo.util.loadBaseConfig
+import no.nav.syfo.util.retryAsync
+import no.nav.syfo.util.toConsumerConfig
+import no.nav.syfo.util.toProducerConfig
 import no.nav.syfo.ws.configureSTSFor
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.binding.ArbeidsfordelingV1
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.ArbeidsfordelingKriterier
@@ -311,8 +320,8 @@ suspend fun CoroutineScope.produceManualTask(kafkaProducer: KafkaProducer<String
     log.info("Message is manual outcome $logKeys", *logValues)
     RULE_HIT_STATUS_COUNTER.labels(Status.MANUAL_PROCESSING.name).inc()
 
-    val geografiskTilknytning = fetchGeografiskTilknytning(personV3, receivedSykmelding, logKeys, logValues)
-    val finnBehandlendeEnhetListeResponse = fetchBehandlendeEnhet(arbeidsfordelingV1, geografiskTilknytning.await().geografiskTilknytning, logKeys, logValues)
+    val geografiskTilknytning = fetchGeografiskTilknytningAsync(personV3, receivedSykmelding, logKeys, logValues)
+    val finnBehandlendeEnhetListeResponse = fetchBehandlendeEnhetAsync(arbeidsfordelingV1, geografiskTilknytning.await().geografiskTilknytning, logKeys, logValues)
 
     when (geografiskTilknytning.await().diskresjonskode?.kodeverksRef) {
         "SPSF" -> createTask(kafkaProducer, receivedSykmelding, results, "2106", logKeys, logValues)
@@ -344,7 +353,7 @@ fun createTask(kafkaProducer: KafkaProducer<String, ProduceTask>, receivedSykmel
     log.info("Message sendt to topic: aapen-syfo-oppgave-produserOppgave $logKeys", *logValues)
 }
 
-fun CoroutineScope.fetchGeografiskTilknytning(
+fun CoroutineScope.fetchGeografiskTilknytningAsync(
     personV3: PersonV3,
     receivedSykmelding: ReceivedSykmelding,
     logKeys: String,
@@ -357,7 +366,7 @@ fun CoroutineScope.fetchGeografiskTilknytning(
                             .withType(Personidenter().withValue("FNR")))))
         }
 
-fun CoroutineScope.fetchBehandlendeEnhet(
+fun CoroutineScope.fetchBehandlendeEnhetAsync(
     arbeidsfordelingV1: ArbeidsfordelingV1,
     geografiskTilknytning: GeografiskTilknytning?,
     logKeys: String,
@@ -380,7 +389,7 @@ fun CoroutineScope.fetchBehandlendeEnhet(
 
 fun findNavOffice(finnBehandlendeEnhetListeResponse: FinnBehandlendeEnhetListeResponse?): String =
     if (finnBehandlendeEnhetListeResponse?.behandlendeEnhetListe?.firstOrNull()?.enhetId == null) {
-        "0393"
+        "0393" // NAV Oppfølging utland
     } else {
         finnBehandlendeEnhetListeResponse.behandlendeEnhetListe.first().enhetId
     }
@@ -400,7 +409,6 @@ fun CoroutineScope.fetchInfotrygdForesp(
     logKeys: String,
     logValues: Array<StructuredArgument>
 ): Deferred<InfotrygdForesp> =
-        // TODO, retryAsync not working when consumedMessage is null, happens when infotrygd is down
         retryAsync("it_hent_infotrygdForesp", logKeys, logValues, IOException::class, WstxException::class, IllegalStateException::class) {
             val infotrygdForespRequest = createInfotrygdForesp(receivedSykmelding.personNrPasient, healthInformation, receivedSykmelding.personNrLege)
             val temporaryQueue = session.createTemporaryQueue()

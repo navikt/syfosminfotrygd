@@ -1,8 +1,9 @@
-package no.nav.syfo
+package no.nav.syfo.util
 
 import com.ibm.mq.jms.MQConnectionFactory
 import com.ibm.msg.client.wmq.WMQConstants
 import com.ibm.msg.client.wmq.compat.base.internal.MQC
+import no.nav.syfo.ApplicationConfig
 
 fun connectionFactory(config: ApplicationConfig) = MQConnectionFactory().apply {
     hostName = config.mqHostname

@@ -11,6 +11,7 @@ import no.nav.helse.sm2013.ArsakType
 import no.nav.helse.sm2013.CV
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.helse.sm2013.Ident
+import no.nav.syfo.util.fellesformatMarshaller
 import no.trygdeetaten.xml.eiff._1.XMLEIFellesformat
 import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek

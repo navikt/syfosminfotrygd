@@ -1,11 +1,10 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import com.github.jengelman.gradle.plugins.shadow.transformers.ServiceFileTransformer
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 group = "no.nav.syfo"
 version = "1.0.27"
 
-val artemisVersion = "2.6.2"
+val artemisVersion = "2.6.4"
 val avroVersion = "1.8.2"
 val confluentVersion = "5.0.0"
 val syfooppgaveSchemasVersion = "1.2-SNAPSHOT"
