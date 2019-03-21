@@ -165,9 +165,10 @@ suspend fun CoroutineScope.blockingApplicationLogic(
             kafkaConsumer.poll(Duration.ofMillis(0)).forEach {
                 val receivedSykmelding: ReceivedSykmelding = objectMapper.readValue(it.value())
                 val logValues = arrayOf(
-                        keyValue("smId", receivedSykmelding.navLogId),
+                        keyValue("mottakId", receivedSykmelding.navLogId),
                         keyValue("msgId", receivedSykmelding.msgId),
-                        keyValue("orgNr", receivedSykmelding.legekontorOrgNr)
+                        keyValue("orgNr", receivedSykmelding.legekontorOrgNr),
+                        keyValue("sykmeldingId", receivedSykmelding.sykmelding.id)
                 )
                 val logKeys = logValues.joinToString(prefix = "(", postfix = ")", separator = ",") { "{}" }
                 log.info("Received a SM2013 $logKeys", *logValues)
