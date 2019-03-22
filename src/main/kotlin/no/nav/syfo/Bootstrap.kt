@@ -333,7 +333,7 @@ suspend fun CoroutineScope.produceManualTask(kafkaProducer: KafkaProducer<String
 fun createTask(kafkaProducer: KafkaProducer<String, ProduceTask>, receivedSykmelding: ReceivedSykmelding, results: List<Rule<Any>>, navKontor: String, logKeys: String, logValues: Array<StructuredArgument>) {
     kafkaProducer.send(ProducerRecord("aapen-syfo-oppgave-produserOppgave",
             ProduceTask().apply {
-                messageId = receivedSykmelding.msgId
+                messageId = receivedSykmelding.sykmelding.id
                 aktoerId = receivedSykmelding.sykmelding.pasientAktoerId
                 tildeltEnhetsnr = navKontor
                 opprettetAvEnhetsnr = "9999"
