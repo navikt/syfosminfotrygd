@@ -48,7 +48,7 @@ spec:
     - name: MQ_HOST_NAME
       value: {{MQ_HOST_NAME}}
     - name: MQ_PORT
-      value: {{MQ_PORT}}
+      value: '{{MQ_PORT}}'
     - name: MQ_GATEWAY_NAME
       value: {{MQ_GATEWAY_NAME}}
     - name: MQ_CHANNEL_NAME
