@@ -162,7 +162,6 @@ enum class ValidationRuleChain(override val ruleId: Int?, override val status: S
 
     @Description("Hvis maks sykepenger er utbetalt")
     MAX_SICK_LEAVE_PAYOUT(1551, Status.MANUAL_PROCESSING, { (healthInformation, infotrygdForesp) ->
-        // TODO innkomende sykmeldings peridode, overlapper med nyeste max dato
         infotrygdForesp.sMhistorikk?.sykmelding != null &&
                 infotrygdForesp.sMhistorikk.sykmelding.findOverlapping(healthInformation.aktivitet.periode.toRange())?.periode?.stans.equals("MAX")
     }),
@@ -232,6 +231,3 @@ fun List<TypeSMinfo>.sortedFOMDate(): List<LocalDate> =
 
 fun List<TypeSMinfo.Historikk>.sortedSMinfoHistorikk(): List<TypeSMinfo.Historikk> =
         sortedBy { it.endringsDato }
-
-fun HelseOpplysningerArbeidsuforhet.Aktivitet.Periode.range(): ClosedRange<LocalDate> =
-        periodeTOMDato.rangeTo(periodeTOMDato)

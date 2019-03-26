@@ -1,6 +1,7 @@
 package no.nav.syfo
 
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
+import no.nav.syfo.metrics.RULE_HIT_COUNTER
 import no.nav.syfo.model.Status
 
 data class RuleData<T>(val healthInformation: HelseOpplysningerArbeidsuforhet, val metadata: T)

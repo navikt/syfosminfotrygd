@@ -26,6 +26,7 @@ import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.helse.sm2013.KontrollSystemBlokk
 import no.nav.helse.sm2013.KontrollsystemBlokkType
 import no.nav.syfo.api.registerNaisApi
+import no.nav.syfo.metrics.RULE_HIT_STATUS_COUNTER
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.model.Status
 import no.nav.syfo.rules.ValidationRuleChain

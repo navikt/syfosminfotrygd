@@ -1,5 +1,6 @@
 # SYFO sykemelding infotrygd
-Application for handling rules used for infotrygd and later on persisting them
+Application for handling rules used for infotrygd and later on persisting them in infotrygd or create a manuall task
+to persisting them in infotrygd
 
 ## Technologies used
 * Kotlin
@@ -7,23 +8,27 @@ Application for handling rules used for infotrygd and later on persisting them
 * Gradle
 * Spek
 * Kafka
+* Mq
+* Vault
+
+#### Requirements
+
+* JDK 11
 
 ## Getting started
-### Running locally
-Unless you change kafka_consumer.properties you will need to either connect to one of NAVs kafka clusters or use the
-[docker compose](https://github.com/navikt/navkafka-docker-compose) environment to test it against. To run it the
-environment variables `SYFOSMINFOTRYGD_USERNAME` and `SYFOSMINFOTRYGD_PASSWORD` needs to be set to
-a user that has access to the topic defined by the environment variable `KAFKA_SM2013_JOURNALING_TOPIC`
+#### Running locally
+`./gradlew run`
 
-
-### Building the application
-#### Compile and package application
-To build locally and run the integration tests you can simply run `./gradlew shadowJar` or  on windows 
+#### Build and run tests
+To build locally and run the integration tests you can simply run `./gradlew shadowJar` or on windows 
 `gradlew.bat shadowJar`
+
 
 #### Creating a docker image
 Creating a docker image should be as simple as `docker build -t syfosminfotrygd .`
 
+#### Running a docker image
+`docker run --rm -it -p 8080:8080 syfosminfotrygd`
 
 ## Contact us
 ### Code/project related questions can be sent to
