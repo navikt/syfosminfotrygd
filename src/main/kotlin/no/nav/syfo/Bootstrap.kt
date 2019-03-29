@@ -28,7 +28,9 @@ import no.nav.helse.sm2013.KontrollsystemBlokkType
 import no.nav.syfo.api.registerNaisApi
 import no.nav.syfo.metrics.RULE_HIT_STATUS_COUNTER
 import no.nav.syfo.model.ReceivedSykmelding
+import no.nav.syfo.model.RuleInfo
 import no.nav.syfo.model.Status
+import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.rules.ValidationRuleChain
 import no.nav.syfo.rules.sortedSMInfos
 import no.nav.syfo.sak.avro.PrioritetType
@@ -115,7 +117,10 @@ fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCo
 
                     val kafkaconsumer = KafkaConsumer<String, String>(consumerProperties)
                     kafkaconsumer.subscribe(listOf(env.sm2013AutomaticHandlingTopic, env.smPaperAutomaticHandlingTopic))
-                    val kafkaproducer = KafkaProducer<String, ProduceTask>(producerProperties)
+                    val kafkaproducerCreateTask = KafkaProducer<String, ProduceTask>(producerProperties)
+
+                    val kafkaproducervalidationResult = KafkaProducer<String, ValidationResult>(producerProperties)
+
                     val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
                     val infotrygdOppdateringQueue = session.createQueue("queue:///${env.infotrygdOppdateringQueue}?targetClient=1")
                     val infotrygdSporringQueue = session.createQueue("queue:///${env.infotrygdSporringQueue}?targetClient=1")
@@ -136,7 +141,7 @@ fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCo
                     configureSTSFor(arbeidsfordelingV1, credentials.serviceuserUsername,
                             credentials.serviceuserPassword, env.securityTokenServiceUrl)
 
-                    blockingApplicationLogic(applicationState, kafkaconsumer, kafkaproducer, infotrygdOppdateringProducer, infotrygdSporringProducer, session, personV3, arbeidsfordelingV1)
+                    blockingApplicationLogic(applicationState, kafkaconsumer, kafkaproducerCreateTask, kafkaproducervalidationResult, infotrygdOppdateringProducer, infotrygdSporringProducer, session, personV3, arbeidsfordelingV1, env)
                 }
             }.toList()
 
@@ -155,12 +160,14 @@ fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCo
 suspend fun CoroutineScope.blockingApplicationLogic(
     applicationState: ApplicationState,
     kafkaConsumer: KafkaConsumer<String, String>,
-    kafkaProducer: KafkaProducer<String, ProduceTask>,
+    kafkaproducerCreateTask: KafkaProducer<String, ProduceTask>,
+    kafkaproducervalidationResult: KafkaProducer<String, ValidationResult>,
     infotrygdOppdateringProducer: MessageProducer,
     infotrygdSporringProducer: MessageProducer,
     session: Session,
     personV3: PersonV3,
-    arbeidsfordelingV1: ArbeidsfordelingV1
+    arbeidsfordelingV1: ArbeidsfordelingV1,
+    env: Environment
 ) {
     while (applicationState.running) {
             kafkaConsumer.poll(Duration.ofMillis(0)).forEach {
@@ -186,9 +193,14 @@ suspend fun CoroutineScope.blockingApplicationLogic(
                 val results = listOf(validationRuleResults).flatten()
                 log.info("Rules hit {}, $logKeys", results.map { rule -> rule.name }, *logValues)
 
+                val validationResult = validationResult(results)
+
+                kafkaproducervalidationResult.send(ProducerRecord(env.sm2013BehandlingsUtfallToipic, receivedSykmelding.sykmelding.id, validationResult))
+                log.info("Validation results send to kafka {} $logKeys", env.sm2013BehandlingsUtfallToipic, *logValues)
+
                 when {
                     results.any { rule -> rule.status == Status.MANUAL_PROCESSING } ->
-                        produceManualTask(kafkaProducer, receivedSykmelding, results, personV3, arbeidsfordelingV1, logKeys, logValues)
+                        produceManualTask(kafkaproducerCreateTask, receivedSykmelding, validationResult, personV3, arbeidsfordelingV1, logKeys, logValues)
                     else -> sendInfotrygdOppdatering(infotrygdOppdateringProducer, session, createInfotrygdInfo(receivedSykmelding.fellesformat, InfotrygdForespAndHealthInformation(infotrygdForespResponse.await(), healthInformation)), logKeys, logValues)
                 }
             }
@@ -318,7 +330,7 @@ fun findOprasjonstype(periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode
     }
 }
 
-suspend fun CoroutineScope.produceManualTask(kafkaProducer: KafkaProducer<String, ProduceTask>, receivedSykmelding: ReceivedSykmelding, results: List<Rule<Any>>, personV3: PersonV3, arbeidsfordelingV1: ArbeidsfordelingV1, logKeys: String, logValues: Array<StructuredArgument>) {
+suspend fun CoroutineScope.produceManualTask(kafkaProducer: KafkaProducer<String, ProduceTask>, receivedSykmelding: ReceivedSykmelding, validationResult: ValidationResult, personV3: PersonV3, arbeidsfordelingV1: ArbeidsfordelingV1, logKeys: String, logValues: Array<StructuredArgument>) {
     log.info("Message is manual outcome $logKeys", *logValues)
     RULE_HIT_STATUS_COUNTER.labels(Status.MANUAL_PROCESSING.name).inc()
 
@@ -326,12 +338,12 @@ suspend fun CoroutineScope.produceManualTask(kafkaProducer: KafkaProducer<String
     val finnBehandlendeEnhetListeResponse = fetchBehandlendeEnhetAsync(arbeidsfordelingV1, geografiskTilknytning.await().geografiskTilknytning, logKeys, logValues)
 
     when (geografiskTilknytning.await().diskresjonskode?.kodeverksRef) {
-        "SPSF" -> createTask(kafkaProducer, receivedSykmelding, results, "2106", logKeys, logValues)
-        else -> createTask(kafkaProducer, receivedSykmelding, results, findNavOffice(finnBehandlendeEnhetListeResponse.await()), logKeys, logValues)
+        "SPSF" -> createTask(kafkaProducer, receivedSykmelding, validationResult, "2106", logKeys, logValues)
+        else -> createTask(kafkaProducer, receivedSykmelding, validationResult, findNavOffice(finnBehandlendeEnhetListeResponse.await()), logKeys, logValues)
     }
 }
 
-fun createTask(kafkaProducer: KafkaProducer<String, ProduceTask>, receivedSykmelding: ReceivedSykmelding, results: List<Rule<Any>>, navKontor: String, logKeys: String, logValues: Array<StructuredArgument>) {
+fun createTask(kafkaProducer: KafkaProducer<String, ProduceTask>, receivedSykmelding: ReceivedSykmelding, validationResult: ValidationResult, navKontor: String, logKeys: String, logValues: Array<StructuredArgument>) {
     kafkaProducer.send(ProducerRecord("aapen-syfo-oppgave-produserOppgave", receivedSykmelding.sykmelding.id,
             ProduceTask().apply {
                 messageId = receivedSykmelding.msgId
@@ -340,7 +352,8 @@ fun createTask(kafkaProducer: KafkaProducer<String, ProduceTask>, receivedSykmel
                 opprettetAvEnhetsnr = "9999"
                 behandlesAvApplikasjon = "FS22" // Gosys
                 orgnr = receivedSykmelding.legekontorOrgNr ?: ""
-                beskrivelse = "Manuell behandling Sykmelding: ${results.joinToString(", ", prefix = "\"", postfix = "\"")}"
+                // TODO print out the rule validationResult.ruleHits.textToUser
+                beskrivelse = "Manuell behandling Sykmelding: ${validationResult.ruleHits}"
                 temagruppe = "SYM"
                 tema = ""
                 behandlingstema = "BEH_EL_SYM"
@@ -429,3 +442,13 @@ fun CoroutineScope.fetchInfotrygdForesp(
                 temporaryQueue.delete()
             }
         }
+
+fun validationResult(results: List<Rule<Any>>): ValidationResult =
+        ValidationResult(
+                status = results
+                        .map { status -> status.status }.let {
+                            it.firstOrNull { status -> status == Status.MANUAL_PROCESSING }
+                                    ?: Status.OK
+                        },
+                ruleHits = results.map { rule -> RuleInfo(rule.name, rule.textToUser, rule.textToTreater) }
+        )

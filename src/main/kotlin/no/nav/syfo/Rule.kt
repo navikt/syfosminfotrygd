@@ -10,6 +10,8 @@ interface Rule<in T> {
     val name: String
     val ruleId: Int?
     val status: Status
+    val textToUser: String
+    val textToTreater: String
     val predicate: (T) -> Boolean
     operator fun invoke(input: T) = predicate(input)
 }
