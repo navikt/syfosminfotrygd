@@ -35,6 +35,7 @@ import no.nav.syfo.rules.ValidationRuleChain
 import no.nav.syfo.rules.sortedSMInfos
 import no.nav.syfo.sak.avro.PrioritetType
 import no.nav.syfo.sak.avro.ProduceTask
+import no.nav.syfo.util.JacksonKafkaSerializer
 import no.nav.syfo.util.connectionFactory
 import no.nav.syfo.util.fellesformatMarshaller
 import no.nav.syfo.util.fellesformatUnmarshaller
@@ -113,13 +114,15 @@ fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCo
                 launch {
                     val kafkaBaseConfig = loadBaseConfig(env, credentials)
                     val consumerProperties = kafkaBaseConfig.toConsumerConfig("${env.applicationName}-consumer", valueDeserializer = StringDeserializer::class)
-                    val producerProperties = kafkaBaseConfig.toProducerConfig(env.applicationName, valueSerializer = KafkaAvroSerializer::class)
+                    val producerPropertiesCreateTask = kafkaBaseConfig.toProducerConfig(env.applicationName, valueSerializer = KafkaAvroSerializer::class)
+
+                    val producerPropertiesvalidationResult = kafkaBaseConfig.toProducerConfig(env.applicationName, valueSerializer = JacksonKafkaSerializer::class)
 
                     val kafkaconsumer = KafkaConsumer<String, String>(consumerProperties)
                     kafkaconsumer.subscribe(listOf(env.sm2013AutomaticHandlingTopic, env.smPaperAutomaticHandlingTopic))
-                    val kafkaproducerCreateTask = KafkaProducer<String, ProduceTask>(producerProperties)
+                    val kafkaproducerCreateTask = KafkaProducer<String, ProduceTask>(producerPropertiesCreateTask)
 
-                    val kafkaproducervalidationResult = KafkaProducer<String, ValidationResult>(producerProperties)
+                    val kafkaproducervalidationResult = KafkaProducer<String, ValidationResult>(producerPropertiesvalidationResult)
 
                     val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
                     val infotrygdOppdateringQueue = session.createQueue("queue:///${env.infotrygdOppdateringQueue}?targetClient=1")
