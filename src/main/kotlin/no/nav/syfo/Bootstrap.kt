@@ -191,7 +191,7 @@ suspend fun CoroutineScope.blockingApplicationLogic(
 
                 log.info("Going through rules $logKeys", *logValues)
 
-                val validationRuleResults = ValidationRuleChain.values().executeFlow(healthInformation, infotrygdForespResponse.await())
+                val validationRuleResults = ValidationRuleChain.values().executeFlow(receivedSykmelding.sykmelding, infotrygdForespResponse.await())
 
                 val results = listOf(validationRuleResults).flatten()
                 log.info("Rules hit {}, $logKeys", results.map { rule -> rule.name }, *logValues)
@@ -453,5 +453,5 @@ fun validationResult(results: List<Rule<Any>>): ValidationResult =
                             it.firstOrNull { status -> status == Status.MANUAL_PROCESSING }
                                     ?: Status.OK
                         },
-                ruleHits = results.map { rule -> RuleInfo(rule.name, rule.textToUser, rule.textToTreater) }
+                ruleHits = results.map { rule -> RuleInfo(rule.name, rule.messageForUser, rule.messageForSender) }
         )

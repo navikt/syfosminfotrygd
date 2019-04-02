@@ -3,7 +3,8 @@ package no.nav.syfo
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.infotrygd.foresp.StatusType
 import no.nav.helse.infotrygd.foresp.TypeSMinfo
-import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
+import no.nav.syfo.model.Gradert
+import no.nav.syfo.model.Sykmelding
 import no.nav.syfo.rules.ValidationRuleChain
 
 import org.amshove.kluent.shouldEqual
@@ -12,10 +13,6 @@ import org.spekframework.spek2.style.specification.describe
 import java.time.LocalDate
 
 object ValidationRuleChainSpek : Spek({
-    fun deafaultHelseOpplysningerArbeidsuforhet() = HelseOpplysningerArbeidsuforhet().apply {
-        aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
-        }
-    }
 
     fun deafaultInfotrygdForesp() = InfotrygdForesp().apply {
         hovedStatus = StatusType().apply {
@@ -24,21 +21,23 @@ object ValidationRuleChainSpek : Spek({
     }
 
     fun ruleData(
-        healthInformation: HelseOpplysningerArbeidsuforhet,
+        healthInformation: Sykmelding,
         infotrygdForesp: InfotrygdForesp
     ): RuleData<InfotrygdForesp> = RuleData(healthInformation, infotrygdForesp)
 
     describe("Testing infotrygd rules and checking the rule outcomes") {
 
         it("Should check rule GRADUAL_SYKMELDING_COMBINED_WITH_TRAVEL, should trigger rule") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
-            healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                gradertSykmelding = HelseOpplysningerArbeidsuforhet.Aktivitet.Periode.GradertSykmelding().apply {
-                    sykmeldingsgrad = 90
-                    isReisetilskudd = true
-                }
-                isReisetilskudd = true
-            })
+            val healthInformation = generateSykmelding(perioder = listOf(
+                    generatePeriode(
+                            fom = LocalDate.now(),
+                            tom = LocalDate.now().plusMonths(3).plusDays(1),
+                            gradert = Gradert(
+                                    reisetilskudd = true,
+                                    grad = 90
+                            )
+                    )
+            ))
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
 
@@ -46,14 +45,16 @@ object ValidationRuleChainSpek : Spek({
         }
 
         it("Should check rule GRADUAL_SYKMELDING_COMBINED_WITH_TRAVEL, should NOT trigger rule") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
-            healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                gradertSykmelding = HelseOpplysningerArbeidsuforhet.Aktivitet.Periode.GradertSykmelding().apply {
-                    sykmeldingsgrad = 90
-                    isReisetilskudd = true
-                }
-                isReisetilskudd = false
-            })
+            val healthInformation = generateSykmelding(perioder = listOf(
+                    generatePeriode(
+                            fom = LocalDate.now(),
+                            tom = LocalDate.now().plusMonths(3).plusDays(1),
+                            gradert = Gradert(
+                                    reisetilskudd = false,
+                                    grad = 90
+                            )
+                    )
+            ))
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
 
@@ -61,12 +62,14 @@ object ValidationRuleChainSpek : Spek({
         }
 
         it("Should check rule NUMBER_OF_TREATMENT_DAYS_SET, should trigger rule") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
-            healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                behandlingsdager = HelseOpplysningerArbeidsuforhet.Aktivitet.Periode.Behandlingsdager().apply {
-                    antallBehandlingsdagerUke = 1
-                }
-            })
+
+            val healthInformation = generateSykmelding(perioder = listOf(
+                    generatePeriode(
+                            fom = LocalDate.now(),
+                            tom = LocalDate.now().plusMonths(3).plusDays(1),
+                            behandlingsdager = 1
+                    )
+            ))
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
 
@@ -74,9 +77,7 @@ object ValidationRuleChainSpek : Spek({
         }
 
         it("Should check rule NUMBER_OF_TREATMENT_DAYS_SET, should NOT trigger rule") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
-            healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-            })
+            val healthInformation = generateSykmelding()
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
 
@@ -84,10 +85,16 @@ object ValidationRuleChainSpek : Spek({
         }
 
         it("Should check rule TRAVEL_SUBSIDY_SPECIFIED, should trigger rule") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
-            healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                isReisetilskudd = true
-            })
+            val healthInformation = generateSykmelding(perioder = listOf(
+                    generatePeriode(
+                            fom = LocalDate.now(),
+                            tom = LocalDate.now().plusMonths(3).plusDays(1),
+                            gradert = Gradert(
+                                    reisetilskudd = true,
+                                    grad = 90
+                            )
+                    )
+            ))
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
 
@@ -95,10 +102,16 @@ object ValidationRuleChainSpek : Spek({
         }
 
         it("Should check rule TRAVEL_SUBSIDY_SPECIFIED, should NOT trigger rule") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
-            healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                isReisetilskudd = false
-            })
+            val healthInformation = generateSykmelding(perioder = listOf(
+                    generatePeriode(
+                            fom = LocalDate.now(),
+                            tom = LocalDate.now().plusMonths(3).plusDays(1),
+                            gradert = Gradert(
+                                    reisetilskudd = false,
+                                    grad = 90
+                            )
+                    )
+            ))
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
 
@@ -106,7 +119,7 @@ object ValidationRuleChainSpek : Spek({
         }
 
         it("Should check rule PATIENT_NOT_IN_IP, should trigger rule") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
+            val healthInformation = generateSykmelding()
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.pasient = InfotrygdForesp.Pasient().apply {
                 isFinnes = false
@@ -116,7 +129,7 @@ object ValidationRuleChainSpek : Spek({
             }
 
         it("Should check rule PATIENT_NOT_IN_IP, should NOT trigger rule") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
+            val healthInformation = generateSykmelding()
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.pasient = InfotrygdForesp.Pasient().apply {
                 isFinnes = true
@@ -137,10 +150,12 @@ object ValidationRuleChainSpek : Spek({
                 })
             }
 
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
-            healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                periodeFOMDato = LocalDate.of(2018, 1, 1)
-            })
+            val healthInformation = generateSykmelding(perioder = listOf(
+                    generatePeriode(
+                            fom = LocalDate.of(2018, 1, 1),
+                            tom = LocalDate.now().plusMonths(3).plusDays(1)
+                    )
+            ))
 
             ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
         }
@@ -157,20 +172,23 @@ object ValidationRuleChainSpek : Spek({
                 })
             }
 
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
-            healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                periodeFOMDato = LocalDate.of(2018, 1, 9)
-                periodeTOMDato = LocalDate.of(2018, 1, 15)
-            })
+            val healthInformation = generateSykmelding(perioder = listOf(
+                generatePeriode(
+                        fom = LocalDate.of(2018, 1, 9),
+                        tom = LocalDate.of(2018, 1, 15)
+                        )
+        ))
 
             ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
         }
 
         it("Should check rule SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_1, should trigger rule") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
-            healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                periodeFOMDato = LocalDate.of(2018, 1, 2)
-            })
+            val healthInformation = generateSykmelding(perioder = listOf(
+                    generatePeriode(
+                            fom = LocalDate.of(2018, 1, 2),
+                            tom = LocalDate.of(2018, 1, 15)
+                    )
+            ))
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
@@ -188,10 +206,12 @@ object ValidationRuleChainSpek : Spek({
         }
 
         it("Should check rule SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_1, should NOT trigger rule") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
-            healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                periodeFOMDato = LocalDate.of(2018, 1, 3)
-            })
+            val healthInformation = generateSykmelding(perioder = listOf(
+                    generatePeriode(
+                            fom = LocalDate.of(2018, 1, 3),
+                            tom = LocalDate.of(2018, 1, 15)
+                    )
+            ))
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
@@ -209,10 +229,12 @@ object ValidationRuleChainSpek : Spek({
         }
 
         it("Should check rule SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_2, should trigger rule") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
-            healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                periodeFOMDato = LocalDate.of(2018, 1, 4)
-            })
+            val healthInformation = generateSykmelding(perioder = listOf(
+                    generatePeriode(
+                            fom = LocalDate.of(2018, 1, 4),
+                            tom = LocalDate.now().plusMonths(3).plusDays(1)
+                    )
+            ))
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
@@ -229,10 +251,12 @@ object ValidationRuleChainSpek : Spek({
         }
 
         it("Should check rule SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_2, should NOT trigger rule") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
-            healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                periodeFOMDato = LocalDate.of(2018, 1, 4)
-            })
+            val healthInformation = generateSykmelding(perioder = listOf(
+                    generatePeriode(
+                            fom = LocalDate.of(2018, 1, 4),
+                            tom = LocalDate.now().plusMonths(3).plusDays(1)
+                    )
+            ))
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
@@ -249,10 +273,12 @@ object ValidationRuleChainSpek : Spek({
         }
 
         it("Should check rule SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_3, should trigger rule") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
-            healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                periodeFOMDato = LocalDate.of(2018, 1, 6)
-            })
+            val healthInformation = generateSykmelding(perioder = listOf(
+                    generatePeriode(
+                            fom = LocalDate.of(2018, 1, 6),
+                            tom = LocalDate.now().plusMonths(3).plusDays(1)
+                    )
+            ))
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
@@ -269,10 +295,12 @@ object ValidationRuleChainSpek : Spek({
         }
 
         it("Should check rule SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_3, should NOT trigger rule") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
-            healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                periodeFOMDato = LocalDate.of(2018, 1, 6)
-            })
+            val healthInformation = generateSykmelding(perioder = listOf(
+                    generatePeriode(
+                            fom = LocalDate.of(2018, 1, 6),
+                            tom = LocalDate.now().plusMonths(3).plusDays(1)
+                    )
+            ))
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
@@ -289,15 +317,13 @@ object ValidationRuleChainSpek : Spek({
         }
 
         it("Should check rule NEW_CLEAN_BILL_DATE_BEFORE_ARBUFORTOM, should trigger rule") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
-            healthInformation.aktivitet.periode.add(
-                    HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                        periodeTOMDato = LocalDate.of(2017, 1, 2)
-                    }
-            )
-            healthInformation.prognose = HelseOpplysningerArbeidsuforhet.Prognose().apply {
-                isArbeidsforEtterEndtPeriode = true
-            }
+            val healthInformation = generateSykmelding(perioder = listOf(
+                    generatePeriode(
+                            fom = LocalDate.of(2017, 1, 2),
+                            tom = LocalDate.of(2017, 2, 1)
+                            )
+                    ),
+                    prognose = generatePrognose(arbeidsforEtterPeriode = true))
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
@@ -312,15 +338,12 @@ object ValidationRuleChainSpek : Spek({
         }
 
         it("Should check rule NEW_CLEAN_BILL_DATE_BEFORE_ARBUFORTOM, should NOT trigger rule") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
-            healthInformation.aktivitet.periode.add(
-                    HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                        periodeTOMDato = LocalDate.of(2017, 1, 2)
-                    }
-            )
-            healthInformation.prognose = HelseOpplysningerArbeidsuforhet.Prognose().apply {
-                isArbeidsforEtterEndtPeriode = true
-            }
+            val healthInformation = generateSykmelding(perioder = listOf(
+                    generatePeriode(
+                            fom = LocalDate.of(2017, 1, 2),
+                            tom = LocalDate.now().plusMonths(3).plusDays(1))
+            ),
+                    prognose = generatePrognose(arbeidsforEtterPeriode = true))
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
@@ -333,15 +356,11 @@ object ValidationRuleChainSpek : Spek({
         }
 
         it("Should check rule NEW_CLEAN_BILL_DATE_BEFORE_PAYOUT, should trigger rule") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
-            healthInformation.aktivitet.periode.add(
-                    HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                        periodeTOMDato = LocalDate.of(2017, 1, 2)
-                    }
-            )
-            healthInformation.prognose = HelseOpplysningerArbeidsuforhet.Prognose().apply {
-                isArbeidsforEtterEndtPeriode = true
-            }
+            val healthInformation = generateSykmelding(perioder = listOf(
+                    generatePeriode(
+                            tom = LocalDate.of(2017, 1, 2))
+            ),
+                    prognose = generatePrognose(arbeidsforEtterPeriode = true))
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
@@ -357,15 +376,11 @@ object ValidationRuleChainSpek : Spek({
         }
 
         it("Should check rule NEW_CLEAN_BILL_DATE_BEFORE_PAYOUT, should NOT trigger rule") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
-            healthInformation.aktivitet.periode.add(
-                    HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                        periodeTOMDato = LocalDate.of(2017, 1, 3)
-                    }
-            )
-            healthInformation.prognose = HelseOpplysningerArbeidsuforhet.Prognose().apply {
-                isArbeidsforEtterEndtPeriode = true
-            }
+            val healthInformation = generateSykmelding(perioder = listOf(
+                    generatePeriode(
+                            tom = LocalDate.of(2017, 1, 3))
+            ),
+                    prognose = generatePrognose(arbeidsforEtterPeriode = true))
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
@@ -381,15 +396,11 @@ object ValidationRuleChainSpek : Spek({
         }
 
         it("Should check rule NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE, should trigger rule") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
-            healthInformation.aktivitet.periode.add(
-                    HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                        periodeTOMDato = LocalDate.of(2018, 1, 2)
-                    }
-            )
-            healthInformation.prognose = HelseOpplysningerArbeidsuforhet.Prognose().apply {
-                isArbeidsforEtterEndtPeriode = true
-            }
+            val healthInformation = generateSykmelding(perioder = listOf(
+                    generatePeriode(
+                            tom = LocalDate.of(2018, 1, 2))
+            ),
+                    prognose = generatePrognose(arbeidsforEtterPeriode = true))
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
@@ -403,15 +414,12 @@ object ValidationRuleChainSpek : Spek({
             }
 
         it("Should check rule NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE, should NOT trigger rule") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
-            healthInformation.aktivitet.periode.add(
-                    HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                        periodeTOMDato = LocalDate.of(2018, 1, 2)
-                    }
-            )
-            healthInformation.prognose = HelseOpplysningerArbeidsuforhet.Prognose().apply {
-                isArbeidsforEtterEndtPeriode = true
-            }
+            val healthInformation = generateSykmelding(perioder = listOf(
+                    generatePeriode(
+                            fom = LocalDate.of(2018, 1, 2),
+                            tom = LocalDate.now().plusMonths(3).plusDays(1))
+            ),
+                    prognose = generatePrognose(arbeidsforEtterPeriode = true))
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
@@ -425,15 +433,12 @@ object ValidationRuleChainSpek : Spek({
         }
 
         it("Should check rule NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE, should NOT trigger rule") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
-            healthInformation.aktivitet.periode.add(
-                    HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                        periodeTOMDato = LocalDate.of(2018, 1, 2)
-                    }
-            )
-            healthInformation.prognose = HelseOpplysningerArbeidsuforhet.Prognose().apply {
-                isArbeidsforEtterEndtPeriode = true
-            }
+            val healthInformation = generateSykmelding(perioder = listOf(
+                    generatePeriode(
+                            fom = LocalDate.of(2018, 1, 2),
+                            tom = LocalDate.now().plusMonths(3).plusDays(1))
+            ),
+                    prognose = generatePrognose(arbeidsforEtterPeriode = true))
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
@@ -444,10 +449,11 @@ object ValidationRuleChainSpek : Spek({
         }
 
         it("Should check rule EXTANION_OVER_FA, should trigger rule") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
-            healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                periodeFOMDato = LocalDate.of(2018, 1, 1)
-            })
+            val healthInformation = generateSykmelding(perioder = listOf(
+                    generatePeriode(
+                            fom = LocalDate.of(2018, 1, 1),
+                            tom = LocalDate.now().plusMonths(3).plusDays(1))
+            ))
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
@@ -464,10 +470,11 @@ object ValidationRuleChainSpek : Spek({
         }
 
         it("Should check rule EXTANION_OVER_FA, should NOT trigger rule") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
-            healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                periodeFOMDato = LocalDate.of(2018, 1, 1)
-            })
+            val healthInformation = generateSykmelding(perioder = listOf(
+                    generatePeriode(
+                            fom = LocalDate.of(2018, 1, 1),
+                            tom = LocalDate.now().plusMonths(3).plusDays(1))
+            ))
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
@@ -484,7 +491,7 @@ object ValidationRuleChainSpek : Spek({
         }
 
         it("Should check rule PERSON_MOVING_KODE_FL, should trigger rule") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
+            val healthInformation = generateSykmelding()
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
@@ -505,7 +512,7 @@ object ValidationRuleChainSpek : Spek({
         }
 
         it("Should check rule PERSON_MOVING_KODE_FL, should NOT trigger rule") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
+            val healthInformation = generateSykmelding()
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
@@ -526,10 +533,11 @@ object ValidationRuleChainSpek : Spek({
         }
 
         it("Should check rule PERIOD_FOR_AA_ENDED, should trigger rule") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
-            healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                periodeFOMDato = LocalDate.of(2017, 2, 1)
-            })
+            val healthInformation = generateSykmelding(perioder = listOf(
+                    generatePeriode(
+                            fom = LocalDate.of(2017, 2, 1),
+                            tom = LocalDate.now().plusMonths(3).plusDays(1))
+            ))
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
@@ -545,10 +553,11 @@ object ValidationRuleChainSpek : Spek({
         }
 
         it("Should check rule PERIOD_FOR_AA_ENDED, should NOT trigger rule") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
-            healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                periodeFOMDato = LocalDate.of(2017, 2, 2)
-            })
+            val healthInformation = generateSykmelding(perioder = listOf(
+                    generatePeriode(
+                            fom = LocalDate.of(2017, 2, 2),
+                            tom = LocalDate.now().plusMonths(3).plusDays(1))
+            ))
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
@@ -564,10 +573,11 @@ object ValidationRuleChainSpek : Spek({
         }
 
         it("Should check rule PERIOD_IS_AF, should trigger rule") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
-            healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                periodeFOMDato = LocalDate.of(2017, 2, 1)
-            })
+            val healthInformation = generateSykmelding(perioder = listOf(
+                    generatePeriode(
+                            fom = LocalDate.of(2017, 2, 1),
+                            tom = LocalDate.now().plusMonths(3).plusDays(1))
+            ))
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
@@ -583,10 +593,11 @@ object ValidationRuleChainSpek : Spek({
         }
 
         it("Should check rule PERIOD_IS_AF, should NOT trigger rule") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
-            healthInformation.aktivitet.periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                periodeFOMDato = LocalDate.of(2017, 2, 2)
-            })
+            val healthInformation = generateSykmelding(perioder = listOf(
+                    generatePeriode(
+                            fom = LocalDate.of(2017, 2, 2),
+                            tom = LocalDate.now().plusMonths(3).plusDays(1))
+            ))
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
@@ -602,14 +613,12 @@ object ValidationRuleChainSpek : Spek({
         }
 
         it("Should check rule MAX_SICK_LEAVE_PAYOUT, should trigger rule") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet().apply {
-                aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
-                    periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                        periodeFOMDato = LocalDate.of(2017, 2, 1)
-                        periodeTOMDato = LocalDate.of(2017, 2, 10)
-                    })
-                }
-            }
+
+            val healthInformation = generateSykmelding(perioder = listOf(
+                    generatePeriode(
+                            fom = LocalDate.of(2017, 2, 1),
+                            tom = LocalDate.of(2017, 2, 10))
+            ))
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
@@ -625,14 +634,12 @@ object ValidationRuleChainSpek : Spek({
         }
 
         it("Should check rule MAX_SICK_LEAVE_PAYOUT, should NOT trigger rule") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet().apply {
-                aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
-                    periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                        periodeFOMDato = LocalDate.of(2017, 2, 11)
-                        periodeTOMDato = LocalDate.of(2017, 2, 20)
-                    })
-                }
-            }
+
+            val healthInformation = generateSykmelding(perioder = listOf(
+                    generatePeriode(
+                            fom = LocalDate.of(2017, 2, 11),
+                            tom = LocalDate.of(2017, 2, 20))
+                    ))
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
@@ -656,14 +663,12 @@ object ValidationRuleChainSpek : Spek({
         }
 
         it("Should check rule MAX_SICK_LEAVE_PAYOUT, should NOT trigger rule") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet().apply {
-                aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
-                    periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                        periodeFOMDato = LocalDate.now()
-                        periodeTOMDato = LocalDate.now().plusDays(10)
-                    })
-                }
-            }
+
+            val healthInformation = generateSykmelding(perioder = listOf(
+                    generatePeriode(
+                            fom = LocalDate.now(),
+                            tom = LocalDate.now().plusDays(10))
+                    ))
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
@@ -679,14 +684,11 @@ object ValidationRuleChainSpek : Spek({
         }
 
         it("Should check rule MAX_SICK_LEAVE_PAYOUT, should NOT trigger rule") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet().apply {
-                aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
-                    periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                        periodeFOMDato = LocalDate.now()
-                        periodeTOMDato = LocalDate.now().plusDays(10)
-                    })
-                }
-            }
+            val healthInformation = generateSykmelding(perioder = listOf(
+                    generatePeriode(
+                            fom = LocalDate.now(),
+                            tom = LocalDate.now().plusDays(10))
+                    ))
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
@@ -702,14 +704,11 @@ object ValidationRuleChainSpek : Spek({
         }
 
         it("Should check rule MAX_SICK_LEAVE_PAYOUT, should NOT trigger rule") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet().apply {
-                aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
-                    periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                        periodeFOMDato = LocalDate.now()
-                        periodeTOMDato = LocalDate.now().plusDays(10)
-                    })
-                }
-            }
+            val healthInformation = generateSykmelding(perioder = listOf(
+                    generatePeriode(
+                            fom = LocalDate.now(),
+                            tom = LocalDate.now().plusDays(10))
+                    ))
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
@@ -724,14 +723,11 @@ object ValidationRuleChainSpek : Spek({
         }
 
         it("Should check rule MAX_SICK_LEAVE_PAYOUT, should NOT trigger rule") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet().apply {
-                aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
-                    periode.add(HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                        periodeFOMDato = LocalDate.now()
-                        periodeTOMDato = LocalDate.now().plusDays(10)
-                    })
-                }
-            }
+            val healthInformation = generateSykmelding(perioder = listOf(
+                    generatePeriode(
+                            fom = LocalDate.now(),
+                            tom = LocalDate.now().plusDays(10))
+                    ))
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
 
@@ -739,7 +735,7 @@ object ValidationRuleChainSpek : Spek({
         }
 
         it("Should check rule ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING, should trigger rule") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
+            val healthInformation = generateSykmelding()
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.hovedStatus = StatusType().apply {
@@ -750,7 +746,7 @@ object ValidationRuleChainSpek : Spek({
         }
 
         it("Should check rule ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING, should NOT trigger rule") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
+            val healthInformation = generateSykmelding()
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.hovedStatus = StatusType().apply {
@@ -761,7 +757,7 @@ object ValidationRuleChainSpek : Spek({
         }
 
         it("Should check rule ERROR_FROM_IT_SMHISTORIKK_STATUS_KODEMELDING, should trigger rule") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
+            val healthInformation = generateSykmelding()
             val infotrygdForespResponse = deafaultInfotrygdForesp()
 
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
@@ -774,7 +770,7 @@ object ValidationRuleChainSpek : Spek({
         }
 
         it("Should check rule ERROR_FROM_IT_SMHISTORIKK_STATUS_KODEMELDING, should NOT trigger rule") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
+            val healthInformation = generateSykmelding()
             val infotrygdForespResponse = deafaultInfotrygdForesp()
 
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
@@ -787,7 +783,7 @@ object ValidationRuleChainSpek : Spek({
         }
 
         it("Should check rule ERROR_FROM_IT_PARALELLYTELSER_STATUS_KODEMELDING, should trigger rule") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
+            val healthInformation = generateSykmelding()
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.parallelleYtelser = InfotrygdForesp.ParallelleYtelser().apply {
@@ -800,7 +796,7 @@ object ValidationRuleChainSpek : Spek({
         }
 
         it("Should check rule ERROR_FROM_IT_PARALELLYTELSER_STATUS_KODEMELDING, should NOT trigger rule") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
+            val healthInformation = generateSykmelding()
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.parallelleYtelser = InfotrygdForesp.ParallelleYtelser().apply {
@@ -813,7 +809,7 @@ object ValidationRuleChainSpek : Spek({
         }
 
         it("Should check rule ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING, should trigger rule") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
+            val healthInformation = generateSykmelding()
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.diagnosekodeOK = InfotrygdForesp.DiagnosekodeOK().apply {
@@ -826,7 +822,7 @@ object ValidationRuleChainSpek : Spek({
         }
 
         it("Should check rule ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING, should NOT trigger rule") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
+            val healthInformation = generateSykmelding()
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.diagnosekodeOK = InfotrygdForesp.DiagnosekodeOK().apply {
@@ -839,7 +835,7 @@ object ValidationRuleChainSpek : Spek({
         }
 
         it("Should check rule ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING, should trigger rule") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
+            val healthInformation = generateSykmelding()
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.pasient = InfotrygdForesp.Pasient().apply {
@@ -852,7 +848,7 @@ object ValidationRuleChainSpek : Spek({
             }
 
         it("Should check rule ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING, should NOT trigger rule") {
-            val healthInformation = deafaultHelseOpplysningerArbeidsuforhet()
+            val healthInformation = generateSykmelding()
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.pasient = InfotrygdForesp.Pasient().apply {
