@@ -31,7 +31,9 @@ import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.model.RuleInfo
 import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
+import no.nav.syfo.rules.Rule
 import no.nav.syfo.rules.ValidationRuleChain
+import no.nav.syfo.rules.executeFlow
 import no.nav.syfo.rules.sortedSMInfos
 import no.nav.syfo.sak.avro.PrioritetType
 import no.nav.syfo.sak.avro.ProduceTask
@@ -453,5 +455,5 @@ fun validationResult(results: List<Rule<Any>>): ValidationResult =
                             it.firstOrNull { status -> status == Status.MANUAL_PROCESSING }
                                     ?: Status.OK
                         },
-                ruleHits = results.map { rule -> RuleInfo(rule.name, rule.messageForUser, rule.messageForSender) }
+                ruleHits = results.map { rule -> RuleInfo(rule.name, rule.messageForUser!!, rule.messageForSender!!) }
         )

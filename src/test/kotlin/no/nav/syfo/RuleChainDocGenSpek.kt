@@ -1,5 +1,7 @@
 package no.nav.syfo
 
+import no.nav.syfo.rules.Description
+import no.nav.syfo.rules.Rule
 import no.nav.syfo.rules.ValidationRuleChain
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe

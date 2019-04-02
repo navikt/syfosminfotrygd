@@ -2,9 +2,6 @@ package no.nav.syfo.rules
 
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.infotrygd.foresp.TypeSMinfo
-import no.nav.syfo.Description
-import no.nav.syfo.Rule
-import no.nav.syfo.RuleData
 import no.nav.syfo.model.Periode
 import no.nav.syfo.model.Status
 import java.time.DayOfWeek

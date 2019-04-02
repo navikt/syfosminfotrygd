@@ -1,5 +1,6 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import com.github.jengelman.gradle.plugins.shadow.transformers.ServiceFileTransformer
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 group = "no.nav.syfo"
 version = "1.0.27"
@@ -37,7 +38,7 @@ val jaxwsToolsVersion = "2.3.1"
 val jaxbRuntimeVersion = "2.4.0-b180830.0438"
 val kithHodemeldingVersion = "1.1"
 val felleformavV1Version = "1.1-SNAPSHOT"
-val smCommonVersion = "1.0.3"
+val smCommonVersion = "1.0.4"
 
 tasks.withType<Jar> {
     manifest.attributes["Main-Class"] = "no.nav.syfo.BootstrapKt"
@@ -81,7 +82,7 @@ val navWsdl= configurations.create("navWsdl") {
 
 dependencies {
 
-    implementation(kotlin("stdlib"))
+    implementation(kotlin("stdlib-jdk8"))
 
     implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
     implementation ("io.prometheus:simpleclient_hotspot:$prometheusVersion")
@@ -116,6 +117,7 @@ dependencies {
 
     implementation("no.nav.syfo.sm:syfosm-common-models:$smCommonVersion")
     implementation("no.nav.syfo.sm:syfosm-common-ws:$smCommonVersion")
+    implementation("no.nav.syfo.sm:syfosm-common-rules:$smCommonVersion")
 
     implementation ("org.apache.commons:commons-text:$commonsTextVersion")
     implementation ("org.apache.cxf:cxf-rt-frontend-jaxws:$cxfVersion")
@@ -154,6 +156,10 @@ dependencies {
 tasks {
     create("printVersion") {
         println(project.version)
+    }
+
+    withType<KotlinCompile> {
+        kotlinOptions.jvmTarget = "1.8"
     }
 
     withType<ShadowJar> {

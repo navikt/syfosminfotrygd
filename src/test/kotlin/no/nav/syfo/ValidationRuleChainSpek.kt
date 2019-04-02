@@ -5,6 +5,7 @@ import no.nav.helse.infotrygd.foresp.StatusType
 import no.nav.helse.infotrygd.foresp.TypeSMinfo
 import no.nav.syfo.model.Gradert
 import no.nav.syfo.model.Sykmelding
+import no.nav.syfo.rules.RuleData
 import no.nav.syfo.rules.ValidationRuleChain
 
 import org.amshove.kluent.shouldEqual
