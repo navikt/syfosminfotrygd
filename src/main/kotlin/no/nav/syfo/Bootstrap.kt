@@ -190,6 +190,7 @@ suspend fun CoroutineScope.blockingApplicationLogic(
                 log.info("Rules hit {}, $logKeys", results.map { rule -> rule.name }, *logValues)
 
                 val validationResult = validationResult(results)
+                RULE_HIT_STATUS_COUNTER.labels(validationResult.status.name).inc()
 
                 kafkaproducervalidationResult.send(ProducerRecord(env.sm2013BehandlingsUtfallToipic, receivedSykmelding.sykmelding.id, validationResult))
                 log.info("Validation results send to kafka {} $logKeys", env.sm2013BehandlingsUtfallToipic, *logValues)
@@ -246,7 +247,6 @@ fun sendInfotrygdOppdatering(
 ) = producer.send(session.createTextMessage().apply {
     text = fellesformatMarshaller.toString(fellesformat)
     log.info("Message is automatic outcome $logKeys", *logValues)
-    RULE_HIT_STATUS_COUNTER.labels(Status.OK.name).inc()
 })
 
 fun createInfotrygdForesp(personNrPasient: String, healthInformation: HelseOpplysningerArbeidsuforhet, doctorFnr: String) = InfotrygdForesp().apply {
@@ -328,7 +328,6 @@ fun findOprasjonstype(periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode
 
 suspend fun CoroutineScope.produceManualTask(kafkaProducer: KafkaProducer<String, ProduceTask>, receivedSykmelding: ReceivedSykmelding, validationResult: ValidationResult, personV3: PersonV3, arbeidsfordelingV1: ArbeidsfordelingV1, logKeys: String, logValues: Array<StructuredArgument>) {
     log.info("Message is manual outcome $logKeys", *logValues)
-    RULE_HIT_STATUS_COUNTER.labels(Status.MANUAL_PROCESSING.name).inc()
 
     val geografiskTilknytning = fetchGeografiskTilknytningAsync(personV3, receivedSykmelding)
     val finnBehandlendeEnhetListeResponse = fetchBehandlendeEnhetAsync(arbeidsfordelingV1, geografiskTilknytning.geografiskTilknytning)
