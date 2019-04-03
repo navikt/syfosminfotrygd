@@ -13,7 +13,6 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.prometheus.client.hotspot.DefaultExports
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -26,11 +25,17 @@ import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.helse.sm2013.KontrollSystemBlokk
 import no.nav.helse.sm2013.KontrollsystemBlokkType
 import no.nav.syfo.api.registerNaisApi
+import no.nav.syfo.helpers.retry
+import no.nav.syfo.kafka.loadBaseConfig
+import no.nav.syfo.kafka.toConsumerConfig
+import no.nav.syfo.kafka.toProducerConfig
 import no.nav.syfo.metrics.RULE_HIT_STATUS_COUNTER
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.model.RuleInfo
 import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
+import no.nav.syfo.mq.connectionFactory
+import no.nav.syfo.mq.producerForQueue
 import no.nav.syfo.rules.Rule
 import no.nav.syfo.rules.ValidationRuleChain
 import no.nav.syfo.rules.executeFlow
@@ -38,16 +43,11 @@ import no.nav.syfo.rules.sortedSMInfos
 import no.nav.syfo.sak.avro.PrioritetType
 import no.nav.syfo.sak.avro.ProduceTask
 import no.nav.syfo.util.JacksonKafkaSerializer
-import no.nav.syfo.util.connectionFactory
 import no.nav.syfo.util.fellesformatMarshaller
 import no.nav.syfo.util.fellesformatUnmarshaller
 import no.nav.syfo.util.infotrygdSporringMarshaller
 import no.nav.syfo.util.infotrygdSporringUnmarshaller
-import no.nav.syfo.util.loadBaseConfig
-import no.nav.syfo.util.retryAsync
-import no.nav.syfo.util.toConsumerConfig
-import no.nav.syfo.util.toProducerConfig
-import no.nav.syfo.ws.configureSTSFor
+import no.nav.syfo.ws.createPort
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.binding.ArbeidsfordelingV1
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.ArbeidsfordelingKriterier
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.Tema
@@ -61,7 +61,6 @@ import no.nav.tjeneste.virksomhet.person.v3.informasjon.Personidenter
 import no.nav.tjeneste.virksomhet.person.v3.meldinger.HentGeografiskTilknytningRequest
 import no.nav.tjeneste.virksomhet.person.v3.meldinger.HentGeografiskTilknytningResponse
 import no.trygdeetaten.xml.eiff._1.XMLEIFellesformat
-import org.apache.cxf.jaxws.JaxWsProxyFactoryBean
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
@@ -127,24 +126,16 @@ fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCo
                     val kafkaproducervalidationResult = KafkaProducer<String, ValidationResult>(producerPropertiesvalidationResult)
 
                     val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
-                    val infotrygdOppdateringQueue = session.createQueue("queue:///${env.infotrygdOppdateringQueue}?targetClient=1")
-                    val infotrygdSporringQueue = session.createQueue("queue:///${env.infotrygdSporringQueue}?targetClient=1")
-                    val infotrygdOppdateringProducer = session.createProducer(infotrygdOppdateringQueue)
-                    val infotrygdSporringProducer = session.createProducer(infotrygdSporringQueue)
+                    val infotrygdOppdateringProducer = session.producerForQueue("queue:///${env.infotrygdOppdateringQueue}?targetClient=1")
+                    val infotrygdSporringProducer = session.producerForQueue("queue:///${env.infotrygdSporringQueue}?targetClient=1")
 
-                    val personV3 = JaxWsProxyFactoryBean().apply {
-                        address = env.personV3EndpointURL
-                        serviceClass = PersonV3::class.java
-                    }.create() as PersonV3
-                    configureSTSFor(personV3, credentials.serviceuserUsername,
-                            credentials.serviceuserPassword, env.securityTokenServiceUrl)
+                    val personV3 = createPort<PersonV3>(env.personV3EndpointURL) {
+                        port { withSTS(credentials.serviceuserUsername, credentials.serviceuserPassword, env.securityTokenServiceUrl) }
+                    }
 
-                    val arbeidsfordelingV1 = JaxWsProxyFactoryBean().apply {
-                        address = env.arbeidsfordelingV1EndpointURL
-                        serviceClass = ArbeidsfordelingV1::class.java
-                    }.create() as ArbeidsfordelingV1
-                    configureSTSFor(arbeidsfordelingV1, credentials.serviceuserUsername,
-                            credentials.serviceuserPassword, env.securityTokenServiceUrl)
+                    val arbeidsfordelingV1 = createPort<ArbeidsfordelingV1>(env.arbeidsfordelingV1EndpointURL) {
+                        port { withSTS(credentials.serviceuserUsername, credentials.serviceuserPassword, env.securityTokenServiceUrl) }
+                    }
 
                     blockingApplicationLogic(applicationState, kafkaconsumer, kafkaproducerCreateTask, kafkaproducervalidationResult, infotrygdOppdateringProducer, infotrygdSporringProducer, session, personV3, arbeidsfordelingV1, env)
                 }
@@ -189,11 +180,11 @@ suspend fun CoroutineScope.blockingApplicationLogic(
                 val fellesformat = fellesformatUnmarshaller.unmarshal(StringReader(receivedSykmelding.fellesformat)) as XMLEIFellesformat
                 val healthInformation = extractHelseOpplysningerArbeidsuforhet(fellesformat)
 
-                val infotrygdForespResponse = fetchInfotrygdForesp(receivedSykmelding, healthInformation, session, infotrygdSporringProducer, logKeys, logValues)
+                val infotrygdForespResponse = fetchInfotrygdForesp(receivedSykmelding, healthInformation, session, infotrygdSporringProducer)
 
                 log.info("Going through rules $logKeys", *logValues)
 
-                val validationRuleResults = ValidationRuleChain.values().executeFlow(receivedSykmelding.sykmelding, infotrygdForespResponse.await())
+                val validationRuleResults = ValidationRuleChain.values().executeFlow(receivedSykmelding.sykmelding, infotrygdForespResponse)
 
                 val results = listOf(validationRuleResults).flatten()
                 log.info("Rules hit {}, $logKeys", results.map { rule -> rule.name }, *logValues)
@@ -206,7 +197,7 @@ suspend fun CoroutineScope.blockingApplicationLogic(
                 when {
                     results.any { rule -> rule.status == Status.MANUAL_PROCESSING } ->
                         produceManualTask(kafkaproducerCreateTask, receivedSykmelding, validationResult, personV3, arbeidsfordelingV1, logKeys, logValues)
-                    else -> sendInfotrygdOppdatering(infotrygdOppdateringProducer, session, createInfotrygdInfo(receivedSykmelding.fellesformat, InfotrygdForespAndHealthInformation(infotrygdForespResponse.await(), healthInformation)), logKeys, logValues)
+                    else -> sendInfotrygdOppdatering(infotrygdOppdateringProducer, session, createInfotrygdInfo(receivedSykmelding.fellesformat, InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation)), logKeys, logValues)
                 }
             }
         delay(100)
@@ -339,12 +330,12 @@ suspend fun CoroutineScope.produceManualTask(kafkaProducer: KafkaProducer<String
     log.info("Message is manual outcome $logKeys", *logValues)
     RULE_HIT_STATUS_COUNTER.labels(Status.MANUAL_PROCESSING.name).inc()
 
-    val geografiskTilknytning = fetchGeografiskTilknytningAsync(personV3, receivedSykmelding, logKeys, logValues)
-    val finnBehandlendeEnhetListeResponse = fetchBehandlendeEnhetAsync(arbeidsfordelingV1, geografiskTilknytning.await().geografiskTilknytning, logKeys, logValues)
+    val geografiskTilknytning = fetchGeografiskTilknytningAsync(personV3, receivedSykmelding)
+    val finnBehandlendeEnhetListeResponse = fetchBehandlendeEnhetAsync(arbeidsfordelingV1, geografiskTilknytning.geografiskTilknytning)
 
-    when (geografiskTilknytning.await().diskresjonskode?.kodeverksRef) {
+    when (geografiskTilknytning.diskresjonskode?.kodeverksRef) {
         "SPSF" -> createTask(kafkaProducer, receivedSykmelding, validationResult, "2106", logKeys, logValues)
-        else -> createTask(kafkaProducer, receivedSykmelding, validationResult, findNavOffice(finnBehandlendeEnhetListeResponse.await()), logKeys, logValues)
+        else -> createTask(kafkaProducer, receivedSykmelding, validationResult, findNavOffice(finnBehandlendeEnhetListeResponse), logKeys, logValues)
     }
 }
 
@@ -373,26 +364,22 @@ fun createTask(kafkaProducer: KafkaProducer<String, ProduceTask>, receivedSykmel
     log.info("Message sendt to topic: aapen-syfo-oppgave-produserOppgave $logKeys", *logValues)
 }
 
-fun CoroutineScope.fetchGeografiskTilknytningAsync(
+suspend fun fetchGeografiskTilknytningAsync(
     personV3: PersonV3,
-    receivedSykmelding: ReceivedSykmelding,
-    logKeys: String,
-    logValues: Array<StructuredArgument>
-): Deferred<HentGeografiskTilknytningResponse> =
-        retryAsync("tps_hent_geografisktilknytning", logKeys, logValues, IOException::class, WstxException::class) {
+    receivedSykmelding: ReceivedSykmelding
+): HentGeografiskTilknytningResponse =
+        retry("tps_hent_geografisktilknytning", IOException::class, WstxException::class) {
             personV3.hentGeografiskTilknytning(HentGeografiskTilknytningRequest().withAktoer(PersonIdent().withIdent(
                     NorskIdent()
                             .withIdent(receivedSykmelding.personNrPasient)
                             .withType(Personidenter().withValue("FNR")))))
         }
 
-fun CoroutineScope.fetchBehandlendeEnhetAsync(
+suspend fun fetchBehandlendeEnhetAsync(
     arbeidsfordelingV1: ArbeidsfordelingV1,
-    geografiskTilknytning: GeografiskTilknytning?,
-    logKeys: String,
-    logValues: Array<StructuredArgument>
-): Deferred<FinnBehandlendeEnhetListeResponse?> =
-        retryAsync("finn_nav_kontor", logKeys, logValues, IOException::class, WstxException::class) {
+    geografiskTilknytning: GeografiskTilknytning?
+): FinnBehandlendeEnhetListeResponse? =
+        retry("finn_nav_kontor", IOException::class, WstxException::class) {
             arbeidsfordelingV1.finnBehandlendeEnhetListe(FinnBehandlendeEnhetListeRequest().apply {
                 val afk = ArbeidsfordelingKriterier()
                 if (geografiskTilknytning?.geografiskTilknytning != null) {
@@ -421,15 +408,13 @@ fun extractHelseOpplysningerArbeidsuforhet(fellesformat: XMLEIFellesformat): Hel
 
 fun ClosedRange<LocalDate>.daysBetween(): Long = ChronoUnit.DAYS.between(start, endInclusive)
 
-fun CoroutineScope.fetchInfotrygdForesp(
+suspend fun fetchInfotrygdForesp(
     receivedSykmelding: ReceivedSykmelding,
     healthInformation: HelseOpplysningerArbeidsuforhet,
     session: Session,
-    infotrygdSporringProducer: MessageProducer,
-    logKeys: String,
-    logValues: Array<StructuredArgument>
-): Deferred<InfotrygdForesp> =
-        retryAsync("it_hent_infotrygdForesp", logKeys, logValues, IOException::class, WstxException::class, IllegalStateException::class) {
+    infotrygdSporringProducer: MessageProducer
+): InfotrygdForesp =
+        retry("it_hent_infotrygdForesp", IOException::class, WstxException::class, IllegalStateException::class) {
             val infotrygdForespRequest = createInfotrygdForesp(receivedSykmelding.personNrPasient, healthInformation, receivedSykmelding.personNrLege)
             val temporaryQueue = session.createTemporaryQueue()
             try {

@@ -118,6 +118,9 @@ dependencies {
     implementation("no.nav.syfo.sm:syfosm-common-models:$smCommonVersion")
     implementation("no.nav.syfo.sm:syfosm-common-ws:$smCommonVersion")
     implementation("no.nav.syfo.sm:syfosm-common-rules:$smCommonVersion")
+    implementation("no.nav.syfo.sm:syfosm-common-mq:$smCommonVersion")
+    implementation("no.nav.syfo.sm:syfosm-common-kafka:$smCommonVersion")
+    implementation("no.nav.syfo.sm:syfosm-common-networking:$smCommonVersion")
 
     implementation ("org.apache.commons:commons-text:$commonsTextVersion")
     implementation ("org.apache.cxf:cxf-rt-frontend-jaxws:$cxfVersion")
