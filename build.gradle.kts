@@ -38,7 +38,7 @@ val jaxwsToolsVersion = "2.3.1"
 val jaxbRuntimeVersion = "2.4.0-b180830.0438"
 val kithHodemeldingVersion = "1.1"
 val felleformavV1Version = "1.1-SNAPSHOT"
-val smCommonVersion = "1.0.4"
+val smCommonVersion = "1.0.6"
 
 tasks.withType<Jar> {
     manifest.attributes["Main-Class"] = "no.nav.syfo.BootstrapKt"

@@ -367,7 +367,7 @@ suspend fun fetchGeografiskTilknytningAsync(
     personV3: PersonV3,
     receivedSykmelding: ReceivedSykmelding
 ): HentGeografiskTilknytningResponse =
-        retry("tps_hent_geografisktilknytning", IOException::class, WstxException::class) {
+        retry("tps_hent_geografisktilknytning", arrayOf(500L, 1000L, 3000L, 5000L, 10000L), IOException::class, WstxException::class) {
             personV3.hentGeografiskTilknytning(HentGeografiskTilknytningRequest().withAktoer(PersonIdent().withIdent(
                     NorskIdent()
                             .withIdent(receivedSykmelding.personNrPasient)
@@ -378,7 +378,7 @@ suspend fun fetchBehandlendeEnhetAsync(
     arbeidsfordelingV1: ArbeidsfordelingV1,
     geografiskTilknytning: GeografiskTilknytning?
 ): FinnBehandlendeEnhetListeResponse? =
-        retry("finn_nav_kontor", IOException::class, WstxException::class) {
+        retry("finn_nav_kontor", arrayOf(500L, 1000L, 3000L, 5000L, 10000L), IOException::class, WstxException::class) {
             arbeidsfordelingV1.finnBehandlendeEnhetListe(FinnBehandlendeEnhetListeRequest().apply {
                 val afk = ArbeidsfordelingKriterier()
                 if (geografiskTilknytning?.geografiskTilknytning != null) {
@@ -413,7 +413,7 @@ suspend fun fetchInfotrygdForesp(
     session: Session,
     infotrygdSporringProducer: MessageProducer
 ): InfotrygdForesp =
-        retry("it_hent_infotrygdForesp", IOException::class, WstxException::class, IllegalStateException::class) {
+        retry("it_hent_infotrygdForesp", arrayOf(500L, 1000L, 3000L, 5000L, 10000L, 3600000L, 14400000L), IOException::class, WstxException::class, IllegalStateException::class) {
             val infotrygdForespRequest = createInfotrygdForesp(receivedSykmelding.personNrPasient, healthInformation, receivedSykmelding.personNrLege)
             val temporaryQueue = session.createTemporaryQueue()
             try {
