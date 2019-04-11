@@ -353,7 +353,7 @@ fun createTask(kafkaProducer: KafkaProducer<String, ProduceTask>, receivedSykmel
                 tema = "SYM" // TODO find corret value
                 behandlingstema = "ab0061" // TODO find corret value
                 oppgavetype = "BEH_EL_SYM" // TODO find corret value
-                behandlingstype = "ae0005"
+                behandlingstype = "ae0001" // TODO find corret value
                 mappeId = 1
                 aktivDato = DateTimeFormatter.ISO_DATE.format(LocalDate.now())
                 fristFerdigstillelse = DateTimeFormatter.ISO_DATE.format(LocalDate.now())
