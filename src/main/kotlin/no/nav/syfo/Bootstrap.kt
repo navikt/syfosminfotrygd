@@ -352,7 +352,7 @@ fun createTask(kafkaProducer: KafkaProducer<String, ProduceTask>, receivedSykmel
                 temagruppe = "SYM"
                 tema = ""
                 behandlingstema = "BEH_EL_SYM"
-                oppgavetype = ""
+                oppgavetype = "BEH_EL_SYM"
                 behandlingstype = ""
                 mappeId = 1
                 aktivDato = DateTimeFormatter.ISO_DATE.format(LocalDate.now())
