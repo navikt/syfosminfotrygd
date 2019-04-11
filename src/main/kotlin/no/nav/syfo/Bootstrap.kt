@@ -349,10 +349,10 @@ fun createTask(kafkaProducer: KafkaProducer<String, ProduceTask>, receivedSykmel
                 orgnr = receivedSykmelding.legekontorOrgNr ?: ""
                 // TODO print out the rule validationResult.ruleHits.textToUser
                 beskrivelse = "Manuell behandling Sykmelding: ${validationResult.ruleHits}"
-                temagruppe = "OVRG" //TODO find corret value
-                tema = "SYM" //TODO find corret value
-                behandlingstema = "ab0061" //TODO find corret value
-                oppgavetype = "BEH_EL_SYM" //TODO find corret value
+                temagruppe = "OVRG" // TODO find corret value
+                tema = "SYM" // TODO find corret value
+                behandlingstema = "ab0061" // TODO find corret value
+                oppgavetype = "BEH_EL_SYM" // TODO find corret value
                 behandlingstype = "ae0005"
                 mappeId = 1
                 aktivDato = DateTimeFormatter.ISO_DATE.format(LocalDate.now())
