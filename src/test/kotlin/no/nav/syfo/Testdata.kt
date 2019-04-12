@@ -64,7 +64,8 @@ fun generateSykmelding(
     behandler: Behandler = generateBehandler(),
     avsenderSystem: AvsenderSystem = generateAvsenderSystem(),
     arbeidsgiver: Arbeidsgiver = generateArbeidsgiver(),
-    msgid: String = UUID.randomUUID().toString()
+    msgid: String = UUID.randomUUID().toString(),
+    syketilfelleStartDato: LocalDate? = null
 ) = Sykmelding(
         id = id,
         msgId = msgid,
@@ -83,7 +84,8 @@ fun generateSykmelding(
         behandletTidspunkt = behandletTidspunkt,
         behandler = behandler,
         avsenderSystem = avsenderSystem,
-        arbeidsgiver = arbeidsgiver
+        arbeidsgiver = arbeidsgiver,
+        syketilfelleStartDato = syketilfelleStartDato
 )
 
 fun generateMedisinskVurdering(
