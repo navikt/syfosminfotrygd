@@ -40,7 +40,6 @@ fun receivedSykmelding(id: String, sykmelding: Sykmelding = generateSykmelding()
         legekontorReshId = "",
         legekontorOrgName = "Legevakt",
         mottattDato = LocalDateTime.now(),
-        signaturDato = LocalDateTime.now(),
         rulesetVersion = "",
         fellesformat = ""
 
@@ -65,7 +64,8 @@ fun generateSykmelding(
     avsenderSystem: AvsenderSystem = generateAvsenderSystem(),
     arbeidsgiver: Arbeidsgiver = generateArbeidsgiver(),
     msgid: String = UUID.randomUUID().toString(),
-    syketilfelleStartDato: LocalDate? = null
+    syketilfelleStartDato: LocalDate? = null,
+    signaturDato: LocalDateTime = LocalDateTime.now()
 ) = Sykmelding(
         id = id,
         msgId = msgid,
@@ -85,7 +85,8 @@ fun generateSykmelding(
         behandler = behandler,
         avsenderSystem = avsenderSystem,
         arbeidsgiver = arbeidsgiver,
-        syketilfelleStartDato = syketilfelleStartDato
+        syketilfelleStartDato = syketilfelleStartDato,
+        signaturDato = signaturDato
 )
 
 fun generateMedisinskVurdering(
@@ -205,7 +206,8 @@ fun generateBehandler(
     fnr: String = "1234567891",
     hpr: String? = null,
     her: String? = null,
-    adresse: Adresse = generateAdresse()
+    adresse: Adresse = generateAdresse(),
+    tlf: String? = null
 ) = Behandler(
     fornavn = fornavn,
         mellomnavn = mellomnavn,
@@ -214,7 +216,8 @@ fun generateBehandler(
         fnr = fnr,
         hpr = hpr,
         her = her,
-        adresse = adresse
+        adresse = adresse,
+        tlf = tlf
 )
 
 fun generateAdresse(
