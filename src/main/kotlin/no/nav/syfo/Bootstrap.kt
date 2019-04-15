@@ -18,7 +18,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.launch
 import net.logstash.logback.argument.StructuredArgument
-import net.logstash.logback.argument.StructuredArguments.keyValue
 import no.kith.xmlstds.msghead._2006_05_24.XMLMsgHead
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
@@ -29,7 +28,6 @@ import no.nav.syfo.helpers.retry
 import no.nav.syfo.kafka.loadBaseConfig
 import no.nav.syfo.kafka.toConsumerConfig
 import no.nav.syfo.kafka.toProducerConfig
-import no.nav.syfo.metrics.RULE_HIT_STATUS_COUNTER
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.model.RuleInfo
 import no.nav.syfo.model.Status
@@ -37,8 +35,6 @@ import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.mq.connectionFactory
 import no.nav.syfo.mq.producerForQueue
 import no.nav.syfo.rules.Rule
-import no.nav.syfo.rules.ValidationRuleChain
-import no.nav.syfo.rules.executeFlow
 import no.nav.syfo.rules.sortedSMInfos
 import no.nav.syfo.sak.avro.PrioritetType
 import no.nav.syfo.sak.avro.ProduceTask
@@ -167,6 +163,7 @@ suspend fun CoroutineScope.blockingApplicationLogic(
 ) {
     while (applicationState.running) {
             kafkaConsumer.poll(Duration.ofMillis(0)).forEach {
+                /*
                 val receivedSykmelding: ReceivedSykmelding = objectMapper.readValue(it.value())
                 val logValues = arrayOf(
                         keyValue("mottakId", receivedSykmelding.navLogId),
@@ -200,6 +197,7 @@ suspend fun CoroutineScope.blockingApplicationLogic(
                         produceManualTask(kafkaproducerCreateTask, receivedSykmelding, validationResult, personV3, arbeidsfordelingV1, logKeys, logValues)
                     else -> sendInfotrygdOppdatering(infotrygdOppdateringProducer, session, createInfotrygdInfo(receivedSykmelding.fellesformat, InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation)), logKeys, logValues)
                 }
+                */
             }
         delay(100)
         }
