@@ -247,6 +247,8 @@ fun sendInfotrygdOppdatering(
 ) = producer.send(session.createTextMessage().apply {
     log.info("Message is automatic outcome $logKeys", *logValues)
     text = fellesformatMarshaller.toString(fellesformat)
+    // TODO remove logging text after test stage
+    log.info("Text sendt to Infotrygd: $text")
     log.info("Message is sendt to infotrygd $logKeys", *logValues)
 })
 
