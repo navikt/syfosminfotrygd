@@ -111,7 +111,7 @@ object CreateInfotrygdInfoSpek : Spek({
         it("Should map regelSettVersjon correctly") {
 
             val itfh = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
-            val infotrygdFellesformat = createInfotrygdInfo(fellesFormatString, itfh)
+            val infotrygdFellesformat = createInfotrygdInfo(fellesFormatString, itfh, "1231234")
 
             extractHelseOpplysningerArbeidsuforhet(infotrygdFellesformat).regelSettVersjon shouldEqual
                     extractHelseOpplysningerArbeidsuforhet(fellesformat).regelSettVersjon
@@ -120,7 +120,7 @@ object CreateInfotrygdInfoSpek : Spek({
         it("Should map strekkode correctly") {
 
             val itfh = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
-            val infotrygdFellesformat = createInfotrygdInfo(fellesFormatString, itfh)
+            val infotrygdFellesformat = createInfotrygdInfo(fellesFormatString, itfh, "1231234")
 
             extractHelseOpplysningerArbeidsuforhet(infotrygdFellesformat).aktivitet.periode.first().periodeTOMDato shouldEqual
                     extractHelseOpplysningerArbeidsuforhet(fellesformat).aktivitet.periode.first().periodeTOMDato

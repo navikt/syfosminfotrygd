@@ -198,7 +198,7 @@ suspend fun CoroutineScope.blockingApplicationLogic(
                 when {
                     results.any { rule -> rule.status == Status.MANUAL_PROCESSING } ->
                         produceManualTask(kafkaproducerCreateTask, receivedSykmelding, validationResult, personV3, arbeidsfordelingV1, logKeys, logValues)
-                    else -> sendInfotrygdOppdatering(infotrygdOppdateringProducer, session, createInfotrygdInfo(receivedSykmelding.fellesformat, InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation)), logKeys, logValues)
+                    else -> sendInfotrygdOppdatering(infotrygdOppdateringProducer, session, createInfotrygdInfo(receivedSykmelding.fellesformat, InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation), receivedSykmelding.personNrPasient), logKeys, logValues)
                 }
             }
         delay(100)
@@ -280,11 +280,11 @@ fun createInfotrygdForesp(personNrPasient: String, healthInformation: HelseOpply
 val inputFactory = XMLInputFactory.newInstance()
 inline fun <reified T> unmarshal(text: String): T = fellesformatUnmarshaller.unmarshal(inputFactory.createXMLEventReader(StringReader(text)), T::class.java).value
 
-fun createInfotrygdInfo(marshalledFellesformat: String, itfh: InfotrygdForespAndHealthInformation) = unmarshal<XMLEIFellesformat>(marshalledFellesformat).apply {
+fun createInfotrygdInfo(marshalledFellesformat: String, itfh: InfotrygdForespAndHealthInformation, personNrPasient: String) = unmarshal<XMLEIFellesformat>(marshalledFellesformat).apply {
     any.add(KontrollSystemBlokk().apply {
     itfh.healthInformation.aktivitet.periode.forEachIndexed { index, periode ->
     infotrygdBlokk.add(KontrollsystemBlokkType.InfotrygdBlokk().apply {
-        fodselsnummer = itfh.healthInformation.pasient.fodselsnummer.id
+        fodselsnummer = personNrPasient
         tkNummer = ""
         forsteFravaersDag = periode.periodeFOMDato
         mottakerKode = itfh.infotrygdForesp.behandlerInfo.behandler.firstOrNull()?.mottakerKode?.value() ?: ""
