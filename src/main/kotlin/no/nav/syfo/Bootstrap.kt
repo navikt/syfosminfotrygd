@@ -245,8 +245,9 @@ fun sendInfotrygdOppdatering(
     logKeys: String,
     logValues: Array<StructuredArgument>
 ) = producer.send(session.createTextMessage().apply {
-    text = fellesformatMarshaller.toString(fellesformat)
     log.info("Message is automatic outcome $logKeys", *logValues)
+    text = fellesformatMarshaller.toString(fellesformat)
+    log.info("Message is sendt to infotrygd $logKeys", *logValues)
 })
 
 fun createInfotrygdForesp(personNrPasient: String, healthInformation: HelseOpplysningerArbeidsuforhet, doctorFnr: String) = InfotrygdForesp().apply {
