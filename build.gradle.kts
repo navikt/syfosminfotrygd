@@ -37,7 +37,7 @@ val javaxAnnotationApiVersion = "1.3.2"
 val jaxwsToolsVersion = "2.3.1"
 val jaxbRuntimeVersion = "2.4.0-b180830.0438"
 val kithHodemeldingVersion = "1.1"
-val felleformavV1Version = "1.1-SNAPSHOT"
+val felleformavV1Version = "1.2-SNAPSHOT"
 val smCommonVersion = "1.0.12"
 
 tasks.withType<Jar> {

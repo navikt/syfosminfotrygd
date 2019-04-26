@@ -297,6 +297,13 @@ fun createInfotrygdInfo(marshalledFellesformat: String, itfh: InfotrygdForespAnd
         hovedDiagnose = itfh.infotrygdForesp.hovedDiagnosekode
         hovedDiagnoseGruppe = itfh.infotrygdForesp.hovedDiagnosekodeverk.toBigInteger()
         hovedDiagnoseTekst = itfh.healthInformation.medisinskVurdering.hovedDiagnose.diagnosekode.dn
+        if (itfh.infotrygdForesp.biDiagnosekodeverk != null &&
+                itfh.healthInformation.medisinskVurdering.biDiagnoser.diagnosekode.firstOrNull()?.dn != null) {
+            biDiagnose = itfh.infotrygdForesp.biDiagnoseKode
+            biDiagnoseGruppe = itfh.infotrygdForesp.biDiagnosekodeverk.toBigInteger()
+            biDiagnoseTekst = itfh.healthInformation.medisinskVurdering.biDiagnoser.diagnosekode.firstOrNull()?.dn
+        }
+
         arbeidsufoerTOM = periode.periodeTOMDato
         ufoeregrad = when {
             periode.gradertSykmelding != null -> periode.gradertSykmelding.sykmeldingsgrad.toBigInteger()
