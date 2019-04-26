@@ -182,6 +182,8 @@ suspend fun CoroutineScope.blockingApplicationLogic(
 
                 val infotrygdForespResponse = fetchInfotrygdForesp(receivedSykmelding, healthInformation, session, infotrygdSporringProducer)
 
+                log.info("Infotrygd response ${objectMapper.writeValueAsString(infotrygdForespResponse)}")
+
                 log.info("Going through rules $logKeys", *logValues)
 
                 val validationRuleResults = ValidationRuleChain.values().executeFlow(receivedSykmelding.sykmelding, infotrygdForespResponse)
