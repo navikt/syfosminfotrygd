@@ -11,6 +11,7 @@ import no.nav.helse.sm2013.ArsakType
 import no.nav.helse.sm2013.CV
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.helse.sm2013.Ident
+import no.nav.helse.sm2013.KontrollSystemBlokk
 import no.nav.syfo.util.fellesformatMarshaller
 import no.trygdeetaten.xml.eiff._1.XMLEIFellesformat
 import org.amshove.kluent.shouldEqual
@@ -109,6 +110,10 @@ object CreateInfotrygdInfoSpek : Spek({
         }
 
         it("Should map regelSettVersjon correctly") {
+            healthInformation.kontaktMedPasient = HelseOpplysningerArbeidsuforhet.KontaktMedPasient().apply {
+                kontaktDato = LocalDate.now()
+                behandletDato = LocalDateTime.now()
+            }
 
             val itfh = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
             val infotrygdFellesformat = createInfotrygdInfo(fellesFormatString, itfh, "1231234")
@@ -118,12 +123,78 @@ object CreateInfotrygdInfoSpek : Spek({
         }
 
         it("Should map strekkode correctly") {
+            healthInformation.kontaktMedPasient = HelseOpplysningerArbeidsuforhet.KontaktMedPasient().apply {
+                kontaktDato = LocalDate.now()
+                behandletDato = LocalDateTime.now()
+            }
 
             val itfh = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
             val infotrygdFellesformat = createInfotrygdInfo(fellesFormatString, itfh, "1231234")
 
             extractHelseOpplysningerArbeidsuforhet(infotrygdFellesformat).aktivitet.periode.first().periodeTOMDato shouldEqual
                     extractHelseOpplysningerArbeidsuforhet(fellesformat).aktivitet.periode.first().periodeTOMDato
+        }
+
+        it("Should use behandlingsDato instead of kontaktDato") {
+            healthInformation.kontaktMedPasient = HelseOpplysningerArbeidsuforhet.KontaktMedPasient().apply {
+                kontaktDato = LocalDate.now().plusDays(1)
+                behandletDato = LocalDateTime.now()
+            }
+
+            val itfh = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
+            val infotrygdFellesformat = createInfotrygdInfo(fellesFormatString, itfh, "1231234")
+
+            val infotrygdBlokk = infotrygdFellesformat.get<KontrollSystemBlokk>().infotrygdBlokk
+
+            healthInformation.kontaktMedPasient.behandletDato.toLocalDate() shouldEqual
+                    infotrygdBlokk.first().behandlingsDato
+        }
+
+        it("Should use kontaktDato instead of behandlingsDato") {
+            healthInformation.kontaktMedPasient = HelseOpplysningerArbeidsuforhet.KontaktMedPasient().apply {
+                kontaktDato = LocalDate.now()
+                behandletDato = LocalDateTime.now().plusDays(1)
+            }
+
+            val itfh = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
+            val infotrygdFellesformat = createInfotrygdInfo(fellesFormatString, itfh, "1231234")
+
+            val infotrygdBlokk = infotrygdFellesformat.get<KontrollSystemBlokk>().infotrygdBlokk
+
+            healthInformation.kontaktMedPasient.kontaktDato shouldEqual
+                    infotrygdBlokk.first().behandlingsDato
+        }
+
+        it("Should use arbeidsKategori to 01 when employers name is set") {
+            healthInformation.kontaktMedPasient = HelseOpplysningerArbeidsuforhet.KontaktMedPasient().apply {
+                kontaktDato = LocalDate.now()
+                behandletDato = LocalDateTime.now()
+            }
+
+            healthInformation.arbeidsgiver = HelseOpplysningerArbeidsuforhet.Arbeidsgiver().apply {
+                navnArbeidsgiver = "SAS as"
+            }
+
+            val itfh = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
+            val infotrygdFellesformat = createInfotrygdInfo(fellesFormatString, itfh, "1231234")
+
+            val infotrygdBlokk = infotrygdFellesformat.get<KontrollSystemBlokk>().infotrygdBlokk
+
+            "01" shouldEqual infotrygdBlokk.first().arbeidsKategori
+        }
+
+        it("Should use arbeidsKategori to 030 when employers name is set") {
+            healthInformation.kontaktMedPasient = HelseOpplysningerArbeidsuforhet.KontaktMedPasient().apply {
+                kontaktDato = LocalDate.now()
+                behandletDato = LocalDateTime.now()
+            }
+
+            val itfh = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
+            val infotrygdFellesformat = createInfotrygdInfo(fellesFormatString, itfh, "1231234")
+
+            val infotrygdBlokk = infotrygdFellesformat.get<KontrollSystemBlokk>().infotrygdBlokk
+
+            "030" shouldEqual infotrygdBlokk.first().arbeidsKategori
         }
     }
 })

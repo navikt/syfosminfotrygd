@@ -453,8 +453,8 @@ object ValidationRuleChainSpek : Spek({
             val healthInformation = generateSykmelding(perioder = listOf(
                     generatePeriode(
                             fom = LocalDate.of(2018, 1, 1),
-                            tom = LocalDate.now().plusMonths(3).plusDays(1))
-            ))
+                            tom = LocalDate.of(2018, 2, 1)
+            )))
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
@@ -462,7 +462,8 @@ object ValidationRuleChainSpek : Spek({
                     historikk.add(TypeSMinfo.Historikk().apply {
                         tilltak = TypeSMinfo.Historikk.Tilltak().apply {
                             type = "FA"
-                            tom = LocalDate.of(2017, 1, 1)
+                            fom = LocalDate.of(2018, 1, 20)
+                            tom = LocalDate.of(2018, 1, 26)
                         }
                     })
                 })
@@ -474,16 +475,17 @@ object ValidationRuleChainSpek : Spek({
             val healthInformation = generateSykmelding(perioder = listOf(
                     generatePeriode(
                             fom = LocalDate.of(2018, 1, 1),
-                            tom = LocalDate.now().plusMonths(3).plusDays(1))
-            ))
+                            tom = LocalDate.of(2018, 2, 1)
+                    )))
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
                 sykmelding.add(TypeSMinfo().apply {
                     historikk.add(TypeSMinfo.Historikk().apply {
                         tilltak = TypeSMinfo.Historikk.Tilltak().apply {
-                            type = "LA"
-                            tom = LocalDate.of(2017, 1, 1)
+                            type = "FA"
+                            fom = LocalDate.of(2018, 2, 2)
+                            tom = LocalDate.of(2018, 2, 8)
                         }
                     })
                 })

@@ -25,7 +25,7 @@ val ktorVersion = "1.1.3"
 val logbackVersion = "1.2.3"
 val logstashEncoderVersion = "5.1"
 val prometheusVersion = "0.5.0"
-val spekVersion = "2.0.0"
+val spekVersion = "2.0.2"
 val sykmeldingVersion = "1.1-SNAPSHOT"
 val cxfVersion = "3.2.7"
 val jaxwsApiVersion = "2.3.1"
@@ -39,11 +39,6 @@ val jaxbRuntimeVersion = "2.4.0-b180830.0438"
 val kithHodemeldingVersion = "1.1"
 val felleformavV1Version = "1.2-SNAPSHOT"
 val smCommonVersion = "1.0.12"
-
-tasks.withType<Jar> {
-    manifest.attributes["Main-Class"] = "no.nav.syfo.BootstrapKt"
-}
-
 
 plugins {
     java
@@ -157,8 +152,15 @@ dependencies {
 
 
 tasks {
+    withType<Jar> {
+        manifest.attributes["Main-Class"] = "no.nav.syfo.BootstrapKt"
+    }
+
     create("printVersion") {
-        println(project.version)
+
+        doLast {
+            println(project.version)
+        }
     }
 
     withType<KotlinCompile> {
@@ -176,6 +178,12 @@ tasks {
         useJUnitPlatform {
             includeEngines("spek2")
         }
-        testLogging.showStandardStreams = true
+        testLogging {
+            showStandardStreams = true
+        }
+    }
+
+    "check" {
+        dependsOn("formatKotlin")
     }
 }

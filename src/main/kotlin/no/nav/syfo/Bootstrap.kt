@@ -30,6 +30,7 @@ import no.nav.syfo.kafka.loadBaseConfig
 import no.nav.syfo.kafka.toConsumerConfig
 import no.nav.syfo.kafka.toProducerConfig
 import no.nav.syfo.metrics.RULE_HIT_STATUS_COUNTER
+import no.nav.syfo.model.Periode
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.model.RuleInfo
 import no.nav.syfo.model.Status
@@ -249,8 +250,6 @@ fun sendInfotrygdOppdatering(
 ) = producer.send(session.createTextMessage().apply {
     log.info("Message is automatic outcome $logKeys", *logValues)
     text = fellesformatMarshaller.toString(fellesformat)
-    // TODO remove logging text after test stage
-    log.info("Text sendt to Infotrygd: $text")
     log.info("Message is sendt to infotrygd $logKeys", *logValues)
 })
 
@@ -294,6 +293,10 @@ fun createInfotrygdInfo(marshalledFellesformat: String, itfh: InfotrygdForespAnd
             0 -> findOprasjonstype(periode, itfh)
             else -> "2".toBigInteger()
         }
+        if (operasjonstype.equals("1".toBigInteger()) && index == 0) {
+            behandlingsDato = listOf(itfh.healthInformation.kontaktMedPasient.kontaktDato,
+                    itfh.healthInformation.kontaktMedPasient.behandletDato.toLocalDate()).sorted().first()
+        }
         hovedDiagnose = itfh.infotrygdForesp.hovedDiagnosekode
         hovedDiagnoseGruppe = itfh.infotrygdForesp.hovedDiagnosekodeverk.toBigInteger()
         hovedDiagnoseTekst = itfh.healthInformation.medisinskVurdering.hovedDiagnose.diagnosekode.dn
@@ -302,6 +305,15 @@ fun createInfotrygdInfo(marshalledFellesformat: String, itfh: InfotrygdForespAnd
             biDiagnose = itfh.infotrygdForesp.biDiagnoseKode
             biDiagnoseGruppe = itfh.infotrygdForesp.biDiagnosekodeverk.toBigInteger()
             biDiagnoseTekst = itfh.healthInformation.medisinskVurdering.biDiagnoser.diagnosekode.firstOrNull()?.dn
+        }
+
+        if (index == 0) {
+            arbeidsKategori = when (itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver) {
+                null -> "030"
+                else -> "01"
+            }
+            gruppe = "96"
+            saksbehandler = "Auto"
         }
 
         arbeidsufoerTOM = periode.periodeTOMDato

@@ -184,14 +184,17 @@ enum class ValidationRuleChain(
             "Hvis forlengelse utover registrert tiltak FA tiltak",
             { (sykmelding, infotrygdForesp) ->
         infotrygdForesp.sMhistorikk?.sykmelding != null &&
-        infotrygdForesp.sMhistorikk.sykmelding.any { sykemelding ->
-            sykemelding.historikk.firstOrNull()?.tilltak?.type == "FA" } &&
         sykmelding.perioder.sortedPeriodeFOMDate().lastOrNull() != null &&
         infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().lastOrNull()?.historikk?.sortedSMinfoHistorikk()?.lastOrNull()?.tilltak?.type != null &&
         infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().historikk.sortedSMinfoHistorikk().last().tilltak.type == "FA" &&
         infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().historikk.sortedSMinfoHistorikk().last().tilltak.tom != null &&
-        sykmelding.perioder.sortedPeriodeFOMDate().last().isAfter(
-                infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().historikk.sortedSMinfoHistorikk().last().tilltak.tom)
+        sykmelding.perioder.any { periodA ->
+            infotrygdForesp.sMhistorikk.sykmelding.any { sykmeldinger ->
+                sykmeldinger.historikk.any { historikk ->
+                    historikk.tilltak.type == "FA" && historikk.tilltak.fom in periodA.range() || historikk.tilltak.tom in periodA.range()
+                }
+            }
+        }
     }),
 
     @Description("Personen har flyttet ( stanskode FL i Infotrygd)")
@@ -338,3 +341,7 @@ fun List<TypeSMinfo>.sortedFOMDate(): List<LocalDate> =
 
 fun List<TypeSMinfo.Historikk>.sortedSMinfoHistorikk(): List<TypeSMinfo.Historikk> =
         sortedBy { it.endringsDato }
+
+fun Periode.range(): ClosedRange<LocalDate> = fom.rangeTo(tom)
+
+fun TypeSMinfo.Historikk.Tilltak.range(): ClosedRange<LocalDate> = fom.rangeTo(tom)
