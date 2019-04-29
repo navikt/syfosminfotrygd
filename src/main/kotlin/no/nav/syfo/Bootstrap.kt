@@ -308,10 +308,7 @@ fun createInfotrygdInfo(marshalledFellesformat: String, itfh: InfotrygdForespAnd
         }
 
         if (index == 0) {
-            arbeidsKategori = when (itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver) {
-                null -> "030"
-                else -> "01"
-            }
+            arbeidsKategori = findarbeidsKategori(itfh)
             gruppe = "96"
             saksbehandler = "Auto"
         }
@@ -325,6 +322,14 @@ fun createInfotrygdInfo(marshalledFellesformat: String, itfh: InfotrygdForespAnd
         })
         }
     })
+}
+
+fun findarbeidsKategori(itfh: InfotrygdForespAndHealthInformation): String {
+    return if (!itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver.isNullOrBlank()) {
+        "01"
+    } else {
+        "030"
+    }
 }
 
 fun findOprasjonstype(periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode, itfh: InfotrygdForespAndHealthInformation): BigInteger {
