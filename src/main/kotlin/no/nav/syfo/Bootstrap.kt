@@ -293,7 +293,10 @@ fun createInfotrygdInfo(marshalledFellesformat: String, itfh: InfotrygdForespAnd
             0 -> findOprasjonstype(periode, itfh)
             else -> "2".toBigInteger()
         }
-        if (operasjonstype.equals("1".toBigInteger()) && index == 0) {
+        if (operasjonstype.equals("1".toBigInteger()) &&
+                index == 0 &&
+                itfh.healthInformation.kontaktMedPasient?.kontaktDato != null &&
+                itfh.healthInformation.kontaktMedPasient?.behandletDato != null) {
             behandlingsDato = listOf(itfh.healthInformation.kontaktMedPasient.kontaktDato,
                     itfh.healthInformation.kontaktMedPasient.behandletDato.toLocalDate()).sorted().first()
         }
