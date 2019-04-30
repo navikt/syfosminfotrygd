@@ -191,7 +191,7 @@ enum class ValidationRuleChain(
         sykmelding.perioder.any { periodA ->
             infotrygdForesp.sMhistorikk.sykmelding.any { sykmeldinger ->
                 sykmeldinger.historikk.any { historikk ->
-                    historikk.tilltak != null && historikk.tilltak.type == "FA" && historikk.tilltak.fom in periodA.range() || historikk.tilltak.tom in periodA.range()
+                    historikk?.tilltak != null && historikk.tilltak.type == "FA" && historikk.tilltak.fom in periodA.range() || historikk?.tilltak != null && historikk.tilltak.tom in periodA.range()
                 }
             }
         }
