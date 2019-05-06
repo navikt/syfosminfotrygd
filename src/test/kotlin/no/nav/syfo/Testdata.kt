@@ -32,6 +32,7 @@ import kotlin.random.Random
 fun receivedSykmelding(id: String, sykmelding: Sykmelding = generateSykmelding()) = ReceivedSykmelding(
         sykmelding = sykmelding,
         personNrPasient = "123124",
+        tlfPasient = "12314",
         personNrLege = "123145",
         navLogId = "0412",
         msgId = id,
