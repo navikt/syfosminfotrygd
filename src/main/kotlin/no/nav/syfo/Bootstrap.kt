@@ -29,8 +29,8 @@ import no.nav.syfo.helpers.retry
 import no.nav.syfo.kafka.loadBaseConfig
 import no.nav.syfo.kafka.toConsumerConfig
 import no.nav.syfo.kafka.toProducerConfig
+import no.nav.syfo.metrics.REQUEST_TIME
 import no.nav.syfo.metrics.RULE_HIT_STATUS_COUNTER
-import no.nav.syfo.model.Periode
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.model.RuleInfo
 import no.nav.syfo.model.Status
@@ -177,6 +177,7 @@ suspend fun CoroutineScope.blockingApplicationLogic(
                 )
                 val logKeys = logValues.joinToString(prefix = "(", postfix = ")", separator = ",") { "{}" }
                 log.info("Received a SM2013 $logKeys", *logValues)
+                val requestLatency = REQUEST_TIME.startTimer()
 
                 val fellesformat = fellesformatUnmarshaller.unmarshal(StringReader(receivedSykmelding.fellesformat)) as XMLEIFellesformat
                 val healthInformation = extractHelseOpplysningerArbeidsuforhet(fellesformat)
@@ -201,6 +202,13 @@ suspend fun CoroutineScope.blockingApplicationLogic(
                         produceManualTask(kafkaproducerCreateTask, receivedSykmelding, validationResult, personV3, arbeidsfordelingV1, logKeys, logValues)
                     else -> sendInfotrygdOppdatering(infotrygdOppdateringProducer, session, createInfotrygdInfo(receivedSykmelding.fellesformat, InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation), receivedSykmelding.personNrPasient), logKeys, logValues)
                 }
+                val currentRequestLatency = requestLatency.observeDuration()
+
+                log.info("Message($logKeys) got outcome {}, {}, processing took {}s",
+                        *logValues,
+                        keyValue("status", validationResult.status),
+                        keyValue("ruleHits", validationResult.ruleHits.joinToString(", ", "(", ")") { it.ruleName }),
+                        keyValue("latency", currentRequestLatency))
             }
         delay(100)
         }
@@ -246,7 +254,6 @@ fun sendInfotrygdOppdatering(
     logKeys: String,
     logValues: Array<StructuredArgument>
 ) = producer.send(session.createTextMessage().apply {
-    log.info("Message is automatic outcome $logKeys", *logValues)
     text = fellesformatMarshaller.toString(fellesformat)
     log.info("Message is sendt to infotrygd $logKeys", *logValues)
 })
@@ -357,8 +364,6 @@ fun findOprasjonstype(periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode
 }
 
 suspend fun CoroutineScope.produceManualTask(kafkaProducer: KafkaProducer<String, ProduceTask>, receivedSykmelding: ReceivedSykmelding, validationResult: ValidationResult, personV3: PersonV3, arbeidsfordelingV1: ArbeidsfordelingV1, logKeys: String, logValues: Array<StructuredArgument>) {
-    log.info("Message is manual outcome $logKeys", *logValues)
-
     val geografiskTilknytning = fetchGeografiskTilknytningAsync(personV3, receivedSykmelding)
     val finnBehandlendeEnhetListeResponse = fetchBehandlendeEnhetAsync(arbeidsfordelingV1, geografiskTilknytning.geografiskTilknytning)
 
