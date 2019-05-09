@@ -11,6 +11,7 @@ import no.trygdeetaten.xml.eiff._1.XMLMottakenhetBlokk
 import javax.xml.bind.JAXBContext
 import javax.xml.bind.Marshaller
 import javax.xml.bind.Unmarshaller
+import com.sun.xml.bind.marshaller.NamespacePrefixMapper
 
 val infotrygdSporringJaxBContext: JAXBContext = JAXBContext.newInstance(InfotrygdForesp::class.java)
 val infotrygdSporringMarshaller: Marshaller = infotrygdSporringJaxBContext.createMarshaller()
@@ -22,4 +23,12 @@ val fellesformatJaxBContext: JAXBContext = JAXBContext.newInstance(XMLEIFellesfo
         KontrollsystemBlokkType::class.java, KontrollSystemBlokk::class.java, InfotrygdForesp::class.java)
 val fellesformatUnmarshaller: Unmarshaller = fellesformatJaxBContext.createUnmarshaller()
 
-val fellesformatMarshaller: Marshaller = fellesformatJaxBContext.createMarshaller()
+val fellesformatMarshaller: Marshaller = fellesformatJaxBContext.createMarshaller().apply {
+    setProperty("com.sun.xml.bind.namespacePrefixMapper", NoNamespacePrefixMapper())
+}
+
+class NoNamespacePrefixMapper : NamespacePrefixMapper() {
+    override fun getPreferredPrefix(namespaceUri: String?, suggestion: String?, requirePrefix: Boolean): String {
+        return ""
+    }
+}
