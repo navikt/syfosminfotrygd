@@ -1,5 +1,6 @@
 package no.nav.syfo.util
 
+import com.sun.xml.bind.marshaller.NamespacePrefixMapper
 import no.kith.xmlstds.msghead._2006_05_24.XMLMsgHead
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
@@ -11,7 +12,6 @@ import no.trygdeetaten.xml.eiff._1.XMLMottakenhetBlokk
 import javax.xml.bind.JAXBContext
 import javax.xml.bind.Marshaller
 import javax.xml.bind.Unmarshaller
-import com.sun.xml.bind.marshaller.NamespacePrefixMapper
 
 val infotrygdSporringJaxBContext: JAXBContext = JAXBContext.newInstance(InfotrygdForesp::class.java)
 val infotrygdSporringMarshaller: Marshaller = infotrygdSporringJaxBContext.createMarshaller()
@@ -24,7 +24,7 @@ val fellesformatJaxBContext: JAXBContext = JAXBContext.newInstance(XMLEIFellesfo
 val fellesformatUnmarshaller: Unmarshaller = fellesformatJaxBContext.createUnmarshaller()
 
 val fellesformatMarshaller: Marshaller = fellesformatJaxBContext.createMarshaller().apply {
-    setProperty("com.sun.xml.internal.bind.namespacePrefixMappe", NoNamespacePrefixMapper())
+    setProperty("com.sun.xml.bind.namespacePrefixMapper", NoNamespacePrefixMapper())
 }
 
 class NoNamespacePrefixMapper : NamespacePrefixMapper() {
