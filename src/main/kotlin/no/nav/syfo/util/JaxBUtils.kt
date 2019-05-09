@@ -24,7 +24,7 @@ val fellesformatJaxBContext: JAXBContext = JAXBContext.newInstance(XMLEIFellesfo
 val fellesformatUnmarshaller: Unmarshaller = fellesformatJaxBContext.createUnmarshaller()
 
 val fellesformatMarshaller: Marshaller = fellesformatJaxBContext.createMarshaller().apply {
-    setProperty("com.sun.xml.bind.namespacePrefixMapper", NoNamespacePrefixMapper())
+    setProperty("com.sun.xml.internal.bind.namespacePrefixMappe", NoNamespacePrefixMapper())
 }
 
 class NoNamespacePrefixMapper : NamespacePrefixMapper() {
