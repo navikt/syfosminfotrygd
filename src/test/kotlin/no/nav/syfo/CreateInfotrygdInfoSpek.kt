@@ -13,10 +13,12 @@ import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.helse.sm2013.Ident
 import no.nav.helse.sm2013.KontrollSystemBlokk
 import no.nav.syfo.util.fellesformatMarshaller
+import no.nav.syfo.util.fellesformatUnmarshaller
 import no.trygdeetaten.xml.eiff._1.XMLEIFellesformat
 import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.io.StringReader
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -152,6 +154,23 @@ object CreateInfotrygdInfoSpek : Spek({
             val infotrygdBlokk = infotrygdFellesformat.get<KontrollSystemBlokk>().infotrygdBlokk
 
             "030" shouldEqual infotrygdBlokk.first().arbeidsKategori
+        }
+
+        it("Should not contain namespace in InfotrygdBlokk") {
+            val stringInput = getFileAsString("src/test/resources/sykemelding2013Regelsettversjon2.xml")
+            val fellesformat = fellesformatUnmarshaller.unmarshal(StringReader(stringInput)) as XMLEIFellesformat
+
+            val healthInformation = extractHelseOpplysningerArbeidsuforhet(fellesformat)
+            val infotrygdForesp = createInfotrygdForesp()
+
+            val fellesFormatString = fellesformatMarshaller.toString(fellesformat)
+
+            val itfh = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
+            val infotrygdFellesformat = createInfotrygdInfo(fellesFormatString, itfh, "1231234")
+
+            // TODO comment in test when fix is out
+            // fellesformatMarshaller.toString(infotrygdFellesformat).contains(":InfotrygdBlokk").shouldBeFalse()
+            // println(fellesformatMarshaller.toString(infotrygdFellesformat))
         }
     }
 })
