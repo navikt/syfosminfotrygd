@@ -1,5 +1,6 @@
 package no.nav.syfo.util
 
+import com.sun.xml.bind.marshaller.NamespacePrefixMapper
 import no.kith.xmlstds.msghead._2006_05_24.XMLMsgHead
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
@@ -22,4 +23,13 @@ val fellesformatJaxBContext: JAXBContext = JAXBContext.newInstance(XMLEIFellesfo
         KontrollsystemBlokkType::class.java, KontrollSystemBlokk::class.java, InfotrygdForesp::class.java)
 val fellesformatUnmarshaller: Unmarshaller = fellesformatJaxBContext.createUnmarshaller()
 
-val fellesformatMarshaller: Marshaller = fellesformatJaxBContext.createMarshaller()
+val fellesformatMarshaller: Marshaller = fellesformatJaxBContext.createMarshaller().apply {
+    setProperty("com.sun.xml.bind.namespacePrefixMapper", EmptyNamespaceMapper())
+    setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true)
+}
+
+class EmptyNamespaceMapper : NamespacePrefixMapper() {
+    override fun getPreferredPrefix(namespaceUri: String?, suggestion: String?, requirePrefix: Boolean): String {
+      return ""
+    }
+}
