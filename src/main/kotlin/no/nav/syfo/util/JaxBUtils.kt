@@ -30,6 +30,6 @@ val fellesformatMarshaller: Marshaller = fellesformatJaxBContext.createMarshalle
 
 class EmptyNamespaceMapper : NamespacePrefixMapper() {
     override fun getPreferredPrefix(namespaceUri: String?, suggestion: String?, requirePrefix: Boolean): String {
-      return ""
+        return ""
     }
 }
