@@ -38,7 +38,7 @@ val jaxwsToolsVersion = "2.3.1"
 val jaxbRuntimeVersion = "2.4.0-b180830.0438"
 val kithHodemeldingVersion = "1.1"
 val smCommonVersion = "1.0.18"
-val kontrollsystemblokk = "1.0.3-SNAPSHOT"
+val kontrollsystemblokk = "1.0.4-SNAPSHOT"
 
 plugins {
     java
