@@ -37,8 +37,8 @@ val javaxAnnotationApiVersion = "1.3.2"
 val jaxwsToolsVersion = "2.3.1"
 val jaxbRuntimeVersion = "2.4.0-b180830.0438"
 val kithHodemeldingVersion = "1.1"
-val felleformavV1Version = "1.2-SNAPSHOT"
 val smCommonVersion = "1.0.18"
+val kontrollsystemblokk = "1.0.0-SNAPSHOT"
 
 plugins {
     java
@@ -103,7 +103,7 @@ dependencies {
 
     implementation ("no.nav.helse.xml:sm2013:$sykmeldingVersion")
     implementation ("no.nav.syfo.tjenester:fellesformat:$fellesformatVersion")
-    implementation ("no.nav.helse.xml:fellesformat:$felleformavV1Version")
+    implementation ("no.nav.helse.xml:kontrollsystemblokk:$kontrollsystemblokk")
     implementation ("no.nav.tjenester:nav-arbeidsfordeling-v1-tjenestespesifikasjon:$navArbeidsfordelingv1Version:jaxws")
     implementation ("no.nav.syfo:syfooppgave-schemas:$syfooppgaveSchemasVersion")
     implementation ("no.nav.tjenester:nav-person-v3-tjenestespesifikasjon:$navPersonv3Version")
