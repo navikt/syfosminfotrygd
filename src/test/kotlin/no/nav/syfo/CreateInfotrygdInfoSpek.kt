@@ -14,7 +14,9 @@ import no.nav.helse.sm2013.Ident
 import no.nav.helse.sm2013.KontrollSystemBlokk
 import no.nav.syfo.util.fellesformatMarshaller
 import no.nav.syfo.util.fellesformatUnmarshaller
+import no.nav.syfo.util.xmlObjectWriter
 import no.trygdeetaten.xml.eiff._1.XMLEIFellesformat
+import org.amshove.kluent.shouldBeFalse
 import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -169,8 +171,8 @@ object CreateInfotrygdInfoSpek : Spek({
             val infotrygdFellesformat = createInfotrygdInfo(fellesFormatString, itfh, "1231234")
 
             // TODO comment in test when fix is out
-            // fellesformatMarshaller.toString(infotrygdFellesformat).contains(":InfotrygdBlokk").shouldBeFalse()
-            // println(fellesformatMarshaller.toString(infotrygdFellesformat))
+            xmlObjectWriter.writeValueAsString(infotrygdFellesformat).contains(":InfotrygdBlokk").shouldBeFalse()
+            println(xmlObjectWriter.writeValueAsString(infotrygdFellesformat))
         }
     }
 })

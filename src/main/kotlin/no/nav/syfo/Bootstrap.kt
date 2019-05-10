@@ -44,10 +44,10 @@ import no.nav.syfo.rules.sortedSMInfos
 import no.nav.syfo.sak.avro.PrioritetType
 import no.nav.syfo.sak.avro.ProduceTask
 import no.nav.syfo.util.JacksonKafkaSerializer
-import no.nav.syfo.util.fellesformatMarshaller
 import no.nav.syfo.util.fellesformatUnmarshaller
 import no.nav.syfo.util.infotrygdSporringMarshaller
 import no.nav.syfo.util.infotrygdSporringUnmarshaller
+import no.nav.syfo.util.xmlObjectWriter
 import no.nav.syfo.ws.createPort
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.binding.ArbeidsfordelingV1
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.ArbeidsfordelingKriterier
@@ -254,7 +254,7 @@ fun sendInfotrygdOppdatering(
     logKeys: String,
     logValues: Array<StructuredArgument>
 ) = producer.send(session.createTextMessage().apply {
-    text = fellesformatMarshaller.toString(fellesformat)
+    text = xmlObjectWriter.writeValueAsString(fellesformat)
     log.info("Infotrygd oppdatering: $text")
     log.info("Message is sendt to infotrygd $logKeys", *logValues)
 })
