@@ -13,8 +13,8 @@ import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.helse.sm2013.Ident
 import no.nav.helse.sm2013.KontrollSystemBlokk
 import no.nav.syfo.util.fellesformatMarshaller
-import no.nav.syfo.util.fellesformatUnmarshaller
 import no.nav.syfo.util.xmlObjectWriter
+import no.nav.syfo.util.fellesformatUnmarshaller
 import no.trygdeetaten.xml.eiff._1.XMLEIFellesformat
 import org.amshove.kluent.shouldBeFalse
 import org.amshove.kluent.shouldEqual
