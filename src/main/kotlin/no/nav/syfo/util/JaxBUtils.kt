@@ -1,8 +1,12 @@
 package no.nav.syfo.util
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.dataformat.xml.JacksonXmlModule
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
+import com.fasterxml.jackson.dataformat.xml.ser.ToXmlGenerator
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.migesok.jaxb.adapter.javatime.LocalDateTimeXmlAdapter
 import com.migesok.jaxb.adapter.javatime.LocalDateXmlAdapter
@@ -37,8 +41,10 @@ val fellesformatMarshaller: Marshaller = fellesformatJaxBContext.createMarshalle
             setProperty(Marshaller.JAXB_ENCODING, "ISO-8859-1")
 }
 
-val xmlObjectWriter: XmlMapper = XmlMapper().apply {
-    registerModule(JavaTimeModule())
-    registerKotlinModule()
-    configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-}
+val xmlObjectWriter: ObjectMapper = XmlMapper(JacksonXmlModule().apply {
+    setDefaultUseWrapper(false) })
+        .configure(ToXmlGenerator.Feature.WRITE_XML_DECLARATION, true)
+        .registerModule(JaxbAnnotationModule())
+        .registerKotlinModule()
+        .registerModule(JavaTimeModule())
+        .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
