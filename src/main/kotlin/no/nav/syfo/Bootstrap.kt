@@ -293,7 +293,11 @@ fun createInfotrygdInfo(marshalledFellesformat: String, itfh: InfotrygdForespAnd
     infotrygdBlokk.add(KontrollsystemBlokkType.InfotrygdBlokk().apply {
         fodselsnummer = personNrPasient
         tkNummer = ""
-        forsteFravaersDag = periode.periodeFOMDato
+        forsteFravaersDag = when (findOprasjonstype(periode, itfh)) {
+            "1".toBigInteger() -> periode.periodeFOMDato
+            else -> itfh.healthInformation.syketilfelleStartDato
+        }
+
         mottakerKode = itfh.infotrygdForesp.behandlerInfo.behandler.firstOrNull()?.mottakerKode?.value() ?: ""
         operasjonstype = when (index) {
             0 -> findOprasjonstype(periode, itfh)
