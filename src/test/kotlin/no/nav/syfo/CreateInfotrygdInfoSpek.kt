@@ -170,7 +170,6 @@ object CreateInfotrygdInfoSpek : Spek({
             val itfh = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
             val infotrygdFellesformat = createInfotrygdInfo(fellesFormatString, itfh, "1231234")
 
-            // TODO comment in test when fix is out
             xmlObjectWriter.writeValueAsString(infotrygdFellesformat).contains(":InfotrygdBlokk").shouldBeFalse()
             println(xmlObjectWriter.writeValueAsString(infotrygdFellesformat))
         }
