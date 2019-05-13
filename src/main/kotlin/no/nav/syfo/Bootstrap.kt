@@ -289,12 +289,13 @@ inline fun <reified T> unmarshal(text: String): T = fellesformatUnmarshaller.unm
 
 fun createInfotrygdInfo(marshalledFellesformat: String, itfh: InfotrygdForespAndHealthInformation, personNrPasient: String) = unmarshal<XMLEIFellesformat>(marshalledFellesformat).apply {
     any.add(KontrollSystemBlokk().apply {
+    val firstSickLaveDate = itfh.healthInformation.aktivitet.periode.sortedFOMDate().first()
     itfh.healthInformation.aktivitet.periode.forEachIndexed { index, periode ->
     infotrygdBlokk.add(KontrollsystemBlokkType.InfotrygdBlokk().apply {
         fodselsnummer = personNrPasient
         tkNummer = ""
         forsteFravaersDag = when (findOprasjonstype(periode, itfh)) {
-            "1".toBigInteger() -> periode.periodeFOMDato
+            "1".toBigInteger() -> firstSickLaveDate
             else -> itfh.healthInformation.syketilfelleStartDato
         }
 
@@ -489,3 +490,6 @@ fun validationResult(results: List<Rule<Any>>): ValidationResult =
                         },
                 ruleHits = results.map { rule -> RuleInfo(rule.name, rule.messageForUser!!, rule.messageForSender!!) }
         )
+
+fun List<HelseOpplysningerArbeidsuforhet.Aktivitet.Periode>.sortedFOMDate(): List<LocalDate> =
+        map { it.periodeFOMDato }.sorted()
