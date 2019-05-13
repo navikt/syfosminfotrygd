@@ -306,6 +306,7 @@ fun createInfotrygdInfo(marshalledFellesformat: String, itfh: InfotrygdForespAnd
             behandlingsDato = listOf(itfh.healthInformation.kontaktMedPasient.kontaktDato,
                     itfh.healthInformation.kontaktMedPasient.behandletDato.toLocalDate()).sorted().first()
         }
+        if (index == 0) {
         hovedDiagnose = itfh.infotrygdForesp.hovedDiagnosekode
         hovedDiagnoseGruppe = itfh.infotrygdForesp.hovedDiagnosekodeverk.toBigInteger()
         hovedDiagnoseTekst = itfh.healthInformation.medisinskVurdering.hovedDiagnose.diagnosekode.dn
@@ -314,6 +315,7 @@ fun createInfotrygdInfo(marshalledFellesformat: String, itfh: InfotrygdForespAnd
             biDiagnose = itfh.infotrygdForesp.biDiagnoseKode
             biDiagnoseGruppe = itfh.infotrygdForesp.biDiagnosekodeverk.toBigInteger()
             biDiagnoseTekst = itfh.healthInformation.medisinskVurdering.biDiagnoser.diagnosekode.firstOrNull()?.dn
+        }
         }
 
         if (index == 0) {

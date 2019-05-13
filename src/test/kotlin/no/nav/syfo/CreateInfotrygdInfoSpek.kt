@@ -174,6 +174,37 @@ object CreateInfotrygdInfoSpek : Spek({
             xmlObjectWriter.writeValueAsString(infotrygdFellesformat).contains(":InfotrygdBlokk").shouldBeFalse()
             println(xmlObjectWriter.writeValueAsString(infotrygdFellesformat))
         }
+
+        it("Should NOT set arbeidsKategori") {
+            val healthInformation = createDefaultHealthInformation()
+            healthInformation.kontaktMedPasient = HelseOpplysningerArbeidsuforhet.KontaktMedPasient().apply {
+                kontaktDato = LocalDate.now()
+                behandletDato = LocalDateTime.now()
+            }
+            healthInformation.aktivitet.periode.add(
+                    HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
+                        periodeFOMDato = LocalDate.now().plusDays(5)
+                        periodeTOMDato = LocalDate.now().plusDays(10)
+                        aktivitetIkkeMulig = HelseOpplysningerArbeidsuforhet.Aktivitet.Periode.AktivitetIkkeMulig().apply {
+                            medisinskeArsaker = ArsakType().apply {
+                            }
+                        }
+                    }
+
+            )
+
+            val fellesFormat = createFellesFormat(healthInformation)
+            val infotrygdForesp = createInfotrygdForesp()
+
+            val fellesFormatString = fellesformatMarshaller.toString(fellesFormat)
+
+            val itfh = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
+            val infotrygdFellesformat = createInfotrygdInfo(fellesFormatString, itfh, "1231234")
+
+            val infotrygdBlokk = infotrygdFellesformat.get<KontrollSystemBlokk>().infotrygdBlokk
+
+            infotrygdBlokk.last().arbeidsKategori shouldEqual null
+        }
     }
 })
 
