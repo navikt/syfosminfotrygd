@@ -3,7 +3,7 @@ import com.github.jengelman.gradle.plugins.shadow.transformers.ServiceFileTransf
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 group = "no.nav.syfo"
-version = "1.0.30"
+version = "1.0.31-SNAPSHOT"
 
 val artemisVersion = "2.6.4"
 val avroVersion = "1.8.2"
