@@ -256,7 +256,7 @@ fun sendInfotrygdOppdatering(
 ) = producer.send(session.createTextMessage().apply {
     text = xmlObjectWriter.writeValueAsString(fellesformat)
     // TODO remove when going to prod again
-    log.info("Infotrygd text: {} $logKeys", text, *logValues)
+    log.info("Infotrygd text: $text $logKeys", *logValues)
     log.info("Message is sendt to infotrygd $logKeys", *logValues)
 })
 
