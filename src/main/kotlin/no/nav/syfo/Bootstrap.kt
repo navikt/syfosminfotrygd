@@ -290,7 +290,8 @@ inline fun <reified T> unmarshal(text: String): T = fellesformatUnmarshaller.unm
 
 fun createInfotrygdInfo(marshalledFellesformat: String, itfh: InfotrygdForespAndHealthInformation, personNrPasient: String) = unmarshal<XMLEIFellesformat>(marshalledFellesformat).apply {
     any.add(KontrollSystemBlokk().apply {
-    itfh.healthInformation.aktivitet.periode.forEachIndexed { index, periode ->
+    val sortedPerioder = itfh.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
+        sortedPerioder.forEachIndexed { index, periode ->
     infotrygdBlokk.add(
         when (index) {
             0 -> createFirstInfotrygdblokk(periode, itfh, personNrPasient)
