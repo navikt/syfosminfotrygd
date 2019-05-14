@@ -21,7 +21,7 @@ val jedisVersion = "2.9.0"
 val kafkaVersion = "2.0.0"
 val kafkaEmbeddedVersion = "2.1.1"
 val kluentVersion = "1.39"
-val ktorVersion = "1.1.3"
+val ktorVersion = "1.1.4"
 val logbackVersion = "1.2.3"
 val logstashEncoderVersion = "5.1"
 val prometheusVersion = "0.5.0"
@@ -42,10 +42,10 @@ val kontrollsystemblokk = "1.0.5-SNAPSHOT"
 
 plugins {
     java
-    kotlin("jvm") version "1.3.21"
-    id("org.jmailen.kotlinter") version "1.21.0"
+    kotlin("jvm") version "1.3.31"
+    id("org.jmailen.kotlinter") version "1.25.1"
     id("com.diffplug.gradle.spotless") version "3.14.0"
-    id("com.github.johnrengelman.shadow") version "4.0.4"
+    id("com.github.johnrengelman.shadow") version "5.0.0"
 }
 
 
@@ -183,7 +183,9 @@ tasks {
         }
     }
 
-    "check" {
-        dependsOn("formatKotlin")
+    withType<Wrapper> {
+        gradleVersion = "5.4.1"
+        distributionType = Wrapper.DistributionType.BIN
     }
+    
 }
