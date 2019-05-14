@@ -477,6 +477,12 @@ fun createFirstInfotrygdblokk(
                         itfh.healthInformation.kontaktMedPasient.behandletDato.toLocalDate()).sorted().first()
             }
 
+            if (operasjonstype.equals("1".toBigInteger())) {
+            arbeidsKategori = findarbeidsKategori(itfh)
+            gruppe = "96"
+            saksbehandler = "Auto"
+            }
+
             hovedDiagnose = itfh.infotrygdForesp.hovedDiagnosekode
             hovedDiagnoseGruppe = itfh.infotrygdForesp.hovedDiagnosekodeverk.toBigInteger()
                 hovedDiagnoseTekst = itfh.healthInformation.medisinskVurdering.hovedDiagnose.diagnosekode.dn
@@ -486,10 +492,6 @@ fun createFirstInfotrygdblokk(
                     biDiagnoseGruppe = itfh.infotrygdForesp.biDiagnosekodeverk.toBigInteger()
                     biDiagnoseTekst = itfh.healthInformation.medisinskVurdering.biDiagnoser.diagnosekode.firstOrNull()?.dn
                 }
-
-            arbeidsKategori = findarbeidsKategori(itfh)
-            gruppe = "96"
-            saksbehandler = "Auto"
 
             arbeidsufoerTOM = periode.periodeTOMDato
             ufoeregrad = when {
