@@ -200,7 +200,14 @@ suspend fun CoroutineScope.blockingApplicationLogic(
                 when {
                     results.any { rule -> rule.status == Status.MANUAL_PROCESSING } ->
                         produceManualTask(kafkaproducerCreateTask, receivedSykmelding, validationResult, personV3, arbeidsfordelingV1, logKeys, logValues)
-                    else -> sendInfotrygdOppdatering(infotrygdOppdateringProducer, session, createInfotrygdInfo(receivedSykmelding.fellesformat, InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation), receivedSykmelding.personNrPasient), logKeys, logValues)
+                    else -> sendInfotrygdOppdatering(infotrygdOppdateringProducer,
+                            session,
+                            createInfotrygdInfo(
+                                receivedSykmelding.fellesformat,
+                                InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
+                                receivedSykmelding.personNrPasient,
+                                receivedSykmelding.sykmelding.signaturDato.toLocalDate()
+                            ), logKeys, logValues)
                 }
                 val currentRequestLatency = requestLatency.observeDuration()
 
@@ -288,13 +295,13 @@ fun createInfotrygdForesp(personNrPasient: String, healthInformation: HelseOpply
 val inputFactory = XMLInputFactory.newInstance()
 inline fun <reified T> unmarshal(text: String): T = fellesformatUnmarshaller.unmarshal(inputFactory.createXMLEventReader(StringReader(text)), T::class.java).value
 
-fun createInfotrygdInfo(marshalledFellesformat: String, itfh: InfotrygdForespAndHealthInformation, personNrPasient: String) = unmarshal<XMLEIFellesformat>(marshalledFellesformat).apply {
+fun createInfotrygdInfo(marshalledFellesformat: String, itfh: InfotrygdForespAndHealthInformation, personNrPasient: String, signaturDato: LocalDate) = unmarshal<XMLEIFellesformat>(marshalledFellesformat).apply {
     any.add(KontrollSystemBlokk().apply {
     val sortedPerioder = itfh.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
         sortedPerioder.forEachIndexed { index, periode ->
     infotrygdBlokk.add(
         when (index) {
-            0 -> createFirstInfotrygdblokk(periode, itfh, personNrPasient)
+            0 -> createFirstInfotrygdblokk(periode, itfh, personNrPasient, signaturDato)
             else -> createSubsequentInfotrygdblokk(periode, itfh, personNrPasient)
         })
         }
@@ -458,7 +465,8 @@ fun List<HelseOpplysningerArbeidsuforhet.Aktivitet.Periode>.sortedFOMDate(): Lis
 fun createFirstInfotrygdblokk(
     periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode,
     itfh: InfotrygdForespAndHealthInformation,
-    personNrPasient: String
+    personNrPasient: String,
+    signaturDato: LocalDate
 ): KontrollsystemBlokkType.InfotrygdBlokk =
         KontrollsystemBlokkType.InfotrygdBlokk().apply {
             fodselsnummer = personNrPasient
@@ -473,7 +481,7 @@ fun createFirstInfotrygdblokk(
             operasjonstype = findOprasjonstype(periode, itfh)
 
             if (operasjonstype.equals("1".toBigInteger())) {
-                behandlingsDato = findbBehandlingsDato(itfh)
+                behandlingsDato = findbBehandlingsDato(itfh, signaturDato)
             }
 
             if (operasjonstype.equals("1".toBigInteger())) {
@@ -525,7 +533,7 @@ fun createSubsequentInfotrygdblokk(
             }
         }
 
-fun findbBehandlingsDato(itfh: InfotrygdForespAndHealthInformation): LocalDate {
+fun findbBehandlingsDato(itfh: InfotrygdForespAndHealthInformation, signaturDato: LocalDate): LocalDate {
     if (itfh.healthInformation.kontaktMedPasient?.kontaktDato != null &&
             itfh.healthInformation.kontaktMedPasient?.behandletDato != null) {
         return listOf(itfh.healthInformation.kontaktMedPasient.kontaktDato,
@@ -533,6 +541,6 @@ fun findbBehandlingsDato(itfh: InfotrygdForespAndHealthInformation): LocalDate {
     } else if (itfh.healthInformation.kontaktMedPasient?.behandletDato != null) {
         return itfh.healthInformation.kontaktMedPasient.behandletDato.toLocalDate()
     } else {
-        return itfh.healthInformation.kontaktMedPasient.kontaktDato
+        return signaturDato
     }
 }
