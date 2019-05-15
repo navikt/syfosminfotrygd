@@ -38,7 +38,7 @@ object CreateInfotrygdInfoSpek : Spek({
             val fellesFormatString = fellesformatMarshaller.toString(fellesFormat)
 
             val itfh = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
-            val infotrygdFellesformat = createInfotrygdInfo(fellesFormatString, itfh, "1231234")
+            val infotrygdFellesformat = createInfotrygdInfo(fellesFormatString, itfh, "1231234", LocalDate.now())
 
             extractHelseOpplysningerArbeidsuforhet(infotrygdFellesformat).regelSettVersjon shouldEqual
                     extractHelseOpplysningerArbeidsuforhet(fellesFormat).regelSettVersjon
@@ -58,7 +58,7 @@ object CreateInfotrygdInfoSpek : Spek({
             val fellesFormatString = fellesformatMarshaller.toString(fellesFormat)
 
             val itfh = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
-            val infotrygdFellesformat = createInfotrygdInfo(fellesFormatString, itfh, "1231234")
+            val infotrygdFellesformat = createInfotrygdInfo(fellesFormatString, itfh, "1231234", LocalDate.now())
 
             extractHelseOpplysningerArbeidsuforhet(infotrygdFellesformat).aktivitet.periode.first().periodeTOMDato shouldEqual
                     extractHelseOpplysningerArbeidsuforhet(fellesFormat).aktivitet.periode.first().periodeTOMDato
@@ -78,7 +78,7 @@ object CreateInfotrygdInfoSpek : Spek({
             val fellesFormatString = fellesformatMarshaller.toString(fellesFormat)
 
             val itfh = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
-            val infotrygdFellesformat = createInfotrygdInfo(fellesFormatString, itfh, "1231234")
+            val infotrygdFellesformat = createInfotrygdInfo(fellesFormatString, itfh, "1231234", LocalDate.now())
 
             val infotrygdBlokk = infotrygdFellesformat.get<KontrollSystemBlokk>().infotrygdBlokk
 
@@ -100,7 +100,7 @@ object CreateInfotrygdInfoSpek : Spek({
             val fellesFormatString = fellesformatMarshaller.toString(fellesFormat)
 
             val itfh = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
-            val infotrygdFellesformat = createInfotrygdInfo(fellesFormatString, itfh, "1231234")
+            val infotrygdFellesformat = createInfotrygdInfo(fellesFormatString, itfh, "1231234", LocalDate.now())
 
             val infotrygdBlokk = infotrygdFellesformat.get<KontrollSystemBlokk>().infotrygdBlokk
 
@@ -127,7 +127,7 @@ object CreateInfotrygdInfoSpek : Spek({
             val fellesFormatString = fellesformatMarshaller.toString(fellesFormat)
 
             val itfh = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
-            val infotrygdFellesformat = createInfotrygdInfo(fellesFormatString, itfh, "1231234")
+            val infotrygdFellesformat = createInfotrygdInfo(fellesFormatString, itfh, "1231234", LocalDate.now())
 
             val infotrygdBlokk = infotrygdFellesformat.get<KontrollSystemBlokk>().infotrygdBlokk
 
@@ -147,7 +147,7 @@ object CreateInfotrygdInfoSpek : Spek({
             val fellesFormatString = fellesformatMarshaller.toString(fellesFormat)
 
             val itfh = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
-            val infotrygdFellesformat = createInfotrygdInfo(fellesFormatString, itfh, "1231234")
+            val infotrygdFellesformat = createInfotrygdInfo(fellesFormatString, itfh, "1231234", LocalDate.now())
 
             val infotrygdBlokk = infotrygdFellesformat.get<KontrollSystemBlokk>().infotrygdBlokk
 
@@ -164,7 +164,7 @@ object CreateInfotrygdInfoSpek : Spek({
             val fellesFormatString = fellesformatMarshaller.toString(fellesformat)
 
             val itfh = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
-            val infotrygdFellesformat = createInfotrygdInfo(fellesFormatString, itfh, "1231234")
+            val infotrygdFellesformat = createInfotrygdInfo(fellesFormatString, itfh, "1231234", LocalDate.now())
 
             xmlObjectWriter.writeValueAsString(infotrygdFellesformat).contains(":InfotrygdBlokk").shouldBeFalse()
             println(xmlObjectWriter.writeValueAsString(infotrygdFellesformat))
@@ -194,7 +194,7 @@ object CreateInfotrygdInfoSpek : Spek({
             val fellesFormatString = fellesformatMarshaller.toString(fellesFormat)
 
             val itfh = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
-            val infotrygdFellesformat = createInfotrygdInfo(fellesFormatString, itfh, "1231234")
+            val infotrygdFellesformat = createInfotrygdInfo(fellesFormatString, itfh, "1231234", LocalDate.now())
 
             val infotrygdBlokk = infotrygdFellesformat.get<KontrollSystemBlokk>().infotrygdBlokk
 
@@ -233,7 +233,7 @@ object CreateInfotrygdInfoSpek : Spek({
             val fellesFormatString = fellesformatMarshaller.toString(fellesFormat)
 
             val itfh = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
-            val infotrygdFellesformat = createInfotrygdInfo(fellesFormatString, itfh, "1231234")
+            val infotrygdFellesformat = createInfotrygdInfo(fellesFormatString, itfh, "1231234", LocalDate.now())
 
             val infotrygdBlokk = infotrygdFellesformat.get<KontrollSystemBlokk>().infotrygdBlokk
 
@@ -287,7 +287,7 @@ object CreateInfotrygdInfoSpek : Spek({
             val fellesFormatString = fellesformatMarshaller.toString(fellesFormat)
 
             val itfh = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
-            val infotrygdFellesformat = createInfotrygdInfo(fellesFormatString, itfh, "1231234")
+            val infotrygdFellesformat = createInfotrygdInfo(fellesFormatString, itfh, "1231234", LocalDate.now())
 
             val infotrygdBlokk = infotrygdFellesformat.get<KontrollSystemBlokk>().infotrygdBlokk
 
