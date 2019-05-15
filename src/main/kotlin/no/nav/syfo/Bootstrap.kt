@@ -468,6 +468,8 @@ fun createFirstInfotrygdblokk(
                 else -> itfh.healthInformation.syketilfelleStartDato
             }
 
+            mottakerKode = "LE"
+
             operasjonstype = findOprasjonstype(periode, itfh)
 
             if (operasjonstype.equals("1".toBigInteger()) &&
@@ -513,6 +515,8 @@ fun createSubsequentInfotrygdblokk(
                 "1".toBigInteger() -> itfh.healthInformation.aktivitet.periode.sortedFOMDate().first()
                 else -> itfh.healthInformation.syketilfelleStartDato
             }
+
+            mottakerKode = "LE"
 
             operasjonstype = "2".toBigInteger()
 
