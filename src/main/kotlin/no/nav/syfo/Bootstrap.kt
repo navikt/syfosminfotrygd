@@ -312,7 +312,7 @@ fun findarbeidsKategori(itfh: InfotrygdForespAndHealthInformation): String {
 fun findOprasjonstype(periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode, itfh: InfotrygdForespAndHealthInformation): BigInteger {
     // FORSTEGANGS = 1, PAFOLGENDE = 2, ENDRING = 3
     val typeSMinfo = itfh.infotrygdForesp.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()
-        ?: return 1.toBigInteger()
+        ?: return "1".toBigInteger()
 
     return if (itfh.infotrygdForesp.sMhistorikk.status.kodeMelding == "04" ||
             (typeSMinfo.periode.arbufoerFOM..periode.periodeFOMDato).daysBetween() > 280) {
@@ -472,11 +472,8 @@ fun createFirstInfotrygdblokk(
 
             operasjonstype = findOprasjonstype(periode, itfh)
 
-            if (operasjonstype.equals("1".toBigInteger()) &&
-                    itfh.healthInformation.kontaktMedPasient?.kontaktDato != null &&
-                    itfh.healthInformation.kontaktMedPasient?.behandletDato != null) {
-                behandlingsDato = listOf(itfh.healthInformation.kontaktMedPasient.kontaktDato,
-                        itfh.healthInformation.kontaktMedPasient.behandletDato.toLocalDate()).sorted().first()
+            if (operasjonstype.equals("1".toBigInteger())) {
+                behandlingsDato = findbBehandlingsDato(itfh)
             }
 
             if (operasjonstype.equals("1".toBigInteger())) {
@@ -527,3 +524,15 @@ fun createSubsequentInfotrygdblokk(
                 else -> 0.toBigInteger()
             }
         }
+
+fun findbBehandlingsDato(itfh: InfotrygdForespAndHealthInformation): LocalDate {
+    if (itfh.healthInformation.kontaktMedPasient?.kontaktDato != null &&
+            itfh.healthInformation.kontaktMedPasient?.behandletDato != null) {
+        return listOf(itfh.healthInformation.kontaktMedPasient.kontaktDato,
+                itfh.healthInformation.kontaktMedPasient.behandletDato.toLocalDate()).sorted().first()
+    } else if (itfh.healthInformation.kontaktMedPasient?.behandletDato != null) {
+        return itfh.healthInformation.kontaktMedPasient.behandletDato.toLocalDate()
+    } else {
+        return itfh.healthInformation.kontaktMedPasient.kontaktDato
+    }
+}
