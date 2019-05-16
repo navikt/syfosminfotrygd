@@ -352,8 +352,6 @@ fun sendInfotrygdOppdateringMq(
     logValues: Array<StructuredArgument>
 ) = producer.send(session.createTextMessage().apply {
     text = xmlObjectWriter.writeValueAsString(fellesformat)
-    // TODO remove after testing
-    log.info("Infotrygd text: $text $logKeys", *logValues)
     log.info("Message is sendt to infotrygd $logKeys", *logValues)
 })
 
