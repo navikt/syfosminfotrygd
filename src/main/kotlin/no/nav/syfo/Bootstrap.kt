@@ -200,14 +200,16 @@ suspend fun CoroutineScope.blockingApplicationLogic(
                 when {
                     results.any { rule -> rule.status == Status.MANUAL_PROCESSING } ->
                         produceManualTask(kafkaproducerCreateTask, receivedSykmelding, validationResult, personV3, arbeidsfordelingV1, logKeys, logValues)
-                    else -> sendInfotrygdOppdatering(infotrygdOppdateringProducer,
+                    else -> sendInfotrygdOppdatering(
+                            infotrygdOppdateringProducer,
                             session,
-                            createInfotrygdInfo(
-                                receivedSykmelding.fellesformat,
-                                InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
-                                receivedSykmelding.personNrPasient,
-                                receivedSykmelding.sykmelding.signaturDato.toLocalDate()
-                            ), logKeys, logValues)
+                            logKeys,
+                            logValues,
+                            receivedSykmelding.fellesformat,
+                            InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
+                            receivedSykmelding.personNrPasient,
+                            receivedSykmelding.sykmelding.signaturDato.toLocalDate()
+                            )
                 }
                 val currentRequestLatency = requestLatency.observeDuration()
 
@@ -255,6 +257,42 @@ fun sendInfotrygdSporring(
 })
 
 fun sendInfotrygdOppdatering(
+    producer: MessageProducer,
+    session: Session,
+    logKeys: String,
+    logValues: Array<StructuredArgument>,
+    marshalledFellesformat: String,
+    itfh: InfotrygdForespAndHealthInformation,
+    personNrPasient: String,
+    signaturDato: LocalDate
+) {
+    itfh.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }.forEachIndexed { index, periode ->
+                when (index) {
+                    0 -> sendInfotrygdOppdateringMq(producer, session, createInfotrygdInfoFirst(marshalledFellesformat, itfh, personNrPasient, signaturDato), logKeys, logValues)
+                    else -> sendInfotrygdOppdateringMq(producer, session, createInfotrygdInfoSubsequent(marshalledFellesformat, itfh, personNrPasient), logKeys, logValues)
+                }
+    }
+}
+
+fun createInfotrygdInfoFirst(marshalledFellesformat: String, itfh: InfotrygdForespAndHealthInformation, personNrPasient: String, signaturDato: LocalDate) = unmarshal<XMLEIFellesformat>(marshalledFellesformat).apply {
+    any.add(KontrollSystemBlokk().apply {
+        itfh.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }.forEachIndexed { index, periode ->
+            infotrygdBlokk.add(
+                    createFirstInfotrygdblokk(periode, itfh, personNrPasient, signaturDato))
+        }
+    })
+}
+
+fun createInfotrygdInfoSubsequent(marshalledFellesformat: String, itfh: InfotrygdForespAndHealthInformation, personNrPasient: String) = unmarshal<XMLEIFellesformat>(marshalledFellesformat).apply {
+    any.add(KontrollSystemBlokk().apply {
+        itfh.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }.forEachIndexed { index, periode ->
+            infotrygdBlokk.add(
+                    createSubsequentInfotrygdblokk(periode, itfh, personNrPasient))
+        }
+    })
+}
+
+fun sendInfotrygdOppdateringMq(
     producer: MessageProducer,
     session: Session,
     fellesformat: XMLEIFellesformat,
