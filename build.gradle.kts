@@ -1,5 +1,6 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import com.github.jengelman.gradle.plugins.shadow.transformers.ServiceFileTransformer
+import no.nils.wsdl2java.Wsdl2JavaTask
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 group = "no.nav.syfo"
@@ -39,9 +40,11 @@ val jaxbRuntimeVersion = "2.4.0-b180830.0438"
 val kithHodemeldingVersion = "1.1"
 val smCommonVersion = "1.0.18"
 val kontrollsystemblokk = "1.0.5-SNAPSHOT"
+val javaxJaxwsApiVersion = "2.2.1"
 
 plugins {
     java
+    id("no.nils.wsdl2java") version "0.10"
     kotlin("jvm") version "1.3.31"
     id("org.jmailen.kotlinter") version "1.25.1"
     id("com.diffplug.gradle.spotless") version "3.14.0"
@@ -76,8 +79,16 @@ val navWsdl= configurations.create("navWsdl") {
 }
 
 dependencies {
+    wsdl2java("javax.annotation:javax.annotation-api:$javaxAnnotationApiVersion")
+    wsdl2java("javax.activation:activation:$javaxActivationVersion")
+    wsdl2java("org.glassfish.jaxb:jaxb-runtime:$jaxbRuntimeVersion")
+    wsdl2java("javax.xml.bind:jaxb-api:$jaxbApiVersion")
+    wsdl2java("javax.xml.ws:jaxws-api:$javaxJaxwsApiVersion")
+    wsdl2java("com.sun.xml.ws:jaxws-tools:$jaxwsToolsVersion") {
+        exclude(group = "com.sun.xml.ws", module = "policy")
+    }
 
-    implementation(kotlin("stdlib-jdk8"))
+    implementation(kotlin("stdlib"))
 
     implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
     implementation ("io.prometheus:simpleclient_hotspot:$prometheusVersion")
@@ -164,6 +175,7 @@ tasks {
     }
 
     withType<KotlinCompile> {
+        dependsOn("wsdl2java")
         kotlinOptions.jvmTarget = "1.8"
     }
 
@@ -172,6 +184,13 @@ tasks {
             setPath("META-INF/cxf")
             include("bus-extensions.txt")
         }
+    }
+
+    withType<Wsdl2JavaTask> {
+        wsdlDir = file("$projectDir/src/main/resources/wsdl")
+        wsdlsToGenerate = listOf(
+                mutableListOf("-xjc", "-b", "$projectDir/src/main/resources/xjb/binding.xml", "$projectDir/src/main/resources/wsdl/helsepersonellregisteret.wsdl")
+        )
     }
 
     withType<Test> {

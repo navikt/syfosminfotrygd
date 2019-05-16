@@ -20,7 +20,8 @@ data class Environment(
     override val mqHostname: String = getEnvVar("MQ_HOST_NAME"),
     override val mqPort: Int = getEnvVar("MQ_PORT").toInt(),
     override val mqGatewayName: String = getEnvVar("MQ_GATEWAY_NAME"),
-    override val mqChannelName: String = getEnvVar("MQ_CHANNEL_NAME")
+    override val mqChannelName: String = getEnvVar("MQ_CHANNEL_NAME"),
+    val helsepersonellv1EndpointURL: String = getEnvVar("HELSEPERSONELL_V1_ENDPOINT_URL")
 ) : MqConfig, KafkaConfig
 
 data class VaultCredentials(

@@ -34,7 +34,8 @@ object KafkaITSpek : Spek({
             mqChannelName = "syfomottak", infotrygdOppdateringQueue = "apprequeue",
             infotrygdSporringQueue = "infotrygdqueue",
             personV3EndpointURL = "personApi", securityTokenServiceUrl = "secApi", arbeidsfordelingV1EndpointURL = "arkapi",
-            sm2013AutomaticHandlingTopic = "topic1", smPaperAutomaticHandlingTopic = "topic2", applicationName = "syfosminfotrygd"
+            sm2013AutomaticHandlingTopic = "topic1", smPaperAutomaticHandlingTopic = "topic2", applicationName = "syfosminfotrygd",
+            helsepersonellv1EndpointURL = "helseAPi"
     )
 
     fun Properties.overrideForTest(): Properties = apply {

@@ -13,7 +13,9 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.prometheus.client.hotspot.DefaultExports
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.launch
@@ -61,7 +63,14 @@ import no.nav.tjeneste.virksomhet.person.v3.informasjon.PersonIdent
 import no.nav.tjeneste.virksomhet.person.v3.informasjon.Personidenter
 import no.nav.tjeneste.virksomhet.person.v3.meldinger.HentGeografiskTilknytningRequest
 import no.nav.tjeneste.virksomhet.person.v3.meldinger.HentGeografiskTilknytningResponse
+import no.nhn.schemas.reg.hprv2.IHPR2Service
+import no.nhn.schemas.reg.hprv2.Person as HPRPerson
 import no.trygdeetaten.xml.eiff._1.XMLEIFellesformat
+import org.apache.cxf.binding.soap.SoapMessage
+import org.apache.cxf.binding.soap.interceptor.AbstractSoapInterceptor
+import org.apache.cxf.message.Message
+import org.apache.cxf.phase.Phase
+import org.apache.cxf.ws.addressing.WSAddressingFeature
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
@@ -79,6 +88,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
+import java.util.GregorianCalendar
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import javax.jms.MessageProducer
@@ -86,6 +96,7 @@ import javax.jms.Session
 import javax.jms.TemporaryQueue
 import javax.jms.TextMessage
 import javax.xml.bind.Marshaller
+import javax.xml.datatype.DatatypeFactory
 import javax.xml.stream.XMLInputFactory
 
 data class ApplicationState(var running: Boolean = true, var initialized: Boolean = false)
@@ -97,7 +108,9 @@ val objectMapper: ObjectMapper = ObjectMapper().apply {
     configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
 }
 
-fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCoroutineDispatcher()) {
+val datatypeFactory: DatatypeFactory = DatatypeFactory.newInstance()
+
+fun main() = runBlocking(Executors.newFixedThreadPool(2).asCoroutineDispatcher()) {
     val env = Environment()
     val credentials = objectMapper.readValue<VaultCredentials>(Paths.get("/var/run/secrets/nais.io/vault/credentials.json").toFile())
     val applicationState = ApplicationState()
@@ -138,7 +151,26 @@ fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCo
                         port { withSTS(credentials.serviceuserUsername, credentials.serviceuserPassword, env.securityTokenServiceUrl) }
                     }
 
-                    blockingApplicationLogic(applicationState, kafkaconsumer, kafkaproducerCreateTask, kafkaproducervalidationResult, infotrygdOppdateringProducer, infotrygdSporringProducer, session, personV3, arbeidsfordelingV1, env)
+                    val helsepersonellV1 = createPort<IHPR2Service>(env.helsepersonellv1EndpointURL) {
+                        proxy {
+                            // TODO: Contact someone about this hacky workaround
+                            // talk to HDIR about HPR about they claim to send a ISO-8859-1 but its really UTF-8 payload
+                            val interceptor = object : AbstractSoapInterceptor(Phase.RECEIVE) {
+                                override fun handleMessage(message: SoapMessage?) {
+                                    if (message != null)
+                                        message[Message.ENCODING] = "utf-8"
+                                }
+                            }
+
+                            inInterceptors.add(interceptor)
+                            inFaultInterceptors.add(interceptor)
+                            features.add(WSAddressingFeature())
+                        }
+
+                        port { withSTS(credentials.serviceuserUsername, credentials.serviceuserPassword, env.securityTokenServiceUrl) }
+                    }
+
+                    blockingApplicationLogic(applicationState, kafkaconsumer, kafkaproducerCreateTask, kafkaproducervalidationResult, infotrygdOppdateringProducer, infotrygdSporringProducer, session, personV3, arbeidsfordelingV1, env, helsepersonellV1)
                 }
             }.toList()
 
@@ -164,7 +196,8 @@ suspend fun CoroutineScope.blockingApplicationLogic(
     session: Session,
     personV3: PersonV3,
     arbeidsfordelingV1: ArbeidsfordelingV1,
-    env: Environment
+    env: Environment,
+    helsepersonellv1: IHPR2Service
 ) {
     while (applicationState.running) {
             kafkaConsumer.poll(Duration.ofMillis(0)).forEach {
@@ -197,6 +230,10 @@ suspend fun CoroutineScope.blockingApplicationLogic(
                 kafkaproducervalidationResult.send(ProducerRecord(env.sm2013BehandlingsUtfallToipic, receivedSykmelding.sykmelding.id, validationResult))
                 log.info("Validation results send to kafka {} $logKeys", env.sm2013BehandlingsUtfallToipic, *logValues)
 
+                val doctor = fetchDoctor(helsepersonellv1, receivedSykmelding.personNrLege).await()
+
+                val behandlerKode = findBehandlerKode(doctor)
+
                 when {
                     results.any { rule -> rule.status == Status.MANUAL_PROCESSING } ->
                         produceManualTask(kafkaproducerCreateTask, receivedSykmelding, validationResult, personV3, arbeidsfordelingV1, logKeys, logValues)
@@ -208,8 +245,8 @@ suspend fun CoroutineScope.blockingApplicationLogic(
                             receivedSykmelding.fellesformat,
                             InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
                             receivedSykmelding.personNrPasient,
-                            receivedSykmelding.sykmelding.signaturDato.toLocalDate()
-                            )
+                            receivedSykmelding.sykmelding.signaturDato.toLocalDate(),
+                            behandlerKode)
                 }
                 val currentRequestLatency = requestLatency.observeDuration()
 
@@ -264,30 +301,31 @@ fun sendInfotrygdOppdatering(
     marshalledFellesformat: String,
     itfh: InfotrygdForespAndHealthInformation,
     personNrPasient: String,
-    signaturDato: LocalDate
+    signaturDato: LocalDate,
+    behandlerKode: String
 ) {
     itfh.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }.forEachIndexed { index, periode ->
                 when (index) {
-                    0 -> sendInfotrygdOppdateringMq(producer, session, createInfotrygdInfoFirst(marshalledFellesformat, itfh, personNrPasient, signaturDato), logKeys, logValues)
-                    else -> sendInfotrygdOppdateringMq(producer, session, createInfotrygdInfoSubsequent(marshalledFellesformat, itfh, personNrPasient), logKeys, logValues)
+                    0 -> sendInfotrygdOppdateringMq(producer, session, createInfotrygdInfoFirst(marshalledFellesformat, itfh, personNrPasient, signaturDato, behandlerKode), logKeys, logValues)
+                    else -> sendInfotrygdOppdateringMq(producer, session, createInfotrygdInfoSubsequent(marshalledFellesformat, itfh, personNrPasient, behandlerKode), logKeys, logValues)
                 }
     }
 }
 
-fun createInfotrygdInfoFirst(marshalledFellesformat: String, itfh: InfotrygdForespAndHealthInformation, personNrPasient: String, signaturDato: LocalDate) = unmarshal<XMLEIFellesformat>(marshalledFellesformat).apply {
+fun createInfotrygdInfoFirst(marshalledFellesformat: String, itfh: InfotrygdForespAndHealthInformation, personNrPasient: String, signaturDato: LocalDate, behandlerKode: String) = unmarshal<XMLEIFellesformat>(marshalledFellesformat).apply {
     any.add(KontrollSystemBlokk().apply {
         itfh.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }.forEachIndexed { index, periode ->
             infotrygdBlokk.add(
-                    createFirstInfotrygdblokk(periode, itfh, personNrPasient, signaturDato))
+                    createFirstInfotrygdblokk(periode, itfh, personNrPasient, signaturDato, behandlerKode))
         }
     })
 }
 
-fun createInfotrygdInfoSubsequent(marshalledFellesformat: String, itfh: InfotrygdForespAndHealthInformation, personNrPasient: String) = unmarshal<XMLEIFellesformat>(marshalledFellesformat).apply {
+fun createInfotrygdInfoSubsequent(marshalledFellesformat: String, itfh: InfotrygdForespAndHealthInformation, personNrPasient: String, behandlerKode: String) = unmarshal<XMLEIFellesformat>(marshalledFellesformat).apply {
     any.add(KontrollSystemBlokk().apply {
         itfh.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }.forEachIndexed { index, periode ->
             infotrygdBlokk.add(
-                    createSubsequentInfotrygdblokk(periode, itfh, personNrPasient))
+                    createSubsequentInfotrygdblokk(periode, itfh, personNrPasient, behandlerKode))
         }
     })
 }
@@ -300,6 +338,8 @@ fun sendInfotrygdOppdateringMq(
     logValues: Array<StructuredArgument>
 ) = producer.send(session.createTextMessage().apply {
     text = xmlObjectWriter.writeValueAsString(fellesformat)
+    // TODO remove after testing
+    log.info("Infotrygd text: $text $logKeys", *logValues)
     log.info("Message is sendt to infotrygd $logKeys", *logValues)
 })
 
@@ -331,14 +371,20 @@ fun createInfotrygdForesp(personNrPasient: String, healthInformation: HelseOpply
 val inputFactory = XMLInputFactory.newInstance()
 inline fun <reified T> unmarshal(text: String): T = fellesformatUnmarshaller.unmarshal(inputFactory.createXMLEventReader(StringReader(text)), T::class.java).value
 
-fun createInfotrygdInfo(marshalledFellesformat: String, itfh: InfotrygdForespAndHealthInformation, personNrPasient: String, signaturDato: LocalDate) = unmarshal<XMLEIFellesformat>(marshalledFellesformat).apply {
+fun createInfotrygdInfo(
+    marshalledFellesformat: String,
+    itfh: InfotrygdForespAndHealthInformation,
+    personNrPasient: String,
+    signaturDato: LocalDate,
+    behandlerKode: String
+) = unmarshal<XMLEIFellesformat>(marshalledFellesformat).apply {
     any.add(KontrollSystemBlokk().apply {
     val sortedPerioder = itfh.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
         sortedPerioder.forEachIndexed { index, periode ->
     infotrygdBlokk.add(
         when (index) {
-            0 -> createFirstInfotrygdblokk(periode, itfh, personNrPasient, signaturDato)
-            else -> createSubsequentInfotrygdblokk(periode, itfh, personNrPasient)
+            0 -> createFirstInfotrygdblokk(periode, itfh, personNrPasient, signaturDato, behandlerKode)
+            else -> createSubsequentInfotrygdblokk(periode, itfh, personNrPasient, behandlerKode)
         })
         }
     })
@@ -502,7 +548,8 @@ fun createFirstInfotrygdblokk(
     periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode,
     itfh: InfotrygdForespAndHealthInformation,
     personNrPasient: String,
-    signaturDato: LocalDate
+    signaturDato: LocalDate,
+    behandlerKode: String
 ): KontrollsystemBlokkType.InfotrygdBlokk =
         KontrollsystemBlokkType.InfotrygdBlokk().apply {
             fodselsnummer = personNrPasient
@@ -513,6 +560,8 @@ fun createFirstInfotrygdblokk(
             }
 
             operasjonstype = findOprasjonstype(periode, itfh)
+
+            mottakerKode = behandlerKode
 
             if (operasjonstype.equals("1".toBigInteger())) {
                 behandlingsDato = findbBehandlingsDato(itfh, signaturDato)
@@ -545,7 +594,8 @@ fun createFirstInfotrygdblokk(
 fun createSubsequentInfotrygdblokk(
     periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode,
     itfh: InfotrygdForespAndHealthInformation,
-    personNrPasient: String
+    personNrPasient: String,
+    behandlerKode: String
 ): KontrollsystemBlokkType.InfotrygdBlokk =
         KontrollsystemBlokkType.InfotrygdBlokk().apply {
             fodselsnummer = personNrPasient
@@ -556,6 +606,8 @@ fun createSubsequentInfotrygdblokk(
             }
 
             operasjonstype = "2".toBigInteger()
+
+            mottakerKode = behandlerKode
 
             arbeidsufoerTOM = periode.periodeTOMDato
             ufoeregrad = when {
@@ -576,3 +628,21 @@ fun findbBehandlingsDato(itfh: InfotrygdForespAndHealthInformation, signaturDato
         return signaturDato
     }
 }
+
+fun CoroutineScope.fetchDoctor(hprService: IHPR2Service, doctorIdent: String): Deferred<HPRPerson> = async {
+    retry(
+            callName = "hpr_hent_person_med_personnummer",
+            retryIntervals = arrayOf(500L, 1000L, 3000L, 5000L, 10000L),
+            legalExceptions = *arrayOf(IOException::class, WstxException::class)
+    ) {
+        hprService.hentPersonMedPersonnummer(doctorIdent, datatypeFactory.newXMLGregorianCalendar(GregorianCalendar()))
+    }
+}
+
+fun findBehandlerKode(behandler: HPRPerson): String =
+        behandler.godkjenninger.godkjenning.firstOrNull {
+                it?.helsepersonellkategori?.isAktiv != null &&
+                        it.autorisasjon?.isAktiv == true &&
+                        it.helsepersonellkategori.isAktiv != null &&
+                        it.helsepersonellkategori.verdi != null
+            }?.helsepersonellkategori?.verdi ?: ""
