@@ -300,8 +300,6 @@ fun sendInfotrygdOppdateringMq(
     logValues: Array<StructuredArgument>
 ) = producer.send(session.createTextMessage().apply {
     text = xmlObjectWriter.writeValueAsString(fellesformat)
-    // TODO remove when going to prod again
-    log.info("Infotrygd text: $text $logKeys", *logValues)
     log.info("Message is sendt to infotrygd $logKeys", *logValues)
 })
 
@@ -514,8 +512,6 @@ fun createFirstInfotrygdblokk(
                 else -> itfh.healthInformation.syketilfelleStartDato
             }
 
-            mottakerKode = "LE"
-
             operasjonstype = findOprasjonstype(periode, itfh)
 
             if (operasjonstype.equals("1".toBigInteger())) {
@@ -558,8 +554,6 @@ fun createSubsequentInfotrygdblokk(
                 "1".toBigInteger() -> itfh.healthInformation.aktivitet.periode.sortedFOMDate().first()
                 else -> itfh.healthInformation.syketilfelleStartDato
             }
-
-            mottakerKode = "LE"
 
             operasjonstype = "2".toBigInteger()
 
