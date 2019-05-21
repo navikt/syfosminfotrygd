@@ -233,7 +233,7 @@ object CreateInfotrygdInfoSpek : Spek({
             val fellesFormatString = fellesformatMarshaller.toString(fellesFormat)
 
             val itfh = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
-            val infotrygdFellesformat = createInfotrygdInfoSubsequent(fellesFormatString, itfh, "1231234", "LE")
+            val infotrygdFellesformat = createInfotrygdInfoFirst(fellesFormatString, itfh, "1231234",LocalDate.now(),"LE")
 
             val infotrygdBlokk = infotrygdFellesformat.get<KontrollSystemBlokk>().infotrygdBlokk
 
@@ -287,25 +287,25 @@ object CreateInfotrygdInfoSpek : Spek({
             val fellesFormatString = fellesformatMarshaller.toString(fellesFormat)
 
             val itfh = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
-            val infotrygdFellesformat = createInfotrygdInfoFirst(fellesFormatString, itfh, "1231234", LocalDate.now(), "LE")
+            val infotrygdFellesformat = createInfotrygdInfoSubsequent(fellesFormatString, itfh, "1231234", "LE")
 
             val infotrygdBlokk = infotrygdFellesformat.get<KontrollSystemBlokk>().infotrygdBlokk
 
-            infotrygdBlokk[1].fodselsnummer shouldEqual "1231234"
-            infotrygdBlokk[1].tkNummer shouldEqual ""
-            infotrygdBlokk[1].forsteFravaersDag shouldEqual LocalDate.now()
-            infotrygdBlokk[1].behandlingsDato shouldEqual null
-            infotrygdBlokk[1].hovedDiagnose shouldEqual null
-            infotrygdBlokk[1].hovedDiagnoseGruppe shouldEqual null
-            infotrygdBlokk[1].hovedDiagnoseTekst shouldEqual null
-            infotrygdBlokk[1].biDiagnose shouldEqual null
-            infotrygdBlokk[1].biDiagnoseGruppe shouldEqual null
-            infotrygdBlokk[1].biDiagnoseTekst shouldEqual null
-            infotrygdBlokk[1].arbeidsKategori shouldEqual null
-            infotrygdBlokk[1].gruppe shouldEqual null
-            infotrygdBlokk[1].saksbehandler shouldEqual null
-            infotrygdBlokk[1].arbeidsufoerTOM shouldEqual LocalDate.now().plusDays(10)
-            infotrygdBlokk[1].ufoeregrad shouldEqual "100".toBigInteger()
+            infotrygdBlokk[0].fodselsnummer shouldEqual "1231234"
+            infotrygdBlokk[0].tkNummer shouldEqual ""
+            infotrygdBlokk[0].forsteFravaersDag shouldEqual LocalDate.now()
+            infotrygdBlokk[0].behandlingsDato shouldEqual null
+            infotrygdBlokk[0].hovedDiagnose shouldEqual null
+            infotrygdBlokk[0].hovedDiagnoseGruppe shouldEqual null
+            infotrygdBlokk[0].hovedDiagnoseTekst shouldEqual null
+            infotrygdBlokk[0].biDiagnose shouldEqual null
+            infotrygdBlokk[0].biDiagnoseGruppe shouldEqual null
+            infotrygdBlokk[0].biDiagnoseTekst shouldEqual null
+            infotrygdBlokk[0].arbeidsKategori shouldEqual null
+            infotrygdBlokk[0].gruppe shouldEqual null
+            infotrygdBlokk[0].saksbehandler shouldEqual null
+            infotrygdBlokk[0].arbeidsufoerTOM shouldEqual LocalDate.now().plusDays(10)
+            infotrygdBlokk[0].ufoeregrad shouldEqual "100".toBigInteger()
         }
     }
 })
