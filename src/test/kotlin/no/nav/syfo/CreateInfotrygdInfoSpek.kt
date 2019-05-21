@@ -233,7 +233,7 @@ object CreateInfotrygdInfoSpek : Spek({
             val fellesFormatString = fellesformatMarshaller.toString(fellesFormat)
 
             val itfh = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
-            val infotrygdFellesformat = createInfotrygdInfoFirst(fellesFormatString, itfh, "1231234",LocalDate.now(),"LE")
+            val infotrygdFellesformat = createInfotrygdInfoFirst(fellesFormatString, itfh, "1231234", LocalDate.now(), "LE")
 
             val infotrygdBlokk = infotrygdFellesformat.get<KontrollSystemBlokk>().infotrygdBlokk
 
