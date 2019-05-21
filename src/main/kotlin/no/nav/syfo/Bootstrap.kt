@@ -82,7 +82,6 @@ import java.io.IOException
 import java.io.StringReader
 import java.io.StringWriter
 import java.lang.IllegalStateException
-import java.math.BigInteger
 import java.nio.file.Paths
 import java.time.Duration
 import java.time.LocalDate
@@ -318,30 +317,11 @@ fun sendInfotrygdOppdatering(
     signaturDato: LocalDate,
     behandlerKode: String
 ) {
-    itfh.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }.forEachIndexed { index, periode ->
-                when (index) {
-                    0 -> sendInfotrygdOppdateringMq(producer, session, createInfotrygdInfoFirst(marshalledFellesformat, itfh, personNrPasient, signaturDato, behandlerKode), logKeys, logValues)
-                    else -> sendInfotrygdOppdateringMq(producer, session, createInfotrygdInfoSubsequent(marshalledFellesformat, itfh, personNrPasient, behandlerKode), logKeys, logValues)
-                }
+    val perioder = itfh.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
+    sendInfotrygdOppdateringMq(producer, session, createInfotrygdBlokk(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode), logKeys, logValues)
+    perioder.drop(1).forEach { periode ->
+        sendInfotrygdOppdateringMq(producer, session, createInfotrygdBlokk(marshalledFellesformat, itfh, periode, personNrPasient, signaturDato, behandlerKode, operasjonstypeKode = 2), logKeys, logValues)
     }
-}
-
-fun createInfotrygdInfoFirst(marshalledFellesformat: String, itfh: InfotrygdForespAndHealthInformation, personNrPasient: String, signaturDato: LocalDate, behandlerKode: String) = unmarshal<XMLEIFellesformat>(marshalledFellesformat).apply {
-    any.add(KontrollSystemBlokk().apply {
-        itfh.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }.forEachIndexed { index, periode ->
-            infotrygdBlokk.add(
-                    createFirstInfotrygdblokk(periode, itfh, personNrPasient, signaturDato, behandlerKode))
-        }
-    })
-}
-
-fun createInfotrygdInfoSubsequent(marshalledFellesformat: String, itfh: InfotrygdForespAndHealthInformation, personNrPasient: String, behandlerKode: String) = unmarshal<XMLEIFellesformat>(marshalledFellesformat).apply {
-    any.add(KontrollSystemBlokk().apply {
-        itfh.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }.forEachIndexed { index, periode ->
-            infotrygdBlokk.add(
-                    createSubsequentInfotrygdblokk(periode, itfh, personNrPasient, behandlerKode))
-        }
-    })
 }
 
 fun sendInfotrygdOppdateringMq(
@@ -391,30 +371,30 @@ fun findarbeidsKategori(itfh: InfotrygdForespAndHealthInformation): String {
     }
 }
 
-fun findOprasjonstype(periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode, itfh: InfotrygdForespAndHealthInformation): BigInteger {
+fun findOperasjonstype(periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode, itfh: InfotrygdForespAndHealthInformation): Int {
     // FORSTEGANGS = 1, PAFOLGENDE = 2, ENDRING = 3
     val typeSMinfo = itfh.infotrygdForesp.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()
-        ?: return "1".toBigInteger()
+        ?: return 1
 
     return if (itfh.infotrygdForesp.sMhistorikk.status.kodeMelding == "04" ||
             (typeSMinfo.periode.arbufoerFOM..periode.periodeFOMDato).daysBetween() > 280) {
-        "1".toBigInteger()
+        1
     } else if ((typeSMinfo.periode.arbufoerFOM..periode.periodeFOMDato).daysBetween() < 280 &&
                     periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerFOM) ||
             (typeSMinfo.periode.arbufoerTOM != null &&
             (periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerTOM) ||
                     periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerFOM)))) {
-        "2".toBigInteger()
+        2
     } else if (typeSMinfo.periode.arbufoerTOM != null &&
             (typeSMinfo.periode.arbufoerFOM == periode.periodeFOMDato ||
                             typeSMinfo.periode.arbufoerTOM.isBefore(periode.periodeTOMDato))) {
-        "3".toBigInteger()
+        3
     } else {
         throw RuntimeException("Could not determined operasjonstype")
     }
 }
 
-suspend fun CoroutineScope.produceManualTask(kafkaProducer: KafkaProducer<String, ProduceTask>, receivedSykmelding: ReceivedSykmelding, validationResult: ValidationResult, personV3: PersonV3, arbeidsfordelingV1: ArbeidsfordelingV1, logKeys: String, logValues: Array<StructuredArgument>) {
+suspend fun produceManualTask(kafkaProducer: KafkaProducer<String, ProduceTask>, receivedSykmelding: ReceivedSykmelding, validationResult: ValidationResult, personV3: PersonV3, arbeidsfordelingV1: ArbeidsfordelingV1, logKeys: String, logValues: Array<StructuredArgument>) {
     val geografiskTilknytning = fetchGeografiskTilknytningAsync(personV3, receivedSykmelding)
     val finnBehandlendeEnhetListeResponse = fetchBehandlendeEnhetAsync(arbeidsfordelingV1, geografiskTilknytning.geografiskTilknytning)
 
@@ -537,37 +517,38 @@ fun validationResult(results: List<Rule<Any>>): ValidationResult =
 fun List<HelseOpplysningerArbeidsuforhet.Aktivitet.Periode>.sortedFOMDate(): List<LocalDate> =
         map { it.periodeFOMDato }.sorted()
 
-fun createFirstInfotrygdblokk(
-    periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode,
+fun createInfotrygdBlokk(
+    marshalledFellesformat: String,
     itfh: InfotrygdForespAndHealthInformation,
+    periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode,
     personNrPasient: String,
     signaturDato: LocalDate,
-    behandlerKode: String
-): KontrollsystemBlokkType.InfotrygdBlokk =
-        KontrollsystemBlokkType.InfotrygdBlokk().apply {
+    behandlerKode: String,
+    operasjonstypeKode: Int = findOperasjonstype(periode, itfh)
+) = unmarshal<XMLEIFellesformat>(marshalledFellesformat).apply {
+    any.add(KontrollSystemBlokk().apply {
+        infotrygdBlokk.add(KontrollsystemBlokkType.InfotrygdBlokk().apply {
             fodselsnummer = personNrPasient
             tkNummer = ""
-            forsteFravaersDag = when (findOprasjonstype(periode, itfh)) {
-                "1".toBigInteger() -> itfh.healthInformation.aktivitet.periode.sortedFOMDate().first()
+
+            operasjonstype = operasjonstypeKode.toBigInteger()
+
+            forsteFravaersDag = when (operasjonstype) {
+                1.toBigInteger() -> itfh.healthInformation.aktivitet.periode.sortedFOMDate().first()
                 else -> itfh.healthInformation.syketilfelleStartDato
             }
 
-            operasjonstype = findOprasjonstype(periode, itfh)
-
             mottakerKode = behandlerKode
 
-            if (operasjonstype.equals("1".toBigInteger())) {
+            if (operasjonstype == 1.toBigInteger()) {
                 behandlingsDato = findbBehandlingsDato(itfh, signaturDato)
-            }
 
-            if (operasjonstype.equals("1".toBigInteger())) {
-            arbeidsKategori = findarbeidsKategori(itfh)
-            gruppe = "96"
-            saksbehandler = "Auto"
-            }
+                arbeidsKategori = findarbeidsKategori(itfh)
+                gruppe = "96"
+                saksbehandler = "Auto"
 
-            hovedDiagnose = itfh.infotrygdForesp.hovedDiagnosekode
-            hovedDiagnoseGruppe = itfh.infotrygdForesp.hovedDiagnosekodeverk.toBigInteger()
+                hovedDiagnose = itfh.infotrygdForesp.hovedDiagnosekode
+                hovedDiagnoseGruppe = itfh.infotrygdForesp.hovedDiagnosekodeverk.toBigInteger()
                 hovedDiagnoseTekst = itfh.healthInformation.medisinskVurdering.hovedDiagnose.diagnosekode.dn
                 if (itfh.infotrygdForesp.biDiagnosekodeverk != null &&
                         itfh.healthInformation.medisinskVurdering.biDiagnoser.diagnosekode.firstOrNull()?.dn != null) {
@@ -575,6 +556,7 @@ fun createFirstInfotrygdblokk(
                     biDiagnoseGruppe = itfh.infotrygdForesp.biDiagnosekodeverk.toBigInteger()
                     biDiagnoseTekst = itfh.healthInformation.medisinskVurdering.biDiagnoser.diagnosekode.firstOrNull()?.dn
                 }
+            }
 
             arbeidsufoerTOM = periode.periodeTOMDato
             ufoeregrad = when {
@@ -582,33 +564,9 @@ fun createFirstInfotrygdblokk(
                 periode.aktivitetIkkeMulig != null -> 100.toBigInteger()
                 else -> 0.toBigInteger()
             }
+        })
+    })
 }
-
-fun createSubsequentInfotrygdblokk(
-    periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode,
-    itfh: InfotrygdForespAndHealthInformation,
-    personNrPasient: String,
-    behandlerKode: String
-): KontrollsystemBlokkType.InfotrygdBlokk =
-        KontrollsystemBlokkType.InfotrygdBlokk().apply {
-            fodselsnummer = personNrPasient
-            tkNummer = ""
-            forsteFravaersDag = when (findOprasjonstype(periode, itfh)) {
-                "1".toBigInteger() -> itfh.healthInformation.aktivitet.periode.sortedFOMDate().first()
-                else -> itfh.healthInformation.syketilfelleStartDato
-            }
-
-            operasjonstype = "2".toBigInteger()
-
-            mottakerKode = behandlerKode
-
-            arbeidsufoerTOM = periode.periodeTOMDato
-            ufoeregrad = when {
-                periode.gradertSykmelding != null -> periode.gradertSykmelding.sykmeldingsgrad.toBigInteger()
-                periode.aktivitetIkkeMulig != null -> 100.toBigInteger()
-                else -> 0.toBigInteger()
-            }
-        }
 
 fun findbBehandlingsDato(itfh: InfotrygdForespAndHealthInformation, signaturDato: LocalDate): LocalDate {
     if (itfh.healthInformation.kontaktMedPasient?.kontaktDato != null &&

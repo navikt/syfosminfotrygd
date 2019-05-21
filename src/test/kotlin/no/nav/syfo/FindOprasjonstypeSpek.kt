@@ -38,8 +38,8 @@ object FindOprasjonstypeSpek : Spek({
                 }
             }
 
-            findOprasjonstype(healthInformation.aktivitet.periode.first(),
-                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)) shouldEqual 1.toBigInteger()
+            findOperasjonstype(healthInformation.aktivitet.periode.first(),
+                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)) shouldEqual 1
         }
 
         it("Should set oprasjonstype to 2") {
@@ -68,8 +68,8 @@ object FindOprasjonstypeSpek : Spek({
                 }
             }
 
-            findOprasjonstype(healthInformation.aktivitet.periode.first(),
-                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)) shouldEqual 2.toBigInteger()
+            findOperasjonstype(healthInformation.aktivitet.periode.first(),
+                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)) shouldEqual 2
         }
 
         it("Should set oprasjonstype to 2") {
@@ -98,8 +98,8 @@ object FindOprasjonstypeSpek : Spek({
                 }
             }
 
-            findOprasjonstype(healthInformation.aktivitet.periode.first(),
-                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)) shouldEqual 2.toBigInteger()
+            findOperasjonstype(healthInformation.aktivitet.periode.first(),
+                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)) shouldEqual 2
         }
 
         it("Should set oprasjonstype to 3") {
@@ -128,8 +128,8 @@ object FindOprasjonstypeSpek : Spek({
                 }
             }
 
-            findOprasjonstype(healthInformation.aktivitet.periode.first(),
-                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)) shouldEqual 3.toBigInteger()
+            findOperasjonstype(healthInformation.aktivitet.periode.first(),
+                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)) shouldEqual 3
         }
 
         it("Should set oprasjonstype to 1") {
@@ -157,8 +157,8 @@ object FindOprasjonstypeSpek : Spek({
                 }
             }
 
-            findOprasjonstype(healthInformation.aktivitet.periode.first(),
-                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)) shouldEqual 1.toBigInteger()
+            findOperasjonstype(healthInformation.aktivitet.periode.first(),
+                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)) shouldEqual 1
         }
 
         it("Should set oprasjonstype to 2") {
@@ -186,8 +186,8 @@ object FindOprasjonstypeSpek : Spek({
                 }
             }
 
-            findOprasjonstype(healthInformation.aktivitet.periode.first(),
-                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)) shouldEqual 2.toBigInteger()
+            findOperasjonstype(healthInformation.aktivitet.periode.first(),
+                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)) shouldEqual 2
         }
     }
 })
