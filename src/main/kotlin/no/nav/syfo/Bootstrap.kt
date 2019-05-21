@@ -383,25 +383,6 @@ fun createInfotrygdForesp(personNrPasient: String, healthInformation: HelseOpply
 val inputFactory = XMLInputFactory.newInstance()
 inline fun <reified T> unmarshal(text: String): T = fellesformatUnmarshaller.unmarshal(inputFactory.createXMLEventReader(StringReader(text)), T::class.java).value
 
-fun createInfotrygdInfo(
-    marshalledFellesformat: String,
-    itfh: InfotrygdForespAndHealthInformation,
-    personNrPasient: String,
-    signaturDato: LocalDate,
-    behandlerKode: String
-) = unmarshal<XMLEIFellesformat>(marshalledFellesformat).apply {
-    any.add(KontrollSystemBlokk().apply {
-    val sortedPerioder = itfh.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
-        sortedPerioder.forEachIndexed { index, periode ->
-    infotrygdBlokk.add(
-        when (index) {
-            0 -> createFirstInfotrygdblokk(periode, itfh, personNrPasient, signaturDato, behandlerKode)
-            else -> createSubsequentInfotrygdblokk(periode, itfh, personNrPasient, behandlerKode)
-        })
-        }
-    })
-}
-
 fun findarbeidsKategori(itfh: InfotrygdForespAndHealthInformation): String {
     return if (!itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver.isNullOrBlank()) {
         "01"
