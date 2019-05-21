@@ -304,7 +304,7 @@ object CreateInfotrygdInfoSpek : Spek({
             infotrygdBlokk[0].arbeidsKategori shouldEqual null
             infotrygdBlokk[0].gruppe shouldEqual null
             infotrygdBlokk[0].saksbehandler shouldEqual null
-            infotrygdBlokk[0].arbeidsufoerTOM shouldEqual LocalDate.now().plusDays(10)
+            infotrygdBlokk[0].arbeidsufoerTOM shouldEqual LocalDate.now().plusDays(4)
             infotrygdBlokk[0].ufoeregrad shouldEqual "100".toBigInteger()
         }
     }
