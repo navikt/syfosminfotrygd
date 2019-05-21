@@ -373,21 +373,21 @@ fun findarbeidsKategori(itfh: InfotrygdForespAndHealthInformation): String {
 
 fun findOperasjonstype(periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode, itfh: InfotrygdForespAndHealthInformation): Int {
     // FORSTEGANGS = 1, PAFOLGENDE = 2, ENDRING = 3
-    val typeSMinfo = itfh.infotrygdForesp.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()
-        ?: return 1
+    val typeSMinfo = itfh.infotrygdForesp.sMhistorikk?.sykmelding
+            ?.sortedSMInfos()
+            ?.lastOrNull { it.periode.utbetFOM != null }
+            ?: return 1
 
     return if (itfh.infotrygdForesp.sMhistorikk.status.kodeMelding == "04" ||
             (typeSMinfo.periode.arbufoerFOM..periode.periodeFOMDato).daysBetween() > 280) {
         1
     } else if ((typeSMinfo.periode.arbufoerFOM..periode.periodeFOMDato).daysBetween() < 280 &&
                     periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerFOM) ||
-            (typeSMinfo.periode.arbufoerTOM != null &&
-            (periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerTOM) ||
-                    periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerFOM)))) {
+            (typeSMinfo.periode.arbufoerTOM != null && periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerTOM))) {
         2
     } else if (typeSMinfo.periode.arbufoerTOM != null &&
             (typeSMinfo.periode.arbufoerFOM == periode.periodeFOMDato ||
-                            typeSMinfo.periode.arbufoerTOM.isBefore(periode.periodeTOMDato))) {
+                    typeSMinfo.periode.arbufoerTOM.isBefore(periode.periodeTOMDato))) {
         3
     } else {
         throw RuntimeException("Could not determined operasjonstype")
