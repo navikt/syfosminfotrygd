@@ -1,12 +1,13 @@
-package no.nav.syfo
+package no.nav.syfo.rules
 
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.infotrygd.foresp.StatusType
 import no.nav.helse.infotrygd.foresp.TypeSMinfo
+import no.nav.syfo.generatePeriode
+import no.nav.syfo.generatePrognose
+import no.nav.syfo.generateSykmelding
 import no.nav.syfo.model.Gradert
 import no.nav.syfo.model.Sykmelding
-import no.nav.syfo.rules.RuleData
-import no.nav.syfo.rules.ValidationRuleChain
 
 import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
@@ -174,11 +175,11 @@ object ValidationRuleChainSpek : Spek({
             }
 
             val healthInformation = generateSykmelding(perioder = listOf(
-                generatePeriode(
-                        fom = LocalDate.of(2018, 1, 9),
-                        tom = LocalDate.of(2018, 1, 15)
-                        )
-        ))
+                    generatePeriode(
+                            fom = LocalDate.of(2018, 1, 9),
+                            tom = LocalDate.of(2018, 1, 15)
+                    )
+            ))
 
             ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
         }
@@ -322,8 +323,8 @@ object ValidationRuleChainSpek : Spek({
                     generatePeriode(
                             fom = LocalDate.of(2017, 1, 2),
                             tom = LocalDate.of(2017, 2, 1)
-                            )
-                    ),
+                    )
+            ),
                     prognose = generatePrognose(arbeidsforEtterPeriode = true))
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
@@ -454,7 +455,7 @@ object ValidationRuleChainSpek : Spek({
                     generatePeriode(
                             fom = LocalDate.of(2018, 1, 1),
                             tom = LocalDate.of(2018, 2, 1)
-            )))
+                    )))
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
@@ -642,7 +643,7 @@ object ValidationRuleChainSpek : Spek({
                     generatePeriode(
                             fom = LocalDate.of(2017, 2, 11),
                             tom = LocalDate.of(2017, 2, 20))
-                    ))
+            ))
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
@@ -671,7 +672,7 @@ object ValidationRuleChainSpek : Spek({
                     generatePeriode(
                             fom = LocalDate.now(),
                             tom = LocalDate.now().plusDays(10))
-                    ))
+            ))
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
@@ -691,7 +692,7 @@ object ValidationRuleChainSpek : Spek({
                     generatePeriode(
                             fom = LocalDate.now(),
                             tom = LocalDate.now().plusDays(10))
-                    ))
+            ))
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
@@ -711,7 +712,7 @@ object ValidationRuleChainSpek : Spek({
                     generatePeriode(
                             fom = LocalDate.now(),
                             tom = LocalDate.now().plusDays(10))
-                    ))
+            ))
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
@@ -730,7 +731,7 @@ object ValidationRuleChainSpek : Spek({
                     generatePeriode(
                             fom = LocalDate.now(),
                             tom = LocalDate.now().plusDays(10))
-                    ))
+            ))
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
 

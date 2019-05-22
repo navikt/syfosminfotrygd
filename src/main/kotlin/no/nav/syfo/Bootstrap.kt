@@ -35,11 +35,13 @@ import no.nav.syfo.metrics.REQUEST_TIME
 import no.nav.syfo.metrics.RULE_HIT_STATUS_COUNTER
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.model.RuleInfo
+import no.nav.syfo.model.RuleMetadata
 import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.mq.connectionFactory
 import no.nav.syfo.mq.producerForQueue
 import no.nav.syfo.rules.Rule
+import no.nav.syfo.rules.TssRuleChain
 import no.nav.syfo.rules.ValidationRuleChain
 import no.nav.syfo.rules.executeFlow
 import no.nav.syfo.rules.sortedSMInfos
@@ -219,9 +221,22 @@ suspend fun CoroutineScope.blockingApplicationLogic(
 
                 log.info("Going through rules $logKeys", *logValues)
 
-                val validationRuleResults = ValidationRuleChain.values().executeFlow(receivedSykmelding.sykmelding, infotrygdForespResponse)
+                val validationRuleResults = ValidationRuleChain.values().executeFlow(
+                        receivedSykmelding.sykmelding,
+                        infotrygdForespResponse)
 
-                val results = listOf(validationRuleResults).flatten()
+                val tssRuleResults = TssRuleChain.values().executeFlow(
+                        receivedSykmelding.sykmelding,
+                        RuleMetadata(
+                            receivedDate = receivedSykmelding.mottattDato,
+                            signatureDate = receivedSykmelding.sykmelding.signaturDato,
+                            patientPersonNumber = receivedSykmelding.personNrPasient,
+                            rulesetVersion = receivedSykmelding.rulesetVersion,
+                            legekontorOrgnr = receivedSykmelding.legekontorOrgNr,
+                            tssid = receivedSykmelding.tssid
+                ))
+
+                val results = listOf(validationRuleResults, tssRuleResults).flatten()
                 log.info("Rules hit {}, $logKeys", results.map { rule -> rule.name }, *logValues)
 
                 val validationResult = validationResult(results)
@@ -334,7 +349,6 @@ fun sendInfotrygdOppdateringMq(
     logValues: Array<StructuredArgument>
 ) = producer.send(session.createTextMessage().apply {
     text = xmlObjectWriter.writeValueAsString(fellesformat)
-    log.info("Text to infotrygd {} $logKeys", text, *logValues)
     log.info("Message is sendt to infotrygd $logKeys", *logValues)
 })
 
@@ -378,17 +392,20 @@ fun findOperasjonstype(periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Period
     // FORSTEGANGS = 1, PAFOLGENDE = 2, ENDRING = 3
     val typeSMinfo = itfh.infotrygdForesp.sMhistorikk?.sykmelding
             ?.sortedSMInfos()
-            ?.lastOrNull { it.periode.utbetFOM != null }
+            ?.lastOrNull()
             ?: return 1
 
     return if (itfh.infotrygdForesp.sMhistorikk.status.kodeMelding == "04" ||
-            (typeSMinfo.periode.arbufoerFOM..periode.periodeFOMDato).daysBetween() > 280) {
+            (typeSMinfo.periode.arbufoerTOM != null && periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerTOM)) ||
+            ((typeSMinfo.periode.arbufoerFOM..periode.periodeFOMDato).daysBetween() > 1 && typeSMinfo.periode.arbufoerTOM == null)
+    ) {
         1
-    } else if ((typeSMinfo.periode.arbufoerFOM..periode.periodeFOMDato).daysBetween() < 280 &&
-                    periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerFOM) ||
+    } else if (typeSMinfo.periode.arbufoerTOM != null && periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerTOM) ||
+            typeSMinfo.periode.arbufoerTOM != null && periode.periodeFOMDato.isEqual(typeSMinfo.periode.arbufoerTOM) ||
             (typeSMinfo.periode.arbufoerTOM != null && periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerTOM))) {
         2
     } else if (typeSMinfo.periode.arbufoerTOM != null &&
+            typeSMinfo.periode.arbufoerFOM != null &&
             (typeSMinfo.periode.arbufoerFOM == periode.periodeFOMDato ||
                     typeSMinfo.periode.arbufoerTOM.isBefore(periode.periodeTOMDato))) {
         3
@@ -537,7 +554,7 @@ fun createInfotrygdBlokk(
 
             operasjonstype = operasjonstypeKode.toBigInteger()
 
-            legeEllerInstitusjonsNummer = tssid!!?.toBigInteger() ?: "".toBigInteger()
+            legeEllerInstitusjonsNummer = tssid?.toBigInteger() ?: "".toBigInteger()
 
             forsteFravaersDag = when (operasjonstype) {
                 1.toBigInteger() -> itfh.healthInformation.aktivitet.periode.sortedFOMDate().first()
