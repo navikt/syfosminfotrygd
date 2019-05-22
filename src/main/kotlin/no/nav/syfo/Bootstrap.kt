@@ -247,7 +247,8 @@ suspend fun CoroutineScope.blockingApplicationLogic(
                                 InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
                                 receivedSykmelding.personNrPasient,
                                 receivedSykmelding.sykmelding.signaturDato.toLocalDate(),
-                                behandlerKode)
+                                behandlerKode,
+                                receivedSykmelding.tssid)
                     }
                     val currentRequestLatency = requestLatency.observeDuration()
 
@@ -315,12 +316,13 @@ fun sendInfotrygdOppdatering(
     itfh: InfotrygdForespAndHealthInformation,
     personNrPasient: String,
     signaturDato: LocalDate,
-    behandlerKode: String
+    behandlerKode: String,
+    tssid: String?
 ) {
     val perioder = itfh.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
-    sendInfotrygdOppdateringMq(producer, session, createInfotrygdBlokk(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode), logKeys, logValues)
+    sendInfotrygdOppdateringMq(producer, session, createInfotrygdBlokk(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid), logKeys, logValues)
     perioder.drop(1).forEach { periode ->
-        sendInfotrygdOppdateringMq(producer, session, createInfotrygdBlokk(marshalledFellesformat, itfh, periode, personNrPasient, signaturDato, behandlerKode, operasjonstypeKode = 2), logKeys, logValues)
+        sendInfotrygdOppdateringMq(producer, session, createInfotrygdBlokk(marshalledFellesformat, itfh, periode, personNrPasient, signaturDato, behandlerKode, tssid, 2), logKeys, logValues)
     }
 }
 
@@ -525,6 +527,7 @@ fun createInfotrygdBlokk(
     personNrPasient: String,
     signaturDato: LocalDate,
     behandlerKode: String,
+    tssid: String?,
     operasjonstypeKode: Int = findOperasjonstype(periode, itfh)
 ) = unmarshal<XMLEIFellesformat>(marshalledFellesformat).apply {
     any.add(KontrollSystemBlokk().apply {
@@ -533,6 +536,8 @@ fun createInfotrygdBlokk(
             tkNummer = ""
 
             operasjonstype = operasjonstypeKode.toBigInteger()
+
+            legeEllerInstitusjonsNummer = tssid!!?.toBigInteger() ?: "".toBigInteger()
 
             forsteFravaersDag = when (operasjonstype) {
                 1.toBigInteger() -> itfh.healthInformation.aktivitet.periode.sortedFOMDate().first()

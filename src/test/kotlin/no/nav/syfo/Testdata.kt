@@ -42,7 +42,8 @@ fun receivedSykmelding(id: String, sykmelding: Sykmelding = generateSykmelding()
         legekontorOrgName = "Legevakt",
         mottattDato = LocalDateTime.now(),
         rulesetVersion = "",
-        fellesformat = ""
+        fellesformat = "",
+        tssid = ""
 
 )
 
