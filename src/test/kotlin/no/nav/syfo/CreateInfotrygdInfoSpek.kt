@@ -241,6 +241,7 @@ object CreateInfotrygdInfoSpek : Spek({
             infotrygdBlokk.first().tkNummer shouldEqual ""
             infotrygdBlokk.first().forsteFravaersDag shouldEqual LocalDate.now()
             infotrygdBlokk.first().behandlingsDato shouldEqual LocalDate.now()
+            infotrygdBlokk.first().mottakerKode shouldEqual "LE"
             infotrygdBlokk.first().hovedDiagnose shouldEqual "Z09"
             infotrygdBlokk.first().hovedDiagnoseGruppe shouldEqual "3".toBigInteger()
             infotrygdBlokk.first().hovedDiagnoseTekst shouldEqual "Problem med jus/politi"
@@ -295,6 +296,7 @@ object CreateInfotrygdInfoSpek : Spek({
             infotrygdBlokk[0].tkNummer shouldEqual ""
             infotrygdBlokk[0].forsteFravaersDag shouldEqual LocalDate.now()
             infotrygdBlokk[0].behandlingsDato shouldEqual null
+            infotrygdBlokk[0].mottakerKode shouldEqual "LE"
             infotrygdBlokk[0].hovedDiagnose shouldEqual null
             infotrygdBlokk[0].hovedDiagnoseGruppe shouldEqual null
             infotrygdBlokk[0].hovedDiagnoseTekst shouldEqual null
