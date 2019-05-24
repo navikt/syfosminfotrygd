@@ -16,12 +16,13 @@ spec:
   liveness:
     path: /is_alive
     initialDelay: 5
-    periodSeconds: 5
-    failureThreshold: 30
+    timeout: 1
+    periodSeconds: 10
+    failureThreshold: 3
   readiness:
     path: /is_ready
-    initialDelay: 30
-    timeout: 5
+    initialDelay: 5
+    timeout: 1
     periodSeconds: 10
   prometheus:
     enabled: true
