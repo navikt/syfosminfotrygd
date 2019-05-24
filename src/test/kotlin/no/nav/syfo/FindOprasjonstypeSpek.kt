@@ -42,7 +42,7 @@ object FindOprasjonstypeSpek : Spek({
                     InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)) shouldEqual 1
         }
 
-        it("Should set oprasjonstype to 1") {
+        it("Should set oprasjonstype to 2") {
             val healthInformation = HelseOpplysningerArbeidsuforhet().apply {
                 aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
                     periode.add(
@@ -69,10 +69,10 @@ object FindOprasjonstypeSpek : Spek({
             }
 
             findOperasjonstype(healthInformation.aktivitet.periode.first(),
-                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)) shouldEqual 1
+                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)) shouldEqual 2
         }
 
-        it("Should set oprasjonstype to ") {
+        it("Should set oprasjonstype to 2") {
             val healthInformation = HelseOpplysningerArbeidsuforhet().apply {
                 aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
                     periode.add(

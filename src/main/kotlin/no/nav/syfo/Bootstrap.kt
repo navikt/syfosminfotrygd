@@ -348,6 +348,7 @@ fun sendInfotrygdOppdateringMq(
     logKeys: String,
     logValues: Array<StructuredArgument>
 ) = producer.send(session.createTextMessage().apply {
+    log.info("Message has oprasjonstype: {}  $logKeys", fellesformat.get<KontrollsystemBlokkType.InfotrygdBlokk>().operasjonstype.toString(), *logValues)
     text = xmlObjectWriter.writeValueAsString(fellesformat)
     log.info("Message is sendt to infotrygd $logKeys", *logValues)
 })
@@ -396,9 +397,7 @@ fun findOperasjonstype(periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Period
             ?: return 1
 
     return if (itfh.infotrygdForesp.sMhistorikk.status.kodeMelding == "04" ||
-            (typeSMinfo.periode.arbufoerTOM != null && periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerTOM)) ||
-            ((typeSMinfo.periode.arbufoerFOM..periode.periodeFOMDato).daysBetween() > 1 && typeSMinfo.periode.arbufoerTOM == null)
-    ) {
+            ((typeSMinfo.periode.arbufoerFOM..periode.periodeFOMDato).daysBetween() > 1 && typeSMinfo.periode.arbufoerTOM == null)) {
         1
     } else if (typeSMinfo.periode.arbufoerTOM != null && periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerTOM) ||
             typeSMinfo.periode.arbufoerTOM != null && periode.periodeFOMDato.isEqual(typeSMinfo.periode.arbufoerTOM) ||
