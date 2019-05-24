@@ -335,9 +335,9 @@ fun sendInfotrygdOppdatering(
     tssid: String?
 ) {
     val perioder = itfh.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
-    sendInfotrygdOppdateringMq(producer, session, createInfotrygdBlokk(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid), logKeys, logValues)
+    sendInfotrygdOppdateringMq(producer, session, createInfotrygdBlokk(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, logKeys, logValues), logKeys, logValues)
     perioder.drop(1).forEach { periode ->
-        sendInfotrygdOppdateringMq(producer, session, createInfotrygdBlokk(marshalledFellesformat, itfh, periode, personNrPasient, signaturDato, behandlerKode, tssid, 2), logKeys, logValues)
+        sendInfotrygdOppdateringMq(producer, session, createInfotrygdBlokk(marshalledFellesformat, itfh, periode, personNrPasient, signaturDato, behandlerKode, tssid, logKeys, logValues, 2), logKeys, logValues)
     }
 }
 
@@ -389,7 +389,12 @@ fun findarbeidsKategori(itfh: InfotrygdForespAndHealthInformation): String {
     }
 }
 
-fun findOperasjonstype(periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode, itfh: InfotrygdForespAndHealthInformation): Int {
+fun findOperasjonstype(
+    periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode,
+    itfh: InfotrygdForespAndHealthInformation,
+    logKeys: String,
+    logValues: Array<StructuredArgument>
+): Int {
     // FORSTEGANGS = 1, PAFOLGENDE = 2, ENDRING = 3
     val typeSMinfo = itfh.infotrygdForesp.sMhistorikk?.sykmelding
             ?.sortedSMInfos()
@@ -397,18 +402,20 @@ fun findOperasjonstype(periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Period
             ?: return 1
 
     return if (itfh.infotrygdForesp.sMhistorikk.status.kodeMelding == "04" ||
-            ((typeSMinfo.periode.arbufoerFOM..periode.periodeFOMDato).daysBetween() > 1 && typeSMinfo.periode.arbufoerTOM == null)) {
+            (typeSMinfo.periode.arbufoerTOM != null && (typeSMinfo.periode.arbufoerTOM..periode.periodeFOMDato).daysBetween() > 1) ||
+            (typeSMinfo.periode.arbufoerTOM == null && (typeSMinfo.periode.arbufoerFOM..periode.periodeFOMDato).daysBetween() > 1)) {
         1
     } else if (typeSMinfo.periode.arbufoerTOM != null && periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerTOM) ||
             typeSMinfo.periode.arbufoerTOM != null && periode.periodeFOMDato.isEqual(typeSMinfo.periode.arbufoerTOM) ||
             (typeSMinfo.periode.arbufoerTOM != null && periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerTOM))) {
         2
-    } else if (typeSMinfo.periode.arbufoerTOM != null &&
-            typeSMinfo.periode.arbufoerFOM != null &&
-            (typeSMinfo.periode.arbufoerFOM == periode.periodeFOMDato ||
-                    typeSMinfo.periode.arbufoerTOM.isBefore(periode.periodeTOMDato))) {
+    } else if (typeSMinfo.periode.arbufoerFOM != null &&
+            typeSMinfo.periode.arbufoerTOM != null &&
+            (typeSMinfo.periode.arbufoerTOM == periode.periodeTOMDato ||
+                    typeSMinfo.periode.arbufoerTOM.isAfter(periode.periodeTOMDato))) {
         3
     } else {
+        log.error("Could not determined operasjonstype $logKeys", *logValues)
         throw RuntimeException("Could not determined operasjonstype")
     }
 }
@@ -544,7 +551,9 @@ fun createInfotrygdBlokk(
     signaturDato: LocalDate,
     behandlerKode: String,
     tssid: String?,
-    operasjonstypeKode: Int = findOperasjonstype(periode, itfh)
+    logKeys: String,
+    logValues: Array<StructuredArgument>,
+    operasjonstypeKode: Int = findOperasjonstype(periode, itfh, logKeys, logValues)
 ) = unmarshal<XMLEIFellesformat>(marshalledFellesformat).apply {
     any.add(KontrollSystemBlokk().apply {
         infotrygdBlokk.add(KontrollsystemBlokkType.InfotrygdBlokk().apply {
