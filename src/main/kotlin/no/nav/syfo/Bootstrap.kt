@@ -409,7 +409,7 @@ fun findOperasjonstype(
             typeSMinfo.periode.arbufoerTOM != null && periode.periodeFOMDato.isEqual(typeSMinfo.periode.arbufoerTOM) ||
             (typeSMinfo.periode.arbufoerTOM != null && periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerTOM))) {
         2
-    } else if (typeSMinfo.periode.arbufoerFOM == periode.periodeFOMDato) {
+    } else if (typeSMinfo.periode.arbufoerFOM == periode.periodeFOMDato || (typeSMinfo.periode.arbufoerFOM != null && typeSMinfo.periode.arbufoerFOM.isBefore(periode.periodeFOMDato))) {
         3
     } else {
         log.error("Could not determined operasjonstype $logKeys", *logValues)
