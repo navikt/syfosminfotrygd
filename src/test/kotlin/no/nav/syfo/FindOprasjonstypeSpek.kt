@@ -163,7 +163,7 @@ object FindOprasjonstypeSpek : Spek({
                     InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), "", arrayOf(StructuredArguments.keyValue("mottakId", "12315"))) shouldEqual 3
         }
 
-        it("Should set oprasjonstype to 1") {
+        it("Should set oprasjonstype to 2") {
             val healthInformation = HelseOpplysningerArbeidsuforhet().apply {
                 aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
                     periode.add(
@@ -189,10 +189,10 @@ object FindOprasjonstypeSpek : Spek({
             }
 
             findOperasjonstype(healthInformation.aktivitet.periode.first(),
-                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), "", arrayOf(StructuredArguments.keyValue("mottakId", "12315"))) shouldEqual 1
+                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), "", arrayOf(StructuredArguments.keyValue("mottakId", "12315"))) shouldEqual 2
         }
 
-        it("Should set oprasjonstype to 1") {
+        it("Should set oprasjonstype to 2") {
             val healthInformation = HelseOpplysningerArbeidsuforhet().apply {
                 aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
                     periode.add(
@@ -218,7 +218,7 @@ object FindOprasjonstypeSpek : Spek({
             }
 
             findOperasjonstype(healthInformation.aktivitet.periode.first(),
-                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), "", arrayOf(StructuredArguments.keyValue("mottakId", "12315"))) shouldEqual 1
+                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), "", arrayOf(StructuredArguments.keyValue("mottakId", "12315"))) shouldEqual 2
         }
 
         it("Should set oprasjonstype to 3") {
@@ -352,6 +352,63 @@ object FindOprasjonstypeSpek : Spek({
 
             findOperasjonstype(healthInformation.aktivitet.periode.first(),
                     InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), "", arrayOf(StructuredArguments.keyValue("mottakId", "12315"))) shouldEqual 3
+        }
+
+        it("Should set oprasjonstype to 2") {
+            val healthInformation = HelseOpplysningerArbeidsuforhet().apply {
+                aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
+                    periode.add(
+                            HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
+                                periodeFOMDato = LocalDate.of(2019, 6, 1)
+                                periodeTOMDato = LocalDate.of(2019, 6, 30)
+                            })
+                }
+            }
+
+            val infotrygdForesp = InfotrygdForesp().apply {
+                sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
+                    sykmelding.add(TypeSMinfo().apply {
+                        periode = TypeSMinfo.Periode().apply {
+                            arbufoerFOM = LocalDate.of(2019, 5, 1)
+                            arbufoerTOM = LocalDate.of(2019, 5, 31)
+                        }
+                    })
+                    status = StatusType().apply {
+                        kodeMelding = "00"
+                    }
+                }
+            }
+
+            findOperasjonstype(healthInformation.aktivitet.periode.first(),
+                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), "", arrayOf(StructuredArguments.keyValue("mottakId", "12315"))) shouldEqual 2
+        }
+
+        it("Should set oprasjonstype to 2") {
+            val healthInformation = HelseOpplysningerArbeidsuforhet().apply {
+                aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
+                    periode.add(
+                            HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
+                                periodeFOMDato = LocalDate.of(2019, 6, 2)
+                                periodeTOMDato = LocalDate.of(2019, 7, 4)
+                            })
+                }
+            }
+
+            val infotrygdForesp = InfotrygdForesp().apply {
+                sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
+                    sykmelding.add(TypeSMinfo().apply {
+                        periode = TypeSMinfo.Periode().apply {
+                            arbufoerFOM = LocalDate.of(2018, 5, 1)
+                        }
+                    })
+                    status = StatusType().apply {
+                        kodeMelding = "00"
+                    }
+                }
+            }
+
+            findOperasjonstype(healthInformation.aktivitet.periode.first(),
+                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), "", arrayOf(StructuredArguments.keyValue("mottakId", "12315"))) shouldEqual 2
         }
     }
 })

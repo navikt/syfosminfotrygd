@@ -46,7 +46,7 @@ plugins {
     java
     id("no.nils.wsdl2java") version "0.10"
     kotlin("jvm") version "1.3.31"
-    id("org.jmailen.kotlinter") version "1.25.1"
+    id("org.jmailen.kotlinter") version "1.26.0"
     id("com.diffplug.gradle.spotless") version "3.14.0"
     id("com.github.johnrengelman.shadow") version "4.0.4"
 }

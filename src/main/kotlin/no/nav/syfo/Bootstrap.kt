@@ -401,13 +401,16 @@ fun findOperasjonstype(
             ?.lastOrNull()
             ?: return 1
 
+    if (typeSMinfo.periode.arbufoerTOM == null) {
+        log.info("arbufoerTOM is null $logKeys", *logValues)
+    }
+
     return if (itfh.infotrygdForesp.sMhistorikk.status.kodeMelding == "04" ||
-            (typeSMinfo.periode.arbufoerTOM != null && (typeSMinfo.periode.arbufoerTOM..periode.periodeFOMDato).daysBetween() > 1) ||
-            (typeSMinfo.periode.arbufoerTOM == null && (typeSMinfo.periode.arbufoerFOM..periode.periodeFOMDato).daysBetween() > 1)) {
+            (typeSMinfo.periode.arbufoerTOM != null && (typeSMinfo.periode.arbufoerTOM..periode.periodeFOMDato).daysBetween() > 1)) {
         1
     } else if (typeSMinfo.periode.arbufoerTOM != null && periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerTOM) ||
-            typeSMinfo.periode.arbufoerTOM != null && periode.periodeFOMDato.isEqual(typeSMinfo.periode.arbufoerTOM) ||
-            (typeSMinfo.periode.arbufoerTOM != null && periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerTOM))) {
+            (typeSMinfo.periode.arbufoerTOM != null && periode.periodeFOMDato.isEqual(typeSMinfo.periode.arbufoerTOM)) ||
+            (typeSMinfo.periode.arbufoerTOM == null && (typeSMinfo.periode.arbufoerFOM..periode.periodeFOMDato).daysBetween() > 1)) {
         2
     } else if (typeSMinfo.periode.arbufoerFOM == periode.periodeFOMDato || (typeSMinfo.periode.arbufoerFOM != null && typeSMinfo.periode.arbufoerFOM.isBefore(periode.periodeFOMDato))) {
         3
