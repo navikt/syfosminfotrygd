@@ -349,8 +349,8 @@ fun sendInfotrygdOppdateringMq(
     logValues: Array<StructuredArgument>
 ) = producer.send(session.createTextMessage().apply {
     log.info("Message has oprasjonstype: {}  $logKeys", fellesformat.get<KontrollsystemBlokkType>().infotrygdBlokk.first().operasjonstype, *logValues)
-    text = xmlObjectWriter.writeValueAsString(fellesformat)
-    log.info("Infotrygd xml: $text")
+    //TODO fjerne denne kommentaren når vi går i prod text = xmlObjectWriter.writeValueAsString(fellesformat)
+    log.info("Infotrygd xml: ${xmlObjectWriter.writeValueAsString(fellesformat)}")
     log.info("Message is sendt to infotrygd $logKeys", *logValues)
 })
 
