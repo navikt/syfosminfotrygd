@@ -12,10 +12,7 @@ import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.prometheus.client.hotspot.DefaultExports
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.launch
@@ -188,7 +185,7 @@ fun main() = runBlocking(Executors.newFixedThreadPool(2).asCoroutineDispatcher()
     }
 }
 
-suspend fun CoroutineScope.blockingApplicationLogic(
+suspend fun blockingApplicationLogic(
     applicationState: ApplicationState,
     kafkaConsumer: KafkaConsumer<String, String>,
     kafkaproducerCreateTask: KafkaProducer<String, ProduceTask>,
@@ -202,8 +199,8 @@ suspend fun CoroutineScope.blockingApplicationLogic(
     helsepersonellv1: IHPR2Service
 ) {
     while (applicationState.running) {
-            kafkaConsumer.poll(Duration.ofMillis(0)).forEach {
-                val receivedSykmelding: ReceivedSykmelding = objectMapper.readValue(it.value())
+            kafkaConsumer.poll(Duration.ofMillis(0)).forEach { consumerRecord ->
+                val receivedSykmelding: ReceivedSykmelding = objectMapper.readValue(consumerRecord.value())
                 val logValues = arrayOf(
                         keyValue("mottakId", receivedSykmelding.navLogId),
                         keyValue("msgId", receivedSykmelding.msgId),
@@ -246,7 +243,7 @@ suspend fun CoroutineScope.blockingApplicationLogic(
                 log.info("Validation results send to kafka {} $logKeys", env.sm2013BehandlingsUtfallToipic, *logValues)
 
                 try {
-                    val doctor = fetchDoctor(helsepersonellv1, receivedSykmelding.personNrLege).await()
+                    val doctor = fetchDoctor(helsepersonellv1, receivedSykmelding.personNrLege)
 
                     val behandlerKode = findBehandlerKode(doctor)
 
@@ -379,7 +376,7 @@ fun createInfotrygdForesp(personNrPasient: String, healthInformation: HelseOpply
     tkNrFraDato = dateMinus1Year
 }
 
-val inputFactory = XMLInputFactory.newInstance()
+val inputFactory = XMLInputFactory.newInstance()!!
 inline fun <reified T> unmarshal(text: String): T = fellesformatUnmarshaller.unmarshal(inputFactory.createXMLEventReader(StringReader(text)), T::class.java).value
 
 fun findarbeidsKategori(itfh: InfotrygdForespAndHealthInformation): String {
@@ -601,26 +598,24 @@ fun createInfotrygdBlokk(
 }
 
 fun findbBehandlingsDato(itfh: InfotrygdForespAndHealthInformation, signaturDato: LocalDate): LocalDate {
-    if (itfh.healthInformation.kontaktMedPasient?.kontaktDato != null &&
+    return if (itfh.healthInformation.kontaktMedPasient?.kontaktDato != null &&
             itfh.healthInformation.kontaktMedPasient?.behandletDato != null) {
-        return listOf(itfh.healthInformation.kontaktMedPasient.kontaktDato,
+        listOf(itfh.healthInformation.kontaktMedPasient.kontaktDato,
                 itfh.healthInformation.kontaktMedPasient.behandletDato.toLocalDate()).sorted().first()
     } else if (itfh.healthInformation.kontaktMedPasient?.behandletDato != null) {
-        return itfh.healthInformation.kontaktMedPasient.behandletDato.toLocalDate()
+        itfh.healthInformation.kontaktMedPasient.behandletDato.toLocalDate()
     } else {
-        return signaturDato
+        signaturDato
     }
 }
 
-fun CoroutineScope.fetchDoctor(hprService: IHPR2Service, doctorIdent: String): Deferred<HPRPerson> = async {
-    retry(
+suspend fun fetchDoctor(hprService: IHPR2Service, doctorIdent: String): HPRPerson = retry(
             callName = "hpr_hent_person_med_personnummer",
             retryIntervals = arrayOf(500L, 1000L, 3000L, 5000L, 10000L),
             legalExceptions = *arrayOf(IOException::class, WstxException::class)
     ) {
         hprService.hentPersonMedPersonnummer(doctorIdent, datatypeFactory.newXMLGregorianCalendar(GregorianCalendar()))
     }
-}
 
 fun findBehandlerKode(behandler: HPRPerson): String =
         behandler.godkjenninger.godkjenning.firstOrNull {
