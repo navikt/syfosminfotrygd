@@ -65,7 +65,8 @@ enum class ValidationRuleChain(
         sykmelding.perioder.any { sykmeldingPeriods ->
             infotrygdForesp.sMhistorikk?.sykmelding != null && infotrygdForesp.sMhistorikk.sykmelding
                     .any { infotrygdForespSykmelding ->
-                        infotrygdForespSykmelding.periode?.arbufoerFOM != null && sykmeldingPeriods.fom.isBefore(infotrygdForespSykmelding.periode.arbufoerFOM)
+                        infotrygdForespSykmelding.periode?.arbufoerFOM != null && (sykmeldingPeriods.fom.isBefore(infotrygdForespSykmelding.periode.arbufoerFOM) ||
+                                sykmeldingPeriods.fom.isEqual(infotrygdForespSykmelding.periode.arbufoerFOM))
                     }
         }
     }),
@@ -175,6 +176,18 @@ enum class ValidationRuleChain(
                 infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().lastOrNull()?.periode?.friskmeldtDato != null &&
                 sykmelding.perioder.sortedPeriodeTOMDate().last().isBefore(infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.friskmeldtDato)
     }),
+
+    @Description("Hvis uføregrad er endret går meldingen til manuell behandling")
+    DEGREE_OF_DISABILITY_IS_CHANGED(
+            1530,
+            Status.MANUAL_PROCESSING,
+            "Uføregrad er endret, må registreres manuelt i Infotrygd",
+            "Uføregrad er endret, må registreres manuelt i Infotrygd",
+            { (sykmelding, infotrygdForesp) ->
+                sykmelding.perioder.any {
+                    infotrygdForesp.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()?.periode?.ufoeregrad != it.findGrad().toBigInteger()
+                }
+            }),
 
     @Description("Hvis forlengelse utover registrert tiltak FA tiltak")
     EXTANION_OVER_FA(
@@ -345,3 +358,10 @@ fun List<TypeSMinfo.Historikk>.sortedSMinfoHistorikk(): List<TypeSMinfo.Historik
 fun Periode.range(): ClosedRange<LocalDate> = fom.rangeTo(tom)
 
 fun TypeSMinfo.Historikk.Tilltak.range(): ClosedRange<LocalDate> = fom.rangeTo(tom)
+
+fun Periode.findGrad(): Int =
+        if (gradert?.grad != null) {
+            gradert!!.grad
+        } else {
+            100
+        }

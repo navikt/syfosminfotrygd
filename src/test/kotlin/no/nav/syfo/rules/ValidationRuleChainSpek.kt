@@ -162,6 +162,28 @@ object ValidationRuleChainSpek : Spek({
             ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
         }
 
+        it("Should check rule PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE, should trigger rule") {
+
+            val infotrygdForespResponse = deafaultInfotrygdForesp()
+            infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
+                sykmelding.add(TypeSMinfo().apply {
+                    periode = TypeSMinfo.Periode().apply {
+                        arbufoerFOM = LocalDate.of(2018, 1, 2)
+                        arbufoerTOM = LocalDate.of(2018, 1, 8)
+                    }
+                })
+            }
+
+            val healthInformation = generateSykmelding(perioder = listOf(
+                    generatePeriode(
+                            fom = LocalDate.of(2018, 1, 2),
+                            tom = LocalDate.of(2018, 1, 8)
+                    )
+            ))
+
+            ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
+        }
+
         it("Should check rule PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE, should NOT trigger rule") {
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
@@ -862,6 +884,77 @@ object ValidationRuleChainSpek : Spek({
             }
 
             ValidationRuleChain.ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+        }
+
+        it("Should check rule DEGREE_OF_DISABILITY_IS_CHANGED, should trigger rule") {
+            val healthInformation = generateSykmelding(perioder = listOf(
+                    generatePeriode(
+                            fom = LocalDate.now(),
+                            tom = LocalDate.now().plusDays(1),
+                            gradert = Gradert(
+                                    reisetilskudd = true,
+                                    grad = 90
+                            )
+                    )
+            ))
+
+            val infotrygdForespResponse = deafaultInfotrygdForesp()
+            infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
+                sykmelding.add(TypeSMinfo().apply {
+                    periode = TypeSMinfo.Periode().apply {
+                        arbufoerFOM = LocalDate.now().plusDays(15)
+                        ufoeregrad = 80.toBigInteger()
+                    }
+                })
+            }
+
+            ValidationRuleChain.DEGREE_OF_DISABILITY_IS_CHANGED(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
+        }
+
+        it("Should check rule DEGREE_OF_DISABILITY_IS_CHANGED, should trigger rule") {
+            val healthInformation = generateSykmelding(perioder = listOf(
+                    generatePeriode(
+                            fom = LocalDate.now(),
+                            tom = LocalDate.now().plusDays(1)
+                    )
+            ))
+
+            val infotrygdForespResponse = deafaultInfotrygdForesp()
+            infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
+                sykmelding.add(TypeSMinfo().apply {
+                    periode = TypeSMinfo.Periode().apply {
+                        arbufoerFOM = LocalDate.now().plusDays(15)
+                        ufoeregrad = 80.toBigInteger()
+                    }
+                })
+            }
+
+            ValidationRuleChain.DEGREE_OF_DISABILITY_IS_CHANGED(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
+        }
+
+        it("Should check rule DEGREE_OF_DISABILITY_IS_CHANGED, should NOT trigger rule") {
+            val healthInformation = generateSykmelding(perioder = listOf(
+                    generatePeriode(
+                            fom = LocalDate.now(),
+                            tom = LocalDate.now().plusDays(1),
+                            gradert = Gradert(
+                                    reisetilskudd = true,
+                                    grad = 90
+                            )
+                    )
+            ))
+
+            val infotrygdForespResponse = deafaultInfotrygdForesp()
+            infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
+                sykmelding.add(TypeSMinfo().apply {
+                    periode = TypeSMinfo.Periode().apply {
+                        arbufoerFOM = LocalDate.now().minusDays(1)
+                        ufoeregrad = 90.toBigInteger()
+                    }
+                })
+            }
+
+            ValidationRuleChain.DEGREE_OF_DISABILITY_IS_CHANGED(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
         }
     }
 })
