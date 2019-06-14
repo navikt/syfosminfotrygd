@@ -346,7 +346,7 @@ fun sendInfotrygdOppdateringMq(
     logValues: Array<StructuredArgument>
 ) = producer.send(session.createTextMessage().apply {
     log.info("Message has oprasjonstype: {}  $logKeys", fellesformat.get<KontrollsystemBlokkType>().infotrygdBlokk.first().operasjonstype, *logValues)
-    // TODO fjerne denne kommentaren når vi går i prod text = xmlObjectWriter.writeValueAsString(fellesformat)
+    xmlObjectWriter.writeValueAsString(fellesformat)
     log.info("Infotrygd xml: ${xmlObjectWriter.writeValueAsString(fellesformat)}")
     log.info("Message is sendt to infotrygd $logKeys", *logValues)
 })
@@ -560,7 +560,16 @@ fun createInfotrygdBlokk(
 
             operasjonstype = operasjonstypeKode.toBigInteger()
 
-            legeEllerInstitusjonsNummer = tssid?.toBigInteger() ?: "".toBigInteger()
+            val typeSMinfo = itfh.infotrygdForesp.sMhistorikk?.sykmelding
+                    ?.sortedSMInfos()
+                    ?.lastOrNull()
+
+            if ((typeSMinfo != null && tssid?.toBigInteger() != typeSMinfo.periode.legeInstNr) || operasjonstype == 1.toBigInteger()) {
+                legeEllerInstitusjonsNummer = tssid?.toBigInteger() ?: "".toBigInteger()
+                legeEllerInstitusjon = if (itfh.healthInformation.behandler != null) {
+                    itfh.healthInformation.behandler.formatName()
+                } else { "" }
+            }
 
             forsteFravaersDag = when (operasjonstype) {
                 1.toBigInteger() -> itfh.healthInformation.aktivitet.periode.sortedFOMDate().first()
@@ -569,6 +578,12 @@ fun createInfotrygdBlokk(
 
             mottakerKode = behandlerKode
 
+            if (itfh.infotrygdForesp.diagnosekodeOK != null) {
+                hovedDiagnose = itfh.infotrygdForesp.hovedDiagnosekode
+                hovedDiagnoseGruppe = itfh.infotrygdForesp.hovedDiagnosekodeverk.toBigInteger()
+                hovedDiagnoseTekst = itfh.infotrygdForesp.diagnosekodeOK.diagnoseTekst
+            }
+
             if (operasjonstype == 1.toBigInteger()) {
                 behandlingsDato = findbBehandlingsDato(itfh, signaturDato)
 
@@ -576,14 +591,12 @@ fun createInfotrygdBlokk(
                 gruppe = "96"
                 saksbehandler = "Auto"
 
-                hovedDiagnose = itfh.infotrygdForesp.hovedDiagnosekode
-                hovedDiagnoseGruppe = itfh.infotrygdForesp.hovedDiagnosekodeverk.toBigInteger()
-                hovedDiagnoseTekst = itfh.healthInformation.medisinskVurdering.hovedDiagnose.diagnosekode.dn
                 if (itfh.infotrygdForesp.biDiagnosekodeverk != null &&
-                        itfh.healthInformation.medisinskVurdering.biDiagnoser.diagnosekode.firstOrNull()?.dn != null) {
+                        itfh.healthInformation.medisinskVurdering.biDiagnoser.diagnosekode.firstOrNull()?.dn != null &&
+                        itfh.infotrygdForesp.diagnosekodeOK != null) {
                     biDiagnose = itfh.infotrygdForesp.biDiagnoseKode
                     biDiagnoseGruppe = itfh.infotrygdForesp.biDiagnosekodeverk.toBigInteger()
-                    biDiagnoseTekst = itfh.healthInformation.medisinskVurdering.biDiagnoser.diagnosekode.firstOrNull()?.dn
+                    biDiagnoseTekst = itfh.infotrygdForesp.diagnosekodeOK.bidiagnoseTekst
                 }
             }
 
@@ -624,3 +637,10 @@ fun findBehandlerKode(behandler: HPRPerson): String =
                         it.helsepersonellkategori.isAktiv != null &&
                         it.helsepersonellkategori.verdi != null
             }?.helsepersonellkategori?.verdi ?: ""
+
+fun HelseOpplysningerArbeidsuforhet.Behandler.formatName(): String =
+if (navn.mellomnavn == null) {
+    "${navn.etternavn.toUpperCase()} ${navn.fornavn.toUpperCase()}"
+} else {
+    "${navn.etternavn.toUpperCase()} ${navn.fornavn.toUpperCase()} ${navn.mellomnavn.toUpperCase()}"
+}

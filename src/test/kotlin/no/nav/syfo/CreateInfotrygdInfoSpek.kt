@@ -4,6 +4,7 @@ import net.logstash.logback.argument.StructuredArguments.keyValue
 import no.kith.xmlstds.msghead._2006_05_24.XMLDocument
 import no.kith.xmlstds.msghead._2006_05_24.XMLMsgHead
 import no.kith.xmlstds.msghead._2006_05_24.XMLRefDoc
+import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.sm2013.ArsakType
 import no.nav.helse.sm2013.CV
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
@@ -230,6 +231,9 @@ object CreateInfotrygdInfoSpek : Spek({
 
             val fellesFormat = createFellesFormat(healthInformation)
             val infotrygdForesp = createInfotrygdForesp("1231234", healthInformation, "135153245")
+            infotrygdForesp.diagnosekodeOK = InfotrygdForesp.DiagnosekodeOK().apply {
+                diagnoseTekst = healthInformation.medisinskVurdering.hovedDiagnose.diagnosekode.dn
+            }
 
             val fellesFormatString = fellesformatMarshaller.toString(fellesFormat)
 
