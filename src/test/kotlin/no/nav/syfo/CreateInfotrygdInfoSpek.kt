@@ -257,6 +257,7 @@ object CreateInfotrygdInfoSpek : Spek({
             infotrygdBlokk.first().gruppe shouldEqual "96"
             infotrygdBlokk.first().saksbehandler shouldEqual "Auto"
             infotrygdBlokk.first().arbeidsufoerTOM shouldEqual LocalDate.now().plusDays(4)
+            infotrygdBlokk.first().isErSvangerskapsrelatert shouldEqual null
             infotrygdBlokk.first().ufoeregrad shouldEqual "100".toBigInteger()
         }
 

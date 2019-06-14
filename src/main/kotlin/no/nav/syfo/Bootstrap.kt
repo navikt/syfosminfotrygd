@@ -600,6 +600,11 @@ fun createInfotrygdBlokk(
                 }
             }
 
+            if (itfh.healthInformation.medisinskVurdering?.isSvangerskap != null &&
+                    itfh.healthInformation.medisinskVurdering.isSvangerskap) {
+                isErSvangerskapsrelatert = true
+            }
+
             arbeidsufoerTOM = periode.periodeTOMDato
             ufoeregrad = when {
                 periode.gradertSykmelding != null -> periode.gradertSykmelding.sykmeldingsgrad.toBigInteger()
