@@ -184,6 +184,7 @@ enum class ValidationRuleChain(
             "Uføregrad er endret, må registreres manuelt i Infotrygd",
             "Uføregrad er endret, må registreres manuelt i Infotrygd",
             { (sykmelding, infotrygdForesp) ->
+                infotrygdForesp.sMhistorikk != null &&
                 infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().lastOrNull() != null &&
                     sykmelding.perioder.any { periode ->
                         infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.ufoeregrad != periode.findGrad().toBigInteger()
