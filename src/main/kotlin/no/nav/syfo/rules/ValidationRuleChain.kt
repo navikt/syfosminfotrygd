@@ -184,9 +184,10 @@ enum class ValidationRuleChain(
             "Uføregrad er endret, må registreres manuelt i Infotrygd",
             "Uføregrad er endret, må registreres manuelt i Infotrygd",
             { (sykmelding, infotrygdForesp) ->
-                sykmelding.perioder.any {
-                    infotrygdForesp.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()?.periode?.ufoeregrad != it.findGrad().toBigInteger()
-                }
+                infotrygdForesp.sMhistorikk?.sykmelding != null &&
+                    sykmelding.perioder.any { periode ->
+                        infotrygdForesp.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()?.periode?.ufoeregrad != periode.findGrad().toBigInteger()
+                    }
             }),
 
     @Description("Hvis forlengelse utover registrert tiltak FA tiltak")
