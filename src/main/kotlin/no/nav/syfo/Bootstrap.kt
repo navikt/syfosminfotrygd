@@ -53,10 +53,13 @@ import no.nav.syfo.util.infotrygdSporringMarshaller
 import no.nav.syfo.util.infotrygdSporringUnmarshaller
 import no.nav.syfo.util.xmlObjectWriter
 import no.nav.syfo.ws.createPort
-import no.nav.tjeneste.virksomhet.organisasjonenhet.v2.meldinger.FinnNAVKontorResponse
-import no.nav.tjeneste.virksomhet.organisasjonenhet.v2.meldinger.FinnNAVKontorRequest
-import no.nav.tjeneste.virksomhet.organisasjonenhet.v2.binding.OrganisasjonEnhetV2
-import no.nav.tjeneste.virksomhet.organisasjonenhet.v2.informasjon.Geografi
+import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.binding.ArbeidsfordelingV1
+import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.ArbeidsfordelingKriterier
+import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.Diskresjonskoder
+import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.Oppgavetyper
+import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.Tema
+import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.meldinger.FinnBehandlendeEnhetListeRequest
+import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.meldinger.FinnBehandlendeEnhetListeResponse
 import no.nav.tjeneste.virksomhet.person.v3.binding.PersonV3
 import no.nav.tjeneste.virksomhet.person.v3.informasjon.GeografiskTilknytning
 import no.nav.tjeneste.virksomhet.person.v3.informasjon.NorskIdent
@@ -64,6 +67,7 @@ import no.nav.tjeneste.virksomhet.person.v3.informasjon.PersonIdent
 import no.nav.tjeneste.virksomhet.person.v3.informasjon.Personidenter
 import no.nav.tjeneste.virksomhet.person.v3.meldinger.HentGeografiskTilknytningRequest
 import no.nav.tjeneste.virksomhet.person.v3.meldinger.HentGeografiskTilknytningResponse
+import no.nav.tjeneste.virksomhet.person.v3.meldinger.HentPersonRequest
 import no.nhn.schemas.reg.hprv2.IHPR2Service
 import no.nhn.schemas.reg.hprv2.IHPR2ServiceHentPersonMedPersonnummerGenericFaultFaultFaultMessage
 import no.nhn.schemas.reg.hprv2.Person as HPRPerson
@@ -146,7 +150,7 @@ fun main() = runBlocking(coroutineContext) {
             port { withSTS(credentials.serviceuserUsername, credentials.serviceuserPassword, env.securityTokenServiceUrl) }
         }
 
-        val orgnaisasjonEnhetV2 = createPort<OrganisasjonEnhetV2>(env.organisasjonEnhetV2EndpointURL) {
+        val arbeidsfordelingV1 = createPort<ArbeidsfordelingV1>(env.arbeidsfordelingV1EndpointURL) {
             port { withSTS(credentials.serviceuserUsername, credentials.serviceuserPassword, env.securityTokenServiceUrl) }
         }
 
@@ -169,7 +173,7 @@ fun main() = runBlocking(coroutineContext) {
             port { withSTS(credentials.serviceuserUsername, credentials.serviceuserPassword, env.securityTokenServiceUrl) }
         }
 
-        launchListeners(applicationState, kafkaproducerCreateTask, kafkaproducervalidationResult, infotrygdOppdateringProducer, infotrygdSporringProducer, session, personV3, orgnaisasjonEnhetV2, env, helsepersonellV1, consumerProperties)
+        launchListeners(applicationState, kafkaproducerCreateTask, kafkaproducervalidationResult, infotrygdOppdateringProducer, infotrygdSporringProducer, session, personV3, arbeidsfordelingV1, env, helsepersonellV1, consumerProperties)
 
         Runtime.getRuntime().addShutdownHook(Thread {
             applicationServer.stop(10, 10, TimeUnit.SECONDS)
@@ -195,7 +199,7 @@ suspend fun CoroutineScope.launchListeners(
     infotrygdSporringProducer: MessageProducer,
     session: Session,
     personV3: PersonV3,
-    orgnaisasjonEnhetV2: OrganisasjonEnhetV2,
+    arbeidsfordelingV1: ArbeidsfordelingV1,
     env: Environment,
     helsepersonellv1: IHPR2Service,
     consumerProperties: Properties
@@ -210,7 +214,7 @@ suspend fun CoroutineScope.launchListeners(
         createListener(applicationState) {
             blockingApplicationLogic(applicationState, kafkaconsumerRecievedSykmelding, kafkaproducerCreateTask,
                     kafkaproducervalidationResult, infotrygdOppdateringProducer, infotrygdSporringProducer,
-                    session, personV3, orgnaisasjonEnhetV2, env, helsepersonellv1)
+                    session, personV3, arbeidsfordelingV1, env, helsepersonellv1)
         }
     }.toList()
 
@@ -227,7 +231,7 @@ suspend fun blockingApplicationLogic(
     infotrygdSporringProducer: MessageProducer,
     session: Session,
     personV3: PersonV3,
-    orgnaisasjonEnhetV2: OrganisasjonEnhetV2,
+    arbeidsfordelingV1: ArbeidsfordelingV1,
     env: Environment,
     helsepersonellv1: IHPR2Service
 ) {
@@ -282,7 +286,7 @@ suspend fun blockingApplicationLogic(
 
                 when {
                     results.any { rule -> rule.status == Status.MANUAL_PROCESSING } ->
-                        produceManualTask(kafkaproducerCreateTask, receivedSykmelding, validationResult, personV3, orgnaisasjonEnhetV2, logKeys, logValues)
+                        produceManualTask(kafkaproducerCreateTask, receivedSykmelding, validationResult, personV3, arbeidsfordelingV1, logKeys, logValues)
                     else -> sendInfotrygdOppdatering(
                             infotrygdOppdateringProducer,
                             session,
@@ -312,7 +316,7 @@ suspend fun blockingApplicationLogic(
                 )
                 RULE_HIT_STATUS_COUNTER.labels(validationResultBehandler.status.name).inc()
                 log.warn("Behandler er ikke register i HPR")
-                produceManualTask(kafkaproducerCreateTask, receivedSykmelding, validationResultBehandler, personV3, orgnaisasjonEnhetV2, logKeys, logValues)
+                produceManualTask(kafkaproducerCreateTask, receivedSykmelding, validationResultBehandler, personV3, arbeidsfordelingV1, logKeys, logValues)
             }
         }
         delay(100)
@@ -450,14 +454,11 @@ fun findOperasjonstype(
     }
 }
 
-suspend fun produceManualTask(kafkaProducer: KafkaProducer<String, ProduceTask>, receivedSykmelding: ReceivedSykmelding, validationResult: ValidationResult, personV3: PersonV3, orgnaisasjonEnhetV2: OrganisasjonEnhetV2, logKeys: String, logValues: Array<StructuredArgument>) {
+suspend fun produceManualTask(kafkaProducer: KafkaProducer<String, ProduceTask>, receivedSykmelding: ReceivedSykmelding, validationResult: ValidationResult, personV3: PersonV3, arbeidsfordelingV1: ArbeidsfordelingV1, logKeys: String, logValues: Array<StructuredArgument>) {
     val geografiskTilknytning = fetchGeografiskTilknytningAsync(personV3, receivedSykmelding)
-    val finnBehandlendeEnhetListeResponse = fetchBehandlendeEnhetAsync(orgnaisasjonEnhetV2, geografiskTilknytning.geografiskTilknytning)
-
-    when (geografiskTilknytning.diskresjonskode?.kodeverksRef) {
-        "SPSF" -> createTask(kafkaProducer, receivedSykmelding, validationResult, "2106", logKeys, logValues)
-        else -> createTask(kafkaProducer, receivedSykmelding, validationResult, findNavOffice(finnBehandlendeEnhetListeResponse), logKeys, logValues)
-    }
+    val patientDiskresjonsKode = fetchDiskresjonsKode(personV3, receivedSykmelding)
+    val finnBehandlendeEnhetListeResponse = fetchBehandlendeEnhet(arbeidsfordelingV1, geografiskTilknytning.geografiskTilknytning, patientDiskresjonsKode)
+    createTask(kafkaProducer, receivedSykmelding, validationResult, finnBehandlendeEnhetListeResponse?.behandlendeEnhetListe?.firstOrNull()?.enhetId ?: "0393", logKeys, logValues)
 }
 
 fun createTask(kafkaProducer: KafkaProducer<String, ProduceTask>, receivedSykmelding: ReceivedSykmelding, validationResult: ValidationResult, navKontor: String, logKeys: String, logValues: Array<StructuredArgument>) {
@@ -497,22 +498,40 @@ suspend fun fetchGeografiskTilknytningAsync(
                             .withType(Personidenter().withValue("FNR")))))
         }
 
-suspend fun fetchBehandlendeEnhetAsync(orgnaisasjonEnhetV2: OrganisasjonEnhetV2, geografiskTilknytningResponse: GeografiskTilknytning?): FinnNAVKontorResponse? =
+suspend fun fetchBehandlendeEnhet(arbeidsfordelingV1: ArbeidsfordelingV1, geografiskTilknytning: GeografiskTilknytning?, patientDiskresjonsKode: String): FinnBehandlendeEnhetListeResponse? =
         retry(callName = "finn_nav_kontor",
                 retryIntervals = arrayOf(500L, 1000L, 3000L, 5000L, 10000L),
                 legalExceptions = *arrayOf(IOException::class, WstxException::class)) {
-            orgnaisasjonEnhetV2.finnNAVKontor(FinnNAVKontorRequest().apply {
-                geografiskTilknytning = Geografi().apply {
-                    value = geografiskTilknytningResponse?.geografiskTilknytning ?: "0"
+            arbeidsfordelingV1.finnBehandlendeEnhetListe(FinnBehandlendeEnhetListeRequest().apply {
+                val afk = ArbeidsfordelingKriterier()
+                if (geografiskTilknytning?.geografiskTilknytning != null) {
+                    afk.geografiskTilknytning = no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.Geografi().apply {
+                        value = geografiskTilknytning.geografiskTilknytning
+                    }
                 }
+                afk.tema = Tema().apply {
+                    value = "SYM"
+                }
+
+                afk.oppgavetype = Oppgavetyper().apply {
+                    value = "BEH_EL_SYM"
+                }
+
+                afk.diskresjonskode = Diskresjonskoder().apply {
+                    value = patientDiskresjonsKode
+                }
+
+                arbeidsfordelingKriterier = afk
             })
         }
 
-fun findNavOffice(finnNAVKontorResponse: FinnNAVKontorResponse?): String =
-        if (finnNAVKontorResponse?.navKontor == null) {
-            "0393"
-        } else {
-            finnNAVKontorResponse.navKontor.enhetId
+suspend fun fetchDiskresjonsKode(personV3: PersonV3, receivedSykmelding: ReceivedSykmelding): String =
+        retry(callName = "tps_hent_person",
+                retryIntervals = arrayOf(500L, 1000L, 3000L, 5000L, 10000L),
+                legalExceptions = *arrayOf(IOException::class, WstxException::class)) {
+            personV3.hentPerson(HentPersonRequest()
+                    .withAktoer(PersonIdent().withIdent(NorskIdent().withIdent(receivedSykmelding.personNrPasient)))
+            ).person.diskresjonskode.kodeverksRef ?: ""
         }
 
 inline fun <reified T> XMLEIFellesformat.get() = this.any.find { it is T } as T
