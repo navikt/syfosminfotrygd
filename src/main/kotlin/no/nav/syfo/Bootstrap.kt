@@ -498,7 +498,7 @@ suspend fun fetchGeografiskTilknytningAsync(
                             .withType(Personidenter().withValue("FNR")))))
         }
 
-suspend fun fetchBehandlendeEnhet(arbeidsfordelingV1: ArbeidsfordelingV1, geografiskTilknytning: GeografiskTilknytning?, patientDiskresjonsKode: String): FinnBehandlendeEnhetListeResponse? =
+suspend fun fetchBehandlendeEnhet(arbeidsfordelingV1: ArbeidsfordelingV1, geografiskTilknytning: GeografiskTilknytning?, patientDiskresjonsKode: String?): FinnBehandlendeEnhetListeResponse? =
         retry(callName = "finn_nav_kontor",
                 retryIntervals = arrayOf(500L, 1000L, 3000L, 5000L, 10000L),
                 legalExceptions = *arrayOf(IOException::class, WstxException::class)) {
@@ -517,21 +517,23 @@ suspend fun fetchBehandlendeEnhet(arbeidsfordelingV1: ArbeidsfordelingV1, geogra
                     value = "BEH_EL_SYM"
                 }
 
-                afk.diskresjonskode = Diskresjonskoder().apply {
-                    value = patientDiskresjonsKode
+                if(!patientDiskresjonsKode.isNullOrBlank()) {
+                    afk.diskresjonskode = Diskresjonskoder().apply {
+                        value = patientDiskresjonsKode
+                    }
                 }
 
                 arbeidsfordelingKriterier = afk
             })
         }
 
-suspend fun fetchDiskresjonsKode(personV3: PersonV3, receivedSykmelding: ReceivedSykmelding): String =
+suspend fun fetchDiskresjonsKode(personV3: PersonV3, receivedSykmelding: ReceivedSykmelding): String? =
         retry(callName = "tps_hent_person",
                 retryIntervals = arrayOf(500L, 1000L, 3000L, 5000L, 10000L),
                 legalExceptions = *arrayOf(IOException::class, WstxException::class)) {
             personV3.hentPerson(HentPersonRequest()
                     .withAktoer(PersonIdent().withIdent(NorskIdent().withIdent(receivedSykmelding.personNrPasient)))
-            ).person.diskresjonskode.kodeverksRef ?: ""
+            ).person?.diskresjonskode?.kodeverksRef
         }
 
 inline fun <reified T> XMLEIFellesformat.get() = this.any.find { it is T } as T
