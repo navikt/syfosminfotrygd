@@ -31,7 +31,7 @@ val sykmeldingVersion = "1.1-SNAPSHOT"
 val cxfVersion = "3.2.7"
 val jaxwsApiVersion = "2.3.1"
 val commonsTextVersion = "1.4"
-val navArbeidsfordelingv1Version = "1.1.0"
+val organisasjonEnhetV2Version = "2.1.0"
 val navPersonv3Version = "3.2.0"
 val jaxbBasicAntVersion = "1.11.1"
 val javaxAnnotationApiVersion = "1.3.2"
@@ -115,7 +115,7 @@ dependencies {
     implementation ("no.nav.helse.xml:sm2013:$sykmeldingVersion")
     implementation ("no.nav.syfo.tjenester:fellesformat:$fellesformatVersion")
     implementation ("no.nav.helse.xml:kontrollsystemblokk:$kontrollsystemblokk")
-    implementation ("no.nav.tjenester:nav-arbeidsfordeling-v1-tjenestespesifikasjon:$navArbeidsfordelingv1Version:jaxws")
+    implementation("no.nav.tjenester:nav-organisasjonEnhet-v2-tjenestespesifikasjon:$organisasjonEnhetV2Version:jaxws")
     implementation ("no.nav.syfo:syfooppgave-schemas:$syfooppgaveSchemasVersion")
     implementation ("no.nav.tjenester:nav-person-v3-tjenestespesifikasjon:$navPersonv3Version")
     implementation ("no.nav.helse.xml:infotrygd-foresp:$infotrygdForespVersion")
