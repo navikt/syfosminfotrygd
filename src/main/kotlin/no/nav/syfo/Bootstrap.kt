@@ -458,7 +458,7 @@ suspend fun produceManualTask(kafkaProducer: KafkaProducer<String, ProduceTask>,
     val geografiskTilknytning = fetchGeografiskTilknytningAsync(personV3, receivedSykmelding)
     val patientDiskresjonsKode = fetchDiskresjonsKode(personV3, receivedSykmelding)
     val finnBehandlendeEnhetListeResponse = fetchBehandlendeEnhet(arbeidsfordelingV1, geografiskTilknytning.geografiskTilknytning, patientDiskresjonsKode)
-    if(finnBehandlendeEnhetListeResponse?.behandlendeEnhetListe?.firstOrNull()?.enhetId == null ){
+    if (finnBehandlendeEnhetListeResponse?.behandlendeEnhetListe?.firstOrNull()?.enhetId == null) {
         log.error("arbeidsfordeling fant ingen nav-enheter $logKeys", *logValues)
     }
     createTask(kafkaProducer, receivedSykmelding, validationResult, finnBehandlendeEnhetListeResponse?.behandlendeEnhetListe?.firstOrNull()?.enhetId ?: "0393", logKeys, logValues)
