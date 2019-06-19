@@ -517,7 +517,7 @@ suspend fun fetchBehandlendeEnhet(arbeidsfordelingV1: ArbeidsfordelingV1, geogra
                     value = "BEH_EL_SYM"
                 }
 
-                if(!patientDiskresjonsKode.isNullOrBlank()) {
+                if (!patientDiskresjonsKode.isNullOrBlank()) {
                     afk.diskresjonskode = Diskresjonskoder().apply {
                         value = patientDiskresjonsKode
                     }
