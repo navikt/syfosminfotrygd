@@ -536,7 +536,7 @@ suspend fun fetchDiskresjonsKode(personV3: PersonV3, receivedSykmelding: Receive
                 legalExceptions = *arrayOf(IOException::class, WstxException::class)) {
             personV3.hentPerson(HentPersonRequest()
                     .withAktoer(PersonIdent().withIdent(NorskIdent().withIdent(receivedSykmelding.personNrPasient)))
-            ).person?.diskresjonskode?.kodeverksRef
+            ).person?.diskresjonskode?.value
         }
 
 inline fun <reified T> XMLEIFellesformat.get() = this.any.find { it is T } as T
