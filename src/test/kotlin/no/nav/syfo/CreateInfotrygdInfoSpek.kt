@@ -196,6 +196,14 @@ object CreateInfotrygdInfoSpek : Spek({
 
             val fellesFormatString = fellesformatMarshaller.toString(fellesFormat)
 
+            infotrygdForesp.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
+                sykmelding.add(TypeSMinfo().apply {
+                    periode = TypeSMinfo.Periode().apply {
+                        arbufoerOppr = LocalDate.now()
+                    }
+                })
+            }
+
             val itfh = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
             val infotrygdFellesformat = createInfotrygdBlokk(fellesFormatString, itfh, healthInformation.aktivitet.periode[1], "1231234", LocalDate.now(), "LE", "1341515", "", arrayOf(keyValue("mottakId", "12315")), 2)
 
