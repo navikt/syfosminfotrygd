@@ -5,6 +5,7 @@ import no.kith.xmlstds.msghead._2006_05_24.XMLDocument
 import no.kith.xmlstds.msghead._2006_05_24.XMLMsgHead
 import no.kith.xmlstds.msghead._2006_05_24.XMLRefDoc
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
+import no.nav.helse.infotrygd.foresp.TypeSMinfo
 import no.nav.helse.sm2013.ArsakType
 import no.nav.helse.sm2013.CV
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
@@ -293,6 +294,14 @@ object CreateInfotrygdInfoSpek : Spek({
 
             val fellesFormatString = fellesformatMarshaller.toString(fellesFormat)
 
+            infotrygdForesp.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
+                sykmelding.add(TypeSMinfo().apply {
+                    periode = TypeSMinfo.Periode().apply {
+                        arbufoerOppr = LocalDate.now()
+                    }
+                })
+            }
+
             val itfh = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
             val infotrygdFellesformat = createInfotrygdBlokk(fellesFormatString, itfh, healthInformation.aktivitet.periode[1], "1231234", LocalDate.now(), "LE", "1341515", "", arrayOf(keyValue("mottakId", "12315")), 2)
 
@@ -314,6 +323,7 @@ object CreateInfotrygdInfoSpek : Spek({
             infotrygdBlokk[0].saksbehandler shouldEqual null
             infotrygdBlokk[0].arbeidsufoerTOM shouldEqual LocalDate.now().plusDays(10)
             infotrygdBlokk[0].ufoeregrad shouldEqual "100".toBigInteger()
+            infotrygdBlokk[0].operasjonstype shouldEqual "2".toBigInteger()
         }
     }
 })

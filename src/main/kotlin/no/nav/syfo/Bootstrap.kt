@@ -383,9 +383,7 @@ fun sendInfotrygdOppdateringMq(
     logValues: Array<StructuredArgument>
 ) = producer.send(session.createTextMessage().apply {
     log.info("Message has oprasjonstype: {}  $logKeys", fellesformat.get<KontrollsystemBlokkType>().infotrygdBlokk.first().operasjonstype, *logValues)
-    // TODO REMOVE AFTER TESTING
-    // text = xmlObjectWriter.writeValueAsString(fellesformat)
-    log.info("Infotrygd oppdatering: ${xmlObjectWriter.writeValueAsString(fellesformat)}")
+    text = xmlObjectWriter.writeValueAsString(fellesformat)
     log.info("Message is sendt to infotrygd $logKeys", *logValues)
 })
 
@@ -623,7 +621,7 @@ fun createInfotrygdBlokk(
 
             forsteFravaersDag = when (operasjonstype) {
                 1.toBigInteger() -> itfh.healthInformation.aktivitet.periode.sortedFOMDate().first()
-                else -> itfh.healthInformation.syketilfelleStartDato
+                else -> typeSMinfo?.periode?.arbufoerOppr
             }
 
             mottakerKode = behandlerKode
