@@ -148,7 +148,7 @@ fun main() = runBlocking(coroutineContext) {
         val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
         val infotrygdOppdateringProducer = session.producerForQueue("queue:///${env.infotrygdOppdateringQueue}?targetClient=1")
         val infotrygdSporringProducer = session.producerForQueue("queue:///${env.infotrygdSporringQueue}?targetClient=1")
-        val infotrygdSmIkkeOKQueueBrowser = session.createBrowserForQueue("queue:///${env.infotrygdSmIkkeOKQueue}?targetClient=1")
+        val infotrygdSmIkkeOKQueueBrowser = session.createBrowserForQueue(env.infotrygdSmIkkeOKQueue)
 
         val personV3 = createPort<PersonV3>(env.personV3EndpointURL) {
             port { withSTS(credentials.serviceuserUsername, credentials.serviceuserPassword, env.securityTokenServiceUrl) }
