@@ -4,7 +4,7 @@ import no.nils.wsdl2java.Wsdl2JavaTask
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 group = "no.nav.syfo"
-version = "1.0.37"
+version = "1.0.38-SNAPSHOT"
 
 val artemisVersion = "2.6.4"
 val avroVersion = "1.8.2"
@@ -38,7 +38,7 @@ val javaxAnnotationApiVersion = "1.3.2"
 val jaxwsToolsVersion = "2.3.1"
 val jaxbRuntimeVersion = "2.4.0-b180830.0438"
 val kithHodemeldingVersion = "1.1"
-val smCommonVersion = "1.0.19"
+val smCommonVersion = "1.0.21"
 val kontrollsystemblokk = "1.0.8-SNAPSHOT"
 val javaxJaxwsApiVersion = "2.2.1"
 
