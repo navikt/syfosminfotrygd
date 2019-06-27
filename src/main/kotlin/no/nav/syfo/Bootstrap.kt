@@ -148,7 +148,7 @@ fun main() = runBlocking(coroutineContext) {
         val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
         val infotrygdOppdateringProducer = session.producerForQueue("queue:///${env.infotrygdOppdateringQueue}?targetClient=1")
         val infotrygdSporringProducer = session.producerForQueue("queue:///${env.infotrygdSporringQueue}?targetClient=1")
-        val infotrygdSmIkkeOKQueueBrowser = session.createBrowserForQueue(env.infotrygdSmIkkeOKQueue)
+        val infotrygdSmIkkeOKQueueBrowser = session.createBrowserForQueue("queue:///${env.infotrygdSmIkkeOKQueue}?targetClient=1")
 
         val personV3 = createPort<PersonV3>(env.personV3EndpointURL) {
             port { withSTS(credentials.serviceuserUsername, credentials.serviceuserPassword, env.securityTokenServiceUrl) }
@@ -313,12 +313,7 @@ suspend fun blockingApplicationLogic(
                         keyValue("ruleHits", validationResult.ruleHits.joinToString(", ", "(", ")") { it.ruleName }),
                         keyValue("latency", currentRequestLatency))
 
-                var numMsgs = 0
-                val enumeration = infotrygdSmIkkeOKQueueBrowser.enumeration
-                    while (enumeration.hasMoreElements()) {
-                        numMsgs++
-                    }
-                MESSAGES_ON_INFOTRYGD_SMIKKEOK_QUEUE_COUNTER.inc(numMsgs.toDouble())
+                MESSAGES_ON_INFOTRYGD_SMIKKEOK_QUEUE_COUNTER.inc(getNumerOfMessagesOnQueue(infotrygdSmIkkeOKQueueBrowser))
             } catch (e: IHPR2ServiceHentPersonMedPersonnummerGenericFaultFaultFaultMessage) {
                 val validationResultBehandler = ValidationResult(
                         status = Status.MANUAL_PROCESSING,
@@ -706,3 +701,13 @@ fun HelseOpplysningerArbeidsuforhet.Behandler.formatName(): String =
         } else {
             "${navn.etternavn.toUpperCase()} ${navn.fornavn.toUpperCase()} ${navn.mellomnavn.toUpperCase()}"
         }
+
+fun getNumerOfMessagesOnQueue(infotrygdSmIkkeOKQueueBrowser: QueueBrowser): Double {
+    var numMsgs = 0
+
+    val enumeration = infotrygdSmIkkeOKQueueBrowser.enumeration
+    while (enumeration.hasMoreElements()) {
+        numMsgs++
+    }
+    return numMsgs.toDouble()
+}
