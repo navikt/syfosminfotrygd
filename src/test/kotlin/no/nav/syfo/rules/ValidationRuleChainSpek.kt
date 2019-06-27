@@ -889,8 +889,8 @@ object ValidationRuleChainSpek : Spek({
         it("Should check rule DEGREE_OF_DISABILITY_IS_CHANGED, should trigger rule") {
             val healthInformation = generateSykmelding(perioder = listOf(
                     generatePeriode(
-                            fom = LocalDate.now(),
-                            tom = LocalDate.now().plusDays(1),
+                            fom = LocalDate.of(2019, 6, 27),
+                            tom = LocalDate.of(2019, 6, 28),
                             gradert = Gradert(
                                     reisetilskudd = true,
                                     grad = 90
@@ -902,10 +902,13 @@ object ValidationRuleChainSpek : Spek({
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
                 sykmelding.add(TypeSMinfo().apply {
                     periode = TypeSMinfo.Periode().apply {
-                        arbufoerFOM = LocalDate.now().plusDays(15)
+                        arbufoerFOM = LocalDate.of(2019, 6, 26)
                         ufoeregrad = 80.toBigInteger()
                     }
                 })
+                status = StatusType().apply {
+                    kodeMelding = "01"
+                }
             }
 
             ValidationRuleChain.DEGREE_OF_DISABILITY_IS_CHANGED(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
@@ -914,8 +917,8 @@ object ValidationRuleChainSpek : Spek({
         it("Should check rule DEGREE_OF_DISABILITY_IS_CHANGED, should trigger rule") {
             val healthInformation = generateSykmelding(perioder = listOf(
                     generatePeriode(
-                            fom = LocalDate.now(),
-                            tom = LocalDate.now().plusDays(1)
+                            fom = LocalDate.of(2019, 6, 27),
+                            tom = LocalDate.of(2019, 6, 28)
                     )
             ))
 
@@ -923,10 +926,13 @@ object ValidationRuleChainSpek : Spek({
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
                 sykmelding.add(TypeSMinfo().apply {
                     periode = TypeSMinfo.Periode().apply {
-                        arbufoerFOM = LocalDate.now().plusDays(15)
+                        arbufoerFOM = LocalDate.of(2019, 6, 26)
                         ufoeregrad = 80.toBigInteger()
                     }
                 })
+                status = StatusType().apply {
+                    kodeMelding = "01"
+                }
             }
 
             ValidationRuleChain.DEGREE_OF_DISABILITY_IS_CHANGED(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
@@ -935,8 +941,8 @@ object ValidationRuleChainSpek : Spek({
         it("Should check rule DEGREE_OF_DISABILITY_IS_CHANGED, should NOT trigger rule") {
             val healthInformation = generateSykmelding(perioder = listOf(
                     generatePeriode(
-                            fom = LocalDate.now(),
-                            tom = LocalDate.now().plusDays(1),
+                            fom = LocalDate.of(2019, 6, 27),
+                            tom = LocalDate.of(2019, 6, 28),
                             gradert = Gradert(
                                     reisetilskudd = true,
                                     grad = 90
@@ -948,10 +954,42 @@ object ValidationRuleChainSpek : Spek({
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
                 sykmelding.add(TypeSMinfo().apply {
                     periode = TypeSMinfo.Periode().apply {
-                        arbufoerFOM = LocalDate.now().minusDays(1)
+                        arbufoerFOM = LocalDate.of(2019, 6, 26)
                         ufoeregrad = 90.toBigInteger()
                     }
                 })
+                status = StatusType().apply {
+                    kodeMelding = "01"
+                }
+            }
+
+            ValidationRuleChain.DEGREE_OF_DISABILITY_IS_CHANGED(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+        }
+
+        it("Should check rule DEGREE_OF_DISABILITY_IS_CHANGED, should NOT trigger rule") {
+            val healthInformation = generateSykmelding(perioder = listOf(
+                    generatePeriode(
+                            fom = LocalDate.of(2019, 6, 27),
+                            tom = LocalDate.of(2019, 6, 28),
+                            gradert = Gradert(
+                                    reisetilskudd = true,
+                                    grad = 90
+                            )
+                    )
+            ))
+
+            val infotrygdForespResponse = deafaultInfotrygdForesp()
+            infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
+                sykmelding.add(TypeSMinfo().apply {
+                    periode = TypeSMinfo.Periode().apply {
+                        arbufoerFOM = LocalDate.of(2019, 6, 24)
+                        arbufoerTOM = LocalDate.of(2019, 6, 25)
+                        ufoeregrad = 80.toBigInteger()
+                    }
+                })
+                status = StatusType().apply {
+                    kodeMelding = "01"
+                }
             }
 
             ValidationRuleChain.DEGREE_OF_DISABILITY_IS_CHANGED(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false

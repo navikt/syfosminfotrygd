@@ -2,6 +2,7 @@ package no.nav.syfo.rules
 
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.infotrygd.foresp.TypeSMinfo
+import no.nav.syfo.daysBetween
 import no.nav.syfo.model.Periode
 import no.nav.syfo.model.Status
 import java.time.DayOfWeek
@@ -186,6 +187,8 @@ enum class ValidationRuleChain(
             { (sykmelding, infotrygdForesp) ->
                 infotrygdForesp.sMhistorikk != null &&
                 infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().lastOrNull() != null &&
+                        !sykmelding.perioder.isNullOrEmpty() &&
+                        !forstegangsSykmelding(infotrygdForesp, sykmelding.perioder.sortedSykmeldingPeriodeFOMDate().first()) &&
                     sykmelding.perioder.any { periode ->
                         infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.ufoeregrad != periode.findGrad().toBigInteger()
                     }
@@ -348,6 +351,9 @@ fun List<Periode>.sortedPeriodeTOMDate(): List<LocalDate> =
 fun List<Periode>.sortedPeriodeFOMDate(): List<LocalDate> =
         map { it.fom }.sorted()
 
+fun List<Periode>.sortedSykmeldingPeriodeFOMDate(): List<Periode> =
+        sortedBy { it.fom }
+
 fun List<TypeSMinfo>.sortedSMInfos(): List<TypeSMinfo> =
         sortedBy { it.periode.arbufoerTOM }
 
@@ -367,3 +373,13 @@ fun Periode.findGrad(): Int =
         } else {
             100
         }
+
+fun forstegangsSykmelding(infotrygdForesp: InfotrygdForesp, periode: Periode): Boolean {
+    val typeSMinfo = infotrygdForesp.sMhistorikk?.sykmelding
+            ?.sortedSMInfos()
+            ?.lastOrNull()
+            ?: return true
+
+    return (infotrygdForesp.sMhistorikk.status.kodeMelding == "04" ||
+            (typeSMinfo.periode.arbufoerTOM != null && (typeSMinfo.periode.arbufoerTOM..periode.fom).daysBetween() > 1))
+}

@@ -435,10 +435,6 @@ fun findOperasjonstype(
             ?.lastOrNull()
             ?: return 1
 
-    if (typeSMinfo.periode.arbufoerTOM == null) {
-        log.info("arbufoerTOM is null $logKeys", *logValues)
-    }
-
     return if (itfh.infotrygdForesp.sMhistorikk.status.kodeMelding == "04" ||
             (typeSMinfo.periode.arbufoerTOM != null && (typeSMinfo.periode.arbufoerTOM..periode.periodeFOMDato).daysBetween() > 1)) {
         1
