@@ -252,6 +252,7 @@ suspend fun blockingApplicationLogic(
             )
             val logKeys = logValues.joinToString(prefix = "(", postfix = ")", separator = ",") { "{}" }
             log.info("Received a SM2013 $logKeys", *logValues)
+            MESSAGES_ON_INFOTRYGD_SMIKKEOK_QUEUE_COUNTER.inc(getNumerOfMessagesOnQueue(infotrygdSmIkkeOKQueueBrowser))
             val requestLatency = REQUEST_TIME.startTimer()
 
             val fellesformat = fellesformatUnmarshaller.unmarshal(StringReader(receivedSykmelding.fellesformat)) as XMLEIFellesformat
@@ -312,8 +313,6 @@ suspend fun blockingApplicationLogic(
                         keyValue("status", validationResult.status),
                         keyValue("ruleHits", validationResult.ruleHits.joinToString(", ", "(", ")") { it.ruleName }),
                         keyValue("latency", currentRequestLatency))
-
-                MESSAGES_ON_INFOTRYGD_SMIKKEOK_QUEUE_COUNTER.inc(getNumerOfMessagesOnQueue(infotrygdSmIkkeOKQueueBrowser))
             } catch (e: IHPR2ServiceHentPersonMedPersonnummerGenericFaultFaultFaultMessage) {
                 val validationResultBehandler = ValidationResult(
                         status = Status.MANUAL_PROCESSING,
@@ -703,7 +702,7 @@ fun HelseOpplysningerArbeidsuforhet.Behandler.formatName(): String =
         }
 
 fun getNumerOfMessagesOnQueue(infotrygdSmIkkeOKQueueBrowser: QueueBrowser): Double {
-    var numMsgs = 1
+    var numMsgs = 0
 
     val enumeration = infotrygdSmIkkeOKQueueBrowser.enumeration
     while (enumeration.hasMoreElements()) {
