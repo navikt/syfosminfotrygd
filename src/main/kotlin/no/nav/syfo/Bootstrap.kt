@@ -31,7 +31,6 @@ import no.nav.syfo.helpers.retry
 import no.nav.syfo.kafka.loadBaseConfig
 import no.nav.syfo.kafka.toConsumerConfig
 import no.nav.syfo.kafka.toProducerConfig
-import no.nav.syfo.metrics.MESSAGES_ON_INFOTRYGD_SMIKKEOK_QUEUE_COUNTER
 import no.nav.syfo.metrics.REQUEST_TIME
 import no.nav.syfo.metrics.RULE_HIT_STATUS_COUNTER
 import no.nav.syfo.model.ReceivedSykmelding
@@ -252,7 +251,7 @@ suspend fun blockingApplicationLogic(
             )
             val logKeys = logValues.joinToString(prefix = "(", postfix = ")", separator = ",") { "{}" }
             log.info("Received a SM2013 $logKeys", *logValues)
-            MESSAGES_ON_INFOTRYGD_SMIKKEOK_QUEUE_COUNTER.inc(getNumerOfMessagesOnQueue(infotrygdSmIkkeOKQueueBrowser))
+            // MESSAGES_ON_INFOTRYGD_SMIKKEOK_QUEUE_COUNTER.inc(getNumerOfMessagesOnQueue(infotrygdSmIkkeOKQueueBrowser))
 
             val requestLatency = REQUEST_TIME.startTimer()
 
