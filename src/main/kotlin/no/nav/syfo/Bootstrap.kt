@@ -99,6 +99,7 @@ import java.util.GregorianCalendar
 import java.util.Properties
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import javax.jms.JMSException
 import javax.jms.MessageProducer
 import javax.jms.QueueBrowser
 import javax.jms.Session
@@ -252,7 +253,12 @@ suspend fun blockingApplicationLogic(
             )
             val logKeys = logValues.joinToString(prefix = "(", postfix = ")", separator = ",") { "{}" }
             log.info("Received a SM2013 $logKeys", *logValues)
-            MESSAGES_ON_INFOTRYGD_SMIKKEOK_QUEUE_COUNTER.inc(getNumerOfMessagesOnQueue(infotrygdSmIkkeOKQueueBrowser))
+            try {
+                MESSAGES_ON_INFOTRYGD_SMIKKEOK_QUEUE_COUNTER.inc(getNumerOfMessagesOnQueue(infotrygdSmIkkeOKQueueBrowser))
+            } catch (jmse: JMSException) {
+                log.warn("Fikk ikkje telt antall meldinger på SMIKKEOK køen", jmse)
+            }
+
             val requestLatency = REQUEST_TIME.startTimer()
 
             val fellesformat = fellesformatUnmarshaller.unmarshal(StringReader(receivedSykmelding.fellesformat)) as XMLEIFellesformat
