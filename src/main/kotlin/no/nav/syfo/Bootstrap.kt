@@ -703,7 +703,7 @@ fun HelseOpplysningerArbeidsuforhet.Behandler.formatName(): String =
         }
 
 fun getNumerOfMessagesOnQueue(infotrygdSmIkkeOKQueueBrowser: QueueBrowser): Double {
-    var numMsgs = 0
+    var numMsgs = 1
 
     val enumeration = infotrygdSmIkkeOKQueueBrowser.enumeration
     while (enumeration.hasMoreElements()) {
