@@ -148,7 +148,7 @@ fun main() = runBlocking(coroutineContext) {
         val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
         val infotrygdOppdateringProducer = session.producerForQueue("queue:///${env.infotrygdOppdateringQueue}?targetClient=1")
         val infotrygdSporringProducer = session.producerForQueue("queue:///${env.infotrygdSporringQueue}?targetClient=1")
-        val infotrygdSmIkkeOKQueueBrowser = session.createBrowserForQueue(env.infotrygdSmIkkeOKQueue)
+        val infotrygdSmIkkeOKQueueBrowser = session.createBrowserForQueue("queue:///${env.infotrygdSmIkkeOKQueue}?targetClient=1")
 
         val personV3 = createPort<PersonV3>(env.personV3EndpointURL) {
             port { withSTS(credentials.serviceuserUsername, credentials.serviceuserPassword, env.securityTokenServiceUrl) }
@@ -252,12 +252,7 @@ suspend fun blockingApplicationLogic(
             )
             val logKeys = logValues.joinToString(prefix = "(", postfix = ")", separator = ",") { "{}" }
             log.info("Received a SM2013 $logKeys", *logValues)
-            try {
-                MESSAGES_ON_INFOTRYGD_SMIKKEOK_QUEUE_COUNTER.inc(getNumerOfMessagesOnQueue(infotrygdSmIkkeOKQueueBrowser))
-            } catch (e: Exception) {
-                log.warn("Fikk ikkje telt antall meldinger på SMIKKEOK køen", e)
-            }
-            log.info("i made it passt the try catch")
+            MESSAGES_ON_INFOTRYGD_SMIKKEOK_QUEUE_COUNTER.inc(getNumerOfMessagesOnQueue(infotrygdSmIkkeOKQueueBrowser))
 
             val requestLatency = REQUEST_TIME.startTimer()
 
