@@ -99,7 +99,6 @@ import java.util.GregorianCalendar
 import java.util.Properties
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
-import javax.jms.JMSException
 import javax.jms.MessageProducer
 import javax.jms.QueueBrowser
 import javax.jms.Session
@@ -255,8 +254,8 @@ suspend fun blockingApplicationLogic(
             log.info("Received a SM2013 $logKeys", *logValues)
             try {
                 MESSAGES_ON_INFOTRYGD_SMIKKEOK_QUEUE_COUNTER.inc(getNumerOfMessagesOnQueue(infotrygdSmIkkeOKQueueBrowser))
-            } catch (jmse: JMSException) {
-                log.warn("Fikk ikkje telt antall meldinger på SMIKKEOK køen", jmse)
+            } catch (e: Exception) {
+                log.warn("Fikk ikkje telt antall meldinger på SMIKKEOK køen", e)
             }
 
             val requestLatency = REQUEST_TIME.startTimer()
