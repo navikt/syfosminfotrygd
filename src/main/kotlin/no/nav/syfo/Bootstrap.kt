@@ -257,6 +257,7 @@ suspend fun blockingApplicationLogic(
             } catch (e: Exception) {
                 log.warn("Fikk ikkje telt antall meldinger på SMIKKEOK køen", e)
             }
+            log.info("i made it passt the try catch")
 
             val requestLatency = REQUEST_TIME.startTimer()
 
