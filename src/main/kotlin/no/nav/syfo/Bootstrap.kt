@@ -156,7 +156,6 @@ fun main() = runBlocking(coroutineContext) {
 
         log.info("Antall meldinger på SMIKKEOK kø: $depth")
 
-
         val personV3 = createPort<PersonV3>(env.personV3EndpointURL) {
             port { withSTS(credentials.serviceuserUsername, credentials.serviceuserPassword, env.securityTokenServiceUrl) }
         }
