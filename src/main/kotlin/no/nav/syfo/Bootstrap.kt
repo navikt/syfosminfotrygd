@@ -7,6 +7,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.ibm.mq.MQC
+import com.ibm.mq.MQEnvironment
 import com.ibm.mq.MQQueueManager
 import io.confluent.kafka.serializers.KafkaAvroSerializer
 import io.ktor.application.Application
@@ -147,7 +148,15 @@ fun main() = runBlocking(coroutineContext) {
         val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
         val infotrygdOppdateringProducer = session.producerForQueue("queue:///${env.infotrygdOppdateringQueue}?targetClient=1")
         val infotrygdSporringProducer = session.producerForQueue("queue:///${env.infotrygdSporringQueue}?targetClient=1")
+
+        MQEnvironment.channel = env.mqChannelName
+        MQEnvironment.port = env.mqPort
+        MQEnvironment.hostname = env.mqHostname
+        MQEnvironment.userID = credentials.mqUsername
+        MQEnvironment.password = credentials.mqPassword
+
         val mqQueueManager = MQQueueManager(env.mqGatewayName)
+
         val openOptions = MQC.MQOO_INQUIRE
         val destQueue = mqQueueManager.accessQueue(env.infotrygdSmIkkeOKQueue, openOptions)
         val depth = destQueue.getCurrentDepth()
