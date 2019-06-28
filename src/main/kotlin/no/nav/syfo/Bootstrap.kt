@@ -39,7 +39,6 @@ import no.nav.syfo.model.RuleMetadata
 import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.mq.connectionFactory
-import no.nav.syfo.mq.createBrowserForQueue
 import no.nav.syfo.mq.producerForQueue
 import no.nav.syfo.rules.Rule
 import no.nav.syfo.rules.TssRuleChain
@@ -99,7 +98,6 @@ import java.util.Properties
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import javax.jms.MessageProducer
-import javax.jms.QueueBrowser
 import javax.jms.Session
 import javax.jms.TemporaryQueue
 import javax.jms.TextMessage
@@ -147,7 +145,6 @@ fun main() = runBlocking(coroutineContext) {
         val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
         val infotrygdOppdateringProducer = session.producerForQueue("queue:///${env.infotrygdOppdateringQueue}?targetClient=1")
         val infotrygdSporringProducer = session.producerForQueue("queue:///${env.infotrygdSporringQueue}?targetClient=1")
-        val infotrygdSmIkkeOKQueueBrowser = session.createBrowserForQueue("queue:///${env.infotrygdSmIkkeOKQueue}?targetClient=1")
 
         val personV3 = createPort<PersonV3>(env.personV3EndpointURL) {
             port { withSTS(credentials.serviceuserUsername, credentials.serviceuserPassword, env.securityTokenServiceUrl) }
@@ -176,7 +173,7 @@ fun main() = runBlocking(coroutineContext) {
             port { withSTS(credentials.serviceuserUsername, credentials.serviceuserPassword, env.securityTokenServiceUrl) }
         }
 
-        launchListeners(applicationState, kafkaproducerCreateTask, kafkaproducervalidationResult, infotrygdOppdateringProducer, infotrygdSporringProducer, session, personV3, arbeidsfordelingV1, env, helsepersonellV1, consumerProperties, infotrygdSmIkkeOKQueueBrowser)
+        launchListeners(applicationState, kafkaproducerCreateTask, kafkaproducervalidationResult, infotrygdOppdateringProducer, infotrygdSporringProducer, session, personV3, arbeidsfordelingV1, env, helsepersonellV1, consumerProperties)
 
         Runtime.getRuntime().addShutdownHook(Thread {
             applicationServer.stop(10, 10, TimeUnit.SECONDS)
@@ -205,8 +202,7 @@ suspend fun CoroutineScope.launchListeners(
     arbeidsfordelingV1: ArbeidsfordelingV1,
     env: Environment,
     helsepersonellv1: IHPR2Service,
-    consumerProperties: Properties,
-    infotrygdSmIkkeOKQueueBrowser: QueueBrowser
+    consumerProperties: Properties
 ) {
 
     val recievedSykmeldingListeners = 0.until(env.applicationThreads).map {
@@ -218,7 +214,7 @@ suspend fun CoroutineScope.launchListeners(
         createListener(applicationState) {
             blockingApplicationLogic(applicationState, kafkaconsumerRecievedSykmelding, kafkaproducerCreateTask,
                     kafkaproducervalidationResult, infotrygdOppdateringProducer, infotrygdSporringProducer,
-                    session, personV3, arbeidsfordelingV1, env, helsepersonellv1, infotrygdSmIkkeOKQueueBrowser)
+                    session, personV3, arbeidsfordelingV1, env, helsepersonellv1)
         }
     }.toList()
 
@@ -237,8 +233,7 @@ suspend fun blockingApplicationLogic(
     personV3: PersonV3,
     arbeidsfordelingV1: ArbeidsfordelingV1,
     env: Environment,
-    helsepersonellv1: IHPR2Service,
-    infotrygdSmIkkeOKQueueBrowser: QueueBrowser
+    helsepersonellv1: IHPR2Service
 ) {
     while (applicationState.running) {
         kafkaConsumer.poll(Duration.ofMillis(0)).forEach { consumerRecord ->
@@ -700,13 +695,3 @@ fun HelseOpplysningerArbeidsuforhet.Behandler.formatName(): String =
         } else {
             "${navn.etternavn.toUpperCase()} ${navn.fornavn.toUpperCase()} ${navn.mellomnavn.toUpperCase()}"
         }
-
-fun getNumerOfMessagesOnQueue(infotrygdSmIkkeOKQueueBrowser: QueueBrowser): Double {
-    var numMsgs = 0
-
-    val enumeration = infotrygdSmIkkeOKQueueBrowser.enumeration
-    while (enumeration.hasMoreElements()) {
-        numMsgs++
-    }
-    return numMsgs.toDouble()
-}
