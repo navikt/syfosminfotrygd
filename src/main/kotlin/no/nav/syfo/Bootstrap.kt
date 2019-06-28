@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import com.ibm.mq.MQC
+import com.ibm.mq.MQQueueManager
 import io.confluent.kafka.serializers.KafkaAvroSerializer
 import io.ktor.application.Application
 import io.ktor.routing.routing
@@ -145,6 +147,15 @@ fun main() = runBlocking(coroutineContext) {
         val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
         val infotrygdOppdateringProducer = session.producerForQueue("queue:///${env.infotrygdOppdateringQueue}?targetClient=1")
         val infotrygdSporringProducer = session.producerForQueue("queue:///${env.infotrygdSporringQueue}?targetClient=1")
+        val mqQueueManager = MQQueueManager(env.mqGatewayName)
+        val openOptions = MQC.MQOO_INQUIRE
+        val destQueue = mqQueueManager.accessQueue(env.infotrygdSmIkkeOKQueue, openOptions)
+        val depth = destQueue.getCurrentDepth()
+        destQueue.close()
+        mqQueueManager.disconnect()
+
+        log.info("Antall meldinger på SMIKKEOK kø: $depth")
+
 
         val personV3 = createPort<PersonV3>(env.personV3EndpointURL) {
             port { withSTS(credentials.serviceuserUsername, credentials.serviceuserPassword, env.securityTokenServiceUrl) }
