@@ -157,7 +157,7 @@ fun main() = runBlocking(coroutineContext) {
 
         val mqQueueManager = MQQueueManager(env.mqGatewayName)
 
-        val openOptions = MQC.MQOO_INQUIRE
+        val openOptions = MQC.MQOO_BROWSE + MQC.MQOO_INPUT_SHARED
         val destQueue = mqQueueManager.accessQueue(env.infotrygdSmIkkeOKQueue, openOptions)
         val depth = destQueue.getCurrentDepth()
         log.info("Antall meldinger på SMIKKEOK kø: $depth")
