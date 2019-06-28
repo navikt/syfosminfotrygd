@@ -151,10 +151,9 @@ fun main() = runBlocking(coroutineContext) {
         val openOptions = MQC.MQOO_INQUIRE
         val destQueue = mqQueueManager.accessQueue(env.infotrygdSmIkkeOKQueue, openOptions)
         val depth = destQueue.getCurrentDepth()
+        log.info("Antall meldinger på SMIKKEOK kø: $depth")
         destQueue.close()
         mqQueueManager.disconnect()
-
-        log.info("Antall meldinger på SMIKKEOK kø: $depth")
 
         val personV3 = createPort<PersonV3>(env.personV3EndpointURL) {
             port { withSTS(credentials.serviceuserUsername, credentials.serviceuserPassword, env.securityTokenServiceUrl) }
