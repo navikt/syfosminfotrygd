@@ -6,6 +6,10 @@ import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import com.ibm.mq.MQC
+import com.ibm.mq.MQEnvironment
+import com.ibm.mq.MQQueue
+import com.ibm.mq.MQQueueManager
 import io.confluent.kafka.serializers.KafkaAvroSerializer
 import io.ktor.application.Application
 import io.ktor.routing.routing
@@ -31,6 +35,7 @@ import no.nav.syfo.helpers.retry
 import no.nav.syfo.kafka.loadBaseConfig
 import no.nav.syfo.kafka.toConsumerConfig
 import no.nav.syfo.kafka.toProducerConfig
+import no.nav.syfo.metrics.MESSAGES_ON_INFOTRYGD_SMIKKEOK_QUEUE_COUNTER
 import no.nav.syfo.metrics.REQUEST_TIME
 import no.nav.syfo.metrics.RULE_HIT_STATUS_COUNTER
 import no.nav.syfo.model.ReceivedSykmelding
@@ -146,6 +151,15 @@ fun main() = runBlocking(coroutineContext) {
         val infotrygdOppdateringProducer = session.producerForQueue("queue:///${env.infotrygdOppdateringQueue}?targetClient=1")
         val infotrygdSporringProducer = session.producerForQueue("queue:///${env.infotrygdSporringQueue}?targetClient=1")
 
+        MQEnvironment.channel = env.mqChannelName
+        MQEnvironment.port = env.mqPort
+        MQEnvironment.hostname = env.mqHostname
+        MQEnvironment.userID = credentials.mqUsername
+        MQEnvironment.password = credentials.mqPassword
+        val mqQueueManager = MQQueueManager(env.mqGatewayName)
+        val openOptions = MQC.MQOO_INQUIRE + MQC.MQOO_BROWSE + MQC.MQOO_FAIL_IF_QUIESCING + MQC.MQOO_INPUT_SHARED
+        val smIkkeOkQueue = mqQueueManager.accessQueue(env.infotrygdSmIkkeOKQueue, openOptions)
+
         val personV3 = createPort<PersonV3>(env.personV3EndpointURL) {
             port { withSTS(credentials.serviceuserUsername, credentials.serviceuserPassword, env.securityTokenServiceUrl) }
         }
@@ -173,9 +187,11 @@ fun main() = runBlocking(coroutineContext) {
             port { withSTS(credentials.serviceuserUsername, credentials.serviceuserPassword, env.securityTokenServiceUrl) }
         }
 
-        launchListeners(applicationState, kafkaproducerCreateTask, kafkaproducervalidationResult, infotrygdOppdateringProducer, infotrygdSporringProducer, session, personV3, arbeidsfordelingV1, env, helsepersonellV1, consumerProperties)
+        launchListeners(applicationState, kafkaproducerCreateTask, kafkaproducervalidationResult, infotrygdOppdateringProducer, infotrygdSporringProducer, session, personV3, arbeidsfordelingV1, env, helsepersonellV1, consumerProperties, smIkkeOkQueue)
 
         Runtime.getRuntime().addShutdownHook(Thread {
+            smIkkeOkQueue.close()
+            mqQueueManager.disconnect()
             applicationServer.stop(10, 10, TimeUnit.SECONDS)
         })
     }
@@ -202,7 +218,8 @@ suspend fun CoroutineScope.launchListeners(
     arbeidsfordelingV1: ArbeidsfordelingV1,
     env: Environment,
     helsepersonellv1: IHPR2Service,
-    consumerProperties: Properties
+    consumerProperties: Properties,
+    smIkkeOkQueue: MQQueue
 ) {
 
     val recievedSykmeldingListeners = 0.until(env.applicationThreads).map {
@@ -214,7 +231,7 @@ suspend fun CoroutineScope.launchListeners(
         createListener(applicationState) {
             blockingApplicationLogic(applicationState, kafkaconsumerRecievedSykmelding, kafkaproducerCreateTask,
                     kafkaproducervalidationResult, infotrygdOppdateringProducer, infotrygdSporringProducer,
-                    session, personV3, arbeidsfordelingV1, env, helsepersonellv1)
+                    session, personV3, arbeidsfordelingV1, env, helsepersonellv1, smIkkeOkQueue)
         }
     }.toList()
 
@@ -233,7 +250,8 @@ suspend fun blockingApplicationLogic(
     personV3: PersonV3,
     arbeidsfordelingV1: ArbeidsfordelingV1,
     env: Environment,
-    helsepersonellv1: IHPR2Service
+    helsepersonellv1: IHPR2Service,
+    smIkkeOkQueue: MQQueue
 ) {
     while (applicationState.running) {
         kafkaConsumer.poll(Duration.ofMillis(0)).forEach { consumerRecord ->
@@ -246,7 +264,9 @@ suspend fun blockingApplicationLogic(
             )
             val logKeys = logValues.joinToString(prefix = "(", postfix = ")", separator = ",") { "{}" }
             log.info("Received a SM2013 $logKeys", *logValues)
-            // MESSAGES_ON_INFOTRYGD_SMIKKEOK_QUEUE_COUNTER.inc(getNumerOfMessagesOnQueue(infotrygdSmIkkeOKQueueBrowser))
+
+            val smIkkeOkCurrentDepth = smIkkeOkQueue.currentDepth.toDouble()
+            MESSAGES_ON_INFOTRYGD_SMIKKEOK_QUEUE_COUNTER.inc(smIkkeOkCurrentDepth)
 
             val requestLatency = REQUEST_TIME.startTimer()
 
