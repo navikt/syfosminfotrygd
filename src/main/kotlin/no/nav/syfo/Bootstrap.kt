@@ -52,11 +52,7 @@ import no.nav.syfo.rules.executeFlow
 import no.nav.syfo.rules.sortedSMInfos
 import no.nav.syfo.sak.avro.PrioritetType
 import no.nav.syfo.sak.avro.ProduceTask
-import no.nav.syfo.util.JacksonKafkaSerializer
-import no.nav.syfo.util.fellesformatUnmarshaller
-import no.nav.syfo.util.infotrygdSporringMarshaller
-import no.nav.syfo.util.infotrygdSporringUnmarshaller
-import no.nav.syfo.util.xmlObjectWriter
+import no.nav.syfo.util.*
 import no.nav.syfo.ws.createPort
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.binding.ArbeidsfordelingV1
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.ArbeidsfordelingKriterier
@@ -86,6 +82,7 @@ import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.StringDeserializer
+import org.codehaus.stax2.XMLOutputFactory2
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.IOException
@@ -405,6 +402,7 @@ fun sendInfotrygdOppdateringMq(
     logValues: Array<StructuredArgument>
 ) = producer.send(session.createTextMessage().apply {
     log.info("Message has oprasjonstype: {}  $logKeys", fellesformat.get<KontrollsystemBlokkType>().infotrygdBlokk.first().operasjonstype, *logValues)
+    xmlObjectWriter.factory.xmlOutputFactory.setProperty(XMLOutputFactory2.P_TEXT_ESCAPER, CustomXmlEscapingWriterFactory())
     text = xmlObjectWriter.writeValueAsString(fellesformat)
     log.info("Message is sendt to infotrygd $logKeys", *logValues)
 })
