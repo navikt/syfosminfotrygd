@@ -1,13 +1,12 @@
 package no.nav.syfo.util
 
-import org.apache.commons.lang.StringEscapeUtils
 import org.codehaus.stax2.io.EscapingWriterFactory
 import java.io.IOException
 import java.io.OutputStream
 import java.io.Writer
 
-class CustomXmlEscapingWriterFactory : EscapingWriterFactory {
-    override fun createEscapingWriterFor(out: Writer, enc: String): Writer {
+object CustomXmlEscapingWriterFactory : EscapingWriterFactory {
+    override fun createEscapingWriterFor(writer: Writer, enc: String): Writer {
         return object : Writer() {
             @Throws(IOException::class)
             override fun write(cbuf: CharArray, off: Int, len: Int) {
@@ -15,18 +14,20 @@ class CustomXmlEscapingWriterFactory : EscapingWriterFactory {
                 for (i in off until len) {
                     value += cbuf[i]
                 }
-                val escapedStr = StringEscapeUtils.escapeXml(value)
-                out.write(escapedStr)
+                val escapetString = value
+                    .replace(">", "&gt;")
+                    .replace("<", "&lt;")
+                writer.write(escapetString)
             }
 
             @Throws(IOException::class)
             override fun flush() {
-                out.flush()
+                writer.flush()
             }
 
             @Throws(IOException::class)
             override fun close() {
-                out.close()
+                writer.close()
             }
         }
     }
@@ -34,5 +35,4 @@ class CustomXmlEscapingWriterFactory : EscapingWriterFactory {
     override fun createEscapingWriterFor(out: OutputStream, enc: String): Writer {
         throw IllegalArgumentException("not supported")
     }
-
 }

@@ -18,6 +18,7 @@ import no.nav.syfo.XMLDateAdapter
 import no.nav.syfo.XMLDateTimeAdapter
 import no.trygdeetaten.xml.eiff._1.XMLEIFellesformat
 import no.trygdeetaten.xml.eiff._1.XMLMottakenhetBlokk
+import org.codehaus.stax2.XMLOutputFactory2
 import javax.xml.bind.JAXBContext
 import javax.xml.bind.Marshaller
 import javax.xml.bind.Unmarshaller
@@ -39,10 +40,14 @@ val fellesformatMarshaller: Marshaller = fellesformatJaxBContext.createMarshalle
             setProperty(Marshaller.JAXB_ENCODING, "ISO-8859-1")
 }
 
-val xmlObjectWriter: XmlMapper = XmlMapper(JacksonXmlModule().apply {
+val xmlObjectWriter: XmlMapper = (XmlMapper(JacksonXmlModule().apply {
     setDefaultUseWrapper(false) })
         .configure(ToXmlGenerator.Feature.WRITE_XML_DECLARATION, true)
         .registerModule(JaxbAnnotationModule())
         .registerKotlinModule()
         .registerModule(JavaTimeModule())
-        .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false) as XmlMapper
+        .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false) as XmlMapper)
+    .apply {
+        factory.xmlOutputFactory.setProperty(XMLOutputFactory2.P_TEXT_ESCAPER, CustomXmlEscapingWriterFactory)
+        factory.xmlOutputFactory.setProperty(XMLOutputFactory2.P_ATTR_VALUE_ESCAPER, CustomXmlEscapingWriterFactory)
+    }
