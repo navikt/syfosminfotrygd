@@ -52,7 +52,11 @@ import no.nav.syfo.rules.executeFlow
 import no.nav.syfo.rules.sortedSMInfos
 import no.nav.syfo.sak.avro.PrioritetType
 import no.nav.syfo.sak.avro.ProduceTask
-import no.nav.syfo.util.*
+import no.nav.syfo.util.JacksonKafkaSerializer
+import no.nav.syfo.util.fellesformatUnmarshaller
+import no.nav.syfo.util.infotrygdSporringMarshaller
+import no.nav.syfo.util.infotrygdSporringUnmarshaller
+import no.nav.syfo.util.xmlObjectWriter
 import no.nav.syfo.ws.createPort
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.binding.ArbeidsfordelingV1
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.ArbeidsfordelingKriterier
