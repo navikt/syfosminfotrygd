@@ -9,10 +9,10 @@ version = "1.0.38-SNAPSHOT"
 val artemisVersion = "2.6.4"
 val avroVersion = "1.8.2"
 val confluentVersion = "5.0.0"
-val syfooppgaveSchemasVersion = "1.2-SNAPSHOT"
+val syfooppgaveSchemasVersion = "c8be932543e7356a34690ce7979d494c5d8516d8"
 val coroutinesVersion = "1.1.1"
+val infotrygdForespVersion = "2019.07.29-02-53-86b22e73f7843e422ee500b486dac387a582f2d1"
 val fellesformatVersion = "1.0"
-val infotrygdForespVersion = "1.0.1-SNAPSHOT"
 val ibmMqVersion = "9.1.0.0"
 val javaxActivationVersion = "1.1.1"
 val jacksonVersion = "2.9.7"
@@ -22,25 +22,26 @@ val jedisVersion = "2.9.0"
 val kafkaVersion = "2.0.0"
 val kafkaEmbeddedVersion = "2.1.1"
 val kluentVersion = "1.39"
-val ktorVersion = "1.2.0"
+val ktorVersion = "1.2.2"
 val logbackVersion = "1.2.3"
 val logstashEncoderVersion = "5.1"
 val prometheusVersion = "0.5.0"
 val spekVersion = "2.0.2"
-val sykmeldingVersion = "1.1-SNAPSHOT"
+val sykmeldingVersion = "2019.07.29-02-53-86b22e73f7843e422ee500b486dac387a582f2d1"
 val cxfVersion = "3.2.7"
 val jaxwsApiVersion = "2.3.1"
 val commonsTextVersion = "1.4"
-val navArbeidsfordelingv1Version = "1.1.0"
-val navPersonv3Version = "3.2.0"
+val navArbeidsfordelingv1Version = "1.2019.07.11-06.47-b55f47790a9d"
+val navPersonv3Version = "1.2019.07.11-06.47-b55f47790a9d"
 val jaxbBasicAntVersion = "1.11.1"
 val javaxAnnotationApiVersion = "1.3.2"
 val jaxwsToolsVersion = "2.3.1"
 val jaxbRuntimeVersion = "2.4.0-b180830.0438"
 val kithHodemeldingVersion = "1.1"
-val smCommonVersion = "1.0.21"
-val kontrollsystemblokk = "1.0.8-SNAPSHOT"
+val smCommonVersion = "1.0.22"
+val kontrollsystemblokk = "2019.07.29-02-53-86b22e73f7843e422ee500b486dac387a582f2d1"
 val javaxJaxwsApiVersion = "2.2.1"
+val jaxbTimeAdaptersVersion = "1.1.3"
 
 plugins {
     java
@@ -64,14 +65,13 @@ buildscript {
 }
 
 repositories {
-    maven (url= "https://repo.adeo.no/repository/maven-snapshots/")
-    maven (url= "https://repo.adeo.no/repository/maven-releases/")
+    mavenCentral()
+    jcenter()
     maven (url= "https://dl.bintray.com/kotlin/ktor")
     maven (url= "https://dl.bintray.com/spekframework/spek-dev")
     maven (url= "http://packages.confluent.io/maven/")
     maven (url= "https://kotlin.bintray.com/kotlinx")
-    mavenCentral()
-    jcenter()
+    maven (url = "https://oss.sonatype.org/content/groups/staging/")
 }
 
 val navWsdl= configurations.create("navWsdl") {
@@ -115,9 +115,9 @@ dependencies {
     implementation ("no.nav.helse.xml:sm2013:$sykmeldingVersion")
     implementation ("no.nav.syfo.tjenester:fellesformat:$fellesformatVersion")
     implementation ("no.nav.helse.xml:kontrollsystemblokk:$kontrollsystemblokk")
-    implementation("no.nav.tjenester:nav-arbeidsfordeling-v1-tjenestespesifikasjon:$navArbeidsfordelingv1Version:jaxws")
-    implementation ("no.nav.syfo:syfooppgave-schemas:$syfooppgaveSchemasVersion")
-    implementation ("no.nav.tjenester:nav-person-v3-tjenestespesifikasjon:$navPersonv3Version")
+    implementation ("no.nav.tjenestespesifikasjoner:arbeidsfordeling-v1-tjenestespesifikasjon:$navArbeidsfordelingv1Version")
+    implementation ("no.nav.syfo.schemas:syfosmoppgave-avro:$syfooppgaveSchemasVersion")
+    implementation ("no.nav.tjenestespesifikasjoner:person-v3-tjenestespesifikasjon:$navPersonv3Version")
     implementation ("no.nav.helse.xml:infotrygd-foresp:$infotrygdForespVersion")
     implementation ("no.nav.syfo.tjenester:kith-hodemelding:$kithHodemeldingVersion")
 
@@ -134,6 +134,7 @@ dependencies {
     implementation ("org.apache.cxf:cxf-rt-transports-http:$cxfVersion")
     implementation ("org.apache.cxf:cxf-rt-ws-security:$cxfVersion")
 
+    implementation ("com.migesok:jaxb-java-time-adapters:$jaxbTimeAdaptersVersion")
     implementation ("javax.xml.ws:jaxws-api:$jaxwsApiVersion")
     implementation ("javax.annotation:javax.annotation-api:$javaxAnnotationApiVersion")
     implementation ("javax.xml.bind:jaxb-api:$jaxbApiVersion")
