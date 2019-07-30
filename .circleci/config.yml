@@ -11,9 +11,9 @@ jobs:
       - setup_remote_docker
       - barkendeploy/init
       - barkendeploy/gradle-cache-restore
-#      - run:
-#          name: Run tests
-#          command: ./gradlew test
+      - run:
+          name: Run tests
+          command: ./gradlew test
       - run:
           name: Build jar file
           command: ./gradlew shadowJar -x test
