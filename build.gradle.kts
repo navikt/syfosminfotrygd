@@ -4,7 +4,7 @@ import no.nils.wsdl2java.Wsdl2JavaTask
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 group = "no.nav.syfo"
-version = "1.0.38-SNAPSHOT"
+version = "1.0.39"
 
 val artemisVersion = "2.6.4"
 val avroVersion = "1.8.2"
