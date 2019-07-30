@@ -1,11 +1,12 @@
 package no.nav.syfo
 
 import net.logstash.logback.argument.StructuredArguments.keyValue
-import no.kith.xmlstds.msghead._2006_05_24.XMLDocument
-import no.kith.xmlstds.msghead._2006_05_24.XMLMsgHead
-import no.kith.xmlstds.msghead._2006_05_24.XMLRefDoc
+import no.nav.helse.eiFellesformat.XMLEIFellesformat
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.infotrygd.foresp.TypeSMinfo
+import no.nav.helse.msgHead.XMLDocument
+import no.nav.helse.msgHead.XMLMsgHead
+import no.nav.helse.msgHead.XMLRefDoc
 import no.nav.helse.sm2013.ArsakType
 import no.nav.helse.sm2013.CV
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
@@ -14,7 +15,6 @@ import no.nav.helse.sm2013.KontrollSystemBlokk
 import no.nav.syfo.util.fellesformatMarshaller
 import no.nav.syfo.util.xmlObjectWriter
 import no.nav.syfo.util.fellesformatUnmarshaller
-import no.trygdeetaten.xml.eiff._1.XMLEIFellesformat
 import org.amshove.kluent.shouldBeFalse
 import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
