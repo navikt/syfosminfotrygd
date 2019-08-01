@@ -301,6 +301,8 @@ suspend fun blockingApplicationLogic(
             kafkaproducervalidationResult.send(ProducerRecord(env.sm2013BehandlingsUtfallToipic, receivedSykmelding.sykmelding.id, validationResult))
             log.info("Validation results send to kafka {} $logKeys", env.sm2013BehandlingsUtfallToipic, *logValues)
 
+            val tkNummer = findTknummer(receivedSykmelding, personV3, arbeidsfordelingV1, logKeys, logValues)
+
             try {
                 val doctor = fetchDoctor(helsepersonellv1, receivedSykmelding.personNrLege)
 
@@ -308,7 +310,7 @@ suspend fun blockingApplicationLogic(
 
                 when {
                     results.any { rule -> rule.status == Status.MANUAL_PROCESSING } ->
-                        produceManualTask(kafkaproducerCreateTask, receivedSykmelding, validationResult, personV3, arbeidsfordelingV1, logKeys, logValues)
+                        produceManualTask(kafkaproducerCreateTask, receivedSykmelding, validationResult, tkNummer, logKeys, logValues)
                     else -> sendInfotrygdOppdatering(
                             infotrygdOppdateringProducer,
                             session,
@@ -319,7 +321,8 @@ suspend fun blockingApplicationLogic(
                             receivedSykmelding.personNrPasient,
                             receivedSykmelding.sykmelding.signaturDato.toLocalDate(),
                             behandlerKode,
-                            receivedSykmelding.tssid)
+                            receivedSykmelding.tssid,
+                            tkNummer)
                 }
                 val currentRequestLatency = requestLatency.observeDuration()
 
@@ -338,7 +341,7 @@ suspend fun blockingApplicationLogic(
                 )
                 RULE_HIT_STATUS_COUNTER.labels(validationResultBehandler.status.name).inc()
                 log.warn("Behandler er ikke register i HPR")
-                produceManualTask(kafkaproducerCreateTask, receivedSykmelding, validationResultBehandler, personV3, arbeidsfordelingV1, logKeys, logValues)
+                produceManualTask(kafkaproducerCreateTask, receivedSykmelding, validationResultBehandler, tkNummer, logKeys, logValues)
             }
         }
         delay(100)
@@ -388,12 +391,13 @@ fun sendInfotrygdOppdatering(
     personNrPasient: String,
     signaturDato: LocalDate,
     behandlerKode: String,
-    tssid: String?
+    tssid: String?,
+    tknummer: String
 ) {
     val perioder = itfh.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
-    sendInfotrygdOppdateringMq(producer, session, createInfotrygdBlokk(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, logKeys, logValues), logKeys, logValues)
+    sendInfotrygdOppdateringMq(producer, session, createInfotrygdBlokk(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, logKeys, logValues, tknummer), logKeys, logValues)
     perioder.drop(1).forEach { periode ->
-        sendInfotrygdOppdateringMq(producer, session, createInfotrygdBlokk(marshalledFellesformat, itfh, periode, personNrPasient, signaturDato, behandlerKode, tssid, logKeys, logValues, 2), logKeys, logValues)
+        sendInfotrygdOppdateringMq(producer, session, createInfotrygdBlokk(marshalledFellesformat, itfh, periode, personNrPasient, signaturDato, behandlerKode, tssid, logKeys, logValues, tknummer, 2), logKeys, logValues)
     }
 }
 
@@ -472,14 +476,24 @@ fun findOperasjonstype(
     }
 }
 
-suspend fun produceManualTask(kafkaProducer: KafkaProducer<String, ProduceTask>, receivedSykmelding: ReceivedSykmelding, validationResult: ValidationResult, personV3: PersonV3, arbeidsfordelingV1: ArbeidsfordelingV1, logKeys: String, logValues: Array<StructuredArgument>) {
+fun produceManualTask(kafkaProducer: KafkaProducer<String, ProduceTask>, receivedSykmelding: ReceivedSykmelding, validationResult: ValidationResult, tkNummer: String, logKeys: String, logValues: Array<StructuredArgument>) {
+    createTask(kafkaProducer, receivedSykmelding, validationResult, tkNummer, logKeys, logValues)
+}
+
+suspend fun findTknummer(
+    receivedSykmelding: ReceivedSykmelding,
+    personV3: PersonV3,
+    arbeidsfordelingV1: ArbeidsfordelingV1,
+    logKeys: String,
+    logValues: Array<StructuredArgument>
+): String {
     val geografiskTilknytning = fetchGeografiskTilknytningAsync(personV3, receivedSykmelding)
     val patientDiskresjonsKode = fetchDiskresjonsKode(personV3, receivedSykmelding)
     val finnBehandlendeEnhetListeResponse = fetchBehandlendeEnhet(arbeidsfordelingV1, geografiskTilknytning.geografiskTilknytning, patientDiskresjonsKode)
     if (finnBehandlendeEnhetListeResponse?.behandlendeEnhetListe?.firstOrNull()?.enhetId == null) {
         log.error("arbeidsfordeling fant ingen nav-enheter $logKeys", *logValues)
     }
-    createTask(kafkaProducer, receivedSykmelding, validationResult, finnBehandlendeEnhetListeResponse?.behandlendeEnhetListe?.firstOrNull()?.enhetId ?: "0393", logKeys, logValues)
+    return finnBehandlendeEnhetListeResponse?.behandlendeEnhetListe?.firstOrNull()?.enhetId ?: "0393"
 }
 
 fun createTask(kafkaProducer: KafkaProducer<String, ProduceTask>, receivedSykmelding: ReceivedSykmelding, validationResult: ValidationResult, navKontor: String, logKeys: String, logValues: Array<StructuredArgument>) {
@@ -615,12 +629,13 @@ fun createInfotrygdBlokk(
     tssid: String?,
     logKeys: String,
     logValues: Array<StructuredArgument>,
+    tknummer: String,
     operasjonstypeKode: Int = findOperasjonstype(periode, itfh, logKeys, logValues)
 ) = unmarshal<XMLEIFellesformat>(marshalledFellesformat).apply {
     any.add(KontrollSystemBlokk().apply {
         infotrygdBlokk.add(KontrollsystemBlokkType.InfotrygdBlokk().apply {
             fodselsnummer = personNrPasient
-            tkNummer = ""
+            tkNummer = tknummer
 
             operasjonstype = operasjonstypeKode.toBigInteger()
 
