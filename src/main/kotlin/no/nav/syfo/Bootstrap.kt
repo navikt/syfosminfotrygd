@@ -297,7 +297,7 @@ suspend fun onUpdateInfotrygd(
     val loggingMeta = LoggingMeta(logValues)
     wrapExceptions(loggingMeta) {
 
-        log.info("Received a SM2013 $loggingMeta", loggingMeta.logValues)
+        log.info("Received a SM2013 $loggingMeta", *loggingMeta.logValues)
 
         val smIkkeOkCurrentDepth = smIkkeOkQueue.currentDepth.toDouble()
         MESSAGES_ON_INFOTRYGD_SMIKKEOK_QUEUE_COUNTER.inc(smIkkeOkCurrentDepth)
@@ -309,7 +309,7 @@ suspend fun onUpdateInfotrygd(
 
         val infotrygdForespResponse = fetchInfotrygdForesp(receivedSykmelding, healthInformation, session, infotrygdSporringProducer)
 
-        log.info("Going through rules $loggingMeta", loggingMeta.logValues)
+        log.info("Going through rules $loggingMeta", *loggingMeta.logValues)
 
         val validationRuleResults = ValidationRuleChain.values().executeFlow(
                 receivedSykmelding.sykmelding,
@@ -327,7 +327,7 @@ suspend fun onUpdateInfotrygd(
                 ))
 
         val results = listOf(validationRuleResults, tssRuleResults).flatten()
-        log.info("Rules hit {}, $loggingMeta", results.map { rule -> rule.name }, loggingMeta.logValues)
+        log.info("Rules hit {}, $loggingMeta", results.map { rule -> rule.name }, *loggingMeta.logValues)
 
         val validationResult = validationResult(results)
         RULE_HIT_STATUS_COUNTER.labels(validationResult.status.name).inc()
@@ -360,7 +360,7 @@ suspend fun onUpdateInfotrygd(
             val currentRequestLatency = requestLatency.observeDuration()
 
             log.info("Message($loggingMeta) got outcome {}, {}, processing took {}s",
-                    loggingMeta.logValues,
+                    *loggingMeta.logValues,
                     keyValue("status", validationResult.status),
                     keyValue("ruleHits", validationResult.ruleHits.joinToString(", ", "(", ")") { it.ruleName }),
                     keyValue("latency", currentRequestLatency))
@@ -525,7 +525,7 @@ suspend fun findNavkontorNr(
     val patientDiskresjonsKode = fetchDiskresjonsKode(personV3, receivedSykmelding)
     val finnBehandlendeEnhetListeResponse = fetchBehandlendeEnhet(arbeidsfordelingV1, geografiskTilknytning.geografiskTilknytning, patientDiskresjonsKode)
     if (finnBehandlendeEnhetListeResponse?.behandlendeEnhetListe?.firstOrNull()?.enhetId == null) {
-        log.error("arbeidsfordeling fant ingen nav-enheter $loggingMeta", loggingMeta.logValues)
+        log.error("arbeidsfordeling fant ingen nav-enheter $loggingMeta", *loggingMeta.logValues)
     }
     return finnBehandlendeEnhetListeResponse?.behandlendeEnhetListe?.firstOrNull()?.enhetId ?: NAV_OPPFOLGING_UTLAND_KONTOR_NR
 }
