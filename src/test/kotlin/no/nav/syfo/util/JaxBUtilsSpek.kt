@@ -1,11 +1,11 @@
 package no.nav.syfo.util
 
+import java.io.StringReader
 import no.nav.helse.eiFellesformat.XMLEIFellesformat
 import no.nav.syfo.getFileAsString
 import org.amshove.kluent.shouldBeTrue
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.io.StringReader
 
 object JaxBUtilsSpek : Spek({
 

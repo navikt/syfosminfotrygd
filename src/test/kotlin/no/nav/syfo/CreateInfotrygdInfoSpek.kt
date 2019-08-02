@@ -1,5 +1,8 @@
 package no.nav.syfo
 
+import java.io.StringReader
+import java.time.LocalDate
+import java.time.LocalDateTime
 import net.logstash.logback.argument.StructuredArguments.keyValue
 import no.nav.helse.eiFellesformat.XMLEIFellesformat
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
@@ -13,15 +16,12 @@ import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.helse.sm2013.Ident
 import no.nav.helse.sm2013.KontrollSystemBlokk
 import no.nav.syfo.util.fellesformatMarshaller
-import no.nav.syfo.util.xmlObjectWriter
 import no.nav.syfo.util.fellesformatUnmarshaller
+import no.nav.syfo.util.xmlObjectWriter
 import org.amshove.kluent.shouldBeFalse
 import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.io.StringReader
-import java.time.LocalDate
-import java.time.LocalDateTime
 
 object CreateInfotrygdInfoSpek : Spek({
 

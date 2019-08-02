@@ -17,12 +17,33 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.util.KtorExperimentalAPI
 import io.prometheus.client.hotspot.DefaultExports
+import java.io.IOException
+import java.io.StringReader
+import java.io.StringWriter
+import java.lang.IllegalStateException
+import java.nio.file.Paths
+import java.time.Duration
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
+import java.util.GregorianCalendar
+import java.util.Properties
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import javax.jms.MessageProducer
+import javax.jms.Session
+import javax.jms.TemporaryQueue
+import javax.jms.TextMessage
+import javax.xml.bind.Marshaller
+import javax.xml.datatype.DatatypeFactory
+import javax.xml.stream.XMLInputFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import net.logstash.logback.argument.StructuredArgument
 import net.logstash.logback.argument.StructuredArguments.keyValue
 import no.nav.helse.eiFellesformat.XMLEIFellesformat
@@ -62,6 +83,7 @@ import no.nav.syfo.ws.createPort
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.binding.ArbeidsfordelingV1
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.ArbeidsfordelingKriterier
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.Diskresjonskoder
+import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.Geografi
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.Oppgavetyper
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.Tema
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.meldinger.FinnBehandlendeEnhetListeRequest
@@ -88,27 +110,6 @@ import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.io.IOException
-import java.io.StringReader
-import java.io.StringWriter
-import java.lang.IllegalStateException
-import java.nio.file.Paths
-import java.time.Duration
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
-import java.util.GregorianCalendar
-import java.util.Properties
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
-import javax.jms.MessageProducer
-import javax.jms.Session
-import javax.jms.TemporaryQueue
-import javax.jms.TextMessage
-import javax.xml.bind.Marshaller
-import javax.xml.datatype.DatatypeFactory
-import javax.xml.stream.XMLInputFactory
 
 data class ApplicationState(var running: Boolean = true, var initialized: Boolean = false)
 
@@ -301,7 +302,7 @@ suspend fun blockingApplicationLogic(
             kafkaproducervalidationResult.send(ProducerRecord(env.sm2013BehandlingsUtfallToipic, receivedSykmelding.sykmelding.id, validationResult))
             log.info("Validation results send to kafka {} $logKeys", env.sm2013BehandlingsUtfallToipic, *logValues)
 
-            val tkNummer = findTknummer(receivedSykmelding, personV3, arbeidsfordelingV1, logKeys, logValues)
+            val navKontorNr = findNavkontorNr(receivedSykmelding, personV3, arbeidsfordelingV1, logKeys, logValues)
 
             try {
                 val doctor = fetchDoctor(helsepersonellv1, receivedSykmelding.personNrLege)
@@ -310,7 +311,7 @@ suspend fun blockingApplicationLogic(
 
                 when {
                     results.any { rule -> rule.status == Status.MANUAL_PROCESSING } ->
-                        produceManualTask(kafkaproducerCreateTask, receivedSykmelding, validationResult, tkNummer, logKeys, logValues)
+                        produceManualTask(kafkaproducerCreateTask, receivedSykmelding, validationResult, navKontorNr, logKeys, logValues)
                     else -> sendInfotrygdOppdatering(
                             infotrygdOppdateringProducer,
                             session,
@@ -322,7 +323,7 @@ suspend fun blockingApplicationLogic(
                             receivedSykmelding.sykmelding.signaturDato.toLocalDate(),
                             behandlerKode,
                             receivedSykmelding.tssid,
-                            tkNummer)
+                            navKontorNr)
                 }
                 val currentRequestLatency = requestLatency.observeDuration()
 
@@ -341,7 +342,7 @@ suspend fun blockingApplicationLogic(
                 )
                 RULE_HIT_STATUS_COUNTER.labels(validationResultBehandler.status.name).inc()
                 log.warn("Behandler er ikke register i HPR")
-                produceManualTask(kafkaproducerCreateTask, receivedSykmelding, validationResultBehandler, tkNummer, logKeys, logValues)
+                produceManualTask(kafkaproducerCreateTask, receivedSykmelding, validationResultBehandler, navKontorNr, logKeys, logValues)
             }
         }
         delay(100)
@@ -476,11 +477,11 @@ fun findOperasjonstype(
     }
 }
 
-fun produceManualTask(kafkaProducer: KafkaProducer<String, ProduceTask>, receivedSykmelding: ReceivedSykmelding, validationResult: ValidationResult, tkNummer: String, logKeys: String, logValues: Array<StructuredArgument>) {
-    createTask(kafkaProducer, receivedSykmelding, validationResult, tkNummer, logKeys, logValues)
+fun produceManualTask(kafkaProducer: KafkaProducer<String, ProduceTask>, receivedSykmelding: ReceivedSykmelding, validationResult: ValidationResult, navKontorNr: String, logKeys: String, logValues: Array<StructuredArgument>) {
+    createTask(kafkaProducer, receivedSykmelding, validationResult, navKontorNr, logKeys, logValues)
 }
 
-suspend fun findTknummer(
+suspend fun findNavkontorNr(
     receivedSykmelding: ReceivedSykmelding,
     personV3: PersonV3,
     arbeidsfordelingV1: ArbeidsfordelingV1,
@@ -496,12 +497,12 @@ suspend fun findTknummer(
     return finnBehandlendeEnhetListeResponse?.behandlendeEnhetListe?.firstOrNull()?.enhetId ?: "0393"
 }
 
-fun createTask(kafkaProducer: KafkaProducer<String, ProduceTask>, receivedSykmelding: ReceivedSykmelding, validationResult: ValidationResult, navKontor: String, logKeys: String, logValues: Array<StructuredArgument>) {
+fun createTask(kafkaProducer: KafkaProducer<String, ProduceTask>, receivedSykmelding: ReceivedSykmelding, validationResult: ValidationResult, navKontorNr: String, logKeys: String, logValues: Array<StructuredArgument>) {
     kafkaProducer.send(ProducerRecord("aapen-syfo-oppgave-produserOppgave", receivedSykmelding.sykmelding.id,
             ProduceTask().apply {
                 messageId = receivedSykmelding.msgId
                 aktoerId = receivedSykmelding.sykmelding.pasientAktoerId
-                tildeltEnhetsnr = navKontor
+                tildeltEnhetsnr = navKontorNr
                 opprettetAvEnhetsnr = "9999"
                 behandlesAvApplikasjon = "FS22" // Gosys
                 orgnr = receivedSykmelding.legekontorOrgNr ?: ""
@@ -540,7 +541,7 @@ suspend fun fetchBehandlendeEnhet(arbeidsfordelingV1: ArbeidsfordelingV1, geogra
             arbeidsfordelingV1.finnBehandlendeEnhetListe(FinnBehandlendeEnhetListeRequest().apply {
                 val afk = ArbeidsfordelingKriterier()
                 if (geografiskTilknytning?.geografiskTilknytning != null) {
-                    afk.geografiskTilknytning = no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.Geografi().apply {
+                    afk.geografiskTilknytning = Geografi().apply {
                         value = geografiskTilknytning.geografiskTilknytning
                     }
                 }
@@ -629,13 +630,13 @@ fun createInfotrygdBlokk(
     tssid: String?,
     logKeys: String,
     logValues: Array<StructuredArgument>,
-    tknummer: String,
+    navKontorNr: String,
     operasjonstypeKode: Int = findOperasjonstype(periode, itfh, logKeys, logValues)
 ) = unmarshal<XMLEIFellesformat>(marshalledFellesformat).apply {
     any.add(KontrollSystemBlokk().apply {
         infotrygdBlokk.add(KontrollsystemBlokkType.InfotrygdBlokk().apply {
             fodselsnummer = personNrPasient
-            tkNummer = tknummer
+            tkNummer = navKontorNr
 
             operasjonstype = operasjonstypeKode.toBigInteger()
 

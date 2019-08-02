@@ -1,5 +1,6 @@
 package no.nav.syfo
 
+import java.time.LocalDate
 import net.logstash.logback.argument.StructuredArguments
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.infotrygd.foresp.StatusType
@@ -8,7 +9,6 @@ import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.time.LocalDate
 
 object FindOprasjonstypeSpek : Spek({
 
