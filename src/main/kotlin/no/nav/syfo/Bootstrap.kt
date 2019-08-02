@@ -124,6 +124,8 @@ val coroutineContext = Executors.newFixedThreadPool(2).asCoroutineDispatcher()
 
 val datatypeFactory: DatatypeFactory = DatatypeFactory.newInstance()
 
+const val NAVOPPFOLGINUTLANDKONTORNR = "0393"
+
 fun main() = runBlocking(coroutineContext) {
     val env = Environment()
     val credentials = objectMapper.readValue<VaultCredentials>(Paths.get("/var/run/secrets/nais.io/vault/credentials.json").toFile())
@@ -307,7 +309,7 @@ suspend fun blockingApplicationLogic(
             try {
                 val doctor = fetchDoctor(helsepersonellv1, receivedSykmelding.personNrLege)
 
-                val behandlerKode = findBehandlerKode(doctor)
+                val helsepersonellKategoriVerdi = finnAktivHelsepersonellAutorisasjons(doctor)
 
                 when {
                     results.any { rule -> rule.status == Status.MANUAL_PROCESSING } ->
@@ -321,7 +323,7 @@ suspend fun blockingApplicationLogic(
                             InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
                             receivedSykmelding.personNrPasient,
                             receivedSykmelding.sykmelding.signaturDato.toLocalDate(),
-                            behandlerKode,
+                            helsepersonellKategoriVerdi,
                             receivedSykmelding.tssid,
                             navKontorNr)
                 }
@@ -494,7 +496,7 @@ suspend fun findNavkontorNr(
     if (finnBehandlendeEnhetListeResponse?.behandlendeEnhetListe?.firstOrNull()?.enhetId == null) {
         log.error("arbeidsfordeling fant ingen nav-enheter $logKeys", *logValues)
     }
-    return finnBehandlendeEnhetListeResponse?.behandlendeEnhetListe?.firstOrNull()?.enhetId ?: "0393"
+    return finnBehandlendeEnhetListeResponse?.behandlendeEnhetListe?.firstOrNull()?.enhetId ?: NAVOPPFOLGINUTLANDKONTORNR
 }
 
 fun createTask(kafkaProducer: KafkaProducer<String, ProduceTask>, receivedSykmelding: ReceivedSykmelding, validationResult: ValidationResult, navKontorNr: String, logKeys: String, logValues: Array<StructuredArgument>) {
@@ -626,7 +628,7 @@ fun createInfotrygdBlokk(
     periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode,
     personNrPasient: String,
     signaturDato: LocalDate,
-    behandlerKode: String,
+    helsepersonellKategoriVerdi: String,
     tssid: String?,
     logKeys: String,
     logValues: Array<StructuredArgument>,
@@ -658,7 +660,7 @@ fun createInfotrygdBlokk(
                 else -> typeSMinfo?.periode?.arbufoerOppr ?: throw RuntimeException("Unable to find første fraværsdag in IT")
             }
 
-            mottakerKode = behandlerKode
+            mottakerKode = helsepersonellKategoriVerdi
 
             if (itfh.infotrygdForesp.diagnosekodeOK != null) {
                 hovedDiagnose = itfh.infotrygdForesp.hovedDiagnosekode
@@ -717,8 +719,8 @@ suspend fun fetchDoctor(hprService: IHPR2Service, doctorIdent: String): HPRPerso
     hprService.hentPersonMedPersonnummer(doctorIdent, datatypeFactory.newXMLGregorianCalendar(GregorianCalendar()))
 }
 
-fun findBehandlerKode(behandler: HPRPerson): String =
-        behandler.godkjenninger.godkjenning.firstOrNull {
+fun finnAktivHelsepersonellAutorisasjons(helsepersonelPerson: HPRPerson): String =
+        helsepersonelPerson.godkjenninger.godkjenning.firstOrNull {
             it?.helsepersonellkategori?.isAktiv != null &&
                     it.autorisasjon?.isAktiv == true &&
                     it.helsepersonellkategori.isAktiv != null &&
