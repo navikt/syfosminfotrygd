@@ -206,7 +206,7 @@ fun CoroutineScope.createListener(applicationState: ApplicationState, action: su
             try {
                 action()
             } catch (e: TrackableException) {
-                log.error("En uhaandtert feil oppstod, applikasjonen restartes. ${e.loggingMeta}",
+                log.error("En uhåndtert feil oppstod, applikasjonen restartes. ${e.loggingMeta}",
                         *e.loggingMeta.logValues,
                         e.cause)
             } finally {
