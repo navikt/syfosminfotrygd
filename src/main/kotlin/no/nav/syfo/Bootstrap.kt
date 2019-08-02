@@ -41,6 +41,7 @@ import javax.xml.stream.XMLInputFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -204,6 +205,10 @@ fun CoroutineScope.createListener(applicationState: ApplicationState, action: su
         launch {
             try {
                 action()
+            } catch (e: TrackableException) {
+                log.error("En uhaandtert feil oppstod, applikasjonen restartes. ${e.loggingMeta}",
+                        *e.loggingMeta.logValues,
+                        e.cause)
             } finally {
                 applicationState.running = false
             }
@@ -242,6 +247,7 @@ suspend fun CoroutineScope.launchListeners(
     recievedSykmeldingListeners.forEach { it.join() }
 }
 
+@KtorExperimentalAPI
 suspend fun blockingApplicationLogic(
     applicationState: ApplicationState,
     kafkaConsumer: KafkaConsumer<String, String>,
@@ -259,95 +265,117 @@ suspend fun blockingApplicationLogic(
     while (applicationState.running) {
         kafkaConsumer.poll(Duration.ofMillis(0)).forEach { consumerRecord ->
             val receivedSykmelding: ReceivedSykmelding = objectMapper.readValue(consumerRecord.value())
-            val logValues = arrayOf(
-                    keyValue("mottakId", receivedSykmelding.navLogId),
-                    keyValue("msgId", receivedSykmelding.msgId),
-                    keyValue("orgNr", receivedSykmelding.legekontorOrgNr),
-                    keyValue("sykmeldingId", receivedSykmelding.sykmelding.id)
-            )
-            val logKeys = logValues.joinToString(prefix = "(", postfix = ")", separator = ",") { "{}" }
-            log.info("Received a SM2013 $logKeys", *logValues)
-
-            val smIkkeOkCurrentDepth = smIkkeOkQueue.currentDepth.toDouble()
-            MESSAGES_ON_INFOTRYGD_SMIKKEOK_QUEUE_COUNTER.inc(smIkkeOkCurrentDepth)
-
-            val requestLatency = REQUEST_TIME.startTimer()
-
-            val fellesformat = fellesformatUnmarshaller.unmarshal(StringReader(receivedSykmelding.fellesformat)) as XMLEIFellesformat
-            val healthInformation = extractHelseOpplysningerArbeidsuforhet(fellesformat)
-
-            val infotrygdForespResponse = fetchInfotrygdForesp(receivedSykmelding, healthInformation, session, infotrygdSporringProducer)
-
-            log.info("Going through rules $logKeys", *logValues)
-
-            val validationRuleResults = ValidationRuleChain.values().executeFlow(
-                    receivedSykmelding.sykmelding,
-                    infotrygdForespResponse)
-
-            val tssRuleResults = TssRuleChain.values().executeFlow(
-                    receivedSykmelding.sykmelding,
-                    RuleMetadata(
-                            receivedDate = receivedSykmelding.mottattDato,
-                            signatureDate = receivedSykmelding.sykmelding.signaturDato,
-                            patientPersonNumber = receivedSykmelding.personNrPasient,
-                            rulesetVersion = receivedSykmelding.rulesetVersion,
-                            legekontorOrgnr = receivedSykmelding.legekontorOrgNr,
-                            tssid = receivedSykmelding.tssid
-                    ))
-
-            val results = listOf(validationRuleResults, tssRuleResults).flatten()
-            log.info("Rules hit {}, $logKeys", results.map { rule -> rule.name }, *logValues)
-
-            val validationResult = validationResult(results)
-            RULE_HIT_STATUS_COUNTER.labels(validationResult.status.name).inc()
-
-            kafkaproducervalidationResult.send(ProducerRecord(env.sm2013BehandlingsUtfallToipic, receivedSykmelding.sykmelding.id, validationResult))
-            log.info("Validation results send to kafka {} $logKeys", env.sm2013BehandlingsUtfallToipic, *logValues)
-
-            val navKontorNr = findNavkontorNr(receivedSykmelding, personV3, arbeidsfordelingV1, logKeys, logValues)
-
-            try {
-                val doctor = fetchDoctor(helsepersonellv1, receivedSykmelding.personNrLege)
-
-                val helsepersonellKategoriVerdi = finnAktivHelsepersonellAutorisasjons(doctor)
-
-                when {
-                    results.any { rule -> rule.status == Status.MANUAL_PROCESSING } ->
-                        produceManualTask(kafkaproducerCreateTask, receivedSykmelding, validationResult, navKontorNr, logKeys, logValues)
-                    else -> sendInfotrygdOppdatering(
-                            infotrygdOppdateringProducer,
-                            session,
-                            logKeys,
-                            logValues,
-                            receivedSykmelding.fellesformat,
-                            InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
-                            receivedSykmelding.personNrPasient,
-                            receivedSykmelding.sykmelding.signaturDato.toLocalDate(),
-                            helsepersonellKategoriVerdi,
-                            receivedSykmelding.tssid,
-                            navKontorNr)
-                }
-                val currentRequestLatency = requestLatency.observeDuration()
-
-                log.info("Message($logKeys) got outcome {}, {}, processing took {}s",
-                        *logValues,
-                        keyValue("status", validationResult.status),
-                        keyValue("ruleHits", validationResult.ruleHits.joinToString(", ", "(", ")") { it.ruleName }),
-                        keyValue("latency", currentRequestLatency))
-            } catch (e: IHPR2ServiceHentPersonMedPersonnummerGenericFaultFaultFaultMessage) {
-                val validationResultBehandler = ValidationResult(
-                        status = Status.MANUAL_PROCESSING,
-                        ruleHits = listOf(RuleInfo(
-                                ruleName = "BEHANDLER_NOT_IN_HPR",
-                                messageForSender = "Den som har skrevet sykmeldingen din har ikke autorisasjon til dette.",
-                                messageForUser = "Behandler er ikke register i HPR"))
-                )
-                RULE_HIT_STATUS_COUNTER.labels(validationResultBehandler.status.name).inc()
-                log.warn("Behandler er ikke register i HPR")
-                produceManualTask(kafkaproducerCreateTask, receivedSykmelding, validationResultBehandler, navKontorNr, logKeys, logValues)
-            }
+            onUpdateInfotrygd(receivedSykmelding, kafkaproducerCreateTask, kafkaproducervalidationResult,
+                    infotrygdOppdateringProducer, infotrygdSporringProducer,
+                    session, personV3, arbeidsfordelingV1, env, helsepersonellv1, smIkkeOkQueue)
         }
         delay(100)
+    }
+}
+
+@KtorExperimentalAPI
+suspend fun onUpdateInfotrygd(
+    receivedSykmelding: ReceivedSykmelding,
+    kafkaproducerCreateTask: KafkaProducer<String, ProduceTask>,
+    kafkaproducervalidationResult: KafkaProducer<String, ValidationResult>,
+    infotrygdOppdateringProducer: MessageProducer,
+    infotrygdSporringProducer: MessageProducer,
+    session: Session,
+    personV3: PersonV3,
+    arbeidsfordelingV1: ArbeidsfordelingV1,
+    env: Environment,
+    helsepersonellv1: IHPR2Service,
+    smIkkeOkQueue: MQQueue
+) = coroutineScope {
+    val logValues = arrayOf(
+            keyValue("msgId", receivedSykmelding.msgId),
+            keyValue("mottakId", receivedSykmelding.navLogId),
+            keyValue("sykmeldingId", receivedSykmelding.sykmelding.id),
+            keyValue("orgNr", receivedSykmelding.legekontorOrgNr)
+    )
+
+    val loggingMeta = LoggingMeta(logValues)
+    wrapExceptions(loggingMeta) {
+
+        log.info("Received a SM2013 $loggingMeta", loggingMeta.logValues)
+
+        val smIkkeOkCurrentDepth = smIkkeOkQueue.currentDepth.toDouble()
+        MESSAGES_ON_INFOTRYGD_SMIKKEOK_QUEUE_COUNTER.inc(smIkkeOkCurrentDepth)
+
+        val requestLatency = REQUEST_TIME.startTimer()
+
+        val fellesformat = fellesformatUnmarshaller.unmarshal(StringReader(receivedSykmelding.fellesformat)) as XMLEIFellesformat
+        val healthInformation = extractHelseOpplysningerArbeidsuforhet(fellesformat)
+
+        val infotrygdForespResponse = fetchInfotrygdForesp(receivedSykmelding, healthInformation, session, infotrygdSporringProducer)
+
+        log.info("Going through rules $loggingMeta", loggingMeta.logValues)
+
+        val validationRuleResults = ValidationRuleChain.values().executeFlow(
+                receivedSykmelding.sykmelding,
+                infotrygdForespResponse)
+
+        val tssRuleResults = TssRuleChain.values().executeFlow(
+                receivedSykmelding.sykmelding,
+                RuleMetadata(
+                        receivedDate = receivedSykmelding.mottattDato,
+                        signatureDate = receivedSykmelding.sykmelding.signaturDato,
+                        patientPersonNumber = receivedSykmelding.personNrPasient,
+                        rulesetVersion = receivedSykmelding.rulesetVersion,
+                        legekontorOrgnr = receivedSykmelding.legekontorOrgNr,
+                        tssid = receivedSykmelding.tssid
+                ))
+
+        val results = listOf(validationRuleResults, tssRuleResults).flatten()
+        log.info("Rules hit {}, $loggingMeta", results.map { rule -> rule.name }, loggingMeta.logValues)
+
+        val validationResult = validationResult(results)
+        RULE_HIT_STATUS_COUNTER.labels(validationResult.status.name).inc()
+
+        kafkaproducervalidationResult.send(ProducerRecord(env.sm2013BehandlingsUtfallToipic, receivedSykmelding.sykmelding.id, validationResult))
+        log.info("Validation results send to kafka {} $loggingMeta", env.sm2013BehandlingsUtfallToipic, *loggingMeta.logValues)
+
+        val navKontorNr = findNavkontorNr(receivedSykmelding, personV3, arbeidsfordelingV1, loggingMeta)
+
+        try {
+            val doctor = fetchDoctor(helsepersonellv1, receivedSykmelding.personNrLege)
+
+            val helsepersonellKategoriVerdi = finnAktivHelsepersonellAutorisasjons(doctor)
+
+            when {
+                results.any { rule -> rule.status == Status.MANUAL_PROCESSING } ->
+                    produceManualTask(kafkaproducerCreateTask, receivedSykmelding, validationResult, navKontorNr, loggingMeta)
+                else -> sendInfotrygdOppdatering(
+                        infotrygdOppdateringProducer,
+                        session,
+                        loggingMeta,
+                        receivedSykmelding.fellesformat,
+                        InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
+                        receivedSykmelding.personNrPasient,
+                        receivedSykmelding.sykmelding.signaturDato.toLocalDate(),
+                        helsepersonellKategoriVerdi,
+                        receivedSykmelding.tssid,
+                        navKontorNr)
+            }
+            val currentRequestLatency = requestLatency.observeDuration()
+
+            log.info("Message($loggingMeta) got outcome {}, {}, processing took {}s",
+                    loggingMeta.logValues,
+                    keyValue("status", validationResult.status),
+                    keyValue("ruleHits", validationResult.ruleHits.joinToString(", ", "(", ")") { it.ruleName }),
+                    keyValue("latency", currentRequestLatency))
+        } catch (e: IHPR2ServiceHentPersonMedPersonnummerGenericFaultFaultFaultMessage) {
+            val validationResultBehandler = ValidationResult(
+                    status = Status.MANUAL_PROCESSING,
+                    ruleHits = listOf(RuleInfo(
+                            ruleName = "BEHANDLER_NOT_IN_HPR",
+                            messageForSender = "Den som har skrevet sykmeldingen din har ikke autorisasjon til dette.",
+                            messageForUser = "Behandler er ikke register i HPR"))
+            )
+            RULE_HIT_STATUS_COUNTER.labels(validationResultBehandler.status.name).inc()
+            log.warn("Behandler er ikke register i HPR")
+            produceManualTask(kafkaproducerCreateTask, receivedSykmelding, validationResultBehandler, navKontorNr, loggingMeta)
+        }
     }
 }
 
@@ -387,20 +415,19 @@ fun sendInfotrygdSporring(
 fun sendInfotrygdOppdatering(
     producer: MessageProducer,
     session: Session,
-    logKeys: String,
-    logValues: Array<StructuredArgument>,
+    loggingMeta: LoggingMeta,
     marshalledFellesformat: String,
     itfh: InfotrygdForespAndHealthInformation,
     personNrPasient: String,
     signaturDato: LocalDate,
     behandlerKode: String,
     tssid: String?,
-    tknummer: String
+    navKontorNr: String
 ) {
     val perioder = itfh.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
-    sendInfotrygdOppdateringMq(producer, session, createInfotrygdBlokk(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, logKeys, logValues, tknummer), logKeys, logValues)
+    sendInfotrygdOppdateringMq(producer, session, createInfotrygdBlokk(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr), loggingMeta)
     perioder.drop(1).forEach { periode ->
-        sendInfotrygdOppdateringMq(producer, session, createInfotrygdBlokk(marshalledFellesformat, itfh, periode, personNrPasient, signaturDato, behandlerKode, tssid, logKeys, logValues, tknummer, 2), logKeys, logValues)
+        sendInfotrygdOppdateringMq(producer, session, createInfotrygdBlokk(marshalledFellesformat, itfh, periode, personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, 2), loggingMeta)
     }
 }
 
@@ -408,12 +435,11 @@ fun sendInfotrygdOppdateringMq(
     producer: MessageProducer,
     session: Session,
     fellesformat: XMLEIFellesformat,
-    logKeys: String,
-    logValues: Array<StructuredArgument>
+    loggingMeta: LoggingMeta
 ) = producer.send(session.createTextMessage().apply {
-    log.info("Message has oprasjonstype: {}  $logKeys", fellesformat.get<KontrollsystemBlokkType>().infotrygdBlokk.first().operasjonstype, *logValues)
+    log.info("Message has oprasjonstype: {}  $loggingMeta", fellesformat.get<KontrollsystemBlokkType>().infotrygdBlokk.first().operasjonstype, *loggingMeta.logValues)
     text = xmlObjectWriter.writeValueAsString(fellesformat)
-    log.info("Message is sendt to infotrygd $logKeys", *logValues)
+    log.info("Message is sendt to infotrygd $loggingMeta", *loggingMeta.logValues)
 })
 
 fun createInfotrygdForesp(personNrPasient: String, healthInformation: HelseOpplysningerArbeidsuforhet, doctorFnr: String) = InfotrygdForesp().apply {
@@ -455,8 +481,7 @@ fun findarbeidsKategori(itfh: InfotrygdForespAndHealthInformation): String {
 fun findOperasjonstype(
     periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode,
     itfh: InfotrygdForespAndHealthInformation,
-    logKeys: String,
-    logValues: Array<StructuredArgument>
+    loggingMeta: LoggingMeta
 ): Int {
     // FORSTEGANGS = 1, PAFOLGENDE = 2, ENDRING = 3
     val typeSMinfo = itfh.infotrygdForesp.sMhistorikk?.sykmelding
@@ -474,32 +499,45 @@ fun findOperasjonstype(
     } else if (typeSMinfo.periode.arbufoerFOM == periode.periodeFOMDato || (typeSMinfo.periode.arbufoerFOM != null && typeSMinfo.periode.arbufoerFOM.isBefore(periode.periodeFOMDato))) {
         3
     } else {
-        log.error("Could not determined operasjonstype $logKeys", *logValues)
+        log.error("Could not determined operasjonstype $loggingMeta", *loggingMeta.logValues)
         throw RuntimeException("Could not determined operasjonstype")
     }
 }
 
-fun produceManualTask(kafkaProducer: KafkaProducer<String, ProduceTask>, receivedSykmelding: ReceivedSykmelding, validationResult: ValidationResult, navKontorNr: String, logKeys: String, logValues: Array<StructuredArgument>) {
-    createTask(kafkaProducer, receivedSykmelding, validationResult, navKontorNr, logKeys, logValues)
+fun produceManualTask(
+    kafkaProducer: KafkaProducer<String,
+    ProduceTask>,
+    receivedSykmelding: ReceivedSykmelding,
+    validationResult: ValidationResult,
+    navKontorNr: String,
+    loggingMeta: LoggingMeta
+) {
+    createTask(kafkaProducer, receivedSykmelding, validationResult, navKontorNr, loggingMeta)
 }
 
 suspend fun findNavkontorNr(
     receivedSykmelding: ReceivedSykmelding,
     personV3: PersonV3,
     arbeidsfordelingV1: ArbeidsfordelingV1,
-    logKeys: String,
-    logValues: Array<StructuredArgument>
+    loggingMeta: LoggingMeta
 ): String {
     val geografiskTilknytning = fetchGeografiskTilknytningAsync(personV3, receivedSykmelding)
     val patientDiskresjonsKode = fetchDiskresjonsKode(personV3, receivedSykmelding)
     val finnBehandlendeEnhetListeResponse = fetchBehandlendeEnhet(arbeidsfordelingV1, geografiskTilknytning.geografiskTilknytning, patientDiskresjonsKode)
     if (finnBehandlendeEnhetListeResponse?.behandlendeEnhetListe?.firstOrNull()?.enhetId == null) {
-        log.error("arbeidsfordeling fant ingen nav-enheter $logKeys", *logValues)
+        log.error("arbeidsfordeling fant ingen nav-enheter $loggingMeta", loggingMeta.logValues)
     }
     return finnBehandlendeEnhetListeResponse?.behandlendeEnhetListe?.firstOrNull()?.enhetId ?: NAV_OPPFOLGING_UTLAND_KONTOR_NR
 }
 
-fun createTask(kafkaProducer: KafkaProducer<String, ProduceTask>, receivedSykmelding: ReceivedSykmelding, validationResult: ValidationResult, navKontorNr: String, logKeys: String, logValues: Array<StructuredArgument>) {
+fun createTask(
+    kafkaProducer: KafkaProducer<String,
+    ProduceTask>,
+    receivedSykmelding: ReceivedSykmelding,
+    validationResult: ValidationResult,
+    navKontorNr: String,
+    loggingMeta: LoggingMeta
+) {
     kafkaProducer.send(ProducerRecord("aapen-syfo-oppgave-produserOppgave", receivedSykmelding.sykmelding.id,
             ProduceTask().apply {
                 messageId = receivedSykmelding.msgId
@@ -520,7 +558,7 @@ fun createTask(kafkaProducer: KafkaProducer<String, ProduceTask>, receivedSykmel
                 prioritet = PrioritetType.NORM
                 metadata = mapOf()
             }))
-    log.info("Message sendt to topic: aapen-syfo-oppgave-produserOppgave $logKeys", *logValues)
+    log.info("Message sendt to topic: aapen-syfo-oppgave-produserOppgave $loggingMeta", *loggingMeta.logValues)
 }
 
 suspend fun fetchGeografiskTilknytningAsync(
@@ -630,10 +668,9 @@ fun createInfotrygdBlokk(
     signaturDato: LocalDate,
     helsepersonellKategoriVerdi: String,
     tssid: String?,
-    logKeys: String,
-    logValues: Array<StructuredArgument>,
+    loggingMeta: LoggingMeta,
     navKontorNr: String,
-    operasjonstypeKode: Int = findOperasjonstype(periode, itfh, logKeys, logValues)
+    operasjonstypeKode: Int = findOperasjonstype(periode, itfh, loggingMeta)
 ) = unmarshal<XMLEIFellesformat>(marshalledFellesformat).apply {
     any.add(KontrollSystemBlokk().apply {
         infotrygdBlokk.add(KontrollsystemBlokkType.InfotrygdBlokk().apply {
@@ -733,3 +770,20 @@ fun HelseOpplysningerArbeidsuforhet.Behandler.formatName(): String =
         } else {
             "${navn.etternavn.toUpperCase()} ${navn.fornavn.toUpperCase()} ${navn.mellomnavn.toUpperCase()}"
         }
+
+data class LoggingMeta(
+    val logValues: Array<StructuredArgument>
+) {
+    private val logFormat: String = logValues.joinToString(prefix = "(", postfix = ")", separator = ", ") { "{}" }
+    override fun toString() = logFormat
+}
+
+class TrackableException(override val cause: Throwable, val loggingMeta: LoggingMeta) : RuntimeException()
+
+suspend fun <T : Any, O> T.wrapExceptions(loggingMeta: LoggingMeta, block: suspend T.() -> O): O {
+        try {
+            return block()
+        } catch (e: Exception) {
+            throw TrackableException(e, loggingMeta)
+        }
+}
