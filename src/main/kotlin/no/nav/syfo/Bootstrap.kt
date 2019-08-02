@@ -124,7 +124,7 @@ val coroutineContext = Executors.newFixedThreadPool(2).asCoroutineDispatcher()
 
 val datatypeFactory: DatatypeFactory = DatatypeFactory.newInstance()
 
-const val NAVOPPFOLGINUTLANDKONTORNR = "0393"
+const val NAV_OPPFOLGING_UTLAND_KONTOR_NR = "0393"
 
 fun main() = runBlocking(coroutineContext) {
     val env = Environment()
@@ -496,7 +496,7 @@ suspend fun findNavkontorNr(
     if (finnBehandlendeEnhetListeResponse?.behandlendeEnhetListe?.firstOrNull()?.enhetId == null) {
         log.error("arbeidsfordeling fant ingen nav-enheter $logKeys", *logValues)
     }
-    return finnBehandlendeEnhetListeResponse?.behandlendeEnhetListe?.firstOrNull()?.enhetId ?: NAVOPPFOLGINUTLANDKONTORNR
+    return finnBehandlendeEnhetListeResponse?.behandlendeEnhetListe?.firstOrNull()?.enhetId ?: NAV_OPPFOLGING_UTLAND_KONTOR_NR
 }
 
 fun createTask(kafkaProducer: KafkaProducer<String, ProduceTask>, receivedSykmelding: ReceivedSykmelding, validationResult: ValidationResult, navKontorNr: String, logKeys: String, logValues: Array<StructuredArgument>) {
