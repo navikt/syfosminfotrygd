@@ -1,5 +1,6 @@
 package no.nav.syfo.rules
 
+import java.time.LocalDate
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.infotrygd.foresp.StatusType
 import no.nav.helse.infotrygd.foresp.TypeSMinfo
@@ -8,11 +9,9 @@ import no.nav.syfo.generatePrognose
 import no.nav.syfo.generateSykmelding
 import no.nav.syfo.model.Gradert
 import no.nav.syfo.model.Sykmelding
-
 import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.time.LocalDate
 
 object ValidationRuleChainSpek : Spek({
 

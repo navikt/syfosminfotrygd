@@ -1,5 +1,11 @@
 package no.nav.syfo
 
+import java.io.StringReader
+import java.time.LocalDate
+import javax.jms.ConnectionFactory
+import javax.jms.Session
+import javax.jms.TextMessage
+import javax.naming.InitialContext
 import net.logstash.logback.argument.StructuredArguments
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.infotrygd.foresp.StatusType
@@ -11,12 +17,6 @@ import org.apache.activemq.artemis.core.config.impl.ConfigurationImpl
 import org.apache.activemq.artemis.core.server.ActiveMQServers
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.io.StringReader
-import java.time.LocalDate
-import javax.jms.ConnectionFactory
-import javax.jms.Session
-import javax.jms.TextMessage
-import javax.naming.InitialContext
 
 object MqSpek : Spek({
 

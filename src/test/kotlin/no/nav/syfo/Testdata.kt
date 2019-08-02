@@ -1,5 +1,9 @@
 package no.nav.syfo
 
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.util.UUID
+import kotlin.random.Random
 import no.nav.syfo.diagnose.Kodeverk
 import no.nav.syfo.model.Adresse
 import no.nav.syfo.model.AktivitetIkkeMulig
@@ -24,10 +28,6 @@ import no.nav.syfo.model.Prognose
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.model.SporsmalSvar
 import no.nav.syfo.model.Sykmelding
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.util.UUID
-import kotlin.random.Random
 
 fun receivedSykmelding(id: String, sykmelding: Sykmelding = generateSykmelding()) = ReceivedSykmelding(
         sykmelding = sykmelding,
