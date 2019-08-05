@@ -16,7 +16,6 @@ import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.util.KtorExperimentalAPI
-import io.prometheus.client.Summary
 import io.prometheus.client.hotspot.DefaultExports
 import java.io.IOException
 import java.io.StringReader
@@ -240,7 +239,7 @@ suspend fun CoroutineScope.launchListeners(
         createListener(applicationState) {
             blockingApplicationLogic(applicationState, kafkaconsumerRecievedSykmelding, kafkaproducerCreateTask,
                     kafkaproducervalidationResult, infotrygdOppdateringProducer, infotrygdSporringProducer,
-                    session, personV3, arbeidsfordelingV1, env, helsepersonellv1, smIkkeOkQueue)
+                    session, personV3, arbeidsfordelingV1, env.sm2013BehandlingsUtfallToipic, helsepersonellv1, smIkkeOkQueue)
         }
     }.toList()
 
@@ -259,7 +258,7 @@ suspend fun blockingApplicationLogic(
     session: Session,
     personV3: PersonV3,
     arbeidsfordelingV1: ArbeidsfordelingV1,
-    env: Environment,
+    sm2013BehandlingsUtfallToipic: String,
     helsepersonellv1: IHPR2Service,
     smIkkeOkQueue: MQQueue
 ) {
@@ -277,7 +276,7 @@ suspend fun blockingApplicationLogic(
             handleMessage(
                     receivedSykmelding, kafkaproducerCreateTask, kafkaproducervalidationResult,
                     infotrygdOppdateringProducer, infotrygdSporringProducer,
-                    session, personV3, arbeidsfordelingV1, env, helsepersonellv1, smIkkeOkQueue, loggingMeta)
+                    session, personV3, arbeidsfordelingV1, sm2013BehandlingsUtfallToipic, helsepersonellv1, smIkkeOkQueue, loggingMeta)
         }
         delay(100)
     }
@@ -302,45 +301,54 @@ suspend fun handleMessage(
     session: Session,
     personV3: PersonV3,
     arbeidsfordelingV1: ArbeidsfordelingV1,
-    env: Environment,
+    sm2013BehandlingsUtfallToipic: String,
     helsepersonellv1: IHPR2Service,
     smIkkeOkQueue: MQQueue,
     loggingMeta: LoggingMeta
 ) = coroutineScope {
     wrapExceptions(loggingMeta) {
-    log.info("Received a SM2013 $loggingMeta", *loggingMeta.logValues)
+        log.info("Received a SM2013 $loggingMeta", *loggingMeta.logValues)
 
-    val smIkkeOkCurrentDepth = smIkkeOkQueue.currentDepth.toDouble()
-    MESSAGES_ON_INFOTRYGD_SMIKKEOK_QUEUE_COUNTER.inc(smIkkeOkCurrentDepth)
+        val smIkkeOkCurrentDepth = smIkkeOkQueue.currentDepth.toDouble()
+        MESSAGES_ON_INFOTRYGD_SMIKKEOK_QUEUE_COUNTER.inc(smIkkeOkCurrentDepth)
 
-    val requestLatency = REQUEST_TIME.startTimer()
+        val requestLatency = REQUEST_TIME.startTimer()
 
-    val fellesformat = fellesformatUnmarshaller.unmarshal(StringReader(receivedSykmelding.fellesformat)) as XMLEIFellesformat
-    val healthInformation = extractHelseOpplysningerArbeidsuforhet(fellesformat)
+        val fellesformat = fellesformatUnmarshaller.unmarshal(StringReader(receivedSykmelding.fellesformat)) as XMLEIFellesformat
+        val healthInformation = extractHelseOpplysningerArbeidsuforhet(fellesformat)
 
-    val infotrygdForespResponse = getInfotrygdForespResponse(
-            receivedSykmelding,
-            infotrygdSporringProducer,
-            session,
-            healthInformation)
+        val infotrygdForespResponse = getInfotrygdForespResponse(
+                receivedSykmelding,
+                infotrygdSporringProducer,
+                session,
+                healthInformation)
 
-    val validationResult = ruleCheck(receivedSykmelding, infotrygdForespResponse, loggingMeta)
+        val validationResult = ruleCheck(receivedSykmelding, infotrygdForespResponse, loggingMeta)
 
-    sendRuleCheckValidationResult(receivedSykmelding, kafkaproducervalidationResult, validationResult, env, loggingMeta)
+        sendRuleCheckValidationResult(
+                receivedSykmelding,
+                kafkaproducervalidationResult,
+                validationResult,
+                sm2013BehandlingsUtfallToipic,
+                loggingMeta)
 
-    val navKontor = findNavkontorNr(receivedSykmelding, personV3, arbeidsfordelingV1, loggingMeta)
+        val navKontor = findNavkontorNr(receivedSykmelding, personV3, arbeidsfordelingV1, loggingMeta)
 
-    updateInfotrygd(receivedSykmelding,
-            helsepersonellv1,
-            validationResult,
-            infotrygdOppdateringProducer,
-            kafkaproducerCreateTask,
-            navKontor,
-            loggingMeta,
-            session,
-            infotrygdForespResponse,
-            healthInformation,
-            requestLatency)
+        updateInfotrygd(receivedSykmelding,
+                helsepersonellv1,
+                validationResult,
+                infotrygdOppdateringProducer,
+                kafkaproducerCreateTask,
+                navKontor,
+                loggingMeta,
+                session,
+                infotrygdForespResponse,
+                healthInformation)
+
+        val currentRequestLatency = requestLatency.observeDuration()
+
+        log.info("Message($loggingMeta) processing took {}s", *loggingMeta.logValues,
+                keyValue("latency", currentRequestLatency))
     }
 }
 
@@ -379,11 +387,11 @@ fun sendRuleCheckValidationResult(
     receivedSykmelding: ReceivedSykmelding,
     kafkaproducervalidationResult: KafkaProducer<String, ValidationResult>,
     validationResult: ValidationResult,
-    env: Environment,
+    sm2013BehandlingsUtfallToipic: String,
     loggingMeta: LoggingMeta
 ) {
-    kafkaproducervalidationResult.send(ProducerRecord(env.sm2013BehandlingsUtfallToipic, receivedSykmelding.sykmelding.id, validationResult))
-    log.info("Validation results send to kafka {} $loggingMeta", env.sm2013BehandlingsUtfallToipic, *loggingMeta.logValues)
+    kafkaproducervalidationResult.send(ProducerRecord(sm2013BehandlingsUtfallToipic, receivedSykmelding.sykmelding.id, validationResult))
+    log.info("Validation results send to kafka {} $loggingMeta", sm2013BehandlingsUtfallToipic, *loggingMeta.logValues)
 }
 
 suspend fun updateInfotrygd(
@@ -396,10 +404,8 @@ suspend fun updateInfotrygd(
     loggingMeta: LoggingMeta,
     session: Session,
     infotrygdForespResponse: InfotrygdForesp,
-    healthInformation: HelseOpplysningerArbeidsuforhet,
-    requestLatency: Summary.Timer
+    healthInformation: HelseOpplysningerArbeidsuforhet
 ) {
-
     try {
         val doctor = fetchDoctor(helsepersonellv1, receivedSykmelding.personNrLege)
 
@@ -412,21 +418,16 @@ suspend fun updateInfotrygd(
                     infotrygdOppdateringProducer,
                     session,
                     loggingMeta,
-                    receivedSykmelding.fellesformat,
                     InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
-                    receivedSykmelding.personNrPasient,
-                    receivedSykmelding.sykmelding.signaturDato.toLocalDate(),
+                    receivedSykmelding,
                     helsepersonellKategoriVerdi,
-                    receivedSykmelding.tssid,
                     navKontorNr)
         }
-        val currentRequestLatency = requestLatency.observeDuration()
 
         log.info("Message($loggingMeta) got outcome {}, {}, processing took {}s",
                 *loggingMeta.logValues,
                 keyValue("status", validationResult.status),
-                keyValue("ruleHits", validationResult.ruleHits.joinToString(", ", "(", ")") { it.ruleName }),
-                keyValue("latency", currentRequestLatency))
+                keyValue("ruleHits", validationResult.ruleHits.joinToString(", ", "(", ")") { it.ruleName }))
     } catch (e: IHPR2ServiceHentPersonMedPersonnummerGenericFaultFaultFaultMessage) {
         val validationResultBehandler = ValidationResult(
                 status = Status.MANUAL_PROCESSING,
@@ -478,15 +479,16 @@ fun sendInfotrygdOppdatering(
     producer: MessageProducer,
     session: Session,
     loggingMeta: LoggingMeta,
-    marshalledFellesformat: String,
     itfh: InfotrygdForespAndHealthInformation,
-    personNrPasient: String,
-    signaturDato: LocalDate,
+    receivedSykmelding: ReceivedSykmelding,
     behandlerKode: String,
-    tssid: String?,
     navKontorNr: String
 ) {
     val perioder = itfh.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
+    val marshalledFellesformat = receivedSykmelding.fellesformat
+    val personNrPasient = receivedSykmelding.personNrPasient
+    val signaturDato = receivedSykmelding.sykmelding.signaturDato.toLocalDate()
+    val tssid = receivedSykmelding.tssid
     sendInfotrygdOppdateringMq(producer, session, createInfotrygdBlokk(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr), loggingMeta)
     perioder.drop(1).forEach { periode ->
         sendInfotrygdOppdateringMq(producer, session, createInfotrygdBlokk(marshalledFellesformat, itfh, periode, personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, 2), loggingMeta)
@@ -567,8 +569,7 @@ fun findOperasjonstype(
 }
 
 fun produceManualTask(
-    kafkaProducer: KafkaProducer<String,
-    ProduceTask>,
+    kafkaProducer: KafkaProducer<String, ProduceTask>,
     receivedSykmelding: ReceivedSykmelding,
     validationResult: ValidationResult,
     navKontorNr: String,
