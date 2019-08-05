@@ -45,7 +45,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import net.logstash.logback.argument.StructuredArgument
+import net.logstash.logback.argument.StructuredArguments.fields
 import net.logstash.logback.argument.StructuredArguments.keyValue
 import no.nav.helse.eiFellesformat.XMLEIFellesformat
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
@@ -206,9 +206,7 @@ fun CoroutineScope.createListener(applicationState: ApplicationState, action: su
             try {
                 action()
             } catch (e: TrackableException) {
-                log.error("En uhåndtert feil oppstod, applikasjonen restartes. ${e.loggingMeta}",
-                        *e.loggingMeta.logValues,
-                        e.cause)
+                log.error("En uhåndtert feil oppstod, applikasjonen restarter {}", fields(e.loggingMeta), e.cause)
             } finally {
                 applicationState.running = false
             }
@@ -265,13 +263,12 @@ suspend fun blockingApplicationLogic(
     while (applicationState.running) {
         kafkaConsumer.poll(Duration.ofMillis(0)).forEach { consumerRecord ->
             val receivedSykmelding: ReceivedSykmelding = objectMapper.readValue(consumerRecord.value())
-            val logValues = arrayOf(
-                    keyValue("msgId", receivedSykmelding.msgId),
-                    keyValue("mottakId", receivedSykmelding.navLogId),
-                    keyValue("sykmeldingId", receivedSykmelding.sykmelding.id),
-                    keyValue("orgNr", receivedSykmelding.legekontorOrgNr)
+            val loggingMeta = LoggingMeta(
+                    mottakId = receivedSykmelding.navLogId,
+                    orgNr = receivedSykmelding.legekontorOrgNr,
+                    msgId = receivedSykmelding.msgId,
+                    sykmeldingId = receivedSykmelding.sykmelding.id
             )
-            val loggingMeta = LoggingMeta(logValues)
 
             handleMessage(
                     receivedSykmelding, kafkaproducerCreateTask, kafkaproducervalidationResult,
@@ -307,7 +304,7 @@ suspend fun handleMessage(
     loggingMeta: LoggingMeta
 ) = coroutineScope {
     wrapExceptions(loggingMeta) {
-        log.info("Received a SM2013 $loggingMeta", *loggingMeta.logValues)
+        log.info("Received a SM2013, {}", fields(loggingMeta))
 
         val smIkkeOkCurrentDepth = smIkkeOkQueue.currentDepth.toDouble()
         MESSAGES_ON_INFOTRYGD_SMIKKEOK_QUEUE_COUNTER.inc(smIkkeOkCurrentDepth)
@@ -347,8 +344,9 @@ suspend fun handleMessage(
 
         val currentRequestLatency = requestLatency.observeDuration()
 
-        log.info("Message($loggingMeta) processing took {}s", *loggingMeta.logValues,
-                keyValue("latency", currentRequestLatency))
+        log.info("Message processing took {}s, for message {}",
+                keyValue("latency", currentRequestLatency),
+                fields(loggingMeta))
     }
 }
 
@@ -358,7 +356,7 @@ fun ruleCheck(
     loggingMeta: LoggingMeta
 ): ValidationResult {
 
-    log.info("Going through rules $loggingMeta", *loggingMeta.logValues)
+    log.info("Going through rules {}", fields(loggingMeta))
 
     val validationRuleResults = ValidationRuleChain.values().executeFlow(
             receivedSykmelding.sykmelding,
@@ -376,7 +374,7 @@ fun ruleCheck(
             ))
 
     val results = listOf(validationRuleResults, tssRuleResults).flatten()
-    log.info("Rules hit {}, $loggingMeta", results.map { rule -> rule.name }, *loggingMeta.logValues)
+    log.info("Rules hit {}, $loggingMeta", results.map { rule -> rule.name }, fields(loggingMeta))
 
     val validationResult = validationResult(results)
     RULE_HIT_STATUS_COUNTER.labels(validationResult.status.name).inc()
@@ -391,7 +389,7 @@ fun sendRuleCheckValidationResult(
     loggingMeta: LoggingMeta
 ) {
     kafkaproducervalidationResult.send(ProducerRecord(sm2013BehandlingsUtfallToipic, receivedSykmelding.sykmelding.id, validationResult))
-    log.info("Validation results send to kafka {} $loggingMeta", sm2013BehandlingsUtfallToipic, *loggingMeta.logValues)
+    log.info("Validation results send to kafka {} $loggingMeta", sm2013BehandlingsUtfallToipic, fields(loggingMeta))
 }
 
 suspend fun updateInfotrygd(
@@ -424,8 +422,7 @@ suspend fun updateInfotrygd(
                     navKontorNr)
         }
 
-        log.info("Message($loggingMeta) got outcome {}, {}, processing took {}s",
-                *loggingMeta.logValues,
+        log.info("Message(${fields(loggingMeta)}) got outcome {}, {}, processing took {}s",
                 keyValue("status", validationResult.status),
                 keyValue("ruleHits", validationResult.ruleHits.joinToString(", ", "(", ")") { it.ruleName }))
     } catch (e: IHPR2ServiceHentPersonMedPersonnummerGenericFaultFaultFaultMessage) {
@@ -501,9 +498,9 @@ fun sendInfotrygdOppdateringMq(
     fellesformat: XMLEIFellesformat,
     loggingMeta: LoggingMeta
 ) = producer.send(session.createTextMessage().apply {
-    log.info("Message has oprasjonstype: {}  $loggingMeta", fellesformat.get<KontrollsystemBlokkType>().infotrygdBlokk.first().operasjonstype, *loggingMeta.logValues)
+    log.info("Message has oprasjonstype: {}, {}", fellesformat.get<KontrollsystemBlokkType>().infotrygdBlokk.first().operasjonstype, fields(loggingMeta))
     text = xmlObjectWriter.writeValueAsString(fellesformat)
-    log.info("Message is sendt to infotrygd $loggingMeta", *loggingMeta.logValues)
+    log.info("Message is sendt to infotrygd {}", fields(loggingMeta))
 })
 
 fun createInfotrygdForesp(personNrPasient: String, healthInformation: HelseOpplysningerArbeidsuforhet, doctorFnr: String) = InfotrygdForesp().apply {
@@ -563,7 +560,7 @@ fun findOperasjonstype(
     } else if (typeSMinfo.periode.arbufoerFOM == periode.periodeFOMDato || (typeSMinfo.periode.arbufoerFOM != null && typeSMinfo.periode.arbufoerFOM.isBefore(periode.periodeFOMDato))) {
         3
     } else {
-        log.error("Could not determined operasjonstype $loggingMeta", *loggingMeta.logValues)
+        log.error("Could not determined operasjonstype {}", fields(loggingMeta))
         throw RuntimeException("Could not determined operasjonstype")
     }
 }
@@ -588,7 +585,7 @@ suspend fun findNavkontorNr(
     val patientDiskresjonsKode = fetchDiskresjonsKode(personV3, receivedSykmelding)
     val finnBehandlendeEnhetListeResponse = fetchBehandlendeEnhet(arbeidsfordelingV1, geografiskTilknytning.geografiskTilknytning, patientDiskresjonsKode)
     if (finnBehandlendeEnhetListeResponse?.behandlendeEnhetListe?.firstOrNull()?.enhetId == null) {
-        log.error("arbeidsfordeling fant ingen nav-enheter $loggingMeta", *loggingMeta.logValues)
+        log.error("arbeidsfordeling fant ingen nav-enheter {}", fields(loggingMeta))
     }
     return finnBehandlendeEnhetListeResponse?.behandlendeEnhetListe?.firstOrNull()?.enhetId ?: NAV_OPPFOLGING_UTLAND_KONTOR_NR
 }
@@ -621,7 +618,7 @@ fun createTask(
                 prioritet = PrioritetType.NORM
                 metadata = mapOf()
             }))
-    log.info("Message sendt to topic: aapen-syfo-oppgave-produserOppgave $loggingMeta", *loggingMeta.logValues)
+    log.info("Message sendt to topic: aapen-syfo-oppgave-produserOppgave, {}", fields(loggingMeta))
 }
 
 suspend fun fetchGeografiskTilknytningAsync(
@@ -833,20 +830,3 @@ fun HelseOpplysningerArbeidsuforhet.Behandler.formatName(): String =
         } else {
             "${navn.etternavn.toUpperCase()} ${navn.fornavn.toUpperCase()} ${navn.mellomnavn.toUpperCase()}"
         }
-
-data class LoggingMeta(
-    val logValues: Array<StructuredArgument>
-) {
-    private val logFormat: String = logValues.joinToString(prefix = "(", postfix = ")", separator = ", ") { "{}" }
-    override fun toString() = logFormat
-}
-
-class TrackableException(override val cause: Throwable, val loggingMeta: LoggingMeta) : RuntimeException()
-
-suspend fun <T : Any, O> T.wrapExceptions(loggingMeta: LoggingMeta, block: suspend T.() -> O): O {
-        try {
-            return block()
-        } catch (e: Exception) {
-            throw TrackableException(e, loggingMeta)
-        }
-}
