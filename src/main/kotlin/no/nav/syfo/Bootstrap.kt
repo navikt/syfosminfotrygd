@@ -16,6 +16,7 @@ import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.util.KtorExperimentalAPI
+import io.prometheus.client.Summary
 import io.prometheus.client.hotspot.DefaultExports
 import java.io.IOException
 import java.io.StringReader
@@ -265,16 +266,34 @@ suspend fun blockingApplicationLogic(
     while (applicationState.running) {
         kafkaConsumer.poll(Duration.ofMillis(0)).forEach { consumerRecord ->
             val receivedSykmelding: ReceivedSykmelding = objectMapper.readValue(consumerRecord.value())
-            onUpdateInfotrygd(receivedSykmelding, kafkaproducerCreateTask, kafkaproducervalidationResult,
+            val logValues = arrayOf(
+                    keyValue("msgId", receivedSykmelding.msgId),
+                    keyValue("mottakId", receivedSykmelding.navLogId),
+                    keyValue("sykmeldingId", receivedSykmelding.sykmelding.id),
+                    keyValue("orgNr", receivedSykmelding.legekontorOrgNr)
+            )
+            val loggingMeta = LoggingMeta(logValues)
+
+            handleMessage(
+                    receivedSykmelding, kafkaproducerCreateTask, kafkaproducervalidationResult,
                     infotrygdOppdateringProducer, infotrygdSporringProducer,
-                    session, personV3, arbeidsfordelingV1, env, helsepersonellv1, smIkkeOkQueue)
+                    session, personV3, arbeidsfordelingV1, env, helsepersonellv1, smIkkeOkQueue, loggingMeta)
         }
         delay(100)
     }
 }
 
+suspend fun getInfotrygdForespResponse(
+    receivedSykmelding: ReceivedSykmelding,
+    infotrygdSporringProducer: MessageProducer,
+    session: Session,
+    healthInformation: HelseOpplysningerArbeidsuforhet
+): InfotrygdForesp {
+    return fetchInfotrygdForesp(receivedSykmelding, healthInformation, session, infotrygdSporringProducer)
+}
+
 @KtorExperimentalAPI
-suspend fun onUpdateInfotrygd(
+suspend fun handleMessage(
     receivedSykmelding: ReceivedSykmelding,
     kafkaproducerCreateTask: KafkaProducer<String, ProduceTask>,
     kafkaproducervalidationResult: KafkaProducer<String, ValidationResult>,
@@ -285,97 +304,140 @@ suspend fun onUpdateInfotrygd(
     arbeidsfordelingV1: ArbeidsfordelingV1,
     env: Environment,
     helsepersonellv1: IHPR2Service,
-    smIkkeOkQueue: MQQueue
+    smIkkeOkQueue: MQQueue,
+    loggingMeta: LoggingMeta
 ) = coroutineScope {
-    val logValues = arrayOf(
-            keyValue("msgId", receivedSykmelding.msgId),
-            keyValue("mottakId", receivedSykmelding.navLogId),
-            keyValue("sykmeldingId", receivedSykmelding.sykmelding.id),
-            keyValue("orgNr", receivedSykmelding.legekontorOrgNr)
-    )
-
-    val loggingMeta = LoggingMeta(logValues)
     wrapExceptions(loggingMeta) {
+    log.info("Received a SM2013 $loggingMeta", *loggingMeta.logValues)
 
-        log.info("Received a SM2013 $loggingMeta", *loggingMeta.logValues)
+    val smIkkeOkCurrentDepth = smIkkeOkQueue.currentDepth.toDouble()
+    MESSAGES_ON_INFOTRYGD_SMIKKEOK_QUEUE_COUNTER.inc(smIkkeOkCurrentDepth)
 
-        val smIkkeOkCurrentDepth = smIkkeOkQueue.currentDepth.toDouble()
-        MESSAGES_ON_INFOTRYGD_SMIKKEOK_QUEUE_COUNTER.inc(smIkkeOkCurrentDepth)
+    val requestLatency = REQUEST_TIME.startTimer()
 
-        val requestLatency = REQUEST_TIME.startTimer()
+    val fellesformat = fellesformatUnmarshaller.unmarshal(StringReader(receivedSykmelding.fellesformat)) as XMLEIFellesformat
+    val healthInformation = extractHelseOpplysningerArbeidsuforhet(fellesformat)
 
-        val fellesformat = fellesformatUnmarshaller.unmarshal(StringReader(receivedSykmelding.fellesformat)) as XMLEIFellesformat
-        val healthInformation = extractHelseOpplysningerArbeidsuforhet(fellesformat)
+    val infotrygdForespResponse = getInfotrygdForespResponse(
+            receivedSykmelding,
+            infotrygdSporringProducer,
+            session,
+            healthInformation)
 
-        val infotrygdForespResponse = fetchInfotrygdForesp(receivedSykmelding, healthInformation, session, infotrygdSporringProducer)
+    val validationResult = ruleCheck(receivedSykmelding, infotrygdForespResponse, loggingMeta)
 
-        log.info("Going through rules $loggingMeta", *loggingMeta.logValues)
+    sendRuleCheckValidationResult(receivedSykmelding, kafkaproducervalidationResult, validationResult, env, loggingMeta)
 
-        val validationRuleResults = ValidationRuleChain.values().executeFlow(
-                receivedSykmelding.sykmelding,
-                infotrygdForespResponse)
+    val navKontor = findNavkontorNr(receivedSykmelding, personV3, arbeidsfordelingV1, loggingMeta)
 
-        val tssRuleResults = TssRuleChain.values().executeFlow(
-                receivedSykmelding.sykmelding,
-                RuleMetadata(
-                        receivedDate = receivedSykmelding.mottattDato,
-                        signatureDate = receivedSykmelding.sykmelding.signaturDato,
-                        patientPersonNumber = receivedSykmelding.personNrPasient,
-                        rulesetVersion = receivedSykmelding.rulesetVersion,
-                        legekontorOrgnr = receivedSykmelding.legekontorOrgNr,
-                        tssid = receivedSykmelding.tssid
-                ))
+    updateInfotrygd(receivedSykmelding,
+            helsepersonellv1,
+            validationResult,
+            infotrygdOppdateringProducer,
+            kafkaproducerCreateTask,
+            navKontor,
+            loggingMeta,
+            session,
+            infotrygdForespResponse,
+            healthInformation,
+            requestLatency)
+    }
+}
 
-        val results = listOf(validationRuleResults, tssRuleResults).flatten()
-        log.info("Rules hit {}, $loggingMeta", results.map { rule -> rule.name }, *loggingMeta.logValues)
+fun ruleCheck(
+    receivedSykmelding: ReceivedSykmelding,
+    infotrygdForespResponse: InfotrygdForesp,
+    loggingMeta: LoggingMeta
+): ValidationResult {
 
-        val validationResult = validationResult(results)
-        RULE_HIT_STATUS_COUNTER.labels(validationResult.status.name).inc()
+    log.info("Going through rules $loggingMeta", *loggingMeta.logValues)
 
-        kafkaproducervalidationResult.send(ProducerRecord(env.sm2013BehandlingsUtfallToipic, receivedSykmelding.sykmelding.id, validationResult))
-        log.info("Validation results send to kafka {} $loggingMeta", env.sm2013BehandlingsUtfallToipic, *loggingMeta.logValues)
+    val validationRuleResults = ValidationRuleChain.values().executeFlow(
+            receivedSykmelding.sykmelding,
+            infotrygdForespResponse)
 
-        val navKontorNr = findNavkontorNr(receivedSykmelding, personV3, arbeidsfordelingV1, loggingMeta)
+    val tssRuleResults = TssRuleChain.values().executeFlow(
+            receivedSykmelding.sykmelding,
+            RuleMetadata(
+                    receivedDate = receivedSykmelding.mottattDato,
+                    signatureDate = receivedSykmelding.sykmelding.signaturDato,
+                    patientPersonNumber = receivedSykmelding.personNrPasient,
+                    rulesetVersion = receivedSykmelding.rulesetVersion,
+                    legekontorOrgnr = receivedSykmelding.legekontorOrgNr,
+                    tssid = receivedSykmelding.tssid
+            ))
 
-        try {
-            val doctor = fetchDoctor(helsepersonellv1, receivedSykmelding.personNrLege)
+    val results = listOf(validationRuleResults, tssRuleResults).flatten()
+    log.info("Rules hit {}, $loggingMeta", results.map { rule -> rule.name }, *loggingMeta.logValues)
 
-            val helsepersonellKategoriVerdi = finnAktivHelsepersonellAutorisasjons(doctor)
+    val validationResult = validationResult(results)
+    RULE_HIT_STATUS_COUNTER.labels(validationResult.status.name).inc()
+    return validationResult
+}
 
-            when {
-                results.any { rule -> rule.status == Status.MANUAL_PROCESSING } ->
-                    produceManualTask(kafkaproducerCreateTask, receivedSykmelding, validationResult, navKontorNr, loggingMeta)
-                else -> sendInfotrygdOppdatering(
-                        infotrygdOppdateringProducer,
-                        session,
-                        loggingMeta,
-                        receivedSykmelding.fellesformat,
-                        InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
-                        receivedSykmelding.personNrPasient,
-                        receivedSykmelding.sykmelding.signaturDato.toLocalDate(),
-                        helsepersonellKategoriVerdi,
-                        receivedSykmelding.tssid,
-                        navKontorNr)
-            }
-            val currentRequestLatency = requestLatency.observeDuration()
+fun sendRuleCheckValidationResult(
+    receivedSykmelding: ReceivedSykmelding,
+    kafkaproducervalidationResult: KafkaProducer<String, ValidationResult>,
+    validationResult: ValidationResult,
+    env: Environment,
+    loggingMeta: LoggingMeta
+) {
+    kafkaproducervalidationResult.send(ProducerRecord(env.sm2013BehandlingsUtfallToipic, receivedSykmelding.sykmelding.id, validationResult))
+    log.info("Validation results send to kafka {} $loggingMeta", env.sm2013BehandlingsUtfallToipic, *loggingMeta.logValues)
+}
 
-            log.info("Message($loggingMeta) got outcome {}, {}, processing took {}s",
-                    *loggingMeta.logValues,
-                    keyValue("status", validationResult.status),
-                    keyValue("ruleHits", validationResult.ruleHits.joinToString(", ", "(", ")") { it.ruleName }),
-                    keyValue("latency", currentRequestLatency))
-        } catch (e: IHPR2ServiceHentPersonMedPersonnummerGenericFaultFaultFaultMessage) {
-            val validationResultBehandler = ValidationResult(
-                    status = Status.MANUAL_PROCESSING,
-                    ruleHits = listOf(RuleInfo(
-                            ruleName = "BEHANDLER_NOT_IN_HPR",
-                            messageForSender = "Den som har skrevet sykmeldingen din har ikke autorisasjon til dette.",
-                            messageForUser = "Behandler er ikke register i HPR"))
-            )
-            RULE_HIT_STATUS_COUNTER.labels(validationResultBehandler.status.name).inc()
-            log.warn("Behandler er ikke register i HPR")
-            produceManualTask(kafkaproducerCreateTask, receivedSykmelding, validationResultBehandler, navKontorNr, loggingMeta)
+suspend fun updateInfotrygd(
+    receivedSykmelding: ReceivedSykmelding,
+    helsepersonellv1: IHPR2Service,
+    validationResult: ValidationResult,
+    infotrygdOppdateringProducer: MessageProducer,
+    kafkaproducerCreateTask: KafkaProducer<String, ProduceTask>,
+    navKontorNr: String,
+    loggingMeta: LoggingMeta,
+    session: Session,
+    infotrygdForespResponse: InfotrygdForesp,
+    healthInformation: HelseOpplysningerArbeidsuforhet,
+    requestLatency: Summary.Timer
+) {
+
+    try {
+        val doctor = fetchDoctor(helsepersonellv1, receivedSykmelding.personNrLege)
+
+        val helsepersonellKategoriVerdi = finnAktivHelsepersonellAutorisasjons(doctor)
+
+        when {
+            validationResult.status in arrayOf(Status.MANUAL_PROCESSING) ->
+                produceManualTask(kafkaproducerCreateTask, receivedSykmelding, validationResult, navKontorNr, loggingMeta)
+            else -> sendInfotrygdOppdatering(
+                    infotrygdOppdateringProducer,
+                    session,
+                    loggingMeta,
+                    receivedSykmelding.fellesformat,
+                    InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
+                    receivedSykmelding.personNrPasient,
+                    receivedSykmelding.sykmelding.signaturDato.toLocalDate(),
+                    helsepersonellKategoriVerdi,
+                    receivedSykmelding.tssid,
+                    navKontorNr)
         }
+        val currentRequestLatency = requestLatency.observeDuration()
+
+        log.info("Message($loggingMeta) got outcome {}, {}, processing took {}s",
+                *loggingMeta.logValues,
+                keyValue("status", validationResult.status),
+                keyValue("ruleHits", validationResult.ruleHits.joinToString(", ", "(", ")") { it.ruleName }),
+                keyValue("latency", currentRequestLatency))
+    } catch (e: IHPR2ServiceHentPersonMedPersonnummerGenericFaultFaultFaultMessage) {
+        val validationResultBehandler = ValidationResult(
+                status = Status.MANUAL_PROCESSING,
+                ruleHits = listOf(RuleInfo(
+                        ruleName = "BEHANDLER_NOT_IN_HPR",
+                        messageForSender = "Den som har skrevet sykmeldingen din har ikke autorisasjon til dette.",
+                        messageForUser = "Behandler er ikke register i HPR"))
+        )
+        RULE_HIT_STATUS_COUNTER.labels(validationResultBehandler.status.name).inc()
+        log.warn("Behandler er ikke register i HPR")
+        produceManualTask(kafkaproducerCreateTask, receivedSykmelding, validationResultBehandler, navKontorNr, loggingMeta)
     }
 }
 
