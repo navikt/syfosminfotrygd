@@ -625,7 +625,7 @@ suspend fun findLocaleNavkontorNr(
     val patientDiskresjonsKode = fetchDiskresjonsKode(personV3, receivedSykmelding)
     norge2Client.getLocalNAVOffice(geografiskTilknytning.geografiskTilknytning.toString(), patientDiskresjonsKode)
 
-    return norge2Client.getLocalNAVOffice(geografiskTilknytning.geografiskTilknytning.toString(), patientDiskresjonsKode).enhetNr
+    return norge2Client.getLocalNAVOffice(geografiskTilknytning.geografiskTilknytning.geografiskTilknytning, patientDiskresjonsKode).enhetNr
 }
 
 fun createTask(
