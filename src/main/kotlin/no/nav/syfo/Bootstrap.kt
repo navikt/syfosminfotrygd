@@ -523,7 +523,7 @@ fun sendInfotrygdOppdateringMq(
     fellesformat: XMLEIFellesformat,
     loggingMeta: LoggingMeta
 ) = producer.send(session.createTextMessage().apply {
-    log.info("Message has oprasjonstype: {}, {}", fellesformat.get<KontrollsystemBlokkType>().infotrygdBlokk.first().operasjonstype, fields(loggingMeta))
+    log.info("Message has oprasjonstype: {}, tkNummer: {}, {}", fellesformat.get<KontrollsystemBlokkType>().infotrygdBlokk.first().operasjonstype, fellesformat.get<KontrollsystemBlokkType>().infotrygdBlokk.first().tkNummer, fields(loggingMeta))
     text = xmlObjectWriter.writeValueAsString(fellesformat)
     log.info("Message is sendt to infotrygd {}", fields(loggingMeta))
 })
@@ -624,7 +624,6 @@ suspend fun findLocaleNavkontorNr(
     val geografiskTilknytning = fetchGeografiskTilknytningAsync(personV3, receivedSykmelding)
     val patientDiskresjonsKode = fetchDiskresjonsKode(personV3, receivedSykmelding)
     norge2Client.getLocalNAVOffice(geografiskTilknytning.geografiskTilknytning.geografiskTilknytning, patientDiskresjonsKode)
-    log.info("GeografiskTilknytning: $geografiskTilknytning.geografiskTilknytning.geografiskTilknytning")
     return norge2Client.getLocalNAVOffice(geografiskTilknytning.geografiskTilknytning.geografiskTilknytning, patientDiskresjonsKode).enhetNr
 }
 
