@@ -1,5 +1,6 @@
 package no.nav.syfo.client
 
+import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
@@ -29,6 +30,7 @@ class Norge2Client(
                 registerKotlinModule()
                 registerModule(JavaTimeModule())
                 configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+                configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
             }
         }
 
@@ -54,16 +56,17 @@ data class Enhet(
     val enhetId: String,
     val navn: String,
     val enhetNr: String,
-    val antallRessurser: String,
+    val antallRessurser: Int,
     val status: String,
     val orgNivaa: String,
+    val type: String,
     val organisasjonsnummer: String,
     val underEtableringDato: String,
     val aktiveringsdato: String,
     val underAvviklingDato: String?,
     val nedleggelsesdato: String?,
     val oppgavebehandler: String?,
-    val versjon: String,
+    val versjon: Int,
     val sosialeTjenester: String,
     val kanalstrategi: String?,
     val orgNrTilKommunaltNavKontor: String?
