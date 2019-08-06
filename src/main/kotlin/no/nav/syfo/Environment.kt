@@ -17,6 +17,7 @@ data class Environment(
     val infotrygdSporringQueue: String = getEnvVar("INFOTRYGD_SPORRING_QUEUE"),
     val infotrygdOppdateringQueue: String = getEnvVar("INFOTRYGD_OPPDATERING_QUEUE"),
     val arbeidsfordelingV1EndpointURL: String = getEnvVar("ARBEIDSFORDELING_V1_ENDPOINT_URL"),
+    val norg2V1EndpointURL: String = getEnvVar("NORG2_V1_ENDPOINT_URL"),
     override val mqHostname: String = getEnvVar("MQ_HOST_NAME"),
     override val mqPort: Int = getEnvVar("MQ_PORT").toInt(),
     override val mqGatewayName: String = getEnvVar("MQ_GATEWAY_NAME"),

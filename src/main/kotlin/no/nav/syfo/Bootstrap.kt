@@ -54,6 +54,7 @@ import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.helse.sm2013.KontrollSystemBlokk
 import no.nav.helse.sm2013.KontrollsystemBlokkType
 import no.nav.syfo.api.registerNaisApi
+import no.nav.syfo.client.Norge2Client
 import no.nav.syfo.helpers.retry
 import no.nav.syfo.kafka.loadBaseConfig
 import no.nav.syfo.kafka.toConsumerConfig
@@ -127,6 +128,7 @@ val datatypeFactory: DatatypeFactory = DatatypeFactory.newInstance()
 
 const val NAV_OPPFOLGING_UTLAND_KONTOR_NR = "0393"
 
+@KtorExperimentalAPI
 fun main() = runBlocking(coroutineContext) {
     val env = Environment()
     val credentials = objectMapper.readValue<VaultCredentials>(Paths.get("/var/run/secrets/nais.io/vault/credentials.json").toFile())
@@ -191,7 +193,22 @@ fun main() = runBlocking(coroutineContext) {
             port { withSTS(credentials.serviceuserUsername, credentials.serviceuserPassword, env.securityTokenServiceUrl) }
         }
 
-        launchListeners(applicationState, kafkaproducerCreateTask, kafkaproducervalidationResult, infotrygdOppdateringProducer, infotrygdSporringProducer, session, personV3, arbeidsfordelingV1, env, helsepersonellV1, consumerProperties, smIkkeOkQueue)
+        val norge2Client = Norge2Client(env.norg2V1EndpointURL)
+
+        launchListeners(
+                applicationState,
+                kafkaproducerCreateTask,
+                kafkaproducervalidationResult,
+                infotrygdOppdateringProducer,
+                infotrygdSporringProducer,
+                session,
+                personV3,
+                arbeidsfordelingV1,
+                env,
+                helsepersonellV1,
+                consumerProperties,
+                smIkkeOkQueue,
+                norge2Client)
 
         Runtime.getRuntime().addShutdownHook(Thread {
             smIkkeOkQueue.close()
@@ -225,7 +242,8 @@ suspend fun CoroutineScope.launchListeners(
     env: Environment,
     helsepersonellv1: IHPR2Service,
     consumerProperties: Properties,
-    smIkkeOkQueue: MQQueue
+    smIkkeOkQueue: MQQueue,
+    norge2Client: Norge2Client
 ) {
 
     val recievedSykmeldingListeners = 0.until(env.applicationThreads).map {
@@ -237,7 +255,8 @@ suspend fun CoroutineScope.launchListeners(
         createListener(applicationState) {
             blockingApplicationLogic(applicationState, kafkaconsumerRecievedSykmelding, kafkaproducerCreateTask,
                     kafkaproducervalidationResult, infotrygdOppdateringProducer, infotrygdSporringProducer,
-                    session, personV3, arbeidsfordelingV1, env.sm2013BehandlingsUtfallToipic, helsepersonellv1, smIkkeOkQueue)
+                    session, personV3, arbeidsfordelingV1, env.sm2013BehandlingsUtfallToipic, helsepersonellv1,
+                    smIkkeOkQueue, norge2Client)
         }
     }.toList()
 
@@ -258,7 +277,8 @@ suspend fun blockingApplicationLogic(
     arbeidsfordelingV1: ArbeidsfordelingV1,
     sm2013BehandlingsUtfallToipic: String,
     helsepersonellv1: IHPR2Service,
-    smIkkeOkQueue: MQQueue
+    smIkkeOkQueue: MQQueue,
+    norge2Client: Norge2Client
 ) {
     while (applicationState.running) {
         kafkaConsumer.poll(Duration.ofMillis(0)).forEach { consumerRecord ->
@@ -273,7 +293,8 @@ suspend fun blockingApplicationLogic(
             handleMessage(
                     receivedSykmelding, kafkaproducerCreateTask, kafkaproducervalidationResult,
                     infotrygdOppdateringProducer, infotrygdSporringProducer,
-                    session, personV3, arbeidsfordelingV1, sm2013BehandlingsUtfallToipic, helsepersonellv1, smIkkeOkQueue, loggingMeta)
+                    session, personV3, arbeidsfordelingV1, sm2013BehandlingsUtfallToipic, helsepersonellv1,
+                    smIkkeOkQueue, loggingMeta, norge2Client)
         }
         delay(100)
     }
@@ -301,7 +322,8 @@ suspend fun handleMessage(
     sm2013BehandlingsUtfallToipic: String,
     helsepersonellv1: IHPR2Service,
     smIkkeOkQueue: MQQueue,
-    loggingMeta: LoggingMeta
+    loggingMeta: LoggingMeta,
+    norge2Client: Norge2Client
 ) = coroutineScope {
     wrapExceptions(loggingMeta) {
         log.info("Received a SM2013, {}", fields(loggingMeta))
@@ -329,14 +351,16 @@ suspend fun handleMessage(
                 sm2013BehandlingsUtfallToipic,
                 loggingMeta)
 
-        val navKontor = findNavkontorNr(receivedSykmelding, personV3, arbeidsfordelingV1, loggingMeta)
+        val navKontorManuellOppgave = findNavkontorTaskNr(receivedSykmelding, personV3, arbeidsfordelingV1, loggingMeta)
+        val navKontorLokalKontor = findLocaleNavkontorNr(receivedSykmelding, personV3, norge2Client)
 
         updateInfotrygd(receivedSykmelding,
                 helsepersonellv1,
                 validationResult,
                 infotrygdOppdateringProducer,
                 kafkaproducerCreateTask,
-                navKontor,
+                navKontorManuellOppgave,
+                navKontorLokalKontor,
                 loggingMeta,
                 session,
                 infotrygdForespResponse,
@@ -398,7 +422,8 @@ suspend fun updateInfotrygd(
     validationResult: ValidationResult,
     infotrygdOppdateringProducer: MessageProducer,
     kafkaproducerCreateTask: KafkaProducer<String, ProduceTask>,
-    navKontorNr: String,
+    navKontorManuellOppgave: String,
+    navKontorLokalKontor: String,
     loggingMeta: LoggingMeta,
     session: Session,
     infotrygdForespResponse: InfotrygdForesp,
@@ -411,7 +436,7 @@ suspend fun updateInfotrygd(
 
         when {
             validationResult.status in arrayOf(Status.MANUAL_PROCESSING) ->
-                produceManualTask(kafkaproducerCreateTask, receivedSykmelding, validationResult, navKontorNr, loggingMeta)
+                produceManualTask(kafkaproducerCreateTask, receivedSykmelding, validationResult, navKontorManuellOppgave, loggingMeta)
             else -> sendInfotrygdOppdatering(
                     infotrygdOppdateringProducer,
                     session,
@@ -419,7 +444,7 @@ suspend fun updateInfotrygd(
                     InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
                     receivedSykmelding,
                     helsepersonellKategoriVerdi,
-                    navKontorNr)
+                    navKontorLokalKontor)
         }
 
         log.info("Message(${fields(loggingMeta)}) got outcome {}, {}, processing took {}s",
@@ -435,7 +460,7 @@ suspend fun updateInfotrygd(
         )
         RULE_HIT_STATUS_COUNTER.labels(validationResultBehandler.status.name).inc()
         log.warn("Behandler er ikke register i HPR")
-        produceManualTask(kafkaproducerCreateTask, receivedSykmelding, validationResultBehandler, navKontorNr, loggingMeta)
+        produceManualTask(kafkaproducerCreateTask, receivedSykmelding, validationResultBehandler, navKontorManuellOppgave, loggingMeta)
     }
 }
 
@@ -575,7 +600,7 @@ fun produceManualTask(
     createTask(kafkaProducer, receivedSykmelding, validationResult, navKontorNr, loggingMeta)
 }
 
-suspend fun findNavkontorNr(
+suspend fun findNavkontorTaskNr(
     receivedSykmelding: ReceivedSykmelding,
     personV3: PersonV3,
     arbeidsfordelingV1: ArbeidsfordelingV1,
@@ -588,6 +613,19 @@ suspend fun findNavkontorNr(
         log.error("arbeidsfordeling fant ingen nav-enheter {}", fields(loggingMeta))
     }
     return finnBehandlendeEnhetListeResponse?.behandlendeEnhetListe?.firstOrNull()?.enhetId ?: NAV_OPPFOLGING_UTLAND_KONTOR_NR
+}
+
+@KtorExperimentalAPI
+suspend fun findLocaleNavkontorNr(
+    receivedSykmelding: ReceivedSykmelding,
+    personV3: PersonV3,
+    norge2Client: Norge2Client
+): String {
+    val geografiskTilknytning = fetchGeografiskTilknytningAsync(personV3, receivedSykmelding)
+    val patientDiskresjonsKode = fetchDiskresjonsKode(personV3, receivedSykmelding)
+    norge2Client.getLocalNAVOffice(geografiskTilknytning.geografiskTilknytning.toString(), patientDiskresjonsKode)
+
+    return norge2Client.getLocalNAVOffice(geografiskTilknytning.geografiskTilknytning.toString(), patientDiskresjonsKode).enhetNr
 }
 
 fun createTask(
