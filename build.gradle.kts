@@ -121,12 +121,14 @@ dependencies {
     implementation ("no.nav.helse.xml:infotrygd-foresp:$infotrygdForespVersion")
     implementation ("no.nav.helse.xml:kith-hodemelding:$kithHodemeldingVersion")
 
-    implementation("no.nav.syfo.sm:syfosm-common-models:$smCommonVersion")
-    implementation("no.nav.syfo.sm:syfosm-common-ws:$smCommonVersion")
-    implementation("no.nav.syfo.sm:syfosm-common-rules:$smCommonVersion")
-    implementation("no.nav.syfo.sm:syfosm-common-mq:$smCommonVersion")
-    implementation("no.nav.syfo.sm:syfosm-common-kafka:$smCommonVersion")
-    implementation("no.nav.syfo.sm:syfosm-common-networking:$smCommonVersion")
+    implementation ("no.nav.syfo.sm:syfosm-common-models:$smCommonVersion")
+    implementation ("no.nav.syfo.sm:syfosm-common-ws:$smCommonVersion")
+    implementation ("no.nav.syfo.sm:syfosm-common-rules:$smCommonVersion")
+    implementation ("no.nav.syfo.sm:syfosm-common-mq:$smCommonVersion")
+    implementation ("no.nav.syfo.sm:syfosm-common-kafka:$smCommonVersion")
+    implementation ("no.nav.syfo.sm:syfosm-common-networking:$smCommonVersion")
+    implementation ("no.nav.syfo.sm:syfosm-common-rest-sts:$smCommonVersion")
+    implementation ("no.nav.syfo.sm:syfosm-common-networking:$smCommonVersion")
 
     implementation ("org.apache.commons:commons-text:$commonsTextVersion")
     implementation ("org.apache.cxf:cxf-rt-frontend-jaxws:$cxfVersion")
@@ -140,7 +142,7 @@ dependencies {
     implementation ("javax.xml.bind:jaxb-api:$jaxbApiVersion")
     implementation ("org.glassfish.jaxb:jaxb-runtime:$jaxbRuntimeVersion")
     implementation ("javax.activation:activation:$javaxActivationVersion")
-    implementation("com.sun.xml.ws:jaxws-tools:$jaxwsToolsVersion") {
+    implementation ("com.sun.xml.ws:jaxws-tools:$jaxwsToolsVersion") {
         exclude(group = "com.sun.xml.ws", module = "policy")
     }
 
@@ -153,7 +155,7 @@ dependencies {
     testImplementation ("org.apache.activemq:artemis-server:$artemisVersion")
     testImplementation ("org.apache.activemq:artemis-jms-client:$artemisVersion")
 
-    testImplementation("org.spekframework.spek2:spek-dsl-jvm:$spekVersion") {
+    testImplementation ("org.spekframework.spek2:spek-dsl-jvm:$spekVersion") {
         exclude(group = "org.jetbrains.kotlin")
     }
     testRuntimeOnly ("org.spekframework.spek2:spek-runner-junit5:$spekVersion") {
