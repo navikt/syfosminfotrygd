@@ -17,7 +17,7 @@ import io.ktor.util.KtorExperimentalAPI
 import no.nav.syfo.helpers.retry
 
 @KtorExperimentalAPI
-class Norge2Client(
+class Norg2Client(
     private val endpointUrl: String
 ) {
     private val client = HttpClient(Apache) {
@@ -44,21 +44,5 @@ class Norge2Client(
 }
 
 data class Enhet(
-    val enhetId: String,
-    val navn: String,
-    val enhetNr: String,
-    val antallRessurser: Int,
-    val status: String,
-    val orgNivaa: String,
-    val type: String,
-    val organisasjonsnummer: String,
-    val underEtableringDato: String,
-    val aktiveringsdato: String,
-    val underAvviklingDato: String?,
-    val nedleggelsesdato: String?,
-    val oppgavebehandler: String?,
-    val versjon: Int,
-    val sosialeTjenester: String,
-    val kanalstrategi: String?,
-    val orgNrTilKommunaltNavKontor: String?
+    val enhetNr: String
 )

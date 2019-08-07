@@ -54,7 +54,7 @@ import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.helse.sm2013.KontrollSystemBlokk
 import no.nav.helse.sm2013.KontrollsystemBlokkType
 import no.nav.syfo.api.registerNaisApi
-import no.nav.syfo.client.Norge2Client
+import no.nav.syfo.client.Norg2Client
 import no.nav.syfo.helpers.retry
 import no.nav.syfo.kafka.loadBaseConfig
 import no.nav.syfo.kafka.toConsumerConfig
@@ -76,6 +76,7 @@ import no.nav.syfo.rules.executeFlow
 import no.nav.syfo.rules.sortedSMInfos
 import no.nav.syfo.sak.avro.PrioritetType
 import no.nav.syfo.sak.avro.ProduceTask
+import no.nav.syfo.services.FindNAVKontorService
 import no.nav.syfo.util.JacksonKafkaSerializer
 import no.nav.syfo.util.fellesformatUnmarshaller
 import no.nav.syfo.util.infotrygdSporringMarshaller
@@ -193,7 +194,7 @@ fun main() = runBlocking(coroutineContext) {
             port { withSTS(credentials.serviceuserUsername, credentials.serviceuserPassword, env.securityTokenServiceUrl) }
         }
 
-        val norge2Client = Norge2Client(env.norg2V1EndpointURL)
+        val norg2Client = Norg2Client(env.norg2V1EndpointURL)
 
         launchListeners(
                 applicationState,
@@ -208,7 +209,7 @@ fun main() = runBlocking(coroutineContext) {
                 helsepersonellV1,
                 consumerProperties,
                 smIkkeOkQueue,
-                norge2Client)
+                norg2Client)
 
         Runtime.getRuntime().addShutdownHook(Thread {
             smIkkeOkQueue.close()
@@ -243,7 +244,7 @@ suspend fun CoroutineScope.launchListeners(
     helsepersonellv1: IHPR2Service,
     consumerProperties: Properties,
     smIkkeOkQueue: MQQueue,
-    norge2Client: Norge2Client
+    norg2Client: Norg2Client
 ) {
 
     val recievedSykmeldingListeners = 0.until(env.applicationThreads).map {
@@ -256,7 +257,7 @@ suspend fun CoroutineScope.launchListeners(
             blockingApplicationLogic(applicationState, kafkaconsumerRecievedSykmelding, kafkaproducerCreateTask,
                     kafkaproducervalidationResult, infotrygdOppdateringProducer, infotrygdSporringProducer,
                     session, personV3, arbeidsfordelingV1, env.sm2013BehandlingsUtfallToipic, helsepersonellv1,
-                    smIkkeOkQueue, norge2Client)
+                    smIkkeOkQueue, norg2Client)
         }
     }.toList()
 
@@ -278,7 +279,7 @@ suspend fun blockingApplicationLogic(
     sm2013BehandlingsUtfallToipic: String,
     helsepersonellv1: IHPR2Service,
     smIkkeOkQueue: MQQueue,
-    norge2Client: Norge2Client
+    norg2Client: Norg2Client
 ) {
     while (applicationState.running) {
         kafkaConsumer.poll(Duration.ofMillis(0)).forEach { consumerRecord ->
@@ -294,7 +295,7 @@ suspend fun blockingApplicationLogic(
                     receivedSykmelding, kafkaproducerCreateTask, kafkaproducervalidationResult,
                     infotrygdOppdateringProducer, infotrygdSporringProducer,
                     session, personV3, arbeidsfordelingV1, sm2013BehandlingsUtfallToipic, helsepersonellv1,
-                    smIkkeOkQueue, loggingMeta, norge2Client)
+                    smIkkeOkQueue, loggingMeta, norg2Client)
         }
         delay(100)
     }
@@ -323,7 +324,7 @@ suspend fun handleMessage(
     helsepersonellv1: IHPR2Service,
     smIkkeOkQueue: MQQueue,
     loggingMeta: LoggingMeta,
-    norge2Client: Norge2Client
+    norg2Client: Norg2Client
 ) = coroutineScope {
     wrapExceptions(loggingMeta) {
         log.info("Received a SM2013, {}", fields(loggingMeta))
@@ -351,8 +352,10 @@ suspend fun handleMessage(
                 sm2013BehandlingsUtfallToipic,
                 loggingMeta)
 
-        val navKontorManuellOppgave = findNavkontorTaskNr(receivedSykmelding, personV3, arbeidsfordelingV1, loggingMeta)
-        val navKontorLokalKontor = findLocaleNavkontorNr(receivedSykmelding, personV3, norge2Client)
+        val findNAVKontorService = FindNAVKontorService(receivedSykmelding, personV3, loggingMeta)
+
+        val navKontorManuellOppgave = findNAVKontorService.findNavkontorTaskNr(arbeidsfordelingV1)
+        val navKontorLokalKontor = findNAVKontorService.findLocaleNavkontorNr(norg2Client)
 
         updateInfotrygd(receivedSykmelding,
                 helsepersonellv1,
@@ -523,9 +526,9 @@ fun sendInfotrygdOppdateringMq(
     fellesformat: XMLEIFellesformat,
     loggingMeta: LoggingMeta
 ) = producer.send(session.createTextMessage().apply {
-    log.info("Message has oprasjonstype: {}, tkNummer: {}, {}", fellesformat.get<KontrollsystemBlokkType>().infotrygdBlokk.first().operasjonstype, fellesformat.get<KontrollsystemBlokkType>().infotrygdBlokk.first().tkNummer, fields(loggingMeta))
+    log.info("Melding har oprasjonstype: {}, tkNummer: {}, {}", fellesformat.get<KontrollsystemBlokkType>().infotrygdBlokk.first().operasjonstype, fellesformat.get<KontrollsystemBlokkType>().infotrygdBlokk.first().tkNummer, fields(loggingMeta))
     text = xmlObjectWriter.writeValueAsString(fellesformat)
-    log.info("Message is sendt to infotrygd {}", fields(loggingMeta))
+    log.info("Meldings er sendt til infotrygd {}", fields(loggingMeta))
 })
 
 fun createInfotrygdForesp(personNrPasient: String, healthInformation: HelseOpplysningerArbeidsuforhet, doctorFnr: String) = InfotrygdForesp().apply {
@@ -598,36 +601,6 @@ fun produceManualTask(
     loggingMeta: LoggingMeta
 ) {
     createTask(kafkaProducer, receivedSykmelding, validationResult, navKontorNr, loggingMeta)
-}
-
-suspend fun findNavkontorTaskNr(
-    receivedSykmelding: ReceivedSykmelding,
-    personV3: PersonV3,
-    arbeidsfordelingV1: ArbeidsfordelingV1,
-    loggingMeta: LoggingMeta
-): String {
-    val geografiskTilknytning = fetchGeografiskTilknytningAsync(personV3, receivedSykmelding)
-    val patientDiskresjonsKode = fetchDiskresjonsKode(personV3, receivedSykmelding)
-    val finnBehandlendeEnhetListeResponse = fetchBehandlendeEnhet(arbeidsfordelingV1, geografiskTilknytning.geografiskTilknytning, patientDiskresjonsKode)
-    if (finnBehandlendeEnhetListeResponse?.behandlendeEnhetListe?.firstOrNull()?.enhetId == null) {
-        log.error("arbeidsfordeling fant ingen nav-enheter {}", fields(loggingMeta))
-    }
-    return finnBehandlendeEnhetListeResponse?.behandlendeEnhetListe?.firstOrNull()?.enhetId ?: NAV_OPPFOLGING_UTLAND_KONTOR_NR
-}
-
-@KtorExperimentalAPI
-suspend fun findLocaleNavkontorNr(
-    receivedSykmelding: ReceivedSykmelding,
-    personV3: PersonV3,
-    norge2Client: Norge2Client
-): String {
-    val geografiskTilknytning = fetchGeografiskTilknytningAsync(personV3, receivedSykmelding)
-    val patientDiskresjonsKode = fetchDiskresjonsKode(personV3, receivedSykmelding)
-    return if (geografiskTilknytning.geografiskTilknytning?.geografiskTilknytning.isNullOrEmpty()) {
-        NAV_OPPFOLGING_UTLAND_KONTOR_NR
-    } else {
-        norge2Client.getLocalNAVOffice(geografiskTilknytning.geografiskTilknytning.geografiskTilknytning, patientDiskresjonsKode).enhetNr
-    }
 }
 
 fun createTask(
