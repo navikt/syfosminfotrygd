@@ -623,10 +623,10 @@ suspend fun findLocaleNavkontorNr(
 ): String {
     val geografiskTilknytning = fetchGeografiskTilknytningAsync(personV3, receivedSykmelding)
     val patientDiskresjonsKode = fetchDiskresjonsKode(personV3, receivedSykmelding)
-    if (geografiskTilknytning.geografiskTilknytning?.geografiskTilknytning.isNullOrEmpty()) {
-        return NAV_OPPFOLGING_UTLAND_KONTOR_NR
+    return if (geografiskTilknytning.geografiskTilknytning?.geografiskTilknytning.isNullOrEmpty()) {
+        NAV_OPPFOLGING_UTLAND_KONTOR_NR
     } else {
-        return norge2Client.getLocalNAVOffice(geografiskTilknytning.geografiskTilknytning.geografiskTilknytning, patientDiskresjonsKode).enhetNr
+        norge2Client.getLocalNAVOffice(geografiskTilknytning.geografiskTilknytning.geografiskTilknytning, patientDiskresjonsKode).enhetNr
     }
 }
 
