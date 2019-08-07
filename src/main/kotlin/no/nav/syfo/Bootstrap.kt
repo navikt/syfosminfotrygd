@@ -354,16 +354,16 @@ suspend fun handleMessage(
 
         val findNAVKontorService = FindNAVKontorService(receivedSykmelding, personV3, norg2Client, arbeidsfordelingV1, loggingMeta)
 
-        val navKontorManuellOppgave = findNAVKontorService.finnBehandlendeEnhet()
-        val navKontorLokalKontor = findNAVKontorService.finnLokaltNavkontor()
+        val behandlendeEnhet = findNAVKontorService.finnBehandlendeEnhet()
+        val lokaltNavkontor = findNAVKontorService.finnLokaltNavkontor()
 
         updateInfotrygd(receivedSykmelding,
                 helsepersonellv1,
                 validationResult,
                 infotrygdOppdateringProducer,
                 kafkaproducerCreateTask,
-                navKontorManuellOppgave,
-                navKontorLokalKontor,
+                behandlendeEnhet,
+                lokaltNavkontor,
                 loggingMeta,
                 session,
                 infotrygdForespResponse,
