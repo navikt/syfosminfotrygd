@@ -352,10 +352,10 @@ suspend fun handleMessage(
                 sm2013BehandlingsUtfallToipic,
                 loggingMeta)
 
-        val findNAVKontorService = FindNAVKontorService(receivedSykmelding, personV3, loggingMeta)
+        val findNAVKontorService = FindNAVKontorService(receivedSykmelding, personV3, norg2Client, arbeidsfordelingV1, loggingMeta)
 
-        val navKontorManuellOppgave = findNAVKontorService.findNavkontorTaskNr(arbeidsfordelingV1)
-        val navKontorLokalKontor = findNAVKontorService.findLocaleNavkontorNr(norg2Client)
+        val navKontorManuellOppgave = findNAVKontorService.finnBehandlendeEnhet()
+        val navKontorLokalKontor = findNAVKontorService.finnLokaltNavkontor()
 
         updateInfotrygd(receivedSykmelding,
                 helsepersonellv1,
@@ -528,7 +528,7 @@ fun sendInfotrygdOppdateringMq(
 ) = producer.send(session.createTextMessage().apply {
     log.info("Melding har oprasjonstype: {}, tkNummer: {}, {}", fellesformat.get<KontrollsystemBlokkType>().infotrygdBlokk.first().operasjonstype, fellesformat.get<KontrollsystemBlokkType>().infotrygdBlokk.first().tkNummer, fields(loggingMeta))
     text = xmlObjectWriter.writeValueAsString(fellesformat)
-    log.info("Meldings er sendt til infotrygd {}", fields(loggingMeta))
+    log.info("Melding er sendt til infotrygd {}", fields(loggingMeta))
 })
 
 fun createInfotrygdForesp(personNrPasient: String, healthInformation: HelseOpplysningerArbeidsuforhet, doctorFnr: String) = InfotrygdForesp().apply {

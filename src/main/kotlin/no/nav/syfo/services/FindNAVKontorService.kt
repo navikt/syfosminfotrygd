@@ -16,12 +16,12 @@ import no.nav.tjeneste.virksomhet.person.v3.binding.PersonV3
 class FindNAVKontorService(
     val receivedSykmelding: ReceivedSykmelding,
     val personV3: PersonV3,
+    val norg2Client: Norg2Client,
+    val arbeidsfordelingV1: ArbeidsfordelingV1,
     val loggingMeta: LoggingMeta
 ) {
 
-    suspend fun findNavkontorTaskNr(
-        arbeidsfordelingV1: ArbeidsfordelingV1
-    ): String {
+    suspend fun finnBehandlendeEnhet(): String {
         val geografiskTilknytning = fetchGeografiskTilknytningAsync(personV3, receivedSykmelding)
         val patientDiskresjonsKode = fetchDiskresjonsKode(personV3, receivedSykmelding)
         val finnBehandlendeEnhetListeResponse = fetchBehandlendeEnhet(arbeidsfordelingV1, geografiskTilknytning.geografiskTilknytning, patientDiskresjonsKode)
@@ -32,9 +32,7 @@ class FindNAVKontorService(
     }
 
     @KtorExperimentalAPI
-    suspend fun findLocaleNavkontorNr(
-        norg2Client: Norg2Client
-    ): String {
+    suspend fun finnLokaltNavkontor(): String {
         val geografiskTilknytning = fetchGeografiskTilknytningAsync(personV3, receivedSykmelding)
         val patientDiskresjonsKode = fetchDiskresjonsKode(personV3, receivedSykmelding)
         return if (geografiskTilknytning.geografiskTilknytning?.geografiskTilknytning.isNullOrEmpty()) {
