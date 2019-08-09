@@ -161,7 +161,7 @@ object ValidationRuleChainSpek : Spek({
             ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
         }
 
-        it("Should check rule PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE, should trigger rule") {
+        it("Should check rule PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE, should NOT trigger rule") {
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
@@ -180,7 +180,7 @@ object ValidationRuleChainSpek : Spek({
                     )
             ))
 
-            ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
+            ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
         }
 
         it("Should check rule PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE, should NOT trigger rule") {
