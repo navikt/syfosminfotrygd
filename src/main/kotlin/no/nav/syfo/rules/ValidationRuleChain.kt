@@ -63,13 +63,13 @@ enum class ValidationRuleChain(
             "Hvis delvis sammenfallende sykmeldingsperiode er registrert i Infotrygd",
             "Hvis delvis sammenfallende sykmeldingsperiode er registrert i Infotrygd",
             { (sykmelding, infotrygdForesp) ->
-        sykmelding.perioder.any { sykmeldingPeriods ->
+        sykmelding.perioder.any { sykmeldingPeriode ->
             infotrygdForesp.sMhistorikk?.sykmelding != null && infotrygdForesp.sMhistorikk.sykmelding
                     .any { infotrygdForespSykmelding ->
-                        infotrygdForespSykmelding.periode?.arbufoerFOM != null && (sykmeldingPeriods.fom.isBefore(infotrygdForespSykmelding.periode.arbufoerFOM) ||
-                                sykmeldingPeriods.fom.isEqual(infotrygdForespSykmelding.periode.arbufoerFOM)) &&
-                                sykmeldingPeriods.fom != infotrygdForespSykmelding.periode.arbufoerFOM &&
-                                (infotrygdForespSykmelding.periode?.arbufoerTOM != null && sykmeldingPeriods.tom != infotrygdForespSykmelding.periode.arbufoerTOM)
+                        sykmeldingPeriode.fom != infotrygdForespSykmelding.periode.arbufoerFOM &&
+                        (infotrygdForespSykmelding.periode?.arbufoerTOM != null && sykmeldingPeriode.tom != infotrygdForespSykmelding.periode.arbufoerTOM) &&
+                        infotrygdForespSykmelding.periode?.arbufoerFOM != null && (sykmeldingPeriode.fom.isBefore(infotrygdForespSykmelding.periode.arbufoerFOM) ||
+                                sykmeldingPeriode.fom.isEqual(infotrygdForespSykmelding.periode.arbufoerFOM))
                     }
         }
     }),
