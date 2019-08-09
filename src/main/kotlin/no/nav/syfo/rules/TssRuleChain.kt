@@ -10,12 +10,12 @@ enum class TssRuleChain(
     override val messageForSender: String,
     override val predicate: (RuleData<RuleMetadata>) -> Boolean
 ) : Rule<RuleData<RuleMetadata>> {
-    @Description("Behandlers TSS-ident er ikkje funnet automatisk av systemet")
+    @Description("Behandlers TSS-ident er ikke funnet automatisk av systemet")
     TSS_IDENT_MANGLER(
             9999,
             Status.MANUAL_PROCESSING,
-            "Behandlers TSS-ident er ikkje funnet automatisk av systemet",
-            "Behandlers TSS-ident er ikkje funnet automatisk av systemet", { (_, metadata) ->
+            "Behandlers TSS-ident er ikke funnet automatisk av systemet",
+            "Behandlers TSS-ident er ikke funnet automatisk av systemet", { (_, metadata) ->
         metadata.tssid.isNullOrBlank()
     }),
 }
