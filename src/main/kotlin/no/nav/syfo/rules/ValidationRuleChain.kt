@@ -66,10 +66,11 @@ enum class ValidationRuleChain(
         sykmelding.perioder.any { sykmeldingPeriode ->
             infotrygdForesp.sMhistorikk?.sykmelding != null && infotrygdForesp.sMhistorikk.sykmelding
                     .any { infotrygdForespSykmelding ->
-                        sykmeldingPeriode.fom != infotrygdForespSykmelding.periode.arbufoerFOM &&
-                        (infotrygdForespSykmelding.periode?.arbufoerTOM != null && sykmeldingPeriode.tom != infotrygdForespSykmelding.periode.arbufoerTOM) &&
-                        infotrygdForespSykmelding.periode?.arbufoerFOM != null && (sykmeldingPeriode.fom.isBefore(infotrygdForespSykmelding.periode.arbufoerFOM) ||
-                                sykmeldingPeriode.fom.isEqual(infotrygdForespSykmelding.periode.arbufoerFOM))
+                        (infotrygdForespSykmelding.periode?.arbufoerFOM != null && infotrygdForespSykmelding.periode?.arbufoerTOM != null &&
+                        !sammePeriode(infotrygdForespSykmelding.periode, sykmeldingPeriode)) &&
+                        (infotrygdForespSykmelding.periode?.arbufoerFOM != null && infotrygdForespSykmelding.periode.arbufoerFOM in sykmeldingPeriode.range() ||
+                        infotrygdForespSykmelding.periode?.arbufoerTOM != null && infotrygdForespSykmelding.periode.arbufoerTOM in sykmeldingPeriode.range())
+
                     }
         }
     }),
@@ -384,4 +385,8 @@ fun forstegangsSykmelding(infotrygdForesp: InfotrygdForesp, periode: Periode): B
 
     return (infotrygdForesp.sMhistorikk.status.kodeMelding == "04" ||
             (typeSMinfo.periode.arbufoerTOM != null && (typeSMinfo.periode.arbufoerTOM..periode.fom).daysBetween() > 1))
+}
+
+fun sammePeriode(infotrygdPeriode: TypeSMinfo.Periode, sykemldingsPeriode: Periode): Boolean {
+    return infotrygdPeriode.arbufoerFOM == sykemldingsPeriode.fom && infotrygdPeriode.arbufoerTOM == sykemldingsPeriode.tom
 }
