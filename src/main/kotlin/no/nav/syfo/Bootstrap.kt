@@ -330,7 +330,7 @@ suspend fun handleMessage(
         log.info("Received a SM2013, {}", fields(loggingMeta))
 
         val smIkkeOkCurrentDepth = smIkkeOkQueue.currentDepth.toDouble()
-        MESSAGES_ON_INFOTRYGD_SMIKKEOK_QUEUE_COUNTER.inc(smIkkeOkCurrentDepth)
+        MESSAGES_ON_INFOTRYGD_SMIKKEOK_QUEUE_COUNTER.set(smIkkeOkCurrentDepth)
 
         val requestLatency = REQUEST_TIME.startTimer()
 
