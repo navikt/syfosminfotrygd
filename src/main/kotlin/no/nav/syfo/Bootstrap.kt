@@ -527,28 +527,24 @@ fun sendInfotrygdOppdatering(
     val personNrPasient = receivedSykmelding.personNrPasient
     val signaturDato = receivedSykmelding.sykmelding.signaturDato.toLocalDate()
     val tssid = receivedSykmelding.tssid
-    val sha256String = sha256hashstring(marshalledFellesformat)
-
-    var duplicate = false
+    val sha256String = sha256hashstring(createInfotrygdBlokk(itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr))
 
     try {
         val redisSha256String = jedis.get(sha256String)
         if (redisSha256String != null) {
             log.warn("Message with marked as duplicate {}", fields(loggingMeta))
-            duplicate = true
+            sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, 2), loggingMeta)
         } else {
-            jedis.setex(sha256String, TimeUnit.DAYS.toSeconds(7).toInt(), sha256String)
+            jedis.setex(sha256String, TimeUnit.DAYS.toSeconds(1).toInt(), sha256String)
+            sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr), loggingMeta)
         }
     } catch (connectionException: JedisConnectionException) {
         log.warn("Unable to contact redis, will allow possible duplicates.", connectionException)
-    }
-    when (duplicate) {
-        true -> sendInfotrygdOppdateringMq(producer, session, createInfotrygdBlokk(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr), loggingMeta)
-        else -> sendInfotrygdOppdateringMq(producer, session, createInfotrygdBlokk(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, 2), loggingMeta)
+        sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr), loggingMeta)
     }
 
     perioder.drop(1).forEach { periode ->
-        sendInfotrygdOppdateringMq(producer, session, createInfotrygdBlokk(marshalledFellesformat, itfh, periode, personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, 2), loggingMeta)
+        sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, periode, personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, 2), loggingMeta)
     }
 }
 
@@ -765,7 +761,7 @@ fun validationResult(results: List<Rule<Any>>): ValidationResult =
 fun List<HelseOpplysningerArbeidsuforhet.Aktivitet.Periode>.sortedFOMDate(): List<LocalDate> =
         map { it.periodeFOMDato }.sorted()
 
-fun createInfotrygdBlokk(
+fun createInfotrygdFellesformat(
     marshalledFellesformat: String,
     itfh: InfotrygdForespAndHealthInformation,
     periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode,
@@ -778,68 +774,89 @@ fun createInfotrygdBlokk(
     operasjonstypeKode: Int = findOperasjonstype(periode, itfh, loggingMeta)
 ) = unmarshal<XMLEIFellesformat>(marshalledFellesformat).apply {
     any.add(KontrollSystemBlokk().apply {
-        infotrygdBlokk.add(KontrollsystemBlokkType.InfotrygdBlokk().apply {
-            fodselsnummer = personNrPasient
-            tkNummer = navKontorNr
-
-            operasjonstype = operasjonstypeKode.toBigInteger()
-
-            val typeSMinfo = itfh.infotrygdForesp.sMhistorikk?.sykmelding
-                    ?.sortedSMInfos()
-                    ?.lastOrNull()
-
-            if ((typeSMinfo != null && tssid?.toBigInteger() != typeSMinfo.periode.legeInstNr) || operasjonstype == 1.toBigInteger()) {
-                legeEllerInstitusjonsNummer = tssid?.toBigInteger() ?: "".toBigInteger()
-                legeEllerInstitusjon = if (itfh.healthInformation.behandler != null) {
-                    itfh.healthInformation.behandler.formatName()
-                } else {
-                    ""
-                }
-            }
-
-            forsteFravaersDag = when (operasjonstype) {
-                1.toBigInteger() -> itfh.healthInformation.aktivitet.periode.sortedFOMDate().first()
-                else -> typeSMinfo?.periode?.arbufoerOppr ?: throw RuntimeException("Unable to find første fraværsdag in IT")
-            }
-
-            mottakerKode = helsepersonellKategoriVerdi
-
-            if (itfh.infotrygdForesp.diagnosekodeOK != null) {
-                hovedDiagnose = itfh.infotrygdForesp.hovedDiagnosekode
-                hovedDiagnoseGruppe = itfh.infotrygdForesp.hovedDiagnosekodeverk.toBigInteger()
-                hovedDiagnoseTekst = itfh.infotrygdForesp.diagnosekodeOK.diagnoseTekst
-            }
-
-            if (operasjonstype == 1.toBigInteger()) {
-                behandlingsDato = findbBehandlingsDato(itfh, signaturDato)
-
-                arbeidsKategori = findarbeidsKategori(itfh)
-                gruppe = "96"
-                saksbehandler = "Auto"
-
-                if (itfh.infotrygdForesp.biDiagnosekodeverk != null &&
-                        itfh.healthInformation.medisinskVurdering.biDiagnoser.diagnosekode.firstOrNull()?.dn != null &&
-                        itfh.infotrygdForesp.diagnosekodeOK != null) {
-                    biDiagnose = itfh.infotrygdForesp.biDiagnoseKode
-                    biDiagnoseGruppe = itfh.infotrygdForesp.biDiagnosekodeverk.toBigInteger()
-                    biDiagnoseTekst = itfh.infotrygdForesp.diagnosekodeOK.bidiagnoseTekst
-                }
-            }
-
-            if (itfh.healthInformation.medisinskVurdering?.isSvangerskap != null &&
-                    itfh.healthInformation.medisinskVurdering.isSvangerskap) {
-                isErSvangerskapsrelatert = true
-            }
-
-            arbeidsufoerTOM = periode.periodeTOMDato
-            ufoeregrad = when {
-                periode.gradertSykmelding != null -> periode.gradertSykmelding.sykmeldingsgrad.toBigInteger()
-                periode.aktivitetIkkeMulig != null -> 100.toBigInteger()
-                else -> 0.toBigInteger()
-            }
-        })
+        infotrygdBlokk.add(createInfotrygdBlokk(
+                itfh,
+                periode,
+                personNrPasient,
+                signaturDato,
+                helsepersonellKategoriVerdi,
+                tssid,
+                loggingMeta,
+                navKontorNr,
+                operasjonstypeKode))
     })
 }
+
+fun createInfotrygdBlokk(
+    itfh: InfotrygdForespAndHealthInformation,
+    periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode,
+    personNrPasient: String,
+    signaturDato: LocalDate,
+    helsepersonellKategoriVerdi: String,
+    tssid: String?,
+    loggingMeta: LoggingMeta,
+    navKontorNr: String,
+    operasjonstypeKode: Int = findOperasjonstype(periode, itfh, loggingMeta)
+) = KontrollsystemBlokkType.InfotrygdBlokk().apply {
+        fodselsnummer = personNrPasient
+        tkNummer = navKontorNr
+
+        operasjonstype = operasjonstypeKode.toBigInteger()
+
+        val typeSMinfo = itfh.infotrygdForesp.sMhistorikk?.sykmelding
+                ?.sortedSMInfos()
+                ?.lastOrNull()
+
+        if ((typeSMinfo != null && tssid?.toBigInteger() != typeSMinfo.periode.legeInstNr) || operasjonstype == 1.toBigInteger()) {
+            legeEllerInstitusjonsNummer = tssid?.toBigInteger() ?: "".toBigInteger()
+            legeEllerInstitusjon = if (itfh.healthInformation.behandler != null) {
+                itfh.healthInformation.behandler.formatName()
+            } else {
+                ""
+            }
+        }
+
+        forsteFravaersDag = when (operasjonstype) {
+            1.toBigInteger() -> itfh.healthInformation.aktivitet.periode.sortedFOMDate().first()
+            else -> typeSMinfo?.periode?.arbufoerOppr ?: throw RuntimeException("Unable to find første fraværsdag in IT")
+        }
+
+        mottakerKode = helsepersonellKategoriVerdi
+
+        if (itfh.infotrygdForesp.diagnosekodeOK != null) {
+            hovedDiagnose = itfh.infotrygdForesp.hovedDiagnosekode
+            hovedDiagnoseGruppe = itfh.infotrygdForesp.hovedDiagnosekodeverk.toBigInteger()
+            hovedDiagnoseTekst = itfh.infotrygdForesp.diagnosekodeOK.diagnoseTekst
+        }
+
+        if (operasjonstype == 1.toBigInteger()) {
+            behandlingsDato = findbBehandlingsDato(itfh, signaturDato)
+
+            arbeidsKategori = findarbeidsKategori(itfh)
+            gruppe = "96"
+            saksbehandler = "Auto"
+
+            if (itfh.infotrygdForesp.biDiagnosekodeverk != null &&
+                    itfh.healthInformation.medisinskVurdering.biDiagnoser.diagnosekode.firstOrNull()?.dn != null &&
+                    itfh.infotrygdForesp.diagnosekodeOK != null) {
+                biDiagnose = itfh.infotrygdForesp.biDiagnoseKode
+                biDiagnoseGruppe = itfh.infotrygdForesp.biDiagnosekodeverk.toBigInteger()
+                biDiagnoseTekst = itfh.infotrygdForesp.diagnosekodeOK.bidiagnoseTekst
+            }
+        }
+
+        if (itfh.healthInformation.medisinskVurdering?.isSvangerskap != null &&
+                itfh.healthInformation.medisinskVurdering.isSvangerskap) {
+            isErSvangerskapsrelatert = true
+        }
+
+        arbeidsufoerTOM = periode.periodeTOMDato
+        ufoeregrad = when {
+            periode.gradertSykmelding != null -> periode.gradertSykmelding.sykmeldingsgrad.toBigInteger()
+            periode.aktivitetIkkeMulig != null -> 100.toBigInteger()
+            else -> 0.toBigInteger()
+        }
+    }
 
 fun findbBehandlingsDato(itfh: InfotrygdForespAndHealthInformation, signaturDato: LocalDate): LocalDate {
     return if (itfh.healthInformation.kontaktMedPasient?.kontaktDato != null &&
@@ -876,7 +893,7 @@ fun HelseOpplysningerArbeidsuforhet.Behandler.formatName(): String =
             "${navn.etternavn.toUpperCase()} ${navn.fornavn.toUpperCase()} ${navn.mellomnavn.toUpperCase()}"
         }
 
-fun sha256hashstring(marshalledFellesformat: String): String =
+fun sha256hashstring(infotrygdblokk: KontrollsystemBlokkType.InfotrygdBlokk): String =
         MessageDigest.getInstance("SHA-256")
-                .digest(objectMapper.writeValueAsBytes(marshalledFellesformat))
+                .digest(objectMapper.writeValueAsBytes(infotrygdblokk))
                 .fold("") { str, it -> str + "%02x".format(it) }
