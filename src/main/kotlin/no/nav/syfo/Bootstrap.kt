@@ -49,6 +49,7 @@ import net.logstash.logback.argument.StructuredArguments.fields
 import net.logstash.logback.argument.StructuredArguments.keyValue
 import no.nav.helse.eiFellesformat.XMLEIFellesformat
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
+import no.nav.helse.infotrygd.foresp.TypeSMinfo
 import no.nav.helse.msgHead.XMLMsgHead
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.helse.sm2013.KontrollSystemBlokk
@@ -578,20 +579,41 @@ fun findOperasjonstype(
             ?.lastOrNull()
             ?: return 1
 
-    return if (itfh.infotrygdForesp.sMhistorikk.status.kodeMelding == "04" ||
-            (typeSMinfo.periode.arbufoerTOM != null && (typeSMinfo.periode.arbufoerTOM..periode.periodeFOMDato).daysBetween() > 1)) {
+    return if (forstegangsSykmelding(periode, itfh, typeSMinfo)) {
         1
-    } else if (typeSMinfo.periode.arbufoerTOM != null && periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerTOM) ||
-            (typeSMinfo.periode.arbufoerTOM != null && periode.periodeFOMDato.isEqual(typeSMinfo.periode.arbufoerTOM)) ||
-            (typeSMinfo.periode.arbufoerTOM == null && (typeSMinfo.periode.arbufoerFOM..periode.periodeFOMDato).daysBetween() > 1)) {
+    } else if (paafolgendeSykmelding(periode, typeSMinfo)) {
         2
-    } else if (typeSMinfo.periode.arbufoerFOM == periode.periodeFOMDato || (typeSMinfo.periode.arbufoerFOM != null && typeSMinfo.periode.arbufoerFOM.isBefore(periode.periodeFOMDato))) {
+    } else if (endringSykmelding(periode, typeSMinfo)) {
         3
     } else {
         log.error("Could not determined operasjonstype {}", fields(loggingMeta))
         throw RuntimeException("Could not determined operasjonstype")
     }
 }
+
+// TODO fikse test som feiler
+fun forstegangsSykmelding(
+    periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode,
+    itfh: InfotrygdForespAndHealthInformation,
+    typeSMinfo: TypeSMinfo
+): Boolean =
+            (itfh.infotrygdForesp.sMhistorikk.status.kodeMelding == "04" ||
+                (typeSMinfo.periode.arbufoerTOM != null && (typeSMinfo.periode.arbufoerTOM..periode.periodeFOMDato).daysBetween() > 1))
+
+fun paafolgendeSykmelding(
+    periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode,
+    typeSMinfo: TypeSMinfo
+): Boolean =
+        (typeSMinfo.periode.arbufoerTOM != null && periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerTOM) ||
+                (typeSMinfo.periode.arbufoerTOM != null && periode.periodeFOMDato.isEqual(typeSMinfo.periode.arbufoerTOM)) ||
+                (typeSMinfo.periode.arbufoerTOM == null && (typeSMinfo.periode.arbufoerFOM..periode.periodeFOMDato).daysBetween() > 1))
+
+fun endringSykmelding(
+    periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode,
+    typeSMinfo: TypeSMinfo
+): Boolean =
+        (typeSMinfo.periode.arbufoerFOM == periode.periodeFOMDato || (typeSMinfo.periode.arbufoerFOM != null &&
+                typeSMinfo.periode.arbufoerFOM.isBefore(periode.periodeFOMDato)))
 
 fun produceManualTask(
     kafkaProducer: KafkaProducer<String, ProduceTask>,

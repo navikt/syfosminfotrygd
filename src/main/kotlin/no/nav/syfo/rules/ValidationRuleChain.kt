@@ -70,7 +70,6 @@ enum class ValidationRuleChain(
                         !sammePeriode(infotrygdForespSykmelding.periode, sykmeldingPeriode)) &&
                         (infotrygdForespSykmelding.periode?.arbufoerFOM != null && infotrygdForespSykmelding.periode.arbufoerFOM in sykmeldingPeriode.range() ||
                         infotrygdForespSykmelding.periode?.arbufoerTOM != null && infotrygdForespSykmelding.periode.arbufoerTOM in sykmeldingPeriode.range())
-
                     }
         }
     }),
