@@ -78,6 +78,7 @@ import no.nav.syfo.rules.sortedSMInfos
 import no.nav.syfo.sak.avro.PrioritetType
 import no.nav.syfo.sak.avro.ProduceTask
 import no.nav.syfo.services.FindNAVKontorService
+import no.nav.syfo.services.UpdateInfotrygdService
 import no.nav.syfo.util.JacksonKafkaSerializer
 import no.nav.syfo.util.fellesformatUnmarshaller
 import no.nav.syfo.util.infotrygdSporringMarshaller
@@ -101,7 +102,6 @@ import no.nav.tjeneste.virksomhet.person.v3.meldinger.HentGeografiskTilknytningR
 import no.nav.tjeneste.virksomhet.person.v3.meldinger.HentGeografiskTilknytningResponse
 import no.nav.tjeneste.virksomhet.person.v3.meldinger.HentPersonRequest
 import no.nhn.schemas.reg.hprv2.IHPR2Service
-import no.nhn.schemas.reg.hprv2.IHPR2ServiceHentPersonMedPersonnummerGenericFaultFaultFaultMessage
 import no.nhn.schemas.reg.hprv2.Person as HPRPerson
 import org.apache.cxf.binding.soap.SoapMessage
 import org.apache.cxf.binding.soap.interceptor.AbstractSoapInterceptor
@@ -366,7 +366,7 @@ suspend fun handleMessage(
         val behandlendeEnhet = findNAVKontorService.finnBehandlendeEnhet()
         val lokaltNavkontor = findNAVKontorService.finnLokaltNavkontor()
 
-        updateInfotrygd(receivedSykmelding,
+        UpdateInfotrygdService(receivedSykmelding,
                 helsepersonellv1,
                 validationResult,
                 infotrygdOppdateringProducer,
@@ -377,7 +377,7 @@ suspend fun handleMessage(
                 session,
                 infotrygdForespResponse,
                 healthInformation,
-                jedis)
+                jedis).updateInfotrygd()
 
         val currentRequestLatency = requestLatency.observeDuration()
 
@@ -427,56 +427,6 @@ fun sendRuleCheckValidationResult(
 ) {
     kafkaproducervalidationResult.send(ProducerRecord(sm2013BehandlingsUtfallToipic, receivedSykmelding.sykmelding.id, validationResult))
     log.info("Validation results send to kafka {} $loggingMeta", sm2013BehandlingsUtfallToipic, fields(loggingMeta))
-}
-
-suspend fun updateInfotrygd(
-    receivedSykmelding: ReceivedSykmelding,
-    helsepersonellv1: IHPR2Service,
-    validationResult: ValidationResult,
-    infotrygdOppdateringProducer: MessageProducer,
-    kafkaproducerCreateTask: KafkaProducer<String, ProduceTask>,
-    navKontorManuellOppgave: String,
-    navKontorLokalKontor: String,
-    loggingMeta: LoggingMeta,
-    session: Session,
-    infotrygdForespResponse: InfotrygdForesp,
-    healthInformation: HelseOpplysningerArbeidsuforhet,
-    jedis: Jedis
-) {
-    try {
-        val doctor = fetchDoctor(helsepersonellv1, receivedSykmelding.personNrLege)
-
-        val helsepersonellKategoriVerdi = finnAktivHelsepersonellAutorisasjons(doctor)
-
-        when {
-            validationResult.status in arrayOf(Status.MANUAL_PROCESSING) ->
-                produceManualTask(kafkaproducerCreateTask, receivedSykmelding, validationResult, navKontorManuellOppgave, loggingMeta)
-            else -> sendInfotrygdOppdatering(
-                    infotrygdOppdateringProducer,
-                    session,
-                    loggingMeta,
-                    InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
-                    receivedSykmelding,
-                    helsepersonellKategoriVerdi,
-                    navKontorLokalKontor,
-                    jedis)
-        }
-
-        log.info("Message(${fields(loggingMeta)}) got outcome {}, {}, processing took {}s",
-                keyValue("status", validationResult.status),
-                keyValue("ruleHits", validationResult.ruleHits.joinToString(", ", "(", ")") { it.ruleName }))
-    } catch (e: IHPR2ServiceHentPersonMedPersonnummerGenericFaultFaultFaultMessage) {
-        val validationResultBehandler = ValidationResult(
-                status = Status.MANUAL_PROCESSING,
-                ruleHits = listOf(RuleInfo(
-                        ruleName = "BEHANDLER_NOT_IN_HPR",
-                        messageForSender = "Den som har skrevet sykmeldingen din har ikke autorisasjon til dette.",
-                        messageForUser = "Behandler er ikke register i HPR"))
-        )
-        RULE_HIT_STATUS_COUNTER.labels(validationResultBehandler.status.name).inc()
-        log.warn("Behandler er ikke register i HPR")
-        produceManualTask(kafkaproducerCreateTask, receivedSykmelding, validationResultBehandler, navKontorManuellOppgave, loggingMeta)
-    }
 }
 
 data class InfotrygdForespAndHealthInformation(
@@ -532,14 +482,15 @@ fun sendInfotrygdOppdatering(
     try {
         val redisSha256String = jedis.get(sha256String)
         if (redisSha256String != null) {
-            log.warn("Message with marked as duplicate {}", fields(loggingMeta))
+            log.warn("Melding market som infotrygd duplikat oppdaatering {}", fields(loggingMeta))
             sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, 2), loggingMeta)
         } else {
-            jedis.setex(sha256String, TimeUnit.DAYS.toSeconds(1).toInt(), sha256String)
+            val antallSekunderI24Timer = TimeUnit.DAYS.toSeconds(1).toInt()
+            jedis.setex(sha256String, antallSekunderI24Timer, sha256String)
             sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr), loggingMeta)
         }
     } catch (connectionException: JedisConnectionException) {
-        log.warn("Unable to contact redis, will allow possible duplicates.", connectionException)
+        log.warn("Fikk ikkje opprettet kontakt med redis, infotrygd duplikater kan forekomme", connectionException)
         sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr), loggingMeta)
     }
 
