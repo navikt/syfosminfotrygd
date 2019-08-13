@@ -13,7 +13,7 @@ import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.binding.ArbeidsfordelingV1
 import no.nav.tjeneste.virksomhet.person.v3.binding.PersonV3
 
-class FindNAVKontorService(
+class FindNAVKontorService @KtorExperimentalAPI constructor(
     val receivedSykmelding: ReceivedSykmelding,
     val personV3: PersonV3,
     val norg2Client: Norg2Client,

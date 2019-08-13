@@ -136,6 +136,8 @@ dependencies {
     implementation ("org.apache.cxf:cxf-rt-transports-http:$cxfVersion")
     implementation ("org.apache.cxf:cxf-rt-ws-security:$cxfVersion")
 
+    implementation ("redis.clients:jedis:$jedisVersion")
+
     implementation ("com.migesok:jaxb-java-time-adapters:$jaxbTimeAdaptersVersion")
     implementation ("javax.xml.ws:jaxws-api:$jaxwsApiVersion")
     implementation ("javax.annotation:javax.annotation-api:$javaxAnnotationApiVersion")
