@@ -22,6 +22,7 @@ import java.io.StringReader
 import java.io.StringWriter
 import java.lang.IllegalStateException
 import java.nio.file.Paths
+import java.security.MessageDigest
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -113,6 +114,8 @@ import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import redis.clients.jedis.Jedis
+import redis.clients.jedis.exceptions.JedisConnectionException
 
 data class ApplicationState(var running: Boolean = true, var initialized: Boolean = false)
 
@@ -144,78 +147,81 @@ fun main() = runBlocking(coroutineContext) {
     connectionFactory(env).createConnection(credentials.mqUsername, credentials.mqPassword).use { connection ->
         connection.start()
 
-        val kafkaBaseConfig = loadBaseConfig(env, credentials)
-        val consumerProperties = kafkaBaseConfig.toConsumerConfig("${env.applicationName}-consumer", valueDeserializer = StringDeserializer::class)
-        val producerPropertiesCreateTask = kafkaBaseConfig.toProducerConfig(env.applicationName, valueSerializer = KafkaAvroSerializer::class)
+        Jedis(env.redishost, 6379).use { jedis ->
+            val kafkaBaseConfig = loadBaseConfig(env, credentials)
+            val consumerProperties = kafkaBaseConfig.toConsumerConfig("${env.applicationName}-consumer", valueDeserializer = StringDeserializer::class)
+            val producerPropertiesCreateTask = kafkaBaseConfig.toProducerConfig(env.applicationName, valueSerializer = KafkaAvroSerializer::class)
 
-        val producerPropertiesvalidationResult = kafkaBaseConfig.toProducerConfig(env.applicationName, valueSerializer = JacksonKafkaSerializer::class)
+            val producerPropertiesvalidationResult = kafkaBaseConfig.toProducerConfig(env.applicationName, valueSerializer = JacksonKafkaSerializer::class)
 
-        val kafkaproducerCreateTask = KafkaProducer<String, ProduceTask>(producerPropertiesCreateTask)
+            val kafkaproducerCreateTask = KafkaProducer<String, ProduceTask>(producerPropertiesCreateTask)
 
-        val kafkaproducervalidationResult = KafkaProducer<String, ValidationResult>(producerPropertiesvalidationResult)
+            val kafkaproducervalidationResult = KafkaProducer<String, ValidationResult>(producerPropertiesvalidationResult)
 
-        val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
-        val infotrygdOppdateringProducer = session.producerForQueue("queue:///${env.infotrygdOppdateringQueue}?targetClient=1")
-        val infotrygdSporringProducer = session.producerForQueue("queue:///${env.infotrygdSporringQueue}?targetClient=1")
+            val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
+            val infotrygdOppdateringProducer = session.producerForQueue("queue:///${env.infotrygdOppdateringQueue}?targetClient=1")
+            val infotrygdSporringProducer = session.producerForQueue("queue:///${env.infotrygdSporringQueue}?targetClient=1")
 
-        MQEnvironment.channel = env.mqChannelName
-        MQEnvironment.port = env.mqPort
-        MQEnvironment.hostname = env.mqHostname
-        MQEnvironment.userID = credentials.mqUsername
-        MQEnvironment.password = credentials.mqPassword
-        val mqQueueManager = MQQueueManager(env.mqGatewayName)
-        val openOptions = MQC.MQOO_INQUIRE + MQC.MQOO_BROWSE + MQC.MQOO_FAIL_IF_QUIESCING + MQC.MQOO_INPUT_SHARED
-        val smIkkeOkQueue = mqQueueManager.accessQueue(env.infotrygdSmIkkeOKQueue, openOptions)
+            MQEnvironment.channel = env.mqChannelName
+            MQEnvironment.port = env.mqPort
+            MQEnvironment.hostname = env.mqHostname
+            MQEnvironment.userID = credentials.mqUsername
+            MQEnvironment.password = credentials.mqPassword
+            val mqQueueManager = MQQueueManager(env.mqGatewayName)
+            val openOptions = MQC.MQOO_INQUIRE + MQC.MQOO_BROWSE + MQC.MQOO_FAIL_IF_QUIESCING + MQC.MQOO_INPUT_SHARED
+            val smIkkeOkQueue = mqQueueManager.accessQueue(env.infotrygdSmIkkeOKQueue, openOptions)
 
-        val personV3 = createPort<PersonV3>(env.personV3EndpointURL) {
-            port { withSTS(credentials.serviceuserUsername, credentials.serviceuserPassword, env.securityTokenServiceUrl) }
-        }
-
-        val arbeidsfordelingV1 = createPort<ArbeidsfordelingV1>(env.arbeidsfordelingV1EndpointURL) {
-            port { withSTS(credentials.serviceuserUsername, credentials.serviceuserPassword, env.securityTokenServiceUrl) }
-        }
-
-        val helsepersonellV1 = createPort<IHPR2Service>(env.helsepersonellv1EndpointURL) {
-            proxy {
-                // TODO: Contact someone about this hacky workaround
-                // talk to HDIR about HPR about they claim to send a ISO-8859-1 but its really UTF-8 payload
-                val interceptor = object : AbstractSoapInterceptor(Phase.RECEIVE) {
-                    override fun handleMessage(message: SoapMessage?) {
-                        if (message != null)
-                            message[Message.ENCODING] = "utf-8"
-                    }
-                }
-
-                inInterceptors.add(interceptor)
-                inFaultInterceptors.add(interceptor)
-                features.add(WSAddressingFeature())
+            val personV3 = createPort<PersonV3>(env.personV3EndpointURL) {
+                port { withSTS(credentials.serviceuserUsername, credentials.serviceuserPassword, env.securityTokenServiceUrl) }
             }
 
-            port { withSTS(credentials.serviceuserUsername, credentials.serviceuserPassword, env.securityTokenServiceUrl) }
+            val arbeidsfordelingV1 = createPort<ArbeidsfordelingV1>(env.arbeidsfordelingV1EndpointURL) {
+                port { withSTS(credentials.serviceuserUsername, credentials.serviceuserPassword, env.securityTokenServiceUrl) }
+            }
+
+            val helsepersonellV1 = createPort<IHPR2Service>(env.helsepersonellv1EndpointURL) {
+                proxy {
+                    // TODO: Contact someone about this hacky workaround
+                    // talk to HDIR about HPR about they claim to send a ISO-8859-1 but its really UTF-8 payload
+                    val interceptor = object : AbstractSoapInterceptor(Phase.RECEIVE) {
+                        override fun handleMessage(message: SoapMessage?) {
+                            if (message != null)
+                                message[Message.ENCODING] = "utf-8"
+                        }
+                    }
+
+                    inInterceptors.add(interceptor)
+                    inFaultInterceptors.add(interceptor)
+                    features.add(WSAddressingFeature())
+                }
+
+                port { withSTS(credentials.serviceuserUsername, credentials.serviceuserPassword, env.securityTokenServiceUrl) }
+            }
+
+            val norg2Client = Norg2Client(env.norg2V1EndpointURL)
+
+            launchListeners(
+                    applicationState,
+                    kafkaproducerCreateTask,
+                    kafkaproducervalidationResult,
+                    infotrygdOppdateringProducer,
+                    infotrygdSporringProducer,
+                    session,
+                    personV3,
+                    arbeidsfordelingV1,
+                    env,
+                    helsepersonellV1,
+                    consumerProperties,
+                    smIkkeOkQueue,
+                    norg2Client,
+                    jedis)
+
+            Runtime.getRuntime().addShutdownHook(Thread {
+                smIkkeOkQueue.close()
+                mqQueueManager.disconnect()
+                applicationServer.stop(10, 10, TimeUnit.SECONDS)
+            })
         }
-
-        val norg2Client = Norg2Client(env.norg2V1EndpointURL)
-
-        launchListeners(
-                applicationState,
-                kafkaproducerCreateTask,
-                kafkaproducervalidationResult,
-                infotrygdOppdateringProducer,
-                infotrygdSporringProducer,
-                session,
-                personV3,
-                arbeidsfordelingV1,
-                env,
-                helsepersonellV1,
-                consumerProperties,
-                smIkkeOkQueue,
-                norg2Client)
-
-        Runtime.getRuntime().addShutdownHook(Thread {
-            smIkkeOkQueue.close()
-            mqQueueManager.disconnect()
-            applicationServer.stop(10, 10, TimeUnit.SECONDS)
-        })
     }
 }
 
@@ -244,7 +250,8 @@ suspend fun CoroutineScope.launchListeners(
     helsepersonellv1: IHPR2Service,
     consumerProperties: Properties,
     smIkkeOkQueue: MQQueue,
-    norg2Client: Norg2Client
+    norg2Client: Norg2Client,
+    jedis: Jedis
 ) {
 
     val recievedSykmeldingListeners = 0.until(env.applicationThreads).map {
@@ -257,7 +264,7 @@ suspend fun CoroutineScope.launchListeners(
             blockingApplicationLogic(applicationState, kafkaconsumerRecievedSykmelding, kafkaproducerCreateTask,
                     kafkaproducervalidationResult, infotrygdOppdateringProducer, infotrygdSporringProducer,
                     session, personV3, arbeidsfordelingV1, env.sm2013BehandlingsUtfallToipic, helsepersonellv1,
-                    smIkkeOkQueue, norg2Client)
+                    smIkkeOkQueue, norg2Client, jedis)
         }
     }.toList()
 
@@ -279,7 +286,8 @@ suspend fun blockingApplicationLogic(
     sm2013BehandlingsUtfallToipic: String,
     helsepersonellv1: IHPR2Service,
     smIkkeOkQueue: MQQueue,
-    norg2Client: Norg2Client
+    norg2Client: Norg2Client,
+    jedis: Jedis
 ) {
     while (applicationState.running) {
         kafkaConsumer.poll(Duration.ofMillis(0)).forEach { consumerRecord ->
@@ -295,7 +303,7 @@ suspend fun blockingApplicationLogic(
                     receivedSykmelding, kafkaproducerCreateTask, kafkaproducervalidationResult,
                     infotrygdOppdateringProducer, infotrygdSporringProducer,
                     session, personV3, arbeidsfordelingV1, sm2013BehandlingsUtfallToipic, helsepersonellv1,
-                    smIkkeOkQueue, loggingMeta, norg2Client)
+                    smIkkeOkQueue, loggingMeta, norg2Client, jedis)
         }
         delay(100)
     }
@@ -324,7 +332,8 @@ suspend fun handleMessage(
     helsepersonellv1: IHPR2Service,
     smIkkeOkQueue: MQQueue,
     loggingMeta: LoggingMeta,
-    norg2Client: Norg2Client
+    norg2Client: Norg2Client,
+    jedis: Jedis
 ) = coroutineScope {
     wrapExceptions(loggingMeta) {
         log.info("Received a SM2013, {}", fields(loggingMeta))
@@ -367,7 +376,8 @@ suspend fun handleMessage(
                 loggingMeta,
                 session,
                 infotrygdForespResponse,
-                healthInformation)
+                healthInformation,
+                jedis)
 
         val currentRequestLatency = requestLatency.observeDuration()
 
@@ -430,7 +440,8 @@ suspend fun updateInfotrygd(
     loggingMeta: LoggingMeta,
     session: Session,
     infotrygdForespResponse: InfotrygdForesp,
-    healthInformation: HelseOpplysningerArbeidsuforhet
+    healthInformation: HelseOpplysningerArbeidsuforhet,
+    jedis: Jedis
 ) {
     try {
         val doctor = fetchDoctor(helsepersonellv1, receivedSykmelding.personNrLege)
@@ -447,7 +458,8 @@ suspend fun updateInfotrygd(
                     InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
                     receivedSykmelding,
                     helsepersonellKategoriVerdi,
-                    navKontorLokalKontor)
+                    navKontorLokalKontor,
+                    jedis)
         }
 
         log.info("Message(${fields(loggingMeta)}) got outcome {}, {}, processing took {}s",
@@ -507,14 +519,34 @@ fun sendInfotrygdOppdatering(
     itfh: InfotrygdForespAndHealthInformation,
     receivedSykmelding: ReceivedSykmelding,
     behandlerKode: String,
-    navKontorNr: String
+    navKontorNr: String,
+    jedis: Jedis
 ) {
     val perioder = itfh.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
     val marshalledFellesformat = receivedSykmelding.fellesformat
     val personNrPasient = receivedSykmelding.personNrPasient
     val signaturDato = receivedSykmelding.sykmelding.signaturDato.toLocalDate()
     val tssid = receivedSykmelding.tssid
-    sendInfotrygdOppdateringMq(producer, session, createInfotrygdBlokk(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr), loggingMeta)
+    val sha256String = sha256hashstring(marshalledFellesformat)
+
+    var duplicate = false
+
+    try {
+        val redisSha256String = jedis.get(sha256String)
+        if (redisSha256String != null) {
+            log.warn("Message with marked as duplicate {}", fields(loggingMeta))
+            duplicate = true
+        } else {
+            jedis.setex(sha256String, TimeUnit.DAYS.toSeconds(7).toInt(), sha256String)
+        }
+    } catch (connectionException: JedisConnectionException) {
+        log.warn("Unable to contact redis, will allow possible duplicates.", connectionException)
+    }
+    when (duplicate) {
+        true -> sendInfotrygdOppdateringMq(producer, session, createInfotrygdBlokk(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr), loggingMeta)
+        else -> sendInfotrygdOppdateringMq(producer, session, createInfotrygdBlokk(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, 2), loggingMeta)
+    }
+
     perioder.drop(1).forEach { periode ->
         sendInfotrygdOppdateringMq(producer, session, createInfotrygdBlokk(marshalledFellesformat, itfh, periode, personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, 2), loggingMeta)
     }
@@ -843,3 +875,8 @@ fun HelseOpplysningerArbeidsuforhet.Behandler.formatName(): String =
         } else {
             "${navn.etternavn.toUpperCase()} ${navn.fornavn.toUpperCase()} ${navn.mellomnavn.toUpperCase()}"
         }
+
+fun sha256hashstring(marshalledFellesformat: String): String =
+        MessageDigest.getInstance("SHA-256")
+                .digest(objectMapper.writeValueAsBytes(marshalledFellesformat))
+                .fold("") { str, it -> str + "%02x".format(it) }
