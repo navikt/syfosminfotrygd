@@ -47,7 +47,7 @@ class Norg2Client(
                     }
                 }
                 if (httpResponse.status == NotFound) {
-                    log.info("Fant ikke lokalt nav kontor for geografisk tilhørighet: $geografiskOmraade, setter da NAV oppfølging utland som lokalt navkontor: $NAV_OPPFOLGING_UTLAND_KONTOR_NR")
+                    log.info("Fant ikke lokalt NAV-kontor for geografisk tilhørighet: $geografiskOmraade, setter da NAV-kontor oppfølging utland som lokalt navkontor: $NAV_OPPFOLGING_UTLAND_KONTOR_NR")
                     Enhet(NAV_OPPFOLGING_UTLAND_KONTOR_NR)
                 } else {
                     httpResponse.call.response.receive<Enhet>()
