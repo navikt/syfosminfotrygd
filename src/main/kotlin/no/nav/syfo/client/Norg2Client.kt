@@ -14,9 +14,12 @@ import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.response.HttpResponse
 import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode.Companion.NotFound
 import io.ktor.http.contentType
 import io.ktor.util.KtorExperimentalAPI
+import no.nav.syfo.NAV_OPPFOLGING_UTLAND_KONTOR_NR
 import no.nav.syfo.helpers.retry
+import no.nav.syfo.log
 
 @KtorExperimentalAPI
 class Norg2Client(
@@ -31,6 +34,7 @@ class Norg2Client(
                 configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
             }
         }
+        expectSuccess = false
     }
 
     suspend fun getLocalNAVOffice(geografiskOmraade: String, diskresjonskode: String?): Enhet =
@@ -42,7 +46,12 @@ class Norg2Client(
                         parameter("disk", diskresjonskode)
                     }
                 }
-                httpResponse.call.response.receive<Enhet>()
+                if (httpResponse.status == NotFound) {
+                    log.info("Fant ikke lokalt nav kontor for geografisk tilhørighet: $geografiskOmraade, setter da NAV oppfølging utland som lokalt navkontor: $NAV_OPPFOLGING_UTLAND_KONTOR_NR")
+                    Enhet(NAV_OPPFOLGING_UTLAND_KONTOR_NR)
+                } else {
+                    httpResponse.call.response.receive<Enhet>()
+                }
             }
 }
 
