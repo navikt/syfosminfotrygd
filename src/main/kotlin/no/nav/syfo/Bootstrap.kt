@@ -356,13 +356,6 @@ suspend fun handleMessage(
 
         val validationResult = ruleCheck(receivedSykmelding, infotrygdForespResponse, loggingMeta)
 
-        sendRuleCheckValidationResult(
-                receivedSykmelding,
-                kafkaproducervalidationResult,
-                validationResult,
-                sm2013BehandlingsUtfallToipic,
-                loggingMeta)
-
         val findNAVKontorService = FindNAVKontorService(receivedSykmelding, personV3, norg2Client, arbeidsfordelingV1, loggingMeta)
 
         val behandlendeEnhet = findNAVKontorService.finnBehandlendeEnhet()
@@ -380,6 +373,13 @@ suspend fun handleMessage(
                 infotrygdForespResponse,
                 healthInformation,
                 jedis).updateInfotrygd()
+
+        sendRuleCheckValidationResult(
+                receivedSykmelding,
+                kafkaproducervalidationResult,
+                validationResult,
+                sm2013BehandlingsUtfallToipic,
+                loggingMeta)
 
         val currentRequestLatency = requestLatency.observeDuration()
 
