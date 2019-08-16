@@ -525,6 +525,5 @@ object FindOprasjonstypeSpek : Spek({
             findOperasjonstype(healthInformation.aktivitet.periode.first(),
                     InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "")) shouldEqual 1
         }
-
     }
 })

@@ -325,6 +325,18 @@ enum class ValidationRuleChain(
         infotrygdForesp.pasient?.status?.kodeMelding?.toIntOrNull() != null &&
                 infotrygdForesp.pasient.status.kodeMelding.toInt() > 4
     }),
+    @Description("Infotrygd returnerte ikke arbufoerTOM dato på sykmeldings historikken, vi kan ikke automatisk oppdatere Infotrygd")
+    ARBEIDUFORETOM_MANGLER(
+            1591,
+            Status.MANUAL_PROCESSING,
+            "Infotrygd returnerte ikke arbufoerTOM dato på sykmeldings historikken, vi kan ikke automatisk oppdatere Infotrygd",
+            "Infotrygd returnerte ikke arbufoerTOM dato på sykmeldings historikken, vi kan ikke automatisk oppdatere Infotrygd",
+            { (_, infotrygdForesp) ->
+                infotrygdForesp.sMhistorikk?.sykmelding != null &&
+                infotrygdForesp.sMhistorikk.sykmelding.any {
+                    it.periode?.arbufoerTOM == null
+                }
+            }),
 }
 
 private fun List<Periode>.toRange(): ClosedRange<LocalDate> =

@@ -1037,5 +1037,69 @@ object ValidationRuleChainSpek : Spek({
 
             ValidationRuleChain.DEGREE_OF_DISABILITY_IS_CHANGED(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
         }
+        it("Should check rule ERROR_FROM_IT_ARBEIDUFORETOM_MANGLER, should NOT trigger rule") {
+            val healthInformation = generateSykmelding(perioder = listOf(
+                    generatePeriode(
+                            fom = LocalDate.of(2019, 6, 27),
+                            tom = LocalDate.of(2019, 6, 28)
+                    )
+            ))
+
+            val infotrygdForespResponse = deafaultInfotrygdForesp()
+            infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
+                sykmelding.add(TypeSMinfo().apply {
+                    periode = TypeSMinfo.Periode().apply {
+                        arbufoerFOM = LocalDate.of(2019, 6, 24)
+                    }
+                })
+                status = StatusType().apply {
+                    kodeMelding = "00"
+                }
+            }
+
+            ValidationRuleChain.ARBEIDUFORETOM_MANGLER(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
+        }
+
+        it("Should check rule ERROR_FROM_IT_ARBEIDUFORETOM_MANGLER, should NOT trigger rule") {
+            val healthInformation = generateSykmelding(perioder = listOf(
+                    generatePeriode(
+                            fom = LocalDate.of(2019, 6, 27),
+                            tom = LocalDate.of(2019, 6, 28)
+                    )
+            ))
+
+            val infotrygdForespResponse = deafaultInfotrygdForesp()
+            infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
+                sykmelding.add(TypeSMinfo().apply {
+                    periode = TypeSMinfo.Periode().apply {
+                        arbufoerFOM = LocalDate.of(2019, 6, 24)
+                        arbufoerTOM = LocalDate.of(2019, 6, 25)
+                    }
+                })
+                status = StatusType().apply {
+                    kodeMelding = "00"
+                }
+            }
+
+            ValidationRuleChain.ARBEIDUFORETOM_MANGLER(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+        }
+
+        it("Should check rule ERROR_FROM_IT_ARBEIDUFORETOM_MANGLER, should NOT trigger rule") {
+            val healthInformation = generateSykmelding(perioder = listOf(
+                    generatePeriode(
+                            fom = LocalDate.of(2019, 6, 27),
+                            tom = LocalDate.of(2019, 6, 28)
+                    )
+            ))
+
+            val infotrygdForespResponse = deafaultInfotrygdForesp()
+            infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
+                status = StatusType().apply {
+                    kodeMelding = "00"
+                }
+            }
+
+            ValidationRuleChain.ARBEIDUFORETOM_MANGLER(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+        }
     }
 })
