@@ -39,6 +39,7 @@ import javax.jms.TextMessage
 import javax.xml.bind.Marshaller
 import javax.xml.datatype.DatatypeFactory
 import javax.xml.stream.XMLInputFactory
+import kotlin.math.absoluteValue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.asCoroutineDispatcher
@@ -118,7 +119,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import redis.clients.jedis.Jedis
 import redis.clients.jedis.exceptions.JedisConnectionException
-import kotlin.math.absoluteValue
 
 data class ApplicationState(var running: Boolean = true, var initialized: Boolean = false)
 
@@ -586,9 +586,12 @@ fun paafolgendeSykmelding(
     typeSMinfo: TypeSMinfo
 ): Boolean =
         itfh.infotrygdForesp.sMhistorikk.status.kodeMelding != "04" &&
-        (typeSMinfo.periode.arbufoerTOM != null && periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerTOM) ||
-        (typeSMinfo.periode.arbufoerTOM != null && periode.periodeFOMDato.isEqual(typeSMinfo.periode.arbufoerTOM)) ||
-        (typeSMinfo.periode.arbufoerTOM == null && (typeSMinfo.periode.arbufoerFOM..periode.periodeFOMDato).daysBetween() > 1))
+        (typeSMinfo.periode.arbufoerTOM != null && (
+            periode.periodeFOMDato.isEqual(typeSMinfo.periode.arbufoerTOM) ||
+                    ((periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerTOM) &&
+                    (typeSMinfo.periode.arbufoerTOM..periode.periodeFOMDato).daysBetween() <= 1))
+            ) ||
+        typeSMinfo.periode.arbufoerTOM == null)
 
 fun endringSykmelding(
     periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode,
@@ -598,11 +601,11 @@ fun endringSykmelding(
         itfh.infotrygdForesp.sMhistorikk.status.kodeMelding != "04" &&
         (typeSMinfo.periode.arbufoerFOM == periode.periodeFOMDato ||
         (typeSMinfo.periode.arbufoerFOM.isBefore(periode.periodeFOMDato)) ||
-                (typeSMinfo.periode.arbufoerTOM != null && typeSMinfo.periode.arbufoerFOM != null &&
-                        sammePeriodeInfotrygd(typeSMinfo.periode, periode))) &&
-                !(typeSMinfo.periode.arbufoerTOM == null && (typeSMinfo.periode.arbufoerFOM..periode.periodeFOMDato).daysBetween() > 1) &&
-                !(typeSMinfo.periode.arbufoerTOM != null && periode.periodeFOMDato.isEqual(typeSMinfo.periode.arbufoerTOM)) &&
-                !(typeSMinfo.periode.arbufoerTOM != null && periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerTOM))
+        (typeSMinfo.periode.arbufoerTOM != null && typeSMinfo.periode.arbufoerFOM != null &&
+        sammePeriodeInfotrygd(typeSMinfo.periode, periode))) &&
+        !(typeSMinfo.periode.arbufoerTOM == null && (typeSMinfo.periode.arbufoerFOM..periode.periodeFOMDato).daysBetween() > 1) &&
+        !(typeSMinfo.periode.arbufoerTOM != null && periode.periodeFOMDato.isEqual(typeSMinfo.periode.arbufoerTOM)) &&
+        !(typeSMinfo.periode.arbufoerTOM != null && periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerTOM))
 
 fun produceManualTask(
     kafkaProducer: KafkaProducer<String, ProduceTask>,
