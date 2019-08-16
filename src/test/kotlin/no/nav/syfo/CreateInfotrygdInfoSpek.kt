@@ -198,7 +198,7 @@ object CreateInfotrygdInfoSpek : Spek({
             infotrygdForesp.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
                 sykmelding.add(TypeSMinfo().apply {
                     periode = TypeSMinfo.Periode().apply {
-                        arbufoerOppr = LocalDate.now()
+                        arbufoerFOM = LocalDate.now()
                     }
                 })
             }
@@ -304,7 +304,7 @@ object CreateInfotrygdInfoSpek : Spek({
             infotrygdForesp.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
                 sykmelding.add(TypeSMinfo().apply {
                     periode = TypeSMinfo.Periode().apply {
-                        arbufoerOppr = LocalDate.now()
+                        arbufoerFOM = LocalDate.now()
                     }
                 })
             }

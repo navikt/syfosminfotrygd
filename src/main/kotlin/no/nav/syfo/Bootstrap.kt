@@ -804,7 +804,7 @@ fun createInfotrygdBlokk(
 
         forsteFravaersDag = when (operasjonstype) {
             1.toBigInteger() -> itfh.healthInformation.aktivitet.periode.sortedFOMDate().first()
-            else -> typeSMinfo?.periode?.arbufoerOppr ?: throw RuntimeException("Unable to find første fraværsdag in IT")
+            else -> typeSMinfo?.periode?.arbufoerFOM ?: throw RuntimeException("Unable to find første fraværsdag in IT")
         }
 
         mottakerKode = helsepersonellKategoriVerdi
