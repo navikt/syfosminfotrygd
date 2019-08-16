@@ -118,6 +118,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import redis.clients.jedis.Jedis
 import redis.clients.jedis.exceptions.JedisConnectionException
+import kotlin.math.absoluteValue
 
 data class ApplicationState(var running: Boolean = true, var initialized: Boolean = false)
 
@@ -577,8 +578,7 @@ fun forstegangsSykmelding(
     typeSMinfo: TypeSMinfo
 ): Boolean =
         itfh.infotrygdForesp.sMhistorikk.status.kodeMelding == "04" ||
-        (typeSMinfo.periode.arbufoerTOM != null && (typeSMinfo.periode.arbufoerTOM..periode.periodeFOMDato).daysBetween() > 1) ||
-        (typeSMinfo.periode.arbufoerTOM != null && (typeSMinfo.periode.arbufoerTOM..periode.periodeFOMDato).daysBetween() < -1)
+        (typeSMinfo.periode.arbufoerTOM != null && (typeSMinfo.periode.arbufoerTOM..periode.periodeFOMDato).daysBetween().absoluteValue >= 1)
 
 fun paafolgendeSykmelding(
     periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode,
