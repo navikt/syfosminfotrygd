@@ -328,8 +328,8 @@ object FindOprasjonstypeSpek : Spek({
                 aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
                     periode.add(
                             HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                                periodeFOMDato = LocalDate.of(2019, 7, 3)
-                                periodeTOMDato = LocalDate.of(2019, 7, 4)
+                                periodeFOMDato = LocalDate.of(2019, 6, 1)
+                                periodeTOMDato = LocalDate.of(2019, 6, 30)
                             })
                 }
             }
@@ -338,8 +338,8 @@ object FindOprasjonstypeSpek : Spek({
                 sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
                     sykmelding.add(TypeSMinfo().apply {
                         periode = TypeSMinfo.Periode().apply {
-                            arbufoerFOM = LocalDate.of(2019, 7, 1)
-                            arbufoerTOM = LocalDate.of(2019, 7, 2)
+                            arbufoerFOM = LocalDate.of(2019, 5, 1)
+                            arbufoerTOM = LocalDate.of(2019, 5, 31)
                         }
                     })
                     status = StatusType().apply {
@@ -381,13 +381,13 @@ object FindOprasjonstypeSpek : Spek({
                     InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "")) shouldEqual 1
         }
 
-        it("Should set oprasjonstype to 1") {
+        it("Should set oprasjonstype to 2") {
             val healthInformation = HelseOpplysningerArbeidsuforhet().apply {
                 aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
                     periode.add(
                             HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                                periodeFOMDato = LocalDate.of(2019, 8, 15)
-                                periodeTOMDato = LocalDate.of(2019, 8, 15)
+                                periodeFOMDato = LocalDate.of(2019, 6, 2)
+                                periodeTOMDato = LocalDate.of(2019, 7, 4)
                             })
                 }
             }
@@ -396,8 +396,7 @@ object FindOprasjonstypeSpek : Spek({
                 sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
                     sykmelding.add(TypeSMinfo().apply {
                         periode = TypeSMinfo.Periode().apply {
-                            arbufoerFOM = LocalDate.of(2019, 8, 16)
-                            arbufoerTOM = LocalDate.of(2019, 8, 16)
+                            arbufoerFOM = LocalDate.of(2018, 5, 1)
                         }
                     })
                     status = StatusType().apply {
@@ -407,7 +406,7 @@ object FindOprasjonstypeSpek : Spek({
             }
 
             findOperasjonstype(healthInformation.aktivitet.periode.first(),
-                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "")) shouldEqual 1
+                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "")) shouldEqual 2
         }
 
         it("Should set oprasjonstype to 1") {
@@ -425,8 +424,8 @@ object FindOprasjonstypeSpek : Spek({
                 sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
                     sykmelding.add(TypeSMinfo().apply {
                         periode = TypeSMinfo.Periode().apply {
-                            arbufoerFOM = LocalDate.of(2019, 8, 16)
-                            arbufoerTOM = LocalDate.of(2019, 8, 16)
+                            arbufoerFOM = LocalDate.of(2019, 8, 12)
+                            arbufoerTOM = LocalDate.of(2019, 8, 12)
                         }
                     })
                     status = StatusType().apply {
