@@ -332,8 +332,8 @@ enum class ValidationRuleChain(
             "Infotrygd returnerte ikke arbufoerTOM dato på sykmeldings historikken, vi kan ikke automatisk oppdatere Infotrygd",
             "Infotrygd returnerte ikke arbufoerTOM dato på sykmeldings historikken, vi kan ikke automatisk oppdatere Infotrygd",
             { (_, infotrygdForesp) ->
-                itfh.infotrygdForesp.sMhistorikk.status.kodeMelding != "04" &&
                 infotrygdForesp.sMhistorikk?.sykmelding != null &&
+                infotrygdForesp.sMhistorikk.status.kodeMelding != "04" &&
                 infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos()?.lastOrNull()?.periode?.arbufoerTOM == null
             }),
 }
