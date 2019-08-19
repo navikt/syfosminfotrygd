@@ -1,6 +1,5 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import com.github.jengelman.gradle.plugins.shadow.transformers.ServiceFileTransformer
-import no.nils.wsdl2java.Wsdl2JavaTask
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 group = "no.nav.syfo"
@@ -45,24 +44,12 @@ val jaxbTimeAdaptersVersion = "1.1.3"
 
 plugins {
     java
-    id("no.nils.wsdl2java") version "0.10"
     kotlin("jvm") version "1.3.41"
     id("org.jmailen.kotlinter") version "2.1.0"
     id("com.diffplug.gradle.spotless") version "3.14.0"
     id("com.github.johnrengelman.shadow") version "4.0.4"
 }
 
-
-buildscript {
-    dependencies {
-        classpath("javax.xml.bind:jaxb-api:2.4.0-b180830.0359")
-        classpath("org.glassfish.jaxb:jaxb-runtime:2.4.0-b180830.0438")
-        classpath("com.sun.activation:javax.activation:1.2.0")
-        classpath("com.sun.xml.ws:jaxws-tools:2.3.1") {
-            exclude(group = "com.sun.xml.ws", module = "policy")
-        }
-    }
-}
 
 repositories {
     mavenCentral()
@@ -74,20 +61,8 @@ repositories {
     maven (url = "https://oss.sonatype.org/content/groups/staging/")
 }
 
-val navWsdl= configurations.create("navWsdl") {
-    setTransitive(false)
-}
 
 dependencies {
-    wsdl2java("javax.annotation:javax.annotation-api:$javaxAnnotationApiVersion")
-    wsdl2java("javax.activation:activation:$javaxActivationVersion")
-    wsdl2java("org.glassfish.jaxb:jaxb-runtime:$jaxbRuntimeVersion")
-    wsdl2java("javax.xml.bind:jaxb-api:$jaxbApiVersion")
-    wsdl2java("javax.xml.ws:jaxws-api:$javaxJaxwsApiVersion")
-    wsdl2java("com.sun.xml.ws:jaxws-tools:$jaxwsToolsVersion") {
-        exclude(group = "com.sun.xml.ws", module = "policy")
-    }
-
     implementation(kotlin("stdlib"))
 
     implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
@@ -96,6 +71,7 @@ dependencies {
 
     implementation ("io.ktor:ktor-server-netty:$ktorVersion")
     implementation ("io.ktor:ktor-client-apache:$ktorVersion")
+    implementation ("io.ktor:ktor-client-cio:$ktorVersion")
     implementation ("io.ktor:ktor-client-auth-basic:$ktorVersion")
     implementation ("io.ktor:ktor-client-jackson:$ktorVersion")
 
@@ -180,7 +156,6 @@ tasks {
     }
 
     withType<KotlinCompile> {
-        dependsOn("wsdl2java")
         kotlinOptions.jvmTarget = "1.8"
     }
 
@@ -191,12 +166,6 @@ tasks {
         }
     }
 
-    withType<Wsdl2JavaTask> {
-        wsdlDir = file("$projectDir/src/main/resources/wsdl")
-        wsdlsToGenerate = listOf(
-                mutableListOf("-xjc", "-b", "$projectDir/src/main/resources/xjb/binding.xml", "$projectDir/src/main/resources/wsdl/helsepersonellregisteret.wsdl")
-        )
-    }
 
     withType<Test> {
         useJUnitPlatform {
