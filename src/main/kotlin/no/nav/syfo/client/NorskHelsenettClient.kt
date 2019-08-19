@@ -34,7 +34,7 @@ class NorskHelsenettClient(private val endpointUrl: String, private val stsClien
         }
     }
 
-    suspend fun finnBehandler(behandlerFnr: String): Behandler? = retry(
+    suspend fun finnBehandler(behandlerFnr: String, msgId: String): Behandler? = retry(
             callName = "finnbehandler",
             retryIntervals = arrayOf(500L, 1000L, 3000L, 5000L, 10000L)) {
         val httpResponse = httpClient.get<HttpResponse>("$endpointUrl/behandler") {
@@ -42,6 +42,7 @@ class NorskHelsenettClient(private val endpointUrl: String, private val stsClien
             val oidcToken = stsClient.oidcToken()
             headers {
                 append("Authorization", "Bearer ${oidcToken.access_token}")
+                append("Nav-CallId", msgId)
             }
             parameter("behandlerFnr", behandlerFnr)
         }

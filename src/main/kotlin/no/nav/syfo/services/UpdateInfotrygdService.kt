@@ -39,7 +39,7 @@ class UpdateInfotrygdService @KtorExperimentalAPI constructor(
 
     @KtorExperimentalAPI
     suspend fun updateInfotrygd() {
-        val helsepersonell = norskHelsenettClient.finnBehandler(receivedSykmelding.personNrLege)
+        val helsepersonell = norskHelsenettClient.finnBehandler(receivedSykmelding.personNrLege, receivedSykmelding.msgId)
 
             val helsepersonellKategoriVerdi = finnAktivHelsepersonellAutorisasjons(helsepersonell)
 
