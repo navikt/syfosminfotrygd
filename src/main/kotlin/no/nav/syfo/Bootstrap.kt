@@ -586,12 +586,9 @@ fun paafolgendeSykmelding(
     typeSMinfo: TypeSMinfo
 ): Boolean =
         itfh.infotrygdForesp.sMhistorikk.status.kodeMelding != "04" &&
-        (typeSMinfo.periode.arbufoerTOM != null && (
-            periode.periodeFOMDato.isEqual(typeSMinfo.periode.arbufoerTOM) ||
-                    ((periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerTOM) &&
-                    (typeSMinfo.periode.arbufoerTOM..periode.periodeFOMDato).daysBetween() <= 1))
-            ) ||
-        typeSMinfo.periode.arbufoerTOM == null)
+        periode.periodeFOMDato.isEqual(typeSMinfo.periode.arbufoerTOM) ||
+        ((periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerTOM) &&
+        (typeSMinfo.periode.arbufoerTOM..periode.periodeFOMDato).daysBetween() <= 1))
 
 fun endringSykmelding(
     periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode,
@@ -601,11 +598,11 @@ fun endringSykmelding(
         itfh.infotrygdForesp.sMhistorikk.status.kodeMelding != "04" &&
         (typeSMinfo.periode.arbufoerFOM == periode.periodeFOMDato ||
         (typeSMinfo.periode.arbufoerFOM.isBefore(periode.periodeFOMDato)) ||
-        (typeSMinfo.periode.arbufoerTOM != null && typeSMinfo.periode.arbufoerFOM != null &&
+        (typeSMinfo.periode.arbufoerFOM != null &&
         sammePeriodeInfotrygd(typeSMinfo.periode, periode))) &&
         !(typeSMinfo.periode.arbufoerTOM == null && (typeSMinfo.periode.arbufoerFOM..periode.periodeFOMDato).daysBetween() > 1) &&
-        !(typeSMinfo.periode.arbufoerTOM != null && periode.periodeFOMDato.isEqual(typeSMinfo.periode.arbufoerTOM)) &&
-        !(typeSMinfo.periode.arbufoerTOM != null && periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerTOM))
+        !(periode.periodeFOMDato.isEqual(typeSMinfo.periode.arbufoerTOM)) &&
+        !(periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerTOM))
 
 fun produceManualTask(
     kafkaProducer: KafkaProducer<String, ProduceTask>,
