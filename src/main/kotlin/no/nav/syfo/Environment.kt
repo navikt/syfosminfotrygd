@@ -23,6 +23,9 @@ data class Environment(
     override val mqGatewayName: String = getEnvVar("MQ_GATEWAY_NAME"),
     override val mqChannelName: String = getEnvVar("MQ_CHANNEL_NAME"),
     val norskHelsenettEndpointURL: String = getEnvVar("HELSENETT_ENDPOINT_URL", "http://syfohelsenettproxy"),
+    val clientId: String = getEnvVar("CLIENT_ID"),
+    val helsenettproxyId: String = getEnvVar("HELSENETTPROXY_ID"),
+    val aadAccessTokenUrl: String = getEnvVar("AADACCESSTOKEN_URL"),
     val infotrygdSmIkkeOKQueue: String = getEnvVar("MQ_INFOTRYGD_SMIKKEOK_QUEUE"),
     val redishost: String = getEnvVar("REDIS_HOST", "syfosminfotrygd-redis.default.svc.nais.local")
 ) : MqConfig, KafkaConfig
@@ -31,7 +34,8 @@ data class VaultCredentials(
     val serviceuserUsername: String,
     val serviceuserPassword: String,
     val mqUsername: String,
-    val mqPassword: String
+    val mqPassword: String,
+    val clientsecret: String
 ) : KafkaCredentials {
     override val kafkaUsername: String = serviceuserUsername
     override val kafkaPassword: String = serviceuserPassword

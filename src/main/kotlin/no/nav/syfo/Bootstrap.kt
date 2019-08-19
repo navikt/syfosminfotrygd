@@ -55,11 +55,11 @@ import no.nav.helse.msgHead.XMLMsgHead
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.helse.sm2013.KontrollSystemBlokk
 import no.nav.helse.sm2013.KontrollsystemBlokkType
+import no.nav.syfo.api.AccessTokenClient
 import no.nav.syfo.api.registerNaisApi
 import no.nav.syfo.client.Behandler
 import no.nav.syfo.client.Norg2Client
 import no.nav.syfo.client.NorskHelsenettClient
-import no.nav.syfo.client.StsOidcClient
 import no.nav.syfo.helpers.retry
 import no.nav.syfo.kafka.loadBaseConfig
 import no.nav.syfo.kafka.toConsumerConfig
@@ -176,8 +176,8 @@ fun main() = runBlocking(coroutineContext) {
                 port { withSTS(credentials.serviceuserUsername, credentials.serviceuserPassword, env.securityTokenServiceUrl) }
             }
 
-            val oidcClient = StsOidcClient(credentials.serviceuserUsername, credentials.serviceuserPassword)
-            val norskHelsenettClient = NorskHelsenettClient(env.norskHelsenettEndpointURL, oidcClient)
+            val accessTokenClient = AccessTokenClient(env.aadAccessTokenUrl, env.clientId, credentials.clientsecret)
+            val norskHelsenettClient = NorskHelsenettClient(env.norskHelsenettEndpointURL, accessTokenClient, env.helsenettproxyId)
 
             val norg2Client = Norg2Client(env.norg2V1EndpointURL)
 

@@ -27,7 +27,7 @@ object KafkaITSpek : Spek({
             topicNames = listOf(topic)
     )
 
-    val credentials = VaultCredentials("", "", "", "")
+    val credentials = VaultCredentials("", "", "", "", "")
 
     val config = Environment(mqHostname = "mqhost", mqPort = getRandomPort(),
             mqGatewayName = "mqGateway", kafkaBootstrapServers = embeddedEnvironment.brokersURL,
@@ -35,7 +35,9 @@ object KafkaITSpek : Spek({
             infotrygdSporringQueue = "infotrygdqueue",
             personV3EndpointURL = "personApi", securityTokenServiceUrl = "secApi", arbeidsfordelingV1EndpointURL = "arbeidsfordelingAPi",
             sm2013AutomaticHandlingTopic = "topic1", smPaperAutomaticHandlingTopic = "topic2", applicationName = "syfosminfotrygd",
-            norskHelsenettEndpointURL = "helseAPi", infotrygdSmIkkeOKQueue = "smikkeok", norg2V1EndpointURL = "/enhet/navkontor"
+            norskHelsenettEndpointURL = "helseAPi", infotrygdSmIkkeOKQueue = "smikkeok", norg2V1EndpointURL = "/enhet/navkontor",
+            clientId = "1313", helsenettproxyId = "12313", aadAccessTokenUrl = "acccess"
+
     )
 
     fun Properties.overrideForTest(): Properties = apply {

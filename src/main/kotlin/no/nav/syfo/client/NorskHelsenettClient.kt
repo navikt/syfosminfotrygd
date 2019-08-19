@@ -17,11 +17,16 @@ import io.ktor.client.response.HttpResponse
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode.Companion.NotFound
 import io.ktor.util.KtorExperimentalAPI
+import no.nav.syfo.api.AccessTokenClient
 import no.nav.syfo.helpers.retry
 import no.nav.syfo.log
 
 @KtorExperimentalAPI
-class NorskHelsenettClient(private val endpointUrl: String, private val stsClient: StsOidcClient) {
+class NorskHelsenettClient(
+    private val endpointUrl: String,
+    private val accessTokenClient: AccessTokenClient,
+    private val resourceId: String
+) {
     private val httpClient = HttpClient(CIO) {
         install(JsonFeature) {
             serializer = JacksonSerializer {
@@ -39,9 +44,9 @@ class NorskHelsenettClient(private val endpointUrl: String, private val stsClien
             retryIntervals = arrayOf(500L, 1000L, 3000L, 5000L, 10000L)) {
         val httpResponse = httpClient.get<HttpResponse>("$endpointUrl/behandler") {
             accept(ContentType.Application.Json)
-            val oidcToken = stsClient.oidcToken()
+            val accessToken = accessTokenClient.hentAccessToken(resourceId)
             headers {
-                append("Authorization", "Bearer ${oidcToken.access_token}")
+                append("Authorization", "Bearer $accessToken")
                 append("Nav-CallId", msgId)
             }
             parameter("behandlerFnr", behandlerFnr)
