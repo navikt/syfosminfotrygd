@@ -1,6 +1,7 @@
 package no.nav.syfo
 
 import com.ctc.wstx.exc.WstxException
+import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
@@ -127,6 +128,7 @@ val objectMapper: ObjectMapper = ObjectMapper().apply {
     registerKotlinModule()
     registerModule(JavaTimeModule())
     configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+    configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 }
 
 val coroutineContext = Executors.newFixedThreadPool(2).asCoroutineDispatcher()
