@@ -22,7 +22,8 @@ import no.nav.syfo.sendInfotrygdOppdatering
 import org.apache.kafka.clients.producer.KafkaProducer
 import redis.clients.jedis.Jedis
 
-class UpdateInfotrygdService @KtorExperimentalAPI constructor(
+@KtorExperimentalAPI
+class UpdateInfotrygdService(
     val receivedSykmelding: ReceivedSykmelding,
     val norskHelsenettClient: NorskHelsenettClient,
     val validationResult: ValidationResult,
@@ -37,7 +38,6 @@ class UpdateInfotrygdService @KtorExperimentalAPI constructor(
     val jedis: Jedis
 ) {
 
-    @KtorExperimentalAPI
     suspend fun updateInfotrygd() {
         val helsepersonell = norskHelsenettClient.finnBehandler(receivedSykmelding.personNrLege, receivedSykmelding.msgId)
 
