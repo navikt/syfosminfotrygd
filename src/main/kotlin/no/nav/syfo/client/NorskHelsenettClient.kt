@@ -14,6 +14,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.headers
 import io.ktor.client.response.HttpResponse
 import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.HttpStatusCode.Companion.NotFound
 import io.ktor.util.KtorExperimentalAPI
 import no.nav.syfo.api.AccessTokenClient
@@ -21,11 +22,7 @@ import no.nav.syfo.helpers.retry
 import no.nav.syfo.log
 
 @KtorExperimentalAPI
-class NorskHelsenettClient(
-    private val endpointUrl: String,
-    private val accessTokenClient: AccessTokenClient,
-    private val resourceId: String
-) {
+class NorskHelsenettClient(private val endpointUrl: String, private val accessTokenClient: AccessTokenClient, private val resourceId: String) {
     private val httpClient = HttpClient(CIO) {
         install(JsonFeature) {
             serializer = JacksonSerializer {
@@ -41,6 +38,7 @@ class NorskHelsenettClient(
     suspend fun finnBehandler(behandlerFnr: String, msgId: String): Behandler? = retry(
             callName = "finnbehandler",
             retryIntervals = arrayOf(500L, 1000L, 3000L, 5000L, 10000L)) {
+        log.info("Henter behandler fra syfohelsenettproxy for msgId {}", msgId)
         val httpResponse = httpClient.get<HttpResponse>("$endpointUrl/api/behandler") {
             accept(ContentType.Application.Json)
             val accessToken = accessTokenClient.hentAccessToken(resourceId)
@@ -50,12 +48,19 @@ class NorskHelsenettClient(
                 append("behandlerFnr", behandlerFnr)
             }
         }
-
-        if (httpResponse.status == NotFound) {
-            log.info("Fant ikke behandler")
-            null
-        } else {
-            httpResponse.call.response.receive<Behandler>()
+        when {
+            httpResponse.status == NotFound -> {
+                log.error("BehandlerFnr mangler i request for msgId {}", msgId)
+                null
+            }
+            httpResponse.status == HttpStatusCode.InternalServerError -> {
+                log.error("Syfohelsenettproxy svarte med feilmelding for msgId {}", msgId)
+                null
+            }
+            else -> {
+                log.info("Hentet behandler for msgId {}", msgId)
+                httpResponse.call.response.receive<Behandler>()
+            }
         }
     }
 }
