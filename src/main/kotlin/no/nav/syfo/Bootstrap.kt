@@ -466,8 +466,7 @@ fun sendInfotrygdOppdatering(
         val redisSha256String = jedis.get(sha256String)
         if (redisSha256String != null) {
             log.warn("Melding market som infotrygd duplikat oppdaatering {}", fields(loggingMeta))
-            sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, 2), loggingMeta)
-        } else {
+         } else {
             val antallSekunderI24Timer = TimeUnit.DAYS.toSeconds(1).toInt()
             jedis.setex(sha256String, antallSekunderI24Timer, sha256String)
             sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr), loggingMeta)
