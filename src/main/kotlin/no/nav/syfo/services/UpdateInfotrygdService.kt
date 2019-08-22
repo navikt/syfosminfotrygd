@@ -41,9 +41,8 @@ class UpdateInfotrygdService(
     suspend fun updateInfotrygd() {
         val helsepersonell = norskHelsenettClient.finnBehandler(receivedSykmelding.personNrLege, receivedSykmelding.msgId)
 
-            val helsepersonellKategoriVerdi = finnAktivHelsepersonellAutorisasjons(helsepersonell)
-
             if (helsepersonell != null) {
+                val helsepersonellKategoriVerdi = finnAktivHelsepersonellAutorisasjons(helsepersonell)
                 when {
                     validationResult.status in arrayOf(Status.MANUAL_PROCESSING) ->
                         produceManualTask(kafkaproducerCreateTask, receivedSykmelding, validationResult, navKontorManuellOppgave, loggingMeta)

@@ -13,6 +13,11 @@ import com.ibm.mq.MQQueue
 import com.ibm.mq.MQQueueManager
 import io.confluent.kafka.serializers.KafkaAvroSerializer
 import io.ktor.application.Application
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.apache.Apache
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.features.json.JacksonSerializer
+import io.ktor.client.features.json.JsonFeature
 import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
@@ -179,9 +184,32 @@ fun main() = runBlocking(coroutineContext) {
             }
 
             val accessTokenClient = AccessTokenClient(env.aadAccessTokenUrl, env.clientId, credentials.clientsecret)
-            val norskHelsenettClient = NorskHelsenettClient(env.norskHelsenettEndpointURL, accessTokenClient, env.helsenettproxyId)
+            val norskHelsenetthttpClient = HttpClient(CIO) {
+            install(JsonFeature) {
+                serializer = JacksonSerializer {
+                    registerKotlinModule()
+                    registerModule(JavaTimeModule())
+                    configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+                    configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                    }
+                expectSuccess = false
+                }
+            }
+            val norskHelsenettClient = NorskHelsenettClient(norskHelsenetthttpClient, env.norskHelsenettEndpointURL, accessTokenClient, env.helsenettproxyId)
 
-            val norg2Client = Norg2Client(env.norg2V1EndpointURL)
+            val norg2ClientHttpClient = HttpClient(Apache) {
+                install(JsonFeature) {
+                    serializer = JacksonSerializer {
+                        registerKotlinModule()
+                        registerModule(JavaTimeModule())
+                        configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+                        configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                    }
+                }
+                expectSuccess = false
+            }
+
+            val norg2Client = Norg2Client(norg2ClientHttpClient, env.norg2V1EndpointURL)
 
             launchListeners(
                     applicationState,
@@ -460,13 +488,16 @@ fun sendInfotrygdOppdatering(
     val personNrPasient = receivedSykmelding.personNrPasient
     val signaturDato = receivedSykmelding.sykmelding.signaturDato.toLocalDate()
     val tssid = receivedSykmelding.tssid
-    val sha256String = sha256hashstring(createInfotrygdBlokk(itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr))
+    val sha256String = sha256hashstring(createInfotrygdBlokk(
+            itfh, perioder.first(), personNrPasient, signaturDato,
+            behandlerKode, tssid, loggingMeta, navKontorNr)
+    )
 
     try {
         val redisSha256String = jedis.get(sha256String)
         if (redisSha256String != null) {
             log.warn("Melding market som infotrygd duplikat oppdaatering {}", fields(loggingMeta))
-         } else {
+        } else {
             val antallSekunderI24Timer = TimeUnit.DAYS.toSeconds(1).toInt()
             jedis.setex(sha256String, antallSekunderI24Timer, sha256String)
             sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr), loggingMeta)
@@ -832,8 +863,8 @@ fun findbBehandlingsDato(itfh: InfotrygdForespAndHealthInformation, signaturDato
     }
 }
 
-fun finnAktivHelsepersonellAutorisasjons(helsepersonelPerson: Behandler?): String =
-        helsepersonelPerson?.godkjenninger?.firstOrNull {
+fun finnAktivHelsepersonellAutorisasjons(helsepersonelPerson: Behandler): String =
+        helsepersonelPerson.godkjenninger.firstOrNull {
             it.helsepersonellkategori?.aktiv != null &&
                     it.autorisasjon?.aktiv == true &&
                     it.helsepersonellkategori.verdi != null
