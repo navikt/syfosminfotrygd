@@ -13,6 +13,11 @@ import com.ibm.mq.MQQueue
 import com.ibm.mq.MQQueueManager
 import io.confluent.kafka.serializers.KafkaAvroSerializer
 import io.ktor.application.Application
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.apache.Apache
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.features.json.JacksonSerializer
+import io.ktor.client.features.json.JsonFeature
 import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
@@ -29,7 +34,6 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
-import java.util.GregorianCalendar
 import java.util.Properties
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -57,8 +61,11 @@ import no.nav.helse.msgHead.XMLMsgHead
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.helse.sm2013.KontrollSystemBlokk
 import no.nav.helse.sm2013.KontrollsystemBlokkType
+import no.nav.syfo.api.AccessTokenClient
 import no.nav.syfo.api.registerNaisApi
+import no.nav.syfo.client.Behandler
 import no.nav.syfo.client.Norg2Client
+import no.nav.syfo.client.NorskHelsenettClient
 import no.nav.syfo.helpers.retry
 import no.nav.syfo.kafka.loadBaseConfig
 import no.nav.syfo.kafka.toConsumerConfig
@@ -66,7 +73,6 @@ import no.nav.syfo.kafka.toProducerConfig
 import no.nav.syfo.metrics.MESSAGES_ON_INFOTRYGD_SMIKKEOK_QUEUE_COUNTER
 import no.nav.syfo.metrics.REQUEST_TIME
 import no.nav.syfo.metrics.RULE_HIT_STATUS_COUNTER
-import no.nav.syfo.model.Periode
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.model.RuleInfo
 import no.nav.syfo.model.RuleMetadata
@@ -105,13 +111,6 @@ import no.nav.tjeneste.virksomhet.person.v3.informasjon.Personidenter
 import no.nav.tjeneste.virksomhet.person.v3.meldinger.HentGeografiskTilknytningRequest
 import no.nav.tjeneste.virksomhet.person.v3.meldinger.HentGeografiskTilknytningResponse
 import no.nav.tjeneste.virksomhet.person.v3.meldinger.HentPersonRequest
-import no.nhn.schemas.reg.hprv2.IHPR2Service
-import no.nhn.schemas.reg.hprv2.Person as HPRPerson
-import org.apache.cxf.binding.soap.SoapMessage
-import org.apache.cxf.binding.soap.interceptor.AbstractSoapInterceptor
-import org.apache.cxf.message.Message
-import org.apache.cxf.phase.Phase
-import org.apache.cxf.ws.addressing.WSAddressingFeature
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
@@ -184,26 +183,33 @@ fun main() = runBlocking(coroutineContext) {
                 port { withSTS(credentials.serviceuserUsername, credentials.serviceuserPassword, env.securityTokenServiceUrl) }
             }
 
-            val helsepersonellV1 = createPort<IHPR2Service>(env.helsepersonellv1EndpointURL) {
-                proxy {
-                    // TODO: Contact someone about this hacky workaround
-                    // talk to HDIR about HPR about they claim to send a ISO-8859-1 but its really UTF-8 payload
-                    val interceptor = object : AbstractSoapInterceptor(Phase.RECEIVE) {
-                        override fun handleMessage(message: SoapMessage?) {
-                            if (message != null)
-                                message[Message.ENCODING] = "utf-8"
-                        }
+            val accessTokenClient = AccessTokenClient(env.aadAccessTokenUrl, env.clientId, credentials.clientsecret)
+            val norskHelsenetthttpClient = HttpClient(CIO) {
+            install(JsonFeature) {
+                serializer = JacksonSerializer {
+                    registerKotlinModule()
+                    registerModule(JavaTimeModule())
+                    configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+                    configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
                     }
-
-                    inInterceptors.add(interceptor)
-                    inFaultInterceptors.add(interceptor)
-                    features.add(WSAddressingFeature())
+                expectSuccess = false
                 }
+            }
+            val norskHelsenettClient = NorskHelsenettClient(norskHelsenetthttpClient, env.norskHelsenettEndpointURL, accessTokenClient, env.helsenettproxyId)
 
-                port { withSTS(credentials.serviceuserUsername, credentials.serviceuserPassword, env.securityTokenServiceUrl) }
+            val norg2ClientHttpClient = HttpClient(Apache) {
+                install(JsonFeature) {
+                    serializer = JacksonSerializer {
+                        registerKotlinModule()
+                        registerModule(JavaTimeModule())
+                        configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+                        configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                    }
+                }
+                expectSuccess = false
             }
 
-            val norg2Client = Norg2Client(env.norg2V1EndpointURL)
+            val norg2Client = Norg2Client(norg2ClientHttpClient, env.norg2V1EndpointURL)
 
             launchListeners(
                     applicationState,
@@ -215,7 +221,7 @@ fun main() = runBlocking(coroutineContext) {
                     personV3,
                     arbeidsfordelingV1,
                     env,
-                    helsepersonellV1,
+                    norskHelsenettClient,
                     consumerProperties,
                     smIkkeOkQueue,
                     norg2Client,
@@ -252,7 +258,7 @@ suspend fun CoroutineScope.launchListeners(
     personV3: PersonV3,
     arbeidsfordelingV1: ArbeidsfordelingV1,
     env: Environment,
-    helsepersonellv1: IHPR2Service,
+    norskHelsenettClient: NorskHelsenettClient,
     consumerProperties: Properties,
     smIkkeOkQueue: MQQueue,
     norg2Client: Norg2Client,
@@ -268,7 +274,7 @@ suspend fun CoroutineScope.launchListeners(
         createListener(applicationState) {
             blockingApplicationLogic(applicationState, kafkaconsumerRecievedSykmelding, kafkaproducerCreateTask,
                     kafkaproducervalidationResult, infotrygdOppdateringProducer, infotrygdSporringProducer,
-                    session, personV3, arbeidsfordelingV1, env.sm2013BehandlingsUtfallToipic, helsepersonellv1,
+                    session, personV3, arbeidsfordelingV1, env.sm2013BehandlingsUtfallToipic, norskHelsenettClient,
                     smIkkeOkQueue, norg2Client, jedis)
         }
     }.toList()
@@ -289,7 +295,7 @@ suspend fun blockingApplicationLogic(
     personV3: PersonV3,
     arbeidsfordelingV1: ArbeidsfordelingV1,
     sm2013BehandlingsUtfallToipic: String,
-    helsepersonellv1: IHPR2Service,
+    norskHelsenettClient: NorskHelsenettClient,
     smIkkeOkQueue: MQQueue,
     norg2Client: Norg2Client,
     jedis: Jedis
@@ -307,7 +313,7 @@ suspend fun blockingApplicationLogic(
             handleMessage(
                     receivedSykmelding, kafkaproducerCreateTask, kafkaproducervalidationResult,
                     infotrygdOppdateringProducer, infotrygdSporringProducer,
-                    session, personV3, arbeidsfordelingV1, sm2013BehandlingsUtfallToipic, helsepersonellv1,
+                    session, personV3, arbeidsfordelingV1, sm2013BehandlingsUtfallToipic, norskHelsenettClient,
                     smIkkeOkQueue, loggingMeta, norg2Client, jedis)
         }
         delay(100)
@@ -334,7 +340,7 @@ suspend fun handleMessage(
     personV3: PersonV3,
     arbeidsfordelingV1: ArbeidsfordelingV1,
     sm2013BehandlingsUtfallToipic: String,
-    helsepersonellv1: IHPR2Service,
+    norskHelsenettClient: NorskHelsenettClient,
     smIkkeOkQueue: MQQueue,
     loggingMeta: LoggingMeta,
     norg2Client: Norg2Client,
@@ -365,7 +371,7 @@ suspend fun handleMessage(
         val lokaltNavkontor = findNAVKontorService.finnLokaltNavkontor()
 
         UpdateInfotrygdService(receivedSykmelding,
-                helsepersonellv1,
+                norskHelsenettClient,
                 validationResult,
                 infotrygdOppdateringProducer,
                 kafkaproducerCreateTask,
@@ -482,13 +488,15 @@ fun sendInfotrygdOppdatering(
     val personNrPasient = receivedSykmelding.personNrPasient
     val signaturDato = receivedSykmelding.sykmelding.signaturDato.toLocalDate()
     val tssid = receivedSykmelding.tssid
-    val sha256String = sha256hashstring(createInfotrygdBlokk(itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr))
+    val sha256String = sha256hashstring(createInfotrygdBlokk(
+            itfh, perioder.first(), personNrPasient, signaturDato,
+            behandlerKode, tssid, loggingMeta, navKontorNr)
+    )
 
     try {
         val redisSha256String = jedis.get(sha256String)
         if (redisSha256String != null) {
             log.warn("Melding market som infotrygd duplikat oppdaatering {}", fields(loggingMeta))
-            sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, 2), loggingMeta)
         } else {
             val antallSekunderI24Timer = TimeUnit.DAYS.toSeconds(1).toInt()
             jedis.setex(sha256String, antallSekunderI24Timer, sha256String)
@@ -855,19 +863,10 @@ fun findbBehandlingsDato(itfh: InfotrygdForespAndHealthInformation, signaturDato
     }
 }
 
-suspend fun fetchDoctor(hprService: IHPR2Service, doctorIdent: String): HPRPerson = retry(
-        callName = "hpr_hent_person_med_personnummer",
-        retryIntervals = arrayOf(500L, 1000L, 3000L, 5000L, 10000L),
-        legalExceptions = *arrayOf(IOException::class, WstxException::class)
-) {
-    hprService.hentPersonMedPersonnummer(doctorIdent, datatypeFactory.newXMLGregorianCalendar(GregorianCalendar()))
-}
-
-fun finnAktivHelsepersonellAutorisasjons(helsepersonelPerson: HPRPerson): String =
-        helsepersonelPerson.godkjenninger.godkjenning.firstOrNull {
-            it?.helsepersonellkategori?.isAktiv != null &&
-                    it.autorisasjon?.isAktiv == true &&
-                    it.helsepersonellkategori.isAktiv != null &&
+fun finnAktivHelsepersonellAutorisasjons(helsepersonelPerson: Behandler): String =
+        helsepersonelPerson.godkjenninger.firstOrNull {
+            it.helsepersonellkategori?.aktiv != null &&
+                    it.autorisasjon?.aktiv == true &&
                     it.helsepersonellkategori.verdi != null
         }?.helsepersonellkategori?.verdi ?: ""
 
