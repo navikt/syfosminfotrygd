@@ -13,6 +13,7 @@ import io.ktor.util.KtorExperimentalAPI
 import no.nav.syfo.api.AccessTokenClient
 import no.nav.syfo.helpers.retry
 import no.nav.syfo.log
+import java.io.IOException
 
 @KtorExperimentalAPI
 class NorskHelsenettClient(private val httpClient: HttpClient, private val endpointUrl: String, private val accessTokenClient: AccessTokenClient, private val resourceId: String) {
@@ -29,13 +30,13 @@ class NorskHelsenettClient(private val httpClient: HttpClient, private val endpo
                 append("behandlerFnr", behandlerFnr)
             }
         }
-        when {
-            httpResponse.status == NotFound -> {
+        if (httpResponse.status == HttpStatusCode.InternalServerError) {
+            log.error("Syfohelsenettproxy svarte med feilmelding for msgId {}", msgId)
+            throw IOException("Syfohelsenettproxy svarte med feilmelding for $msgId")
+        }
+        when (NotFound) {
+            httpResponse.status -> {
                 log.error("BehandlerFnr mangler i request for msgId {}", msgId)
-                null
-            }
-            httpResponse.status == HttpStatusCode.InternalServerError -> {
-                log.error("Syfohelsenettproxy svarte med feilmelding for msgId {}", msgId)
                 null
             }
             else -> {
