@@ -4,17 +4,17 @@ import java.time.LocalDate
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.infotrygd.foresp.StatusType
 import no.nav.helse.infotrygd.foresp.TypeSMinfo
+import no.nav.helse.sm2013.CS
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-object CreateInfotrygdBlokkSpek : Spek({
-    describe("Testing the creating of infotrygdblokk") {
+object Duplikatsjekk : Spek({
+    describe("Tester duplikat hånderingen med redis") {
+        it("Skal plukke meldingen som duplikat") {
 
-        it("Should set forsteFravaersDag correctly, when oprasjosntype 1") {
-
-            val healthInformation = HelseOpplysningerArbeidsuforhet().apply {
+            val healthInformationForstemelding = HelseOpplysningerArbeidsuforhet().apply {
                 aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
                     periode.add(
                             HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
@@ -37,11 +37,11 @@ object CreateInfotrygdBlokkSpek : Spek({
                 }
             }
 
-            val ifth = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
+            val ifthForstemelding = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformationForstemelding)
 
-            val infotrygdBlokk = createInfotrygdBlokk(
-                    ifth,
-                    healthInformation.aktivitet.periode.last(),
+            val infotrygdBlokkForsteMelding = createInfotrygdBlokk(
+                    ifthForstemelding,
+                    healthInformationForstemelding.aktivitet.periode.last(),
                     "2134",
                     LocalDate.now(),
                     "LE",
@@ -53,12 +53,7 @@ object CreateInfotrygdBlokkSpek : Spek({
 
             )
 
-            infotrygdBlokk.forsteFravaersDag shouldEqual LocalDate.of(2019, 1, 1)
-        }
-
-        it("Should set forsteFravaersDag correctly, when oprasjosntype 2 and more than 1 periode") {
-
-            val healthInformation = HelseOpplysningerArbeidsuforhet().apply {
+            val healthInformationAndreMelding = HelseOpplysningerArbeidsuforhet().apply {
                 aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
                     periode.add(
                             HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
@@ -66,44 +61,36 @@ object CreateInfotrygdBlokkSpek : Spek({
                                 periodeTOMDato = LocalDate.of(2019, 1, 2)
                             }
                     )
-                    periode.add(
-                            HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                                periodeFOMDato = LocalDate.of(2019, 1, 3)
-                                periodeTOMDato = LocalDate.of(2019, 1, 4)
-                            }
-                    )
                 }
-            }
-
-            val infotrygdForesp = InfotrygdForesp().apply {
-                sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
-                    sykmelding.add(TypeSMinfo().apply {
-                        periode = TypeSMinfo.Periode().apply {
-                        }
-                    })
-                    status = StatusType().apply {
-                        kodeMelding = "00"
+                arbeidsgiver = HelseOpplysningerArbeidsuforhet.Arbeidsgiver().apply {
+                    navnArbeidsgiver = "Nav ikt"
+                    harArbeidsgiver = CS().apply {
+                        dn = "EN_ARBEIDSGIVER"
+                        v = "1"
                     }
                 }
             }
 
-            val ifth = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
+            val ifthAndreMelding = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformationAndreMelding)
 
-            val infotrygdBlokk = createInfotrygdBlokk(
-                    ifth,
-                    healthInformation.aktivitet.periode.last(),
+            val infotrygdBlokkAndreMelding = createInfotrygdBlokk(
+                    ifthAndreMelding,
+                    healthInformationAndreMelding.aktivitet.periode.last(),
                     "2134",
                     LocalDate.now(),
                     "LE",
                     "12345",
-                    LoggingMeta("mottakId", "12315", "", ""),
+                    LoggingMeta("mottakId", "12315", "2424", "2424"),
                     "1234",
                     "NAV IKT",
-                    2
+                    1
 
             )
 
-            infotrygdBlokk.forsteFravaersDag shouldEqual LocalDate.of(2019, 1, 1)
+            val sha256StringForsteMelding = sha256hashstring(infotrygdBlokkForsteMelding)
+            val sha256StringAndreMelding = sha256hashstring(infotrygdBlokkAndreMelding)
+
+            sha256StringForsteMelding shouldEqual sha256StringAndreMelding
         }
     }
 })

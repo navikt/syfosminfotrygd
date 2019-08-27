@@ -488,18 +488,27 @@ fun sendInfotrygdOppdatering(
     val personNrPasient = receivedSykmelding.personNrPasient
     val signaturDato = receivedSykmelding.sykmelding.signaturDato.toLocalDate()
     val tssid = receivedSykmelding.tssid
-    val sha256String = sha256hashstring(createInfotrygdBlokk(
+    val sha256StringMedArbeidsgiver = sha256hashstring(createInfotrygdBlokk(
             itfh, perioder.first(), personNrPasient, signaturDato,
-            behandlerKode, tssid, loggingMeta, navKontorNr)
+            behandlerKode, tssid, loggingMeta, navKontorNr, findarbeidsKategori(itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver))
+    )
+    val sha256StringUtenArbeidsgiver = sha256hashstring(createInfotrygdBlokk(
+            itfh, perioder.first(), personNrPasient, signaturDato,
+            behandlerKode, tssid, loggingMeta, navKontorNr, "")
     )
 
     try {
-        val redisSha256String = jedis.get(sha256String)
-        if (redisSha256String != null) {
+        val redisSha256StringMedArbeidsgiver = jedis.get(sha256StringMedArbeidsgiver)
+        val redisSha256StringUtenArbeidsgiver = jedis.get(sha256StringUtenArbeidsgiver)
+        if (redisSha256StringMedArbeidsgiver != null) {
             log.warn("Melding market som infotrygd duplikat oppdaatering {}", fields(loggingMeta))
+        } else if (redisSha256StringUtenArbeidsgiver != null) {
+            log.info("Arbeidsgiver er endret, send oppdatering til infotrygd")
+            sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, 3), loggingMeta)
         } else {
             val antallSekunderI24Timer = TimeUnit.DAYS.toSeconds(1).toInt()
-            jedis.setex(sha256String, antallSekunderI24Timer, sha256String)
+            jedis.setex(sha256StringMedArbeidsgiver, antallSekunderI24Timer, sha256StringMedArbeidsgiver)
+            jedis.setex(sha256StringUtenArbeidsgiver, antallSekunderI24Timer, sha256StringUtenArbeidsgiver)
             sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr), loggingMeta)
         }
     } catch (connectionException: JedisConnectionException) {
@@ -551,8 +560,8 @@ fun createInfotrygdForesp(personNrPasient: String, healthInformation: HelseOpply
 val inputFactory = XMLInputFactory.newInstance()!!
 inline fun <reified T> unmarshal(text: String): T = fellesformatUnmarshaller.unmarshal(inputFactory.createXMLEventReader(StringReader(text)), T::class.java).value
 
-fun findarbeidsKategori(itfh: InfotrygdForespAndHealthInformation): String {
-    return if (!itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver.isNullOrBlank()) {
+fun findarbeidsKategori(navnArbeidsgiver: String?): String {
+    return if (!navnArbeidsgiver.isNullOrBlank()) {
         "01"
     } else {
         "030"
@@ -776,6 +785,7 @@ fun createInfotrygdFellesformat(
                 tssid,
                 loggingMeta,
                 navKontorNr,
+                itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver,
                 operasjonstypeKode))
     })
 }
@@ -789,6 +799,7 @@ fun createInfotrygdBlokk(
     tssid: String?,
     loggingMeta: LoggingMeta,
     navKontorNr: String,
+    navnArbeidsgiver: String?,
     operasjonstypeKode: Int = findOperasjonstype(periode, itfh, loggingMeta)
 ) = KontrollsystemBlokkType.InfotrygdBlokk().apply {
         fodselsnummer = personNrPasient
@@ -826,7 +837,7 @@ fun createInfotrygdBlokk(
         if (operasjonstype == 1.toBigInteger()) {
             behandlingsDato = findbBehandlingsDato(itfh, signaturDato)
 
-            arbeidsKategori = findarbeidsKategori(itfh)
+            arbeidsKategori = findarbeidsKategori(navnArbeidsgiver)
             gruppe = "96"
             saksbehandler = "Auto"
 
