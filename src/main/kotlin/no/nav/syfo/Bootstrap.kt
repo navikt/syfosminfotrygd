@@ -42,7 +42,6 @@ import javax.jms.Session
 import javax.jms.TemporaryQueue
 import javax.jms.TextMessage
 import javax.xml.bind.Marshaller
-import javax.xml.datatype.DatatypeFactory
 import javax.xml.stream.XMLInputFactory
 import kotlin.math.absoluteValue
 import kotlinx.coroutines.CoroutineScope
@@ -131,8 +130,6 @@ val objectMapper: ObjectMapper = ObjectMapper().apply {
 }
 
 val coroutineContext = Executors.newFixedThreadPool(2).asCoroutineDispatcher()
-
-val datatypeFactory: DatatypeFactory = DatatypeFactory.newInstance()
 
 const val NAV_OPPFOLGING_UTLAND_KONTOR_NR = "0393"
 
@@ -561,10 +558,10 @@ val inputFactory = XMLInputFactory.newInstance()!!
 inline fun <reified T> unmarshal(text: String): T = fellesformatUnmarshaller.unmarshal(inputFactory.createXMLEventReader(StringReader(text)), T::class.java).value
 
 fun findarbeidsKategori(navnArbeidsgiver: String?): String {
-    return if (!navnArbeidsgiver.isNullOrBlank()) {
-        "01"
-    } else {
+    return if (navnArbeidsgiver == null || navnArbeidsgiver.isBlank() || navnArbeidsgiver.isEmpty()) {
         "030"
+    } else {
+        "01"
     }
 }
 
