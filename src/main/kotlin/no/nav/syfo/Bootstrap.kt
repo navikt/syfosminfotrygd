@@ -515,7 +515,7 @@ fun sendInfotrygdOppdatering(
             log.info("Arbeidsgiver er endret, send oppdatering til infotrygd")
             sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, 3), loggingMeta)
         } else if (redissha256StringUtenUforegrad != null) {
-            log.info("Arbeidsgiver er endret, send oppdatering til infotrygd")
+            log.info("Uforegrad er endret, send oppdatering til infotrygd")
             sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, 3), loggingMeta)
         } else {
             val antallSekunderI24Timer = TimeUnit.DAYS.toSeconds(1).toInt()
