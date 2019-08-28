@@ -49,6 +49,7 @@ object Duplikatsjekk : Spek({
                     LoggingMeta("mottakId", "12315", "", ""),
                     "1234",
                     "NAV IKT",
+                    100.toBigInteger(),
                     1
 
             )
@@ -83,6 +84,7 @@ object Duplikatsjekk : Spek({
                     LoggingMeta("mottakId", "12315", "2424", "2424"),
                     "1234",
                     "NAV IKT",
+                    100.toBigInteger(),
                     1
 
             )
@@ -137,6 +139,7 @@ object Duplikatsjekk : Spek({
                     LoggingMeta("mottakId", "12315", "", ""),
                     "1234",
                     ifthForstemelding.healthInformation.arbeidsgiver?.navnArbeidsgiver,
+                    100.toBigInteger(),
                     1
 
             )
@@ -151,6 +154,7 @@ object Duplikatsjekk : Spek({
                     LoggingMeta("mottakId", "12315", "", ""),
                     "1234",
                     "",
+                    100.toBigInteger(),
                     1
 
             )
@@ -185,6 +189,7 @@ object Duplikatsjekk : Spek({
                     LoggingMeta("mottakId", "12315", "", ""),
                     "1234",
                     ifthAndreMelding.healthInformation.arbeidsgiver?.navnArbeidsgiver,
+                    100.toBigInteger(),
                     1
 
             )
@@ -199,6 +204,7 @@ object Duplikatsjekk : Spek({
                     LoggingMeta("mottakId", "12315", "", ""),
                     "1234",
                     "",
+                    100.toBigInteger(),
                     1
 
             )
@@ -260,6 +266,7 @@ object Duplikatsjekk : Spek({
                     LoggingMeta("mottakId", "12315", "", ""),
                     "1234",
                     ifthForstemelding.healthInformation.arbeidsgiver?.navnArbeidsgiver,
+                    100.toBigInteger(),
                     1
 
             )
@@ -274,6 +281,7 @@ object Duplikatsjekk : Spek({
                     LoggingMeta("mottakId", "12315", "", ""),
                     "1234",
                     "",
+                    100.toBigInteger(),
                     1
 
             )
@@ -301,6 +309,7 @@ object Duplikatsjekk : Spek({
                     LoggingMeta("mottakId", "12315", "2424", "2424"),
                     "1234",
                     ifthAndreMelding.healthInformation.arbeidsgiver?.navnArbeidsgiver,
+                    100.toBigInteger(),
                     1
 
             )
@@ -315,6 +324,7 @@ object Duplikatsjekk : Spek({
                     LoggingMeta("mottakId", "12315", "2424", "2424"),
                     "1234",
                     "",
+                    100.toBigInteger(),
                     1
 
             )
@@ -327,6 +337,157 @@ object Duplikatsjekk : Spek({
 
                 sha256StringForsteMelding shouldNotEqual sha256StringAndreMelding
                 sha256StringUtenArbeidsgiverForsteMelding shouldEqual sha256StringUtenArbeidsgiverAndreMelding
+        }
+
+        it("Skal plukke meldingen som duplikat, kun uforegrad er endret") {
+
+            val healthInformationForstemelding = HelseOpplysningerArbeidsuforhet().apply {
+                aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
+                    periode.add(
+                            HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
+                                periodeFOMDato = LocalDate.of(2019, 1, 1)
+                                periodeTOMDato = LocalDate.of(2019, 1, 2)
+                            }
+                    )
+                }
+                arbeidsgiver = HelseOpplysningerArbeidsuforhet.Arbeidsgiver().apply {
+                    navnArbeidsgiver = "Nav ikt"
+                    harArbeidsgiver = CS().apply {
+                        dn = "EN_ARBEIDSGIVER"
+                        v = "1"
+                    }
+                }
+            }
+
+            val infotrygdForesp = InfotrygdForesp().apply {
+                sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
+                    sykmelding.add(TypeSMinfo().apply {
+                        periode = TypeSMinfo.Periode().apply {
+                        }
+                    })
+                    status = StatusType().apply {
+                        kodeMelding = "00"
+                    }
+                }
+            }
+
+            val ifthForstemelding = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformationForstemelding)
+
+            val infotrygdBlokkForsteMelding = createInfotrygdBlokk(
+                    ifthForstemelding,
+                    healthInformationForstemelding.aktivitet.periode.first(),
+                    "2134",
+                    LocalDate.of(2019, 1, 1),
+                    "LE",
+                    "12345",
+                    LoggingMeta("mottakId", "12315", "", ""),
+                    "1234",
+                    ifthForstemelding.healthInformation.arbeidsgiver?.navnArbeidsgiver,
+                    100.toBigInteger(),
+                    1
+
+            )
+
+            val infotrygdUtenArbeidsgiverBlokkForsteMelding = createInfotrygdBlokk(
+                    ifthForstemelding,
+                    healthInformationForstemelding.aktivitet.periode.first(),
+                    "2134",
+                    LocalDate.of(2019, 1, 1),
+                    "LE",
+                    "12345",
+                    LoggingMeta("mottakId", "12315", "", ""),
+                    "1234",
+                    "",
+                    90.toBigInteger(),
+                    1
+
+            )
+
+            val healthInformationAndreMelding = HelseOpplysningerArbeidsuforhet().apply {
+                aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
+                    periode.add(
+                            HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
+                                periodeFOMDato = LocalDate.of(2019, 1, 1)
+                                periodeTOMDato = LocalDate.of(2019, 1, 2)
+                            }
+                    )
+                }
+            }
+
+            val ifthAndreMelding = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformationAndreMelding)
+
+            val infotrygdBlokkAndreMelding = createInfotrygdBlokk(
+                    ifthAndreMelding,
+                    healthInformationAndreMelding.aktivitet.periode.first(),
+                    "2134",
+                    LocalDate.of(2019, 1, 1),
+                    "LE",
+                    "12345",
+                    LoggingMeta("mottakId", "12315", "2424", "2424"),
+                    "1234",
+                    ifthAndreMelding.healthInformation.arbeidsgiver?.navnArbeidsgiver,
+                    100.toBigInteger(),
+                    1
+
+            )
+
+            val infotrygdUtenArbeidsgiverBlokkAndreMelding = createInfotrygdBlokk(
+                    ifthAndreMelding,
+                    healthInformationAndreMelding.aktivitet.periode.first(),
+                    "2134",
+                    LocalDate.of(2019, 1, 1),
+                    "LE",
+                    "12345",
+                    LoggingMeta("mottakId", "12315", "2424", "2424"),
+                    "1234",
+                    "",
+                    100.toBigInteger(),
+                    1
+
+            )
+
+            val infotrygdBlokkUtenUforegradForsteMelding = createInfotrygdBlokk(
+                    ifthAndreMelding,
+                    healthInformationAndreMelding.aktivitet.periode.first(),
+                    "2134",
+                    LocalDate.of(2019, 1, 1),
+                    "LE",
+                    "12345",
+                    LoggingMeta("mottakId", "12315", "2424", "2424"),
+                    "1234",
+                    "",
+                    0.toBigInteger(),
+                    1
+
+            )
+
+            val infotrygdBlokkUtenUforegradAndreMelding = createInfotrygdBlokk(
+                    ifthAndreMelding,
+                    healthInformationAndreMelding.aktivitet.periode.first(),
+                    "2134",
+                    LocalDate.of(2019, 1, 1),
+                    "LE",
+                    "12345",
+                    LoggingMeta("mottakId", "12315", "2424", "2424"),
+                    "1234",
+                    "",
+                    0.toBigInteger(),
+                    1
+
+            )
+
+            val sha256StringForsteMelding = sha256hashstring(infotrygdBlokkForsteMelding)
+            val sha256StringAndreMelding = sha256hashstring(infotrygdBlokkAndreMelding)
+
+            val sha256StringUtenArbeidsgiverForsteMelding = sha256hashstring(infotrygdUtenArbeidsgiverBlokkAndreMelding)
+            val sha256StringUtenArbeidsgiverAndreMelding = sha256hashstring(infotrygdUtenArbeidsgiverBlokkForsteMelding)
+
+            val sha256StringUtenUforegradForsteMelding = sha256hashstring(infotrygdBlokkUtenUforegradForsteMelding)
+            val sha256StringUtenUforegradAndreMelding = sha256hashstring(infotrygdBlokkUtenUforegradAndreMelding)
+
+            sha256StringForsteMelding shouldNotEqual sha256StringAndreMelding
+            sha256StringUtenArbeidsgiverForsteMelding shouldNotEqual sha256StringUtenArbeidsgiverAndreMelding
+            sha256StringUtenUforegradForsteMelding shouldEqual sha256StringUtenUforegradAndreMelding
         }
     }
 })

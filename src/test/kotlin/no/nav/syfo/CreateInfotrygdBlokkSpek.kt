@@ -49,6 +49,7 @@ object CreateInfotrygdBlokkSpek : Spek({
                     LoggingMeta("mottakId", "12315", "", ""),
                     "1234",
                     "NAV IKT",
+                    100.toBigInteger(),
                     1
 
             )
@@ -99,6 +100,7 @@ object CreateInfotrygdBlokkSpek : Spek({
                     LoggingMeta("mottakId", "12315", "", ""),
                     "1234",
                     "NAV IKT",
+                    100.toBigInteger(),
                     2
 
             )

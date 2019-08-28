@@ -27,6 +27,7 @@ import java.io.IOException
 import java.io.StringReader
 import java.io.StringWriter
 import java.lang.IllegalStateException
+import java.math.BigInteger
 import java.nio.file.Paths
 import java.security.MessageDigest
 import java.time.Duration
@@ -485,27 +486,42 @@ fun sendInfotrygdOppdatering(
     val personNrPasient = receivedSykmelding.personNrPasient
     val signaturDato = receivedSykmelding.sykmelding.signaturDato.toLocalDate()
     val tssid = receivedSykmelding.tssid
+    val uforegrad = when {
+        perioder.first().gradertSykmelding != null -> perioder.first().gradertSykmelding.sykmeldingsgrad.toBigInteger()
+        perioder.first().aktivitetIkkeMulig != null -> 100.toBigInteger()
+        else -> 0.toBigInteger()
+    }
     val sha256StringMedArbeidsgiver = sha256hashstring(createInfotrygdBlokk(
             itfh, perioder.first(), personNrPasient, signaturDato,
-            behandlerKode, tssid, loggingMeta, navKontorNr, findarbeidsKategori(itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver))
-    )
+            behandlerKode, tssid, loggingMeta, navKontorNr,
+            findarbeidsKategori(itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver), uforegrad))
     val sha256StringUtenArbeidsgiver = sha256hashstring(createInfotrygdBlokk(
             itfh, perioder.first(), personNrPasient, signaturDato,
-            behandlerKode, tssid, loggingMeta, navKontorNr, "")
+            behandlerKode, tssid, loggingMeta, navKontorNr, "", uforegrad)
     )
+    val sha256StringUtenUforegrad = sha256hashstring(createInfotrygdBlokk(
+            itfh, perioder.first(), personNrPasient, signaturDato,
+            behandlerKode, tssid, loggingMeta, navKontorNr,
+            findarbeidsKategori(itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver), 0.toBigInteger()))
 
     try {
         val redisSha256StringMedArbeidsgiver = jedis.get(sha256StringMedArbeidsgiver)
         val redisSha256StringUtenArbeidsgiver = jedis.get(sha256StringUtenArbeidsgiver)
+        val redissha256StringUtenUforegrad = jedis.get(sha256StringUtenUforegrad)
+
         if (redisSha256StringMedArbeidsgiver != null) {
             log.warn("Melding market som infotrygd duplikat oppdaatering {}", fields(loggingMeta))
         } else if (redisSha256StringUtenArbeidsgiver != null) {
+            log.info("Arbeidsgiver er endret, send oppdatering til infotrygd")
+            sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, 3), loggingMeta)
+        } else if (redissha256StringUtenUforegrad != null) {
             log.info("Arbeidsgiver er endret, send oppdatering til infotrygd")
             sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, 3), loggingMeta)
         } else {
             val antallSekunderI24Timer = TimeUnit.DAYS.toSeconds(1).toInt()
             jedis.setex(sha256StringMedArbeidsgiver, antallSekunderI24Timer, sha256StringMedArbeidsgiver)
             jedis.setex(sha256StringUtenArbeidsgiver, antallSekunderI24Timer, sha256StringUtenArbeidsgiver)
+            jedis.setex(sha256StringUtenUforegrad, antallSekunderI24Timer, sha256StringUtenUforegrad)
             sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr), loggingMeta)
         }
     } catch (connectionException: JedisConnectionException) {
@@ -783,6 +799,11 @@ fun createInfotrygdFellesformat(
                 loggingMeta,
                 navKontorNr,
                 itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver,
+                when {
+                    periode.gradertSykmelding != null -> periode.gradertSykmelding.sykmeldingsgrad.toBigInteger()
+                    periode.aktivitetIkkeMulig != null -> 100.toBigInteger()
+                    else -> 0.toBigInteger()
+                },
                 operasjonstypeKode))
     })
 }
@@ -797,6 +818,7 @@ fun createInfotrygdBlokk(
     loggingMeta: LoggingMeta,
     navKontorNr: String,
     navnArbeidsgiver: String?,
+    uforegrad: BigInteger,
     operasjonstypeKode: Int = findOperasjonstype(periode, itfh, loggingMeta)
 ) = KontrollsystemBlokkType.InfotrygdBlokk().apply {
         fodselsnummer = personNrPasient
@@ -853,11 +875,7 @@ fun createInfotrygdBlokk(
         }
 
         arbeidsufoerTOM = periode.periodeTOMDato
-        ufoeregrad = when {
-            periode.gradertSykmelding != null -> periode.gradertSykmelding.sykmeldingsgrad.toBigInteger()
-            periode.aktivitetIkkeMulig != null -> 100.toBigInteger()
-            else -> 0.toBigInteger()
-        }
+        ufoeregrad = uforegrad
     }
 
 fun findbBehandlingsDato(itfh: InfotrygdForespAndHealthInformation, signaturDato: LocalDate): LocalDate {
