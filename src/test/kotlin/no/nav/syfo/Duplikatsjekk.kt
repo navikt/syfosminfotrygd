@@ -6,12 +6,16 @@ import no.nav.helse.infotrygd.foresp.StatusType
 import no.nav.helse.infotrygd.foresp.TypeSMinfo
 import no.nav.helse.sm2013.CS
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
+import no.nav.syfo.services.UpdateInfotrygdService
 import no.nav.syfo.services.sha256hashstring
 import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
 object Duplikatsjekk : Spek({
+
+    val updateInfotrygdService = UpdateInfotrygdService()
+
     describe("Tester duplikat hånderingen med redis") {
         it("Skal plukke meldingen som duplikat") {
             val healthInformationForstemelding = HelseOpplysningerArbeidsuforhet().apply {
@@ -39,7 +43,7 @@ object Duplikatsjekk : Spek({
 
             val ifthForstemelding = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformationForstemelding)
 
-            val infotrygdBlokkForsteMelding = createInfotrygdBlokk(
+            val infotrygdBlokkForsteMelding = updateInfotrygdService.createInfotrygdBlokk(
                     ifthForstemelding,
                     healthInformationForstemelding.aktivitet.periode.last(),
                     "2134",
@@ -73,7 +77,7 @@ object Duplikatsjekk : Spek({
 
             val ifthAndreMelding = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformationAndreMelding)
 
-            val infotrygdBlokkAndreMelding = createInfotrygdBlokk(
+            val infotrygdBlokkAndreMelding = updateInfotrygdService.createInfotrygdBlokk(
                     ifthAndreMelding,
                     healthInformationAndreMelding.aktivitet.periode.last(),
                     "2134",

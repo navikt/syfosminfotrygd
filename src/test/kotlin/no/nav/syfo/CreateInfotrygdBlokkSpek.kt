@@ -5,12 +5,15 @@ import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.infotrygd.foresp.StatusType
 import no.nav.helse.infotrygd.foresp.TypeSMinfo
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
+import no.nav.syfo.services.UpdateInfotrygdService
 import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
 object CreateInfotrygdBlokkSpek : Spek({
     describe("Testing the creating of infotrygdblokk") {
+
+        val updateInfotrygdService = UpdateInfotrygdService()
 
         it("Should set forsteFravaersDag correctly, when oprasjosntype 1") {
 
@@ -39,7 +42,7 @@ object CreateInfotrygdBlokkSpek : Spek({
 
             val ifth = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
 
-            val infotrygdBlokk = createInfotrygdBlokk(
+            val infotrygdBlokk = updateInfotrygdService.createInfotrygdBlokk(
                     ifth,
                     healthInformation.aktivitet.periode.last(),
                     "2134",
@@ -89,7 +92,7 @@ object CreateInfotrygdBlokkSpek : Spek({
 
             val ifth = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
 
-            val infotrygdBlokk = createInfotrygdBlokk(
+            val infotrygdBlokk = updateInfotrygdService.createInfotrygdBlokk(
                     ifth,
                     healthInformation.aktivitet.periode.last(),
                     "2134",
