@@ -10,8 +10,8 @@ import redis.clients.jedis.Jedis
 
 fun erIRedis(redisKey: String, jedis: Jedis): Boolean =
         when (jedis.get(redisKey)) {
-            null -> true
-            else -> false
+            null -> false
+            else -> true
         }
 
 fun oppdaterRedis(redisKey: String, jedis: Jedis, sekunder: Int, loggingMeta: LoggingMeta) {
