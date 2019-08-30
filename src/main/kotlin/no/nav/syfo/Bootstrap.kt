@@ -371,7 +371,7 @@ suspend fun blockingApplicationLogicRetry(
                     sykmeldingId = receivedSykmelding.sykmelding.id,
                     retry = true
             )
-            Thread.sleep(10000)
+            Thread.sleep(11000)
 
             handleMessage(
                     receivedSykmelding, kafkaproducerCreateTask, kafkaproducervalidationResult,
@@ -573,7 +573,7 @@ fun sendInfotrygdOppdatering(
         } else if (duplikatInfotrygdOppdatering) {
             log.warn("Melding market som infotrygd duplikat oppdaatering {}", fields(loggingMeta))
         } else {
-            oppdaterRedis(personNrPasient, jedis, 20, loggingMeta)
+            oppdaterRedis(personNrPasient, jedis, 10, loggingMeta)
             oppdaterRedis(sha256String, jedis, TimeUnit.DAYS.toSeconds(1).toInt(), loggingMeta)
             sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr), loggingMeta)
         }
