@@ -46,7 +46,7 @@ object CreateInfotrygdBlokkSpek : Spek({
                     LocalDate.now(),
                     "LE",
                     "12345",
-                    LoggingMeta("mottakId", "12315", "", ""),
+                    LoggingMeta("mottakId", "12315", "", "", false),
                     "1234",
                     "NAV IKT",
                     1
@@ -96,7 +96,7 @@ object CreateInfotrygdBlokkSpek : Spek({
                     LocalDate.now(),
                     "LE",
                     "12345",
-                    LoggingMeta("mottakId", "12315", "", ""),
+                    LoggingMeta("mottakId", "12315", "", "", false),
                     "1234",
                     "NAV IKT",
                     2

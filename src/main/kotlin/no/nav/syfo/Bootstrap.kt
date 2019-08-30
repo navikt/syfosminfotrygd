@@ -28,7 +28,6 @@ import java.io.StringReader
 import java.io.StringWriter
 import java.lang.IllegalStateException
 import java.nio.file.Paths
-import java.security.MessageDigest
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -88,6 +87,9 @@ import no.nav.syfo.sak.avro.PrioritetType
 import no.nav.syfo.sak.avro.ProduceTask
 import no.nav.syfo.services.FindNAVKontorService
 import no.nav.syfo.services.UpdateInfotrygdService
+import no.nav.syfo.services.erIRedis
+import no.nav.syfo.services.oppdaterRedis
+import no.nav.syfo.services.sha256hashstring
 import no.nav.syfo.util.JacksonKafkaSerializer
 import no.nav.syfo.util.fellesformatUnmarshaller
 import no.nav.syfo.util.infotrygdSporringMarshaller
@@ -129,7 +131,7 @@ val objectMapper: ObjectMapper = ObjectMapper().apply {
     configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 }
 
-val coroutineContext = Executors.newFixedThreadPool(2).asCoroutineDispatcher()
+val coroutineContext = Executors.newFixedThreadPool(1).asCoroutineDispatcher()
 
 const val NAV_OPPFOLGING_UTLAND_KONTOR_NR = "0393"
 
@@ -154,6 +156,10 @@ fun main() = runBlocking(coroutineContext) {
             val producerPropertiesCreateTask = kafkaBaseConfig.toProducerConfig(env.applicationName, valueSerializer = KafkaAvroSerializer::class)
 
             val producerPropertiesvalidationResult = kafkaBaseConfig.toProducerConfig(env.applicationName, valueSerializer = JacksonKafkaSerializer::class)
+
+            val producerPropertiesReceivedSykmelding = kafkaBaseConfig.toProducerConfig(env.applicationName, valueSerializer = JacksonKafkaSerializer::class)
+
+            val kafkaproducerreceivedSykmelding = KafkaProducer<String, ReceivedSykmelding>(producerPropertiesReceivedSykmelding)
 
             val kafkaproducerCreateTask = KafkaProducer<String, ProduceTask>(producerPropertiesCreateTask)
 
@@ -222,7 +228,8 @@ fun main() = runBlocking(coroutineContext) {
                     consumerProperties,
                     smIkkeOkQueue,
                     norg2Client,
-                    jedis)
+                    jedis,
+                    kafkaproducerreceivedSykmelding)
 
             Runtime.getRuntime().addShutdownHook(Thread {
                 smIkkeOkQueue.close()
@@ -259,7 +266,8 @@ suspend fun CoroutineScope.launchListeners(
     consumerProperties: Properties,
     smIkkeOkQueue: MQQueue,
     norg2Client: Norg2Client,
-    jedis: Jedis
+    jedis: Jedis,
+    kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>
 ) {
 
     val recievedSykmeldingListeners = 0.until(env.applicationThreads).map {
@@ -272,12 +280,26 @@ suspend fun CoroutineScope.launchListeners(
             blockingApplicationLogic(applicationState, kafkaconsumerRecievedSykmelding, kafkaproducerCreateTask,
                     kafkaproducervalidationResult, infotrygdOppdateringProducer, infotrygdSporringProducer,
                     session, personV3, arbeidsfordelingV1, env.sm2013BehandlingsUtfallToipic, norskHelsenettClient,
-                    smIkkeOkQueue, norg2Client, jedis)
+                    smIkkeOkQueue, norg2Client, jedis, kafkaproducerreceivedSykmelding, env.sm2013infotrygdRetry)
+        }
+    }.toList()
+
+    val recievedSykmeldingretryListeners = 0.until(env.applicationThreads).map {
+        val kafkaconsumerRecievedSykmeldingretry = KafkaConsumer<String, String>(consumerProperties)
+
+        kafkaconsumerRecievedSykmeldingretry.subscribe(
+                listOf(env.sm2013infotrygdRetry)
+        )
+        createListener(applicationState) {
+            blockingApplicationLogicRetry(applicationState, kafkaconsumerRecievedSykmeldingretry, kafkaproducerCreateTask,
+                    kafkaproducervalidationResult, infotrygdOppdateringProducer, infotrygdSporringProducer,
+                    session, personV3, arbeidsfordelingV1, env.sm2013BehandlingsUtfallToipic, norskHelsenettClient,
+                    smIkkeOkQueue, norg2Client, jedis, kafkaproducerreceivedSykmelding, env.sm2013infotrygdRetry)
         }
     }.toList()
 
     applicationState.initialized = true
-    recievedSykmeldingListeners.forEach { it.join() }
+    (recievedSykmeldingListeners + recievedSykmeldingretryListeners).forEach { it.join() }
 }
 
 @KtorExperimentalAPI
@@ -295,7 +317,9 @@ suspend fun blockingApplicationLogic(
     norskHelsenettClient: NorskHelsenettClient,
     smIkkeOkQueue: MQQueue,
     norg2Client: Norg2Client,
-    jedis: Jedis
+    jedis: Jedis,
+    kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
+    infotrygdRetryTopic: String
 ) {
     while (applicationState.running) {
         kafkaConsumer.poll(Duration.ofMillis(0)).forEach { consumerRecord ->
@@ -304,14 +328,56 @@ suspend fun blockingApplicationLogic(
                     mottakId = receivedSykmelding.navLogId,
                     orgNr = receivedSykmelding.legekontorOrgNr,
                     msgId = receivedSykmelding.msgId,
-                    sykmeldingId = receivedSykmelding.sykmelding.id
+                    sykmeldingId = receivedSykmelding.sykmelding.id,
+                    retry = false
             )
 
             handleMessage(
                     receivedSykmelding, kafkaproducerCreateTask, kafkaproducervalidationResult,
                     infotrygdOppdateringProducer, infotrygdSporringProducer,
                     session, personV3, arbeidsfordelingV1, sm2013BehandlingsUtfallToipic, norskHelsenettClient,
-                    smIkkeOkQueue, loggingMeta, norg2Client, jedis)
+                    smIkkeOkQueue, loggingMeta, norg2Client, jedis, kafkaproducerreceivedSykmelding, infotrygdRetryTopic)
+        }
+        delay(100)
+    }
+}
+
+@KtorExperimentalAPI
+suspend fun blockingApplicationLogicRetry(
+    applicationState: ApplicationState,
+    kafkaConsumer: KafkaConsumer<String, String>,
+    kafkaproducerCreateTask: KafkaProducer<String, ProduceTask>,
+    kafkaproducervalidationResult: KafkaProducer<String, ValidationResult>,
+    infotrygdOppdateringProducer: MessageProducer,
+    infotrygdSporringProducer: MessageProducer,
+    session: Session,
+    personV3: PersonV3,
+    arbeidsfordelingV1: ArbeidsfordelingV1,
+    sm2013BehandlingsUtfallToipic: String,
+    norskHelsenettClient: NorskHelsenettClient,
+    smIkkeOkQueue: MQQueue,
+    norg2Client: Norg2Client,
+    jedis: Jedis,
+    kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
+    infotrygdRetryTopic: String
+) {
+    while (applicationState.running) {
+        kafkaConsumer.poll(Duration.ofMillis(0)).forEach { consumerRecord ->
+            val receivedSykmelding: ReceivedSykmelding = objectMapper.readValue(consumerRecord.value())
+            val loggingMeta = LoggingMeta(
+                    mottakId = receivedSykmelding.navLogId,
+                    orgNr = receivedSykmelding.legekontorOrgNr,
+                    msgId = receivedSykmelding.msgId,
+                    sykmeldingId = receivedSykmelding.sykmelding.id,
+                    retry = true
+            )
+            Thread.sleep(10000)
+
+            handleMessage(
+                    receivedSykmelding, kafkaproducerCreateTask, kafkaproducervalidationResult,
+                    infotrygdOppdateringProducer, infotrygdSporringProducer,
+                    session, personV3, arbeidsfordelingV1, sm2013BehandlingsUtfallToipic, norskHelsenettClient,
+                    smIkkeOkQueue, loggingMeta, norg2Client, jedis, kafkaproducerreceivedSykmelding, infotrygdRetryTopic)
         }
         delay(100)
     }
@@ -341,7 +407,9 @@ suspend fun handleMessage(
     smIkkeOkQueue: MQQueue,
     loggingMeta: LoggingMeta,
     norg2Client: Norg2Client,
-    jedis: Jedis
+    jedis: Jedis,
+    kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
+    infotrygdRetryTopic: String
 ) = coroutineScope {
     wrapExceptions(loggingMeta) {
         log.info("Received a SM2013, {}", fields(loggingMeta))
@@ -378,7 +446,9 @@ suspend fun handleMessage(
                 session,
                 infotrygdForespResponse,
                 healthInformation,
-                jedis).updateInfotrygd()
+                jedis,
+                kafkaproducerreceivedSykmelding,
+                infotrygdRetryTopic).updateInfotrygd()
 
         sendRuleCheckValidationResult(
                 receivedSykmelding,
@@ -478,42 +548,42 @@ fun sendInfotrygdOppdatering(
     receivedSykmelding: ReceivedSykmelding,
     behandlerKode: String,
     navKontorNr: String,
-    jedis: Jedis
+    jedis: Jedis,
+    kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
+    infotrygdRetryTopic: String
 ) {
     val perioder = itfh.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
     val marshalledFellesformat = receivedSykmelding.fellesformat
     val personNrPasient = receivedSykmelding.personNrPasient
     val signaturDato = receivedSykmelding.sykmelding.signaturDato.toLocalDate()
     val tssid = receivedSykmelding.tssid
-    val sha256StringMedArbeidsgiver = sha256hashstring(createInfotrygdBlokk(
+
+    val sha256String = sha256hashstring(createInfotrygdBlokk(
             itfh, perioder.first(), personNrPasient, signaturDato,
             behandlerKode, tssid, loggingMeta, navKontorNr, findarbeidsKategori(itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver))
     )
-    val sha256StringUtenArbeidsgiver = sha256hashstring(createInfotrygdBlokk(
-            itfh, perioder.first(), personNrPasient, signaturDato,
-            behandlerKode, tssid, loggingMeta, navKontorNr, "")
-    )
 
     try {
-        val redisSha256StringMedArbeidsgiver = jedis.get(sha256StringMedArbeidsgiver)
-        val redisSha256StringUtenArbeidsgiver = jedis.get(sha256StringUtenArbeidsgiver)
-        if (redisSha256StringMedArbeidsgiver != null) {
+        val nyldigInfotrygdOppdatering = erIRedis(personNrPasient, jedis)
+        val duplikatInfotrygdOppdatering = erIRedis(sha256String, jedis)
+
+        if (nyldigInfotrygdOppdatering) {
+            kafkaproducerreceivedSykmelding.send(ProducerRecord(infotrygdRetryTopic, receivedSykmelding.sykmelding.id, receivedSykmelding))
+            log.warn("Melding sendt på retry topic {}", fields(loggingMeta))
+        } else if (duplikatInfotrygdOppdatering) {
             log.warn("Melding market som infotrygd duplikat oppdaatering {}", fields(loggingMeta))
-        } else if (redisSha256StringUtenArbeidsgiver != null) {
-            log.info("Arbeidsgiver er endret, send oppdatering til infotrygd")
-            sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, 3), loggingMeta)
         } else {
-            val antallSekunderI24Timer = TimeUnit.DAYS.toSeconds(1).toInt()
-            jedis.setex(sha256StringMedArbeidsgiver, antallSekunderI24Timer, sha256StringMedArbeidsgiver)
-            jedis.setex(sha256StringUtenArbeidsgiver, antallSekunderI24Timer, sha256StringUtenArbeidsgiver)
+            oppdaterRedis(personNrPasient, jedis, 20, loggingMeta)
+            oppdaterRedis(sha256String, jedis, TimeUnit.DAYS.toSeconds(1).toInt(), loggingMeta)
             sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr), loggingMeta)
         }
     } catch (connectionException: JedisConnectionException) {
-        log.warn("Fikk ikkje opprettet kontakt med redis, infotrygd duplikater kan forekomme", connectionException)
-        sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr), loggingMeta)
+        log.error("Fikk ikkje opprettet kontakt med redis, kaster exception", connectionException)
+        throw connectionException
     }
 
     perioder.drop(1).forEach { periode ->
+        Thread.sleep(10000)
         sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, periode, personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, 2), loggingMeta)
     }
 }
@@ -889,8 +959,3 @@ fun HelseOpplysningerArbeidsuforhet.Behandler.formatName(): String =
 fun sammePeriodeInfotrygd(infotrygdPeriode: TypeSMinfo.Periode, sykemldingsPeriode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode): Boolean {
     return infotrygdPeriode.arbufoerFOM == sykemldingsPeriode.periodeFOMDato && infotrygdPeriode.arbufoerTOM == sykemldingsPeriode.periodeTOMDato
 }
-
-fun sha256hashstring(infotrygdblokk: KontrollsystemBlokkType.InfotrygdBlokk): String =
-        MessageDigest.getInstance("SHA-256")
-                .digest(objectMapper.writeValueAsBytes(infotrygdblokk))
-                .fold("") { str, it -> str + "%02x".format(it) }

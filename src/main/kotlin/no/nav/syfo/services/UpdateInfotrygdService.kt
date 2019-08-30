@@ -35,7 +35,9 @@ class UpdateInfotrygdService(
     val session: Session,
     val infotrygdForespResponse: InfotrygdForesp,
     val healthInformation: HelseOpplysningerArbeidsuforhet,
-    val jedis: Jedis
+    val jedis: Jedis,
+    val kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
+    val infotrygdRetryTopic: String
 ) {
 
     suspend fun updateInfotrygd() {
@@ -54,7 +56,9 @@ class UpdateInfotrygdService(
                             receivedSykmelding,
                             helsepersonellKategoriVerdi,
                             navKontorLokalKontor,
-                            jedis)
+                            jedis,
+                            kafkaproducerreceivedSykmelding,
+                            infotrygdRetryTopic)
                 }
 
                 log.info("Message(${StructuredArguments.fields(loggingMeta)}) got outcome {}, {}, processing took {}s",
