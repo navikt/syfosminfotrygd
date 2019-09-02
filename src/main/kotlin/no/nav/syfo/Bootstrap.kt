@@ -206,7 +206,7 @@ fun main() = runBlocking(coroutineContext) {
     }
 }
 
-suspend fun CoroutineScope.createListener(applicationState: ApplicationState, action: suspend CoroutineScope.() -> Unit): Job =
+fun CoroutineScope.createListener(applicationState: ApplicationState, action: suspend CoroutineScope.() -> Unit): Job =
         launch {
             try {
                 action()
@@ -235,7 +235,7 @@ suspend fun CoroutineScope.launchListeners(
     jedis: Jedis,
     kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>
 ) {
-
+    val recievedSykmeldingListeners = 0.until(env.applicationThreads).map {
         val kafkaconsumerRecievedSykmelding = KafkaConsumer<String, String>(consumerProperties)
 
         kafkaconsumerRecievedSykmelding.subscribe(
@@ -248,6 +248,9 @@ suspend fun CoroutineScope.launchListeners(
                     smIkkeOkQueue, norg2Client, jedis, kafkaproducerreceivedSykmelding, env.sm2013infotrygdRetry,
                     env.sm2013OpppgaveTopic)
         }
+    }.toList()
+
+    val recievedSykmeldingretryListeners = 0.until(env.applicationThreads).map {
 
         val kafkaconsumerRecievedSykmeldingretry = KafkaConsumer<String, String>(consumerProperties)
 
@@ -261,8 +264,10 @@ suspend fun CoroutineScope.launchListeners(
                     smIkkeOkQueue, norg2Client, jedis, kafkaproducerreceivedSykmelding, env.sm2013infotrygdRetry,
                     env.sm2013OpppgaveTopic)
         }
+    }.toList()
 
     applicationState.initialized = true
+    (recievedSykmeldingListeners + recievedSykmeldingretryListeners).forEach { it.join() }
 }
 
 @KtorExperimentalAPI
