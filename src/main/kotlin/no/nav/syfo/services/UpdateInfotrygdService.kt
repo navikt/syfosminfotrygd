@@ -6,6 +6,7 @@ import java.util.concurrent.TimeUnit
 import javax.jms.MessageProducer
 import javax.jms.Session
 import kotlin.math.absoluteValue
+import kotlinx.coroutines.delay
 import net.logstash.logback.argument.StructuredArguments
 import no.nav.helse.eiFellesformat.XMLEIFellesformat
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
@@ -36,7 +37,7 @@ import redis.clients.jedis.Jedis
 import redis.clients.jedis.exceptions.JedisConnectionException
 
 @KtorExperimentalAPI
-class UpdateInfotrygdService() {
+class UpdateInfotrygdService {
 
     suspend fun updateInfotrygd(
         receivedSykmelding: ReceivedSykmelding,
@@ -94,18 +95,18 @@ class UpdateInfotrygdService() {
             }
     }
 
-    fun sendInfotrygdOppdatering(
-        producer: MessageProducer,
-        session: Session,
-        loggingMeta: LoggingMeta,
-        itfh: InfotrygdForespAndHealthInformation,
-        receivedSykmelding: ReceivedSykmelding,
-        behandlerKode: String,
-        navKontorNr: String,
-        jedis: Jedis,
-        kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
-        infotrygdRetryTopic: String
-    ) {
+suspend fun sendInfotrygdOppdatering(
+    producer: MessageProducer,
+    session: Session,
+    loggingMeta: LoggingMeta,
+    itfh: InfotrygdForespAndHealthInformation,
+    receivedSykmelding: ReceivedSykmelding,
+    behandlerKode: String,
+    navKontorNr: String,
+    jedis: Jedis,
+    kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
+    infotrygdRetryTopic: String
+) {
         val perioder = itfh.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
         val marshalledFellesformat = receivedSykmelding.fellesformat
         val personNrPasient = receivedSykmelding.personNrPasient
@@ -122,12 +123,13 @@ class UpdateInfotrygdService() {
             val duplikatInfotrygdOppdatering = erIRedis(sha256String, jedis)
 
             if (nyligInfotrygdOppdatering) {
+                delay(5000)
                 kafkaproducerreceivedSykmelding.send(ProducerRecord(infotrygdRetryTopic, receivedSykmelding.sykmelding.id, receivedSykmelding))
                 log.warn("Melding sendt på retry topic {}", StructuredArguments.fields(loggingMeta))
             } else if (duplikatInfotrygdOppdatering) {
                 log.warn("Melding market som infotrygd duplikat oppdaatering {}", StructuredArguments.fields(loggingMeta))
             } else {
-                oppdaterRedis(personNrPasient, jedis, 10, loggingMeta)
+                oppdaterRedis(personNrPasient, jedis, 4, loggingMeta)
                 oppdaterRedis(sha256String, jedis, TimeUnit.DAYS.toSeconds(1).toInt(), loggingMeta)
                 sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr), loggingMeta)
             }
