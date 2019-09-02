@@ -134,7 +134,7 @@ class UpdateInfotrygdService() {
         }
 
         perioder.drop(1).forEach { periode ->
-            Thread.sleep(10000)
+            Thread.sleep(1000)
             sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, periode, personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, 2), loggingMeta)
         }
     }

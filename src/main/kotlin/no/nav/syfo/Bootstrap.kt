@@ -30,19 +30,17 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.Properties
-import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import javax.jms.MessageProducer
 import javax.jms.Session
 import javax.xml.bind.Marshaller
 import javax.xml.stream.XMLInputFactory
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import net.logstash.logback.argument.StructuredArguments.fields
 import net.logstash.logback.argument.StructuredArguments.keyValue
 import no.nav.helse.eiFellesformat.XMLEIFellesformat
@@ -98,12 +96,10 @@ val objectMapper: ObjectMapper = ObjectMapper().apply {
     configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 }
 
-val coroutineContext = Executors.newFixedThreadPool(1).asCoroutineDispatcher()
-
 const val NAV_OPPFOLGING_UTLAND_KONTOR_NR = "0393"
 
 @KtorExperimentalAPI
-fun main() = runBlocking(coroutineContext) {
+fun main() {
     val env = Environment()
     val credentials = objectMapper.readValue<VaultCredentials>(Paths.get("/var/run/secrets/nais.io/vault/credentials.json").toFile())
     val applicationState = ApplicationState()
@@ -207,8 +203,8 @@ fun main() = runBlocking(coroutineContext) {
     }
 }
 
-fun CoroutineScope.createListener(applicationState: ApplicationState, action: suspend CoroutineScope.() -> Unit): Job =
-        launch {
+fun createListener(applicationState: ApplicationState, action: suspend CoroutineScope.() -> Unit): Job =
+        GlobalScope.launch {
             try {
                 action()
             } catch (e: TrackableException) {
@@ -219,7 +215,7 @@ fun CoroutineScope.createListener(applicationState: ApplicationState, action: su
         }
 
 @KtorExperimentalAPI
-suspend fun CoroutineScope.launchListeners(
+fun launchListeners(
     applicationState: ApplicationState,
     kafkaproducerCreateTask: KafkaProducer<String, ProduceTask>,
     kafkaproducervalidationResult: KafkaProducer<String, ValidationResult>,
@@ -237,7 +233,6 @@ suspend fun CoroutineScope.launchListeners(
     kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>
 ) {
 
-    val recievedSykmeldingListeners = 0.until(env.applicationThreads).map {
         val kafkaconsumerRecievedSykmelding = KafkaConsumer<String, String>(consumerProperties)
 
         kafkaconsumerRecievedSykmelding.subscribe(
@@ -249,9 +244,7 @@ suspend fun CoroutineScope.launchListeners(
                     session, personV3, arbeidsfordelingV1, env.sm2013BehandlingsUtfallToipic, norskHelsenettClient,
                     smIkkeOkQueue, norg2Client, jedis, kafkaproducerreceivedSykmelding, env.sm2013infotrygdRetry)
         }
-    }.toList()
 
-    val recievedSykmeldingretryListeners = 0.until(env.applicationThreads).map {
         val kafkaconsumerRecievedSykmeldingretry = KafkaConsumer<String, String>(consumerProperties)
 
         kafkaconsumerRecievedSykmeldingretry.subscribe(
@@ -263,10 +256,8 @@ suspend fun CoroutineScope.launchListeners(
                     session, personV3, arbeidsfordelingV1, env.sm2013BehandlingsUtfallToipic, norskHelsenettClient,
                     smIkkeOkQueue, norg2Client, jedis, kafkaproducerreceivedSykmelding, env.sm2013infotrygdRetry)
         }
-    }.toList()
 
     applicationState.initialized = true
-    (recievedSykmeldingListeners + recievedSykmeldingretryListeners).forEach { it.join() }
 }
 
 @KtorExperimentalAPI
@@ -338,7 +329,7 @@ suspend fun blockingApplicationLogicRetry(
                     sykmeldingId = receivedSykmelding.sykmelding.id,
                     retry = true
             )
-            Thread.sleep(11000)
+            delay(11000)
 
             handleMessage(
                     receivedSykmelding, kafkaproducerCreateTask, kafkaproducervalidationResult,
