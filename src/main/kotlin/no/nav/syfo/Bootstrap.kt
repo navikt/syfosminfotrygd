@@ -38,7 +38,6 @@ import javax.xml.stream.XMLInputFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import net.logstash.logback.argument.StructuredArguments.fields
@@ -366,7 +365,7 @@ suspend fun handleMessage(
     kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
     infotrygdRetryTopic: String,
     oppgaveTopic: String
-) = coroutineScope {
+) {
     wrapExceptions(loggingMeta) {
         log.info("Received a SM2013, {}", fields(loggingMeta))
 
