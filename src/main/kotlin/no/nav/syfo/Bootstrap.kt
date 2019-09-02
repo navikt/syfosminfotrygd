@@ -1,6 +1,5 @@
 package no.nav.syfo
 
-import com.ctc.wstx.exc.WstxException
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
@@ -23,49 +22,34 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.util.KtorExperimentalAPI
 import io.prometheus.client.hotspot.DefaultExports
-import java.io.IOException
 import java.io.StringReader
 import java.io.StringWriter
-import java.lang.IllegalStateException
 import java.nio.file.Paths
-import java.security.MessageDigest
 import java.time.Duration
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.Properties
-import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import javax.jms.MessageProducer
 import javax.jms.Session
-import javax.jms.TemporaryQueue
-import javax.jms.TextMessage
 import javax.xml.bind.Marshaller
 import javax.xml.stream.XMLInputFactory
-import kotlin.math.absoluteValue
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import net.logstash.logback.argument.StructuredArguments.fields
 import net.logstash.logback.argument.StructuredArguments.keyValue
 import no.nav.helse.eiFellesformat.XMLEIFellesformat
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
-import no.nav.helse.infotrygd.foresp.TypeSMinfo
 import no.nav.helse.msgHead.XMLMsgHead
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
-import no.nav.helse.sm2013.KontrollSystemBlokk
-import no.nav.helse.sm2013.KontrollsystemBlokkType
 import no.nav.syfo.api.AccessTokenClient
 import no.nav.syfo.api.registerNaisApi
-import no.nav.syfo.client.Behandler
 import no.nav.syfo.client.Norg2Client
 import no.nav.syfo.client.NorskHelsenettClient
-import no.nav.syfo.helpers.retry
 import no.nav.syfo.kafka.loadBaseConfig
 import no.nav.syfo.kafka.toConsumerConfig
 import no.nav.syfo.kafka.toProducerConfig
@@ -83,33 +67,16 @@ import no.nav.syfo.rules.Rule
 import no.nav.syfo.rules.TssRuleChain
 import no.nav.syfo.rules.ValidationRuleChain
 import no.nav.syfo.rules.executeFlow
-import no.nav.syfo.rules.sortedSMInfos
 import no.nav.syfo.sak.avro.PrioritetType
 import no.nav.syfo.sak.avro.ProduceTask
 import no.nav.syfo.services.FindNAVKontorService
 import no.nav.syfo.services.UpdateInfotrygdService
+import no.nav.syfo.services.fetchInfotrygdForesp
 import no.nav.syfo.util.JacksonKafkaSerializer
 import no.nav.syfo.util.fellesformatUnmarshaller
-import no.nav.syfo.util.infotrygdSporringMarshaller
-import no.nav.syfo.util.infotrygdSporringUnmarshaller
-import no.nav.syfo.util.xmlObjectWriter
 import no.nav.syfo.ws.createPort
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.binding.ArbeidsfordelingV1
-import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.ArbeidsfordelingKriterier
-import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.Diskresjonskoder
-import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.Geografi
-import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.Oppgavetyper
-import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.Tema
-import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.meldinger.FinnBehandlendeEnhetListeRequest
-import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.meldinger.FinnBehandlendeEnhetListeResponse
 import no.nav.tjeneste.virksomhet.person.v3.binding.PersonV3
-import no.nav.tjeneste.virksomhet.person.v3.informasjon.GeografiskTilknytning
-import no.nav.tjeneste.virksomhet.person.v3.informasjon.NorskIdent
-import no.nav.tjeneste.virksomhet.person.v3.informasjon.PersonIdent
-import no.nav.tjeneste.virksomhet.person.v3.informasjon.Personidenter
-import no.nav.tjeneste.virksomhet.person.v3.meldinger.HentGeografiskTilknytningRequest
-import no.nav.tjeneste.virksomhet.person.v3.meldinger.HentGeografiskTilknytningResponse
-import no.nav.tjeneste.virksomhet.person.v3.meldinger.HentPersonRequest
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
@@ -117,7 +84,6 @@ import org.apache.kafka.common.serialization.StringDeserializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import redis.clients.jedis.Jedis
-import redis.clients.jedis.exceptions.JedisConnectionException
 
 data class ApplicationState(var running: Boolean = true, var initialized: Boolean = false)
 
@@ -129,12 +95,10 @@ val objectMapper: ObjectMapper = ObjectMapper().apply {
     configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 }
 
-val coroutineContext = Executors.newFixedThreadPool(2).asCoroutineDispatcher()
-
 const val NAV_OPPFOLGING_UTLAND_KONTOR_NR = "0393"
 
 @KtorExperimentalAPI
-fun main() = runBlocking(coroutineContext) {
+fun main() {
     val env = Environment()
     val credentials = objectMapper.readValue<VaultCredentials>(Paths.get("/var/run/secrets/nais.io/vault/credentials.json").toFile())
     val applicationState = ApplicationState()
@@ -145,23 +109,19 @@ fun main() = runBlocking(coroutineContext) {
 
     DefaultExports.initialize()
 
-    connectionFactory(env).createConnection(credentials.mqUsername, credentials.mqPassword).use { connection ->
-        connection.start()
-
-        Jedis(env.redishost, 6379).use { jedis ->
             val kafkaBaseConfig = loadBaseConfig(env, credentials)
             val consumerProperties = kafkaBaseConfig.toConsumerConfig("${env.applicationName}-consumer", valueDeserializer = StringDeserializer::class)
             val producerPropertiesCreateTask = kafkaBaseConfig.toProducerConfig(env.applicationName, valueSerializer = KafkaAvroSerializer::class)
 
             val producerPropertiesvalidationResult = kafkaBaseConfig.toProducerConfig(env.applicationName, valueSerializer = JacksonKafkaSerializer::class)
 
+            val producerPropertiesReceivedSykmelding = kafkaBaseConfig.toProducerConfig(env.applicationName, valueSerializer = JacksonKafkaSerializer::class)
+
+            val kafkaproducerreceivedSykmelding = KafkaProducer<String, ReceivedSykmelding>(producerPropertiesReceivedSykmelding)
+
             val kafkaproducerCreateTask = KafkaProducer<String, ProduceTask>(producerPropertiesCreateTask)
 
             val kafkaproducervalidationResult = KafkaProducer<String, ValidationResult>(producerPropertiesvalidationResult)
-
-            val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
-            val infotrygdOppdateringProducer = session.producerForQueue("queue:///${env.infotrygdOppdateringQueue}?targetClient=1")
-            val infotrygdSporringProducer = session.producerForQueue("queue:///${env.infotrygdSporringQueue}?targetClient=1")
 
             MQEnvironment.channel = env.mqChannelName
             MQEnvironment.port = env.mqPort
@@ -208,13 +168,16 @@ fun main() = runBlocking(coroutineContext) {
 
             val norg2Client = Norg2Client(norg2ClientHttpClient, env.norg2V1EndpointURL)
 
+            Runtime.getRuntime().addShutdownHook(Thread {
+                smIkkeOkQueue.close()
+                mqQueueManager.disconnect()
+                applicationServer.stop(10, 10, TimeUnit.SECONDS)
+            })
+
             launchListeners(
                     applicationState,
                     kafkaproducerCreateTask,
                     kafkaproducervalidationResult,
-                    infotrygdOppdateringProducer,
-                    infotrygdSporringProducer,
-                    session,
                     personV3,
                     arbeidsfordelingV1,
                     env,
@@ -222,19 +185,12 @@ fun main() = runBlocking(coroutineContext) {
                     consumerProperties,
                     smIkkeOkQueue,
                     norg2Client,
-                    jedis)
-
-            Runtime.getRuntime().addShutdownHook(Thread {
-                smIkkeOkQueue.close()
-                mqQueueManager.disconnect()
-                applicationServer.stop(10, 10, TimeUnit.SECONDS)
-            })
-        }
-    }
+                    kafkaproducerreceivedSykmelding,
+                    credentials)
 }
 
-fun CoroutineScope.createListener(applicationState: ApplicationState, action: suspend CoroutineScope.() -> Unit): Job =
-        launch {
+fun createListener(applicationState: ApplicationState, action: suspend CoroutineScope.() -> Unit): Job =
+        GlobalScope.launch {
             try {
                 action()
             } catch (e: TrackableException) {
@@ -245,13 +201,10 @@ fun CoroutineScope.createListener(applicationState: ApplicationState, action: su
         }
 
 @KtorExperimentalAPI
-suspend fun CoroutineScope.launchListeners(
+fun launchListeners(
     applicationState: ApplicationState,
     kafkaproducerCreateTask: KafkaProducer<String, ProduceTask>,
     kafkaproducervalidationResult: KafkaProducer<String, ValidationResult>,
-    infotrygdOppdateringProducer: MessageProducer,
-    infotrygdSporringProducer: MessageProducer,
-    session: Session,
     personV3: PersonV3,
     arbeidsfordelingV1: ArbeidsfordelingV1,
     env: Environment,
@@ -259,25 +212,32 @@ suspend fun CoroutineScope.launchListeners(
     consumerProperties: Properties,
     smIkkeOkQueue: MQQueue,
     norg2Client: Norg2Client,
-    jedis: Jedis
+    kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
+    credentials: VaultCredentials
 ) {
-
-    val recievedSykmeldingListeners = 0.until(env.applicationThreads).map {
         val kafkaconsumerRecievedSykmelding = KafkaConsumer<String, String>(consumerProperties)
 
         kafkaconsumerRecievedSykmelding.subscribe(
-                listOf(env.sm2013AutomaticHandlingTopic, env.smPaperAutomaticHandlingTopic)
+                listOf(env.sm2013AutomaticHandlingTopic, env.smPaperAutomaticHandlingTopic, env.sm2013infotrygdRetry)
         )
         createListener(applicationState) {
-            blockingApplicationLogic(applicationState, kafkaconsumerRecievedSykmelding, kafkaproducerCreateTask,
-                    kafkaproducervalidationResult, infotrygdOppdateringProducer, infotrygdSporringProducer,
-                    session, personV3, arbeidsfordelingV1, env.sm2013BehandlingsUtfallToipic, norskHelsenettClient,
-                    smIkkeOkQueue, norg2Client, jedis)
+            connectionFactory(env).createConnection(credentials.mqUsername, credentials.mqPassword).use { connection ->
+                Jedis(env.redishost, 6379).use { jedis ->
+                connection.start()
+                val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
+                val infotrygdOppdateringProducer = session.producerForQueue("queue:///${env.infotrygdOppdateringQueue}?targetClient=1")
+                val infotrygdSporringProducer = session.producerForQueue("queue:///${env.infotrygdSporringQueue}?targetClient=1")
+
+                blockingApplicationLogic(applicationState, kafkaconsumerRecievedSykmelding, kafkaproducerCreateTask,
+                        kafkaproducervalidationResult, infotrygdOppdateringProducer, infotrygdSporringProducer,
+                        session, personV3, arbeidsfordelingV1, env.sm2013BehandlingsUtfallToipic, norskHelsenettClient,
+                        smIkkeOkQueue, norg2Client, jedis, kafkaproducerreceivedSykmelding, env.sm2013infotrygdRetry,
+                        env.sm2013OpppgaveTopic)
+                }
+            }
         }
-    }.toList()
 
     applicationState.initialized = true
-    recievedSykmeldingListeners.forEach { it.join() }
 }
 
 @KtorExperimentalAPI
@@ -295,7 +255,10 @@ suspend fun blockingApplicationLogic(
     norskHelsenettClient: NorskHelsenettClient,
     smIkkeOkQueue: MQQueue,
     norg2Client: Norg2Client,
-    jedis: Jedis
+    jedis: Jedis,
+    kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
+    infotrygdRetryTopic: String,
+    oppgaveTopic: String
 ) {
     while (applicationState.running) {
         kafkaConsumer.poll(Duration.ofMillis(0)).forEach { consumerRecord ->
@@ -311,19 +274,11 @@ suspend fun blockingApplicationLogic(
                     receivedSykmelding, kafkaproducerCreateTask, kafkaproducervalidationResult,
                     infotrygdOppdateringProducer, infotrygdSporringProducer,
                     session, personV3, arbeidsfordelingV1, sm2013BehandlingsUtfallToipic, norskHelsenettClient,
-                    smIkkeOkQueue, loggingMeta, norg2Client, jedis)
+                    smIkkeOkQueue, loggingMeta, norg2Client, jedis, kafkaproducerreceivedSykmelding,
+                    infotrygdRetryTopic, oppgaveTopic)
         }
         delay(100)
     }
-}
-
-suspend fun getInfotrygdForespResponse(
-    receivedSykmelding: ReceivedSykmelding,
-    infotrygdSporringProducer: MessageProducer,
-    session: Session,
-    healthInformation: HelseOpplysningerArbeidsuforhet
-): InfotrygdForesp {
-    return fetchInfotrygdForesp(receivedSykmelding, healthInformation, session, infotrygdSporringProducer)
 }
 
 @KtorExperimentalAPI
@@ -341,8 +296,11 @@ suspend fun handleMessage(
     smIkkeOkQueue: MQQueue,
     loggingMeta: LoggingMeta,
     norg2Client: Norg2Client,
-    jedis: Jedis
-) = coroutineScope {
+    jedis: Jedis,
+    kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
+    infotrygdRetryTopic: String,
+    oppgaveTopic: String
+) {
     wrapExceptions(loggingMeta) {
         log.info("Received a SM2013, {}", fields(loggingMeta))
 
@@ -354,7 +312,7 @@ suspend fun handleMessage(
         val fellesformat = fellesformatUnmarshaller.unmarshal(StringReader(receivedSykmelding.fellesformat)) as XMLEIFellesformat
         val healthInformation = extractHelseOpplysningerArbeidsuforhet(fellesformat)
 
-        val infotrygdForespResponse = getInfotrygdForespResponse(
+        val infotrygdForespResponse = fetchInfotrygdForesp(
                 receivedSykmelding,
                 infotrygdSporringProducer,
                 session,
@@ -367,7 +325,7 @@ suspend fun handleMessage(
         val behandlendeEnhet = findNAVKontorService.finnBehandlendeEnhet()
         val lokaltNavkontor = findNAVKontorService.finnLokaltNavkontor()
 
-        UpdateInfotrygdService(receivedSykmelding,
+        UpdateInfotrygdService().updateInfotrygd(receivedSykmelding,
                 norskHelsenettClient,
                 validationResult,
                 infotrygdOppdateringProducer,
@@ -378,7 +336,10 @@ suspend fun handleMessage(
                 session,
                 infotrygdForespResponse,
                 healthInformation,
-                jedis).updateInfotrygd()
+                jedis,
+                kafkaproducerreceivedSykmelding,
+                infotrygdRetryTopic,
+                oppgaveTopic)
 
         sendRuleCheckValidationResult(
                 receivedSykmelding,
@@ -460,174 +421,18 @@ fun Marshaller.toString(input: Any): String = StringWriter().use {
     it.toString()
 }
 
-fun sendInfotrygdSporring(
-    producer: MessageProducer,
-    session: Session,
-    infotrygdForesp: InfotrygdForesp,
-    temporaryQueue: TemporaryQueue
-) = producer.send(session.createTextMessage().apply {
-    text = infotrygdSporringMarshaller.toString(infotrygdForesp)
-    jmsReplyTo = temporaryQueue
-})
-
-fun sendInfotrygdOppdatering(
-    producer: MessageProducer,
-    session: Session,
-    loggingMeta: LoggingMeta,
-    itfh: InfotrygdForespAndHealthInformation,
-    receivedSykmelding: ReceivedSykmelding,
-    behandlerKode: String,
-    navKontorNr: String,
-    jedis: Jedis
-) {
-    val perioder = itfh.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
-    val marshalledFellesformat = receivedSykmelding.fellesformat
-    val personNrPasient = receivedSykmelding.personNrPasient
-    val signaturDato = receivedSykmelding.sykmelding.signaturDato.toLocalDate()
-    val tssid = receivedSykmelding.tssid
-    val sha256StringMedArbeidsgiver = sha256hashstring(createInfotrygdBlokk(
-            itfh, perioder.first(), personNrPasient, signaturDato,
-            behandlerKode, tssid, loggingMeta, navKontorNr, findarbeidsKategori(itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver))
-    )
-    val sha256StringUtenArbeidsgiver = sha256hashstring(createInfotrygdBlokk(
-            itfh, perioder.first(), personNrPasient, signaturDato,
-            behandlerKode, tssid, loggingMeta, navKontorNr, "")
-    )
-
-    try {
-        val redisSha256StringMedArbeidsgiver = jedis.get(sha256StringMedArbeidsgiver)
-        val redisSha256StringUtenArbeidsgiver = jedis.get(sha256StringUtenArbeidsgiver)
-        if (redisSha256StringMedArbeidsgiver != null) {
-            log.warn("Melding market som infotrygd duplikat oppdaatering {}", fields(loggingMeta))
-        } else if (redisSha256StringUtenArbeidsgiver != null) {
-            log.info("Arbeidsgiver er endret, send oppdatering til infotrygd")
-            sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, 3), loggingMeta)
-        } else {
-            val antallSekunderI24Timer = TimeUnit.DAYS.toSeconds(1).toInt()
-            jedis.setex(sha256StringMedArbeidsgiver, antallSekunderI24Timer, sha256StringMedArbeidsgiver)
-            jedis.setex(sha256StringUtenArbeidsgiver, antallSekunderI24Timer, sha256StringUtenArbeidsgiver)
-            sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr), loggingMeta)
-        }
-    } catch (connectionException: JedisConnectionException) {
-        log.warn("Fikk ikkje opprettet kontakt med redis, infotrygd duplikater kan forekomme", connectionException)
-        sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr), loggingMeta)
-    }
-
-    perioder.drop(1).forEach { periode ->
-        sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, periode, personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, 2), loggingMeta)
-    }
-}
-
-fun sendInfotrygdOppdateringMq(
-    producer: MessageProducer,
-    session: Session,
-    fellesformat: XMLEIFellesformat,
-    loggingMeta: LoggingMeta
-) = producer.send(session.createTextMessage().apply {
-    log.info("Melding har oprasjonstype: {}, tkNummer: {}, {}", fellesformat.get<KontrollsystemBlokkType>().infotrygdBlokk.first().operasjonstype, fellesformat.get<KontrollsystemBlokkType>().infotrygdBlokk.first().tkNummer, fields(loggingMeta))
-    text = xmlObjectWriter.writeValueAsString(fellesformat)
-    log.info("Melding er sendt til infotrygd {}", fields(loggingMeta))
-})
-
-fun createInfotrygdForesp(personNrPasient: String, healthInformation: HelseOpplysningerArbeidsuforhet, doctorFnr: String) = InfotrygdForesp().apply {
-    val dateMinus1Year = LocalDate.now().minusYears(1)
-    val dateMinus4Years = LocalDate.now().minusYears(4)
-
-    fodselsnummer = personNrPasient
-    tkNrFraDato = dateMinus1Year
-    forespNr = 1.toBigInteger()
-    forespTidsStempel = LocalDateTime.now()
-    fraDato = dateMinus1Year
-    eldsteFraDato = dateMinus4Years
-    hovedDiagnosekode = healthInformation.medisinskVurdering.hovedDiagnose.diagnosekode.v
-    hovedDiagnosekodeverk = Diagnosekode.values().first {
-        it.kithCode == healthInformation.medisinskVurdering.hovedDiagnose.diagnosekode.s
-    }.infotrygdCode
-    fodselsnrBehandler = doctorFnr
-    if (healthInformation.medisinskVurdering.biDiagnoser?.diagnosekode?.firstOrNull()?.v != null &&
-            healthInformation.medisinskVurdering.biDiagnoser?.diagnosekode?.firstOrNull()?.s != null) {
-        biDiagnoseKode = healthInformation.medisinskVurdering.biDiagnoser.diagnosekode.first().v
-        biDiagnosekodeverk = Diagnosekode.values().first {
-            it.kithCode == healthInformation.medisinskVurdering.biDiagnoser.diagnosekode.first().s
-        }.infotrygdCode
-    }
-    tkNrFraDato = dateMinus1Year
-}
-
 val inputFactory = XMLInputFactory.newInstance()!!
 inline fun <reified T> unmarshal(text: String): T = fellesformatUnmarshaller.unmarshal(inputFactory.createXMLEventReader(StringReader(text)), T::class.java).value
-
-fun findarbeidsKategori(navnArbeidsgiver: String?): String {
-    return if (navnArbeidsgiver == null || navnArbeidsgiver.isBlank() || navnArbeidsgiver.isEmpty()) {
-        "030"
-    } else {
-        "01"
-    }
-}
-
-fun findOperasjonstype(
-    periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode,
-    itfh: InfotrygdForespAndHealthInformation,
-    loggingMeta: LoggingMeta
-): Int {
-    // FORSTEGANGS = 1, PAFOLGENDE = 2, ENDRING = 3
-    val typeSMinfo = itfh.infotrygdForesp.sMhistorikk?.sykmelding
-            ?.sortedSMInfos()
-            ?.lastOrNull()
-            ?: return 1
-
-    return if (endringSykmelding(periode, itfh, typeSMinfo)) {
-        3
-    } else if (paafolgendeSykmelding(periode, itfh, typeSMinfo)) {
-        2
-    } else if (forstegangsSykmelding(periode, itfh, typeSMinfo)) {
-        1
-    } else {
-        log.error("Could not determined operasjonstype {}", fields(loggingMeta))
-        throw RuntimeException("Could not determined operasjonstype")
-    }
-}
-
-fun forstegangsSykmelding(
-    periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode,
-    itfh: InfotrygdForespAndHealthInformation,
-    typeSMinfo: TypeSMinfo
-): Boolean =
-        itfh.infotrygdForesp.sMhistorikk.status.kodeMelding == "04" ||
-        (typeSMinfo.periode.arbufoerTOM != null && (typeSMinfo.periode.arbufoerTOM..periode.periodeFOMDato).daysBetween().absoluteValue >= 1)
-
-fun paafolgendeSykmelding(
-    periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode,
-    itfh: InfotrygdForespAndHealthInformation,
-    typeSMinfo: TypeSMinfo
-): Boolean =
-        itfh.infotrygdForesp.sMhistorikk.status.kodeMelding != "04" &&
-        periode.periodeFOMDato.isEqual(typeSMinfo.periode.arbufoerTOM) ||
-        ((periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerTOM) &&
-        (typeSMinfo.periode.arbufoerTOM..periode.periodeFOMDato).daysBetween() <= 1))
-
-fun endringSykmelding(
-    periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode,
-    itfh: InfotrygdForespAndHealthInformation,
-    typeSMinfo: TypeSMinfo
-): Boolean =
-        itfh.infotrygdForesp.sMhistorikk.status.kodeMelding != "04" &&
-        (typeSMinfo.periode.arbufoerFOM == periode.periodeFOMDato ||
-        (typeSMinfo.periode.arbufoerFOM.isBefore(periode.periodeFOMDato)) ||
-        (typeSMinfo.periode.arbufoerFOM != null &&
-        sammePeriodeInfotrygd(typeSMinfo.periode, periode))) &&
-        !(typeSMinfo.periode.arbufoerTOM == null && (typeSMinfo.periode.arbufoerFOM..periode.periodeFOMDato).daysBetween() > 1) &&
-        !(periode.periodeFOMDato.isEqual(typeSMinfo.periode.arbufoerTOM)) &&
-        !(periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerTOM))
 
 fun produceManualTask(
     kafkaProducer: KafkaProducer<String, ProduceTask>,
     receivedSykmelding: ReceivedSykmelding,
     validationResult: ValidationResult,
     navKontorNr: String,
-    loggingMeta: LoggingMeta
+    loggingMeta: LoggingMeta,
+    oppgaveTopic: String
 ) {
-    createTask(kafkaProducer, receivedSykmelding, validationResult, navKontorNr, loggingMeta)
+    createTask(kafkaProducer, receivedSykmelding, validationResult, navKontorNr, loggingMeta, oppgaveTopic)
 }
 
 fun createTask(
@@ -636,9 +441,10 @@ fun createTask(
     receivedSykmelding: ReceivedSykmelding,
     validationResult: ValidationResult,
     navKontorNr: String,
-    loggingMeta: LoggingMeta
+    loggingMeta: LoggingMeta,
+    oppgaveTopic: String
 ) {
-    kafkaProducer.send(ProducerRecord("aapen-syfo-oppgave-produserOppgave", receivedSykmelding.sykmelding.id,
+    kafkaProducer.send(ProducerRecord(oppgaveTopic, receivedSykmelding.sykmelding.id,
             ProduceTask().apply {
                 messageId = receivedSykmelding.msgId
                 aktoerId = receivedSykmelding.sykmelding.pasientAktoerId
@@ -661,91 +467,12 @@ fun createTask(
     log.info("Message sendt to topic: aapen-syfo-oppgave-produserOppgave, {}", fields(loggingMeta))
 }
 
-suspend fun fetchGeografiskTilknytningAsync(
-    personV3: PersonV3,
-    receivedSykmelding: ReceivedSykmelding
-): HentGeografiskTilknytningResponse =
-        retry(callName = "tps_hent_geografisktilknytning",
-                retryIntervals = arrayOf(500L, 1000L, 3000L, 5000L, 10000L),
-                legalExceptions = *arrayOf(IOException::class, WstxException::class, IllegalStateException::class)) {
-            personV3.hentGeografiskTilknytning(HentGeografiskTilknytningRequest().withAktoer(PersonIdent().withIdent(
-                    NorskIdent()
-                            .withIdent(receivedSykmelding.personNrPasient)
-                            .withType(Personidenter().withValue("FNR")))))
-        }
-
-suspend fun fetchBehandlendeEnhet(arbeidsfordelingV1: ArbeidsfordelingV1, geografiskTilknytning: GeografiskTilknytning?, patientDiskresjonsKode: String?): FinnBehandlendeEnhetListeResponse? =
-        retry(callName = "finn_nav_kontor",
-                retryIntervals = arrayOf(500L, 1000L, 3000L, 5000L, 10000L),
-                legalExceptions = *arrayOf(IOException::class, WstxException::class)) {
-            arbeidsfordelingV1.finnBehandlendeEnhetListe(FinnBehandlendeEnhetListeRequest().apply {
-                val afk = ArbeidsfordelingKriterier()
-                if (geografiskTilknytning?.geografiskTilknytning != null) {
-                    afk.geografiskTilknytning = Geografi().apply {
-                        value = geografiskTilknytning.geografiskTilknytning
-                    }
-                }
-                afk.tema = Tema().apply {
-                    value = "SYM"
-                }
-
-                afk.oppgavetype = Oppgavetyper().apply {
-                    value = "BEH_EL_SYM"
-                }
-
-                if (!patientDiskresjonsKode.isNullOrBlank()) {
-                    afk.diskresjonskode = Diskresjonskoder().apply {
-                        value = patientDiskresjonsKode
-                    }
-                }
-
-                arbeidsfordelingKriterier = afk
-            })
-        }
-
-suspend fun fetchDiskresjonsKode(personV3: PersonV3, receivedSykmelding: ReceivedSykmelding): String? =
-        retry(callName = "tps_hent_person",
-                retryIntervals = arrayOf(500L, 1000L, 3000L, 5000L, 10000L),
-                legalExceptions = *arrayOf(IOException::class, WstxException::class)) {
-            personV3.hentPerson(HentPersonRequest()
-                    .withAktoer(PersonIdent().withIdent(NorskIdent().withIdent(receivedSykmelding.personNrPasient)))
-            ).person?.diskresjonskode?.value
-        }
-
 inline fun <reified T> XMLEIFellesformat.get() = this.any.find { it is T } as T
 
 fun extractHelseOpplysningerArbeidsuforhet(fellesformat: XMLEIFellesformat): HelseOpplysningerArbeidsuforhet =
         fellesformat.get<XMLMsgHead>().document[0].refDoc.content.any[0] as HelseOpplysningerArbeidsuforhet
 
 fun ClosedRange<LocalDate>.daysBetween(): Long = ChronoUnit.DAYS.between(start, endInclusive)
-
-suspend fun fetchInfotrygdForesp(
-    receivedSykmelding: ReceivedSykmelding,
-    healthInformation: HelseOpplysningerArbeidsuforhet,
-    session: Session,
-    infotrygdSporringProducer: MessageProducer
-): InfotrygdForesp =
-        retry(callName = "it_hent_infotrygdForesp",
-                retryIntervals = arrayOf(500L, 1000L, 3000L, 5000L, 10000L, 3600000L, 14400000L),
-                legalExceptions = *arrayOf(IOException::class, WstxException::class, IllegalStateException::class)
-        ) {
-            val infotrygdForespRequest = createInfotrygdForesp(receivedSykmelding.personNrPasient, healthInformation, receivedSykmelding.personNrLege)
-            val temporaryQueue = session.createTemporaryQueue()
-            try {
-                sendInfotrygdSporring(infotrygdSporringProducer, session, infotrygdForespRequest, temporaryQueue)
-                session.createConsumer(temporaryQueue).use { tmpConsumer ->
-                    val consumedMessage = tmpConsumer.receive(20000)
-                    val inputMessageText = when (consumedMessage) {
-                        is TextMessage -> consumedMessage.text
-                        else -> throw RuntimeException("Incoming message needs to be a byte message or text message, JMS type:" + consumedMessage.jmsType)
-                    }
-
-                    infotrygdSporringUnmarshaller.unmarshal(StringReader(inputMessageText)) as InfotrygdForesp
-                }
-            } finally {
-                temporaryQueue.delete()
-            }
-        }
 
 fun validationResult(results: List<Rule<Any>>): ValidationResult =
         ValidationResult(
@@ -756,141 +483,3 @@ fun validationResult(results: List<Rule<Any>>): ValidationResult =
                         },
                 ruleHits = results.map { rule -> RuleInfo(rule.name, rule.messageForUser!!, rule.messageForSender!!) }
         )
-
-fun List<HelseOpplysningerArbeidsuforhet.Aktivitet.Periode>.sortedFOMDate(): List<LocalDate> =
-        map { it.periodeFOMDato }.sorted()
-
-fun createInfotrygdFellesformat(
-    marshalledFellesformat: String,
-    itfh: InfotrygdForespAndHealthInformation,
-    periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode,
-    personNrPasient: String,
-    signaturDato: LocalDate,
-    helsepersonellKategoriVerdi: String,
-    tssid: String?,
-    loggingMeta: LoggingMeta,
-    navKontorNr: String,
-    operasjonstypeKode: Int = findOperasjonstype(periode, itfh, loggingMeta)
-) = unmarshal<XMLEIFellesformat>(marshalledFellesformat).apply {
-    any.add(KontrollSystemBlokk().apply {
-        infotrygdBlokk.add(createInfotrygdBlokk(
-                itfh,
-                periode,
-                personNrPasient,
-                signaturDato,
-                helsepersonellKategoriVerdi,
-                tssid,
-                loggingMeta,
-                navKontorNr,
-                itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver,
-                operasjonstypeKode))
-    })
-}
-
-fun createInfotrygdBlokk(
-    itfh: InfotrygdForespAndHealthInformation,
-    periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode,
-    personNrPasient: String,
-    signaturDato: LocalDate,
-    helsepersonellKategoriVerdi: String,
-    tssid: String?,
-    loggingMeta: LoggingMeta,
-    navKontorNr: String,
-    navnArbeidsgiver: String?,
-    operasjonstypeKode: Int = findOperasjonstype(periode, itfh, loggingMeta)
-) = KontrollsystemBlokkType.InfotrygdBlokk().apply {
-        fodselsnummer = personNrPasient
-        tkNummer = navKontorNr
-
-        operasjonstype = operasjonstypeKode.toBigInteger()
-
-        val typeSMinfo = itfh.infotrygdForesp.sMhistorikk?.sykmelding
-                ?.sortedSMInfos()
-                ?.lastOrNull()
-
-        if ((typeSMinfo != null && tssid?.toBigInteger() != typeSMinfo.periode.legeInstNr) || operasjonstype == 1.toBigInteger()) {
-            legeEllerInstitusjonsNummer = tssid?.toBigInteger() ?: "".toBigInteger()
-            legeEllerInstitusjon = if (itfh.healthInformation.behandler != null) {
-                itfh.healthInformation.behandler.formatName()
-            } else {
-                ""
-            }
-        }
-
-        if (operasjonstypeKode == 1 || (itfh.healthInformation.aktivitet.periode.size > 1 && operasjonstypeKode == 2)) {
-            forsteFravaersDag = itfh.healthInformation.aktivitet.periode.sortedFOMDate().first()
-        } else {
-            forsteFravaersDag = typeSMinfo?.periode?.arbufoerFOM ?: throw RuntimeException("Unable to find første fraværsdag in IT")
-        }
-
-        mottakerKode = helsepersonellKategoriVerdi
-
-        if (itfh.infotrygdForesp.diagnosekodeOK != null) {
-            hovedDiagnose = itfh.infotrygdForesp.hovedDiagnosekode
-            hovedDiagnoseGruppe = itfh.infotrygdForesp.hovedDiagnosekodeverk.toBigInteger()
-            hovedDiagnoseTekst = itfh.infotrygdForesp.diagnosekodeOK.diagnoseTekst
-        }
-
-        if (operasjonstype == 1.toBigInteger()) {
-            behandlingsDato = findbBehandlingsDato(itfh, signaturDato)
-
-            arbeidsKategori = findarbeidsKategori(navnArbeidsgiver)
-            gruppe = "96"
-            saksbehandler = "Auto"
-
-            if (itfh.infotrygdForesp.biDiagnosekodeverk != null &&
-                    itfh.healthInformation.medisinskVurdering.biDiagnoser.diagnosekode.firstOrNull()?.dn != null &&
-                    itfh.infotrygdForesp.diagnosekodeOK != null) {
-                biDiagnose = itfh.infotrygdForesp.biDiagnoseKode
-                biDiagnoseGruppe = itfh.infotrygdForesp.biDiagnosekodeverk.toBigInteger()
-                biDiagnoseTekst = itfh.infotrygdForesp.diagnosekodeOK.bidiagnoseTekst
-            }
-        }
-
-        if (itfh.healthInformation.medisinskVurdering?.isSvangerskap != null &&
-                itfh.healthInformation.medisinskVurdering.isSvangerskap) {
-            isErSvangerskapsrelatert = true
-        }
-
-        arbeidsufoerTOM = periode.periodeTOMDato
-        ufoeregrad = when {
-            periode.gradertSykmelding != null -> periode.gradertSykmelding.sykmeldingsgrad.toBigInteger()
-            periode.aktivitetIkkeMulig != null -> 100.toBigInteger()
-            else -> 0.toBigInteger()
-        }
-    }
-
-fun findbBehandlingsDato(itfh: InfotrygdForespAndHealthInformation, signaturDato: LocalDate): LocalDate {
-    return if (itfh.healthInformation.kontaktMedPasient?.kontaktDato != null &&
-            itfh.healthInformation.kontaktMedPasient?.behandletDato != null) {
-        listOf(itfh.healthInformation.kontaktMedPasient.kontaktDato,
-                itfh.healthInformation.kontaktMedPasient.behandletDato.toLocalDate()).sorted().first()
-    } else if (itfh.healthInformation.kontaktMedPasient?.behandletDato != null) {
-        itfh.healthInformation.kontaktMedPasient.behandletDato.toLocalDate()
-    } else {
-        signaturDato
-    }
-}
-
-fun finnAktivHelsepersonellAutorisasjons(helsepersonelPerson: Behandler): String =
-        helsepersonelPerson.godkjenninger.firstOrNull {
-            it.helsepersonellkategori?.aktiv != null &&
-                    it.autorisasjon?.aktiv == true &&
-                    it.helsepersonellkategori.verdi != null
-        }?.helsepersonellkategori?.verdi ?: ""
-
-fun HelseOpplysningerArbeidsuforhet.Behandler.formatName(): String =
-        if (navn.mellomnavn == null) {
-            "${navn.etternavn.toUpperCase()} ${navn.fornavn.toUpperCase()}"
-        } else {
-            "${navn.etternavn.toUpperCase()} ${navn.fornavn.toUpperCase()} ${navn.mellomnavn.toUpperCase()}"
-        }
-
-fun sammePeriodeInfotrygd(infotrygdPeriode: TypeSMinfo.Periode, sykemldingsPeriode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode): Boolean {
-    return infotrygdPeriode.arbufoerFOM == sykemldingsPeriode.periodeFOMDato && infotrygdPeriode.arbufoerTOM == sykemldingsPeriode.periodeTOMDato
-}
-
-fun sha256hashstring(infotrygdblokk: KontrollsystemBlokkType.InfotrygdBlokk): String =
-        MessageDigest.getInstance("SHA-256")
-                .digest(objectMapper.writeValueAsBytes(infotrygdblokk))
-                .fold("") { str, it -> str + "%02x".format(it) }

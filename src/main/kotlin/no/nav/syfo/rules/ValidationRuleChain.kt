@@ -334,7 +334,7 @@ enum class ValidationRuleChain(
             { (_, infotrygdForesp) ->
                 infotrygdForesp.sMhistorikk?.sykmelding != null &&
                 infotrygdForesp.sMhistorikk.status.kodeMelding != "04" &&
-                infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos()?.lastOrNull()?.periode?.arbufoerTOM == null
+                infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().lastOrNull()?.periode?.arbufoerTOM == null
             }),
 }
 

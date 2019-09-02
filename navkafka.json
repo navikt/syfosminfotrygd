@@ -1,9 +1,9 @@
 {
   "topics": [
     {
-      "topicName": "privat-syfo-sminfotrygd-manuellBehandling",
+      "topicName": "privat-syfo-sminfotrygd-retry",
       "members": [
-        {"member":"srvsyfosmgsak", "role":"CONSUMER"},
+        {"member":"srvsyfosminfotrygd", "role":"CONSUMER"},
         {"member":"srvsyfosminfotrygd", "role":"PRODUCER"}
       ],
       "numPartitions": 3
