@@ -242,7 +242,8 @@ fun launchListeners(
             blockingApplicationLogic(applicationState, kafkaconsumerRecievedSykmelding, kafkaproducerCreateTask,
                     kafkaproducervalidationResult, infotrygdOppdateringProducer, infotrygdSporringProducer,
                     session, personV3, arbeidsfordelingV1, env.sm2013BehandlingsUtfallToipic, norskHelsenettClient,
-                    smIkkeOkQueue, norg2Client, jedis, kafkaproducerreceivedSykmelding, env.sm2013infotrygdRetry)
+                    smIkkeOkQueue, norg2Client, jedis, kafkaproducerreceivedSykmelding, env.sm2013infotrygdRetry,
+                    env.sm2013OpppgaveTopic)
         }
 
         val kafkaconsumerRecievedSykmeldingretry = KafkaConsumer<String, String>(consumerProperties)
@@ -254,7 +255,8 @@ fun launchListeners(
             blockingApplicationLogicRetry(applicationState, kafkaconsumerRecievedSykmeldingretry, kafkaproducerCreateTask,
                     kafkaproducervalidationResult, infotrygdOppdateringProducer, infotrygdSporringProducer,
                     session, personV3, arbeidsfordelingV1, env.sm2013BehandlingsUtfallToipic, norskHelsenettClient,
-                    smIkkeOkQueue, norg2Client, jedis, kafkaproducerreceivedSykmelding, env.sm2013infotrygdRetry)
+                    smIkkeOkQueue, norg2Client, jedis, kafkaproducerreceivedSykmelding, env.sm2013infotrygdRetry,
+                    env.sm2013OpppgaveTopic)
         }
 
     applicationState.initialized = true
@@ -277,7 +279,8 @@ suspend fun blockingApplicationLogic(
     norg2Client: Norg2Client,
     jedis: Jedis,
     kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
-    infotrygdRetryTopic: String
+    infotrygdRetryTopic: String,
+    oppgaveTopic: String
 ) {
     while (applicationState.running) {
         kafkaConsumer.poll(Duration.ofMillis(0)).forEach { consumerRecord ->
@@ -294,7 +297,8 @@ suspend fun blockingApplicationLogic(
                     receivedSykmelding, kafkaproducerCreateTask, kafkaproducervalidationResult,
                     infotrygdOppdateringProducer, infotrygdSporringProducer,
                     session, personV3, arbeidsfordelingV1, sm2013BehandlingsUtfallToipic, norskHelsenettClient,
-                    smIkkeOkQueue, loggingMeta, norg2Client, jedis, kafkaproducerreceivedSykmelding, infotrygdRetryTopic)
+                    smIkkeOkQueue, loggingMeta, norg2Client, jedis, kafkaproducerreceivedSykmelding,
+                    infotrygdRetryTopic, oppgaveTopic)
         }
         delay(100)
     }
@@ -317,7 +321,8 @@ suspend fun blockingApplicationLogicRetry(
     norg2Client: Norg2Client,
     jedis: Jedis,
     kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
-    infotrygdRetryTopic: String
+    infotrygdRetryTopic: String,
+    oppgaveTopic: String
 ) {
     while (applicationState.running) {
         kafkaConsumer.poll(Duration.ofMillis(0)).forEach { consumerRecord ->
@@ -335,7 +340,8 @@ suspend fun blockingApplicationLogicRetry(
                     receivedSykmelding, kafkaproducerCreateTask, kafkaproducervalidationResult,
                     infotrygdOppdateringProducer, infotrygdSporringProducer,
                     session, personV3, arbeidsfordelingV1, sm2013BehandlingsUtfallToipic, norskHelsenettClient,
-                    smIkkeOkQueue, loggingMeta, norg2Client, jedis, kafkaproducerreceivedSykmelding, infotrygdRetryTopic)
+                    smIkkeOkQueue, loggingMeta, norg2Client, jedis, kafkaproducerreceivedSykmelding,
+                    infotrygdRetryTopic, oppgaveTopic)
         }
         delay(100)
     }
@@ -358,7 +364,8 @@ suspend fun handleMessage(
     norg2Client: Norg2Client,
     jedis: Jedis,
     kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
-    infotrygdRetryTopic: String
+    infotrygdRetryTopic: String,
+    oppgaveTopic: String
 ) = coroutineScope {
     wrapExceptions(loggingMeta) {
         log.info("Received a SM2013, {}", fields(loggingMeta))
@@ -397,7 +404,8 @@ suspend fun handleMessage(
                 healthInformation,
                 jedis,
                 kafkaproducerreceivedSykmelding,
-                infotrygdRetryTopic)
+                infotrygdRetryTopic,
+                oppgaveTopic)
 
         sendRuleCheckValidationResult(
                 receivedSykmelding,
@@ -487,9 +495,10 @@ fun produceManualTask(
     receivedSykmelding: ReceivedSykmelding,
     validationResult: ValidationResult,
     navKontorNr: String,
-    loggingMeta: LoggingMeta
+    loggingMeta: LoggingMeta,
+    oppgaveTopic: String
 ) {
-    createTask(kafkaProducer, receivedSykmelding, validationResult, navKontorNr, loggingMeta)
+    createTask(kafkaProducer, receivedSykmelding, validationResult, navKontorNr, loggingMeta, oppgaveTopic)
 }
 
 fun createTask(
@@ -498,9 +507,10 @@ fun createTask(
     receivedSykmelding: ReceivedSykmelding,
     validationResult: ValidationResult,
     navKontorNr: String,
-    loggingMeta: LoggingMeta
+    loggingMeta: LoggingMeta,
+    oppgaveTopic: String
 ) {
-    kafkaProducer.send(ProducerRecord("aapen-syfo-oppgave-produserOppgave", receivedSykmelding.sykmelding.id,
+    kafkaProducer.send(ProducerRecord(oppgaveTopic, receivedSykmelding.sykmelding.id,
             ProduceTask().apply {
                 messageId = receivedSykmelding.msgId
                 aktoerId = receivedSykmelding.sykmelding.pasientAktoerId

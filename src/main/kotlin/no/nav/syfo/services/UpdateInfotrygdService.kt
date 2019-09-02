@@ -52,7 +52,8 @@ class UpdateInfotrygdService() {
         healthInformation: HelseOpplysningerArbeidsuforhet,
         jedis: Jedis,
         kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
-        infotrygdRetryTopic: String
+        infotrygdRetryTopic: String,
+        oppgaveTopic: String
     ) {
         val helsepersonell = norskHelsenettClient.finnBehandler(receivedSykmelding.personNrLege, receivedSykmelding.msgId)
 
@@ -60,7 +61,8 @@ class UpdateInfotrygdService() {
                 val helsepersonellKategoriVerdi = finnAktivHelsepersonellAutorisasjons(helsepersonell)
                 when {
                     validationResult.status in arrayOf(Status.MANUAL_PROCESSING) ->
-                        produceManualTask(kafkaproducerCreateTask, receivedSykmelding, validationResult, navKontorManuellOppgave, loggingMeta)
+                        produceManualTask(kafkaproducerCreateTask, receivedSykmelding, validationResult,
+                                navKontorManuellOppgave, loggingMeta, oppgaveTopic)
                     else -> sendInfotrygdOppdatering(
                             infotrygdOppdateringProducer,
                             session,
@@ -87,7 +89,8 @@ class UpdateInfotrygdService() {
                 )
                 RULE_HIT_STATUS_COUNTER.labels(validationResultBehandler.status.name).inc()
                 log.warn("Behandler er ikke register i HPR")
-                produceManualTask(kafkaproducerCreateTask, receivedSykmelding, validationResultBehandler, navKontorManuellOppgave, loggingMeta)
+                produceManualTask(kafkaproducerCreateTask, receivedSykmelding, validationResultBehandler,
+                        navKontorManuellOppgave, loggingMeta, oppgaveTopic)
             }
     }
 
