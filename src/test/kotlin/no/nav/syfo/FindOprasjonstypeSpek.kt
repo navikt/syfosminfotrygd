@@ -43,7 +43,7 @@ object FindOprasjonstypeSpek : Spek({
             }
 
             updateInfotrygdService.findOperasjonstype(healthInformation.aktivitet.periode.first(),
-                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "", false)) shouldEqual 1
+                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "")) shouldEqual 1
         }
 
         it("Should set oprasjonstype to 2") {
@@ -73,7 +73,7 @@ object FindOprasjonstypeSpek : Spek({
             }
 
             updateInfotrygdService.findOperasjonstype(healthInformation.aktivitet.periode.first(),
-                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "", false)) shouldEqual 2
+                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "")) shouldEqual 2
         }
 
         it("Should set oprasjonstype to 2") {
@@ -103,7 +103,7 @@ object FindOprasjonstypeSpek : Spek({
             }
 
             updateInfotrygdService.findOperasjonstype(healthInformation.aktivitet.periode.first(),
-                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "", false)) shouldEqual 2
+                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "")) shouldEqual 2
         }
 
         it("Should set oprasjonstype to 3") {
@@ -133,7 +133,7 @@ object FindOprasjonstypeSpek : Spek({
             }
 
             updateInfotrygdService.findOperasjonstype(healthInformation.aktivitet.periode.first(),
-                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "", false)) shouldEqual 3
+                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "")) shouldEqual 3
         }
 
         it("Should set oprasjonstype to 3") {
@@ -163,7 +163,7 @@ object FindOprasjonstypeSpek : Spek({
             }
 
             updateInfotrygdService.findOperasjonstype(healthInformation.aktivitet.periode.first(),
-                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "", false)) shouldEqual 3
+                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "")) shouldEqual 3
         }
 
         it("Should set oprasjonstype to 3") {
@@ -197,7 +197,7 @@ object FindOprasjonstypeSpek : Spek({
             }
 
             updateInfotrygdService.findOperasjonstype(healthInformation.aktivitet.periode.first(),
-                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "", false)) shouldEqual 3
+                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "")) shouldEqual 3
         }
 
         it("Should set oprasjonstype to 3") {
@@ -227,7 +227,7 @@ object FindOprasjonstypeSpek : Spek({
             }
 
             updateInfotrygdService.findOperasjonstype(healthInformation.aktivitet.periode.first(),
-                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "", false)) shouldEqual 3
+                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "")) shouldEqual 3
         }
 
         it("Should set oprasjonstype to 3") {
@@ -267,7 +267,7 @@ object FindOprasjonstypeSpek : Spek({
             }
 
             updateInfotrygdService.findOperasjonstype(healthInformation.aktivitet.periode.first(),
-                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "", false)) shouldEqual 3
+                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "")) shouldEqual 3
         }
 
         it("Should set oprasjonstype to 2") {
@@ -296,7 +296,7 @@ object FindOprasjonstypeSpek : Spek({
             }
 
             updateInfotrygdService.findOperasjonstype(healthInformation.aktivitet.periode.first(),
-                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "", false)) shouldEqual 2
+                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "")) shouldEqual 2
         }
 
         it("Should set oprasjonstype to 1") {
@@ -325,7 +325,7 @@ object FindOprasjonstypeSpek : Spek({
             }
 
             updateInfotrygdService.findOperasjonstype(healthInformation.aktivitet.periode.first(),
-                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "", false)) shouldEqual 1
+                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "")) shouldEqual 1
         }
 
         it("Should set oprasjonstype to 1") {
@@ -354,7 +354,7 @@ object FindOprasjonstypeSpek : Spek({
             }
 
             updateInfotrygdService.findOperasjonstype(healthInformation.aktivitet.periode.first(),
-                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "", false)) shouldEqual 1
+                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "")) shouldEqual 1
         }
 
         it("Should set oprasjonstype to 1") {
@@ -383,7 +383,7 @@ object FindOprasjonstypeSpek : Spek({
             }
 
             updateInfotrygdService.findOperasjonstype(healthInformation.aktivitet.periode.first(),
-                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "", false)) shouldEqual 1
+                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "")) shouldEqual 1
         }
 
         it("Should set oprasjonstype to 1") {
@@ -412,7 +412,7 @@ object FindOprasjonstypeSpek : Spek({
             }
 
             updateInfotrygdService.findOperasjonstype(healthInformation.aktivitet.periode.first(),
-                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "", false)) shouldEqual 1
+                    InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "")) shouldEqual 1
         }
     }
 })

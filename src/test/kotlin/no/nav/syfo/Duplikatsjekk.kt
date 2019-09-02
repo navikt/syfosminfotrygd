@@ -50,7 +50,7 @@ object Duplikatsjekk : Spek({
                     LocalDate.now(),
                     "LE",
                     "12345",
-                    LoggingMeta("mottakId", "12315", "", "", false),
+                    LoggingMeta("mottakId", "12315", "", ""),
                     "1234",
                     "NAV IKT",
                     1
@@ -84,7 +84,7 @@ object Duplikatsjekk : Spek({
                     LocalDate.now(),
                     "LE",
                     "12345",
-                    LoggingMeta("mottakId", "12315", "2424", "2424", false),
+                    LoggingMeta("mottakId", "12315", "2424", "2424"),
                     "1234",
                     "NAV IKT",
                     1

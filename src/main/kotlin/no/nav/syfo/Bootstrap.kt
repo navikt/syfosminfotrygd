@@ -267,8 +267,7 @@ suspend fun blockingApplicationLogic(
                     mottakId = receivedSykmelding.navLogId,
                     orgNr = receivedSykmelding.legekontorOrgNr,
                     msgId = receivedSykmelding.msgId,
-                    sykmeldingId = receivedSykmelding.sykmelding.id,
-                    retry = false
+                    sykmeldingId = receivedSykmelding.sykmelding.id
             )
 
             handleMessage(
