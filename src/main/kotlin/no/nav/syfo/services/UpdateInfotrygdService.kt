@@ -115,10 +115,10 @@ class UpdateInfotrygdService() {
         )
 
         try {
-            val nyldigInfotrygdOppdatering = erIRedis(personNrPasient, jedis)
+            val nyligInfotrygdOppdatering = erIRedis(personNrPasient, jedis)
             val duplikatInfotrygdOppdatering = erIRedis(sha256String, jedis)
 
-            if (nyldigInfotrygdOppdatering) {
+            if (nyligInfotrygdOppdatering) {
                 kafkaproducerreceivedSykmelding.send(ProducerRecord(infotrygdRetryTopic, receivedSykmelding.sykmelding.id, receivedSykmelding))
                 log.warn("Melding sendt på retry topic {}", StructuredArguments.fields(loggingMeta))
             } else if (duplikatInfotrygdOppdatering) {

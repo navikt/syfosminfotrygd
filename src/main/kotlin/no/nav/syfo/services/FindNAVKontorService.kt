@@ -37,7 +37,7 @@ class FindNAVKontorService @KtorExperimentalAPI constructor(
 ) {
 
     suspend fun finnBehandlendeEnhet(): String {
-        val geografiskTilknytning = fetchGeografiskTilknytningAsync(personV3, receivedSykmelding)
+        val geografiskTilknytning = fetchGeografiskTilknytning(personV3, receivedSykmelding)
         val patientDiskresjonsKode = fetchDiskresjonsKode(personV3, receivedSykmelding)
         val finnBehandlendeEnhetListeResponse = fetchBehandlendeEnhet(arbeidsfordelingV1, geografiskTilknytning.geografiskTilknytning, patientDiskresjonsKode)
         if (finnBehandlendeEnhetListeResponse?.behandlendeEnhetListe?.firstOrNull()?.enhetId == null) {
@@ -48,7 +48,7 @@ class FindNAVKontorService @KtorExperimentalAPI constructor(
 
     @KtorExperimentalAPI
     suspend fun finnLokaltNavkontor(): String {
-        val geografiskTilknytning = fetchGeografiskTilknytningAsync(personV3, receivedSykmelding)
+        val geografiskTilknytning = fetchGeografiskTilknytning(personV3, receivedSykmelding)
         val patientDiskresjonsKode = fetchDiskresjonsKode(personV3, receivedSykmelding)
         return if (geografiskTilknytning.geografiskTilknytning?.geografiskTilknytning.isNullOrEmpty()) {
             log.error("GeografiskTilknytning er tomt eller null, benytter nav oppfolings utland nr:$NAV_OPPFOLGING_UTLAND_KONTOR_NR,  {}", StructuredArguments.fields(loggingMeta))
@@ -96,7 +96,7 @@ class FindNAVKontorService @KtorExperimentalAPI constructor(
                 })
             }
 
-    suspend fun fetchGeografiskTilknytningAsync(
+    suspend fun fetchGeografiskTilknytning(
         personV3: PersonV3,
         receivedSykmelding: ReceivedSykmelding
     ): HentGeografiskTilknytningResponse =
