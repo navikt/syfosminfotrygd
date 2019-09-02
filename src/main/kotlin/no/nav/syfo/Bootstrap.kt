@@ -30,16 +30,18 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.Properties
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import javax.jms.MessageProducer
 import javax.jms.Session
 import javax.xml.bind.Marshaller
 import javax.xml.stream.XMLInputFactory
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import net.logstash.logback.argument.StructuredArguments.fields
 import net.logstash.logback.argument.StructuredArguments.keyValue
 import no.nav.helse.eiFellesformat.XMLEIFellesformat
@@ -97,8 +99,10 @@ val objectMapper: ObjectMapper = ObjectMapper().apply {
 
 const val NAV_OPPFOLGING_UTLAND_KONTOR_NR = "0393"
 
+val coroutineContext = Executors.newFixedThreadPool(1).asCoroutineDispatcher()
+
 @KtorExperimentalAPI
-fun main() {
+fun main() = runBlocking(coroutineContext) {
     val env = Environment()
     val credentials = objectMapper.readValue<VaultCredentials>(Paths.get("/var/run/secrets/nais.io/vault/credentials.json").toFile())
     val applicationState = ApplicationState()
@@ -176,6 +180,12 @@ fun main() {
 
             val norg2Client = Norg2Client(norg2ClientHttpClient, env.norg2V1EndpointURL)
 
+            Runtime.getRuntime().addShutdownHook(Thread {
+                smIkkeOkQueue.close()
+                mqQueueManager.disconnect()
+                applicationServer.stop(10, 10, TimeUnit.SECONDS)
+            })
+
             launchListeners(
                     applicationState,
                     kafkaproducerCreateTask,
@@ -192,18 +202,12 @@ fun main() {
                     norg2Client,
                     jedis,
                     kafkaproducerreceivedSykmelding)
-
-            Runtime.getRuntime().addShutdownHook(Thread {
-                smIkkeOkQueue.close()
-                mqQueueManager.disconnect()
-                applicationServer.stop(10, 10, TimeUnit.SECONDS)
-            })
         }
     }
 }
 
-fun createListener(applicationState: ApplicationState, action: suspend CoroutineScope.() -> Unit): Job =
-        GlobalScope.launch {
+suspend fun CoroutineScope.createListener(applicationState: ApplicationState, action: suspend CoroutineScope.() -> Unit): Job =
+        launch {
             try {
                 action()
             } catch (e: TrackableException) {
@@ -214,7 +218,7 @@ fun createListener(applicationState: ApplicationState, action: suspend Coroutine
         }
 
 @KtorExperimentalAPI
-fun launchListeners(
+suspend fun CoroutineScope.launchListeners(
     applicationState: ApplicationState,
     kafkaproducerCreateTask: KafkaProducer<String, ProduceTask>,
     kafkaproducervalidationResult: KafkaProducer<String, ValidationResult>,
