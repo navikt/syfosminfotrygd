@@ -132,16 +132,16 @@ suspend fun sendInfotrygdOppdatering(
                 oppdaterRedis(personNrPasient, jedis, 4, loggingMeta)
                 oppdaterRedis(sha256String, jedis, TimeUnit.DAYS.toSeconds(1).toInt(), loggingMeta)
                 sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr), loggingMeta)
+                perioder.drop(1).forEach { periode ->
+                    Thread.sleep(1000)
+                    sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, periode, personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, 2), loggingMeta)
+                }
             }
         } catch (connectionException: JedisConnectionException) {
             log.error("Fikk ikkje opprettet kontakt med redis, kaster exception", connectionException)
             throw connectionException
         }
 
-        perioder.drop(1).forEach { periode ->
-            Thread.sleep(1000)
-            sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, periode, personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, 2), loggingMeta)
-        }
     }
 
     fun createInfotrygdBlokk(
