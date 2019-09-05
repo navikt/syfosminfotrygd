@@ -1,5 +1,6 @@
 package no.nav.syfo
 
+import io.ktor.util.KtorExperimentalAPI
 import java.time.LocalDate
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.infotrygd.foresp.StatusType
@@ -12,6 +13,7 @@ import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
+@KtorExperimentalAPI
 object Duplikatsjekk : Spek({
 
     val updateInfotrygdService = UpdateInfotrygdService()
@@ -53,6 +55,7 @@ object Duplikatsjekk : Spek({
                     LoggingMeta("mottakId", "12315", "", ""),
                     "1234",
                     "NAV IKT",
+                    LocalDate.now(),
                     1
 
             )
@@ -87,6 +90,7 @@ object Duplikatsjekk : Spek({
                     LoggingMeta("mottakId", "12315", "2424", "2424"),
                     "1234",
                     "NAV IKT",
+                    LocalDate.now(),
                     1
 
             )

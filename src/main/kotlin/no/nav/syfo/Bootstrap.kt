@@ -483,3 +483,5 @@ fun validationResult(results: List<Rule<Any>>): ValidationResult =
                         },
                 ruleHits = results.map { rule -> RuleInfo(rule.name, rule.messageForUser!!, rule.messageForSender!!) }
         )
+fun List<HelseOpplysningerArbeidsuforhet.Aktivitet.Periode>.sortedFOMDate(): List<LocalDate> =
+        map { it.periodeFOMDato }.sorted()
