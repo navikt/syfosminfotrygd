@@ -134,7 +134,7 @@ suspend fun sendInfotrygdOppdatering(
                     oppdaterRedis(sha256String, jedis, TimeUnit.DAYS.toSeconds(1).toInt(), loggingMeta)
                     sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr), loggingMeta)
                     perioder.drop(1).forEach { periode ->
-                        Thread.sleep(2000)
+                        Thread.sleep(4000)
                         sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, periode, personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, 2), loggingMeta)
                     }
                 }
