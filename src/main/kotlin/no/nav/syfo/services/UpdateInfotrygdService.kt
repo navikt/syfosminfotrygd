@@ -29,6 +29,7 @@ import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.produceManualTask
 import no.nav.syfo.rules.sortedSMInfos
 import no.nav.syfo.sak.avro.ProduceTask
+import no.nav.syfo.sortedFOMDate
 import no.nav.syfo.unmarshal
 import no.nav.syfo.util.xmlObjectWriter
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -113,9 +114,18 @@ suspend fun sendInfotrygdOppdatering(
         val signaturDato = receivedSykmelding.sykmelding.signaturDato.toLocalDate()
         val tssid = receivedSykmelding.tssid
 
+        val typeSMinfo = itfh.infotrygdForesp.sMhistorikk?.sykmelding
+            ?.sortedSMInfos()
+            ?.lastOrNull()
+        val forsteFravaersDag = if (findOperasjonstype(perioder.first(), itfh, loggingMeta) == 1) {
+        itfh.healthInformation.aktivitet.periode.sortedFOMDate().first()
+        } else {
+        typeSMinfo?.periode?.arbufoerFOM ?: throw RuntimeException("Unable to find første fraværsdag in IT")
+        }
+
         val sha256String = sha256hashstring(createInfotrygdBlokk(
                 itfh, perioder.first(), personNrPasient, signaturDato,
-                behandlerKode, tssid, loggingMeta, navKontorNr, findarbeidsKategori(itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver))
+                behandlerKode, tssid, loggingMeta, navKontorNr, findarbeidsKategori(itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver), forsteFravaersDag)
         )
 
         try {
@@ -132,10 +142,9 @@ suspend fun sendInfotrygdOppdatering(
                 else -> {
                     oppdaterRedis(personNrPasient, jedis, 4, loggingMeta)
                     oppdaterRedis(sha256String, jedis, TimeUnit.DAYS.toSeconds(1).toInt(), loggingMeta)
-                    sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr), loggingMeta)
+                    sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, forsteFravaersDag), loggingMeta)
                     perioder.drop(1).forEach { periode ->
-                        Thread.sleep(4000)
-                        sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, periode, personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, 2), loggingMeta)
+                        sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, periode, personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, forsteFravaersDag, 2), loggingMeta)
                     }
                 }
             }
@@ -143,7 +152,6 @@ suspend fun sendInfotrygdOppdatering(
             log.error("Fikk ikkje opprettet kontakt med redis, kaster exception", connectionException)
             throw connectionException
         }
-
     }
 
     fun createInfotrygdBlokk(
@@ -156,6 +164,7 @@ suspend fun sendInfotrygdOppdatering(
         loggingMeta: LoggingMeta,
         navKontorNr: String,
         navnArbeidsgiver: String?,
+        identDato: LocalDate,
         operasjonstypeKode: Int = findOperasjonstype(periode, itfh, loggingMeta)
     ) = KontrollsystemBlokkType.InfotrygdBlokk().apply {
         fodselsnummer = personNrPasient
@@ -176,11 +185,7 @@ suspend fun sendInfotrygdOppdatering(
             }
         }
 
-        if (operasjonstypeKode == 1 || (itfh.healthInformation.aktivitet.periode.size > 1 && operasjonstypeKode == 2)) {
-            forsteFravaersDag = itfh.healthInformation.aktivitet.periode.sortedFOMDate().first()
-        } else {
-            forsteFravaersDag = typeSMinfo?.periode?.arbufoerFOM ?: throw RuntimeException("Unable to find første fraværsdag in IT")
-        }
+        forsteFravaersDag = identDato
 
         mottakerKode = helsepersonellKategoriVerdi
 
@@ -292,6 +297,7 @@ suspend fun sendInfotrygdOppdatering(
         tssid: String?,
         loggingMeta: LoggingMeta,
         navKontorNr: String,
+        identDato: LocalDate,
         operasjonstypeKode: Int = findOperasjonstype(periode, itfh, loggingMeta)
     ) = unmarshal<XMLEIFellesformat>(marshalledFellesformat).apply {
         any.add(KontrollSystemBlokk().apply {
@@ -305,6 +311,7 @@ suspend fun sendInfotrygdOppdatering(
                     loggingMeta,
                     navKontorNr,
                     itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver,
+                    identDato,
                     operasjonstypeKode))
         })
     }
@@ -349,7 +356,4 @@ suspend fun sendInfotrygdOppdatering(
         text = xmlObjectWriter.writeValueAsString(fellesformat)
         log.info("Melding er sendt til infotrygd {}", StructuredArguments.fields(loggingMeta))
     })
-
-    fun List<HelseOpplysningerArbeidsuforhet.Aktivitet.Periode>.sortedFOMDate(): List<LocalDate> =
-            map { it.periodeFOMDato }.sorted()
 }
