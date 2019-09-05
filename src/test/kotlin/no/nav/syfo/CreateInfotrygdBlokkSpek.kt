@@ -42,15 +42,7 @@ object CreateInfotrygdBlokkSpek : Spek({
             val ifth = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
 
             val perioder = ifth.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
-            val typeSMinfo = ifth.infotrygdForesp.sMhistorikk?.sykmelding
-                    ?.sortedSMInfos()
-                    ?.lastOrNull()
-            val forsteFravaersDag = if (UpdateInfotrygdService().findOperasjonstype(perioder.first(), ifth,
-                            LoggingMeta("mottakId", "12315", "2424", "2424")) == 1) {
-                ifth.healthInformation.aktivitet.periode.sortedFOMDate().first()
-            } else {
-                typeSMinfo?.periode?.arbufoerFOM ?: throw RuntimeException("Unable to find første fraværsdag in IT")
-            }
+            val forsteFravaersDag = updateInfotrygdService.finnForsteFravaersDag(ifth, perioder.first(), LoggingMeta("mottakId", "12315", "", ""))
 
             val infotrygdBlokk = updateInfotrygdService.createInfotrygdBlokk(
                     ifth,
@@ -106,15 +98,7 @@ object CreateInfotrygdBlokkSpek : Spek({
             val ifth = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
 
             val perioder = ifth.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
-            val typeSMinfo = ifth.infotrygdForesp.sMhistorikk?.sykmelding
-                    ?.sortedSMInfos()
-                    ?.lastOrNull()
-            val forsteFravaersDag = if (UpdateInfotrygdService().findOperasjonstype(perioder.first(), ifth,
-                            LoggingMeta("mottakId", "12315", "2424", "2424")) == 1) {
-                ifth.healthInformation.aktivitet.periode.sortedFOMDate().first()
-            } else {
-                typeSMinfo?.periode?.arbufoerFOM ?: throw RuntimeException("Unable to find første fraværsdag in IT")
-            }
+            val forsteFravaersDag = updateInfotrygdService.finnForsteFravaersDag(ifth, perioder.first(), LoggingMeta("mottakId", "12315", "", ""))
 
             val infotrygdfirstBlokk = updateInfotrygdService.createInfotrygdBlokk(
                     ifth,
@@ -146,8 +130,12 @@ object CreateInfotrygdBlokkSpek : Spek({
 
             )
 
-            infotrygdfirstBlokk.forsteFravaersDag shouldEqual typeSMinfo?.periode?.arbufoerFOM
-            infotrygdlastBlokk.forsteFravaersDag shouldEqual typeSMinfo?.periode?.arbufoerFOM
+            infotrygdfirstBlokk.forsteFravaersDag shouldEqual ifth.infotrygdForesp.sMhistorikk.sykmelding
+                    .sortedSMInfos()
+                    .last().periode.arbufoerFOM
+            infotrygdlastBlokk.forsteFravaersDag shouldEqual ifth.infotrygdForesp.sMhistorikk.sykmelding
+                    .sortedSMInfos()
+                    .last().periode.arbufoerFOM
         }
 
         it("Should set forsteFravaersDag correctly, when oprasjosntype 1 and more than 1 periode") {
@@ -186,15 +174,7 @@ object CreateInfotrygdBlokkSpek : Spek({
             val ifth = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
 
             val perioder = ifth.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
-            val typeSMinfo = ifth.infotrygdForesp.sMhistorikk?.sykmelding
-                    ?.sortedSMInfos()
-                    ?.lastOrNull()
-            val forsteFravaersDag = if (UpdateInfotrygdService().findOperasjonstype(perioder.first(), ifth,
-                            LoggingMeta("mottakId", "12315", "2424", "2424")) == 1) {
-                ifth.healthInformation.aktivitet.periode.sortedFOMDate().first()
-            } else {
-                typeSMinfo?.periode?.arbufoerFOM ?: throw RuntimeException("Unable to find første fraværsdag in IT")
-            }
+            val forsteFravaersDag = updateInfotrygdService.finnForsteFravaersDag(ifth, perioder.first(), LoggingMeta("mottakId", "12315", "", ""))
 
             val infotrygdfirstBlokk = updateInfotrygdService.createInfotrygdBlokk(
                     ifth,

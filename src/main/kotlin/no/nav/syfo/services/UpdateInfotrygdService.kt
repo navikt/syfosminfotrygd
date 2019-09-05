@@ -114,14 +114,7 @@ suspend fun sendInfotrygdOppdatering(
         val signaturDato = receivedSykmelding.sykmelding.signaturDato.toLocalDate()
         val tssid = receivedSykmelding.tssid
 
-        val typeSMinfo = itfh.infotrygdForesp.sMhistorikk?.sykmelding
-            ?.sortedSMInfos()
-            ?.lastOrNull()
-        val forsteFravaersDag = if (findOperasjonstype(perioder.first(), itfh, loggingMeta) == 1) {
-        itfh.healthInformation.aktivitet.periode.sortedFOMDate().first()
-        } else {
-        typeSMinfo?.periode?.arbufoerFOM ?: throw RuntimeException("Unable to find første fraværsdag in IT")
-        }
+        val forsteFravaersDag = finnForsteFravaersDag(itfh, perioder.first(), loggingMeta)
 
         val sha256String = sha256hashstring(createInfotrygdBlokk(
                 itfh, perioder.first(), personNrPasient, signaturDato,
@@ -356,4 +349,19 @@ suspend fun sendInfotrygdOppdatering(
         text = xmlObjectWriter.writeValueAsString(fellesformat)
         log.info("Melding er sendt til infotrygd {}", StructuredArguments.fields(loggingMeta))
     })
+
+    fun finnForsteFravaersDag(
+        itfh: InfotrygdForespAndHealthInformation,
+        forstePeriode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode,
+        loggingMeta: LoggingMeta
+    ): LocalDate {
+        val typeSMinfo = itfh.infotrygdForesp.sMhistorikk?.sykmelding
+                ?.sortedSMInfos()
+                ?.lastOrNull()
+        return if (findOperasjonstype(forstePeriode, itfh, loggingMeta) == 1) {
+            itfh.healthInformation.aktivitet.periode.sortedFOMDate().first()
+        } else {
+            typeSMinfo?.periode?.arbufoerFOM ?: throw RuntimeException("Unable to find første fraværsdag in IT")
+        }
+    }
 }
