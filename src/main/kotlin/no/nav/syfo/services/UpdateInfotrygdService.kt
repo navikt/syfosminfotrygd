@@ -29,6 +29,7 @@ import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.produceManualTask
 import no.nav.syfo.rules.sortedSMInfos
 import no.nav.syfo.sak.avro.ProduceTask
+import no.nav.syfo.sendRuleCheckValidationResult
 import no.nav.syfo.sortedFOMDate
 import no.nav.syfo.unmarshal
 import no.nav.syfo.util.xmlObjectWriter
@@ -55,7 +56,9 @@ class UpdateInfotrygdService {
         jedis: Jedis,
         kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
         infotrygdRetryTopic: String,
-        oppgaveTopic: String
+        oppgaveTopic: String,
+        kafkaproducervalidationResult: KafkaProducer<String, ValidationResult>,
+        sm2013BehandlingsUtfallToipic: String
     ) {
         val helsepersonell = norskHelsenettClient.finnBehandler(receivedSykmelding.personNrLege, receivedSykmelding.msgId)
 
@@ -65,7 +68,7 @@ class UpdateInfotrygdService {
                     validationResult.status in arrayOf(Status.MANUAL_PROCESSING) ->
                         produceManualTask(kafkaproducerCreateTask, receivedSykmelding, validationResult,
                                 navKontorManuellOppgave, loggingMeta, oppgaveTopic)
-                    else -> sendInfotrygdOppdatering(
+                    else -> sendInfotrygdOppdateringAndValidationResult(
                             infotrygdOppdateringProducer,
                             session,
                             loggingMeta,
@@ -75,7 +78,10 @@ class UpdateInfotrygdService {
                             navKontorLokalKontor,
                             jedis,
                             kafkaproducerreceivedSykmelding,
-                            infotrygdRetryTopic)
+                            infotrygdRetryTopic,
+                            kafkaproducervalidationResult,
+                            sm2013BehandlingsUtfallToipic,
+                            validationResult)
                 }
 
                 log.info("Message(${StructuredArguments.fields(loggingMeta)}) got outcome {}, {}, processing took {}s",
@@ -96,7 +102,7 @@ class UpdateInfotrygdService {
             }
     }
 
-suspend fun sendInfotrygdOppdatering(
+suspend fun sendInfotrygdOppdateringAndValidationResult(
     producer: MessageProducer,
     session: Session,
     loggingMeta: LoggingMeta,
@@ -106,7 +112,10 @@ suspend fun sendInfotrygdOppdatering(
     navKontorNr: String,
     jedis: Jedis,
     kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
-    infotrygdRetryTopic: String
+    infotrygdRetryTopic: String,
+    kafkaproducervalidationResult: KafkaProducer<String, ValidationResult>,
+    sm2013BehandlingsUtfallToipic: String,
+    validationResult: ValidationResult
 ) {
         val perioder = itfh.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
         val marshalledFellesformat = receivedSykmelding.fellesformat
@@ -139,6 +148,12 @@ suspend fun sendInfotrygdOppdatering(
                     perioder.drop(1).forEach { periode ->
                         sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, periode, personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, forsteFravaersDag, 2), loggingMeta)
                     }
+                    sendRuleCheckValidationResult(
+                            receivedSykmelding,
+                            kafkaproducervalidationResult,
+                            validationResult,
+                            sm2013BehandlingsUtfallToipic,
+                            loggingMeta)
                 }
             }
         } catch (connectionException: JedisConnectionException) {
