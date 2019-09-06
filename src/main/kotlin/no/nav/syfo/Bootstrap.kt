@@ -339,14 +339,10 @@ suspend fun handleMessage(
                 jedis,
                 kafkaproducerreceivedSykmelding,
                 infotrygdRetryTopic,
-                oppgaveTopic)
-
-        sendRuleCheckValidationResult(
-                receivedSykmelding,
+                oppgaveTopic,
                 kafkaproducervalidationResult,
-                validationResult,
-                sm2013BehandlingsUtfallToipic,
-                loggingMeta)
+                sm2013BehandlingsUtfallToipic
+                )
 
         val currentRequestLatency = requestLatency.observeDuration()
 
