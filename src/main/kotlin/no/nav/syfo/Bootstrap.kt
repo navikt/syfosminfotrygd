@@ -420,14 +420,18 @@ fun Marshaller.toString(input: Any): String = StringWriter().use {
 val inputFactory = XMLInputFactory.newInstance()!!
 inline fun <reified T> unmarshal(text: String): T = fellesformatUnmarshaller.unmarshal(inputFactory.createXMLEventReader(StringReader(text)), T::class.java).value
 
-fun produceManualTask(
+fun produceManualTaskAndSendValidationResults(
     kafkaProducer: KafkaProducer<String, ProduceTask>,
     receivedSykmelding: ReceivedSykmelding,
     validationResult: ValidationResult,
     navKontorNr: String,
     loggingMeta: LoggingMeta,
-    oppgaveTopic: String
+    oppgaveTopic: String,
+    sm2013BehandlingsUtfallToipic: String,
+    kafkaproducervalidationResult: KafkaProducer<String, ValidationResult>,
 ) {
+    sendRuleCheckValidationResult(receivedSykmelding, kafkaproducervalidationResult,
+            validationResult, sm2013BehandlingsUtfallToipic, loggingMeta)
     createTask(kafkaProducer, receivedSykmelding, validationResult, navKontorNr, loggingMeta, oppgaveTopic)
 }
 

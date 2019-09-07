@@ -5,7 +5,6 @@ import java.time.LocalDate
 import java.util.concurrent.TimeUnit
 import javax.jms.MessageProducer
 import javax.jms.Session
-import kotlin.math.absoluteValue
 import kotlinx.coroutines.delay
 import net.logstash.logback.argument.StructuredArguments
 import no.nav.helse.eiFellesformat.XMLEIFellesformat
@@ -18,20 +17,13 @@ import no.nav.syfo.InfotrygdForespAndHealthInformation
 import no.nav.syfo.LoggingMeta
 import no.nav.syfo.client.Behandler
 import no.nav.syfo.client.NorskHelsenettClient
-import no.nav.syfo.daysBetween
-import no.nav.syfo.get
-import no.nav.syfo.log
 import no.nav.syfo.metrics.RULE_HIT_STATUS_COUNTER
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.model.RuleInfo
 import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
-import no.nav.syfo.produceManualTask
 import no.nav.syfo.rules.sortedSMInfos
 import no.nav.syfo.sak.avro.ProduceTask
-import no.nav.syfo.sendRuleCheckValidationResult
-import no.nav.syfo.sortedFOMDate
-import no.nav.syfo.unmarshal
 import no.nav.syfo.util.xmlObjectWriter
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
@@ -66,8 +58,9 @@ class UpdateInfotrygdService {
                 val helsepersonellKategoriVerdi = finnAktivHelsepersonellAutorisasjons(helsepersonell)
                 when {
                     validationResult.status in arrayOf(Status.MANUAL_PROCESSING) ->
-                        produceManualTask(kafkaproducerCreateTask, receivedSykmelding, validationResult,
-                                navKontorManuellOppgave, loggingMeta, oppgaveTopic)
+                        produceManualTaskAndSendValidationResults(kafkaproducerCreateTask, receivedSykmelding, validationResult,
+                                navKontorManuellOppgave, loggingMeta, oppgaveTopic, sm2013BehandlingsUtfallToipic,
+                                kafkaproducervalidationResult)
                     else -> sendInfotrygdOppdateringAndValidationResult(
                             infotrygdOppdateringProducer,
                             session,
@@ -97,8 +90,8 @@ class UpdateInfotrygdService {
                 )
                 RULE_HIT_STATUS_COUNTER.labels(validationResultBehandler.status.name).inc()
                 log.warn("Behandler er ikke register i HPR")
-                produceManualTask(kafkaproducerCreateTask, receivedSykmelding, validationResultBehandler,
-                        navKontorManuellOppgave, loggingMeta, oppgaveTopic)
+                produceManualTaskAndSendValidationResults(kafkaproducerCreateTask, receivedSykmelding, validationResultBehandler,
+                        navKontorManuellOppgave, loggingMeta, oppgaveTopic, sm2013BehandlingsUtfallToipic, kafkaproducervalidationResult)
             }
     }
 
