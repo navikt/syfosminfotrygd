@@ -17,18 +17,26 @@ import no.nav.syfo.InfotrygdForespAndHealthInformation
 import no.nav.syfo.LoggingMeta
 import no.nav.syfo.client.Behandler
 import no.nav.syfo.client.NorskHelsenettClient
+import no.nav.syfo.daysBetween
+import no.nav.syfo.get
+import no.nav.syfo.log
 import no.nav.syfo.metrics.RULE_HIT_STATUS_COUNTER
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.model.RuleInfo
 import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
+import no.nav.syfo.produceManualTaskAndSendValidationResults
 import no.nav.syfo.rules.sortedSMInfos
 import no.nav.syfo.sak.avro.ProduceTask
+import no.nav.syfo.sendRuleCheckValidationResult
+import no.nav.syfo.sortedFOMDate
+import no.nav.syfo.unmarshal
 import no.nav.syfo.util.xmlObjectWriter
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import redis.clients.jedis.Jedis
 import redis.clients.jedis.exceptions.JedisConnectionException
+import kotlin.math.absoluteValue
 
 @KtorExperimentalAPI
 class UpdateInfotrygdService {

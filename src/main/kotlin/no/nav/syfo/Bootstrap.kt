@@ -428,7 +428,7 @@ fun produceManualTaskAndSendValidationResults(
     loggingMeta: LoggingMeta,
     oppgaveTopic: String,
     sm2013BehandlingsUtfallToipic: String,
-    kafkaproducervalidationResult: KafkaProducer<String, ValidationResult>,
+    kafkaproducervalidationResult: KafkaProducer<String, ValidationResult>
 ) {
     sendRuleCheckValidationResult(receivedSykmelding, kafkaproducervalidationResult,
             validationResult, sm2013BehandlingsUtfallToipic, loggingMeta)
