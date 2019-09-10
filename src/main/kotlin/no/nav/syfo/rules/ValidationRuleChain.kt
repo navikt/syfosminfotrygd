@@ -36,8 +36,8 @@ enum class ValidationRuleChain(
         sykmelding.perioder.any { it.behandlingsdager != null }
     }),
 
-    @Description("Hvis sykmeldingen angir reisetilskudd går meldingen til manuell behandling.")
-    TRAVEL_SUBSIDY_SPECIFIED(
+    @Description("Hvis sykmeldingen angir og er gradert reisetilskudd går meldingen til manuell behandling.")
+    GRADERT_TRAVEL_SUBSIDY_SPECIFIED(
             1270,
             Status.MANUAL_PROCESSING,
             "Hvis sykmeldingen angir reisetilskudd går meldingen til manuell behandling.",
@@ -45,6 +45,16 @@ enum class ValidationRuleChain(
             { (sykmelding, _) ->
         sykmelding.perioder.any { it.gradert?.reisetilskudd ?: false }
     }),
+
+    @Description("Hvis sykmeldingen angir reisetilskudd går meldingen til manuell behandling.")
+    TRAVEL_SUBSIDY_SPECIFIED(
+            1270,
+            Status.MANUAL_PROCESSING,
+            "Hvis sykmeldingen angir reisetilskudd går meldingen til manuell behandling.",
+            "Hvis sykmeldingen angir reisetilskudd går meldingen til manuell behandling.",
+            { (sykmelding, _) ->
+                sykmelding.perioder.any { it.reisetilskudd }
+            }),
 
     @Description("Hvis pasienten ikke finnes i infotrygd")
     PATIENT_NOT_IN_IP(
