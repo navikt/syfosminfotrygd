@@ -85,7 +85,7 @@ object ValidationRuleChainSpek : Spek({
             ValidationRuleChain.NUMBER_OF_TREATMENT_DAYS_SET(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
         }
 
-        it("Should check rule TRAVEL_SUBSIDY_SPECIFIED, should trigger rule") {
+        it("Should check rule GRADERT_TRAVEL_SUBSIDY_SPECIFIED, should trigger rule") {
             val healthInformation = generateSykmelding(perioder = listOf(
                     generatePeriode(
                             fom = LocalDate.now(),
@@ -99,10 +99,10 @@ object ValidationRuleChainSpek : Spek({
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
 
-            ValidationRuleChain.TRAVEL_SUBSIDY_SPECIFIED(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
+            ValidationRuleChain.GRADERT_TRAVEL_SUBSIDY_SPECIFIED(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
         }
 
-        it("Should check rule TRAVEL_SUBSIDY_SPECIFIED, should NOT trigger rule") {
+        it("Should check rule GRADERT_TRAVEL_SUBSIDY_SPECIFIED, should NOT trigger rule") {
             val healthInformation = generateSykmelding(perioder = listOf(
                     generatePeriode(
                             fom = LocalDate.now(),
@@ -111,6 +111,34 @@ object ValidationRuleChainSpek : Spek({
                                     reisetilskudd = false,
                                     grad = 90
                             )
+                    )
+            ))
+
+            val infotrygdForespResponse = deafaultInfotrygdForesp()
+
+            ValidationRuleChain.GRADERT_TRAVEL_SUBSIDY_SPECIFIED(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+        }
+
+        it("Should check rule TRAVEL_SUBSIDY_SPECIFIED, should trigger rule") {
+            val healthInformation = generateSykmelding(perioder = listOf(
+                    generatePeriode(
+                            fom = LocalDate.now(),
+                            tom = LocalDate.now().plusMonths(3).plusDays(1),
+                            reisetilskudd = true
+                    )
+            ))
+
+            val infotrygdForespResponse = deafaultInfotrygdForesp()
+
+            ValidationRuleChain.TRAVEL_SUBSIDY_SPECIFIED(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
+        }
+
+        it("Should check rule GRADERT_TRAVEL_SUBSIDY_SPECIFIED, should NOT trigger rule") {
+            val healthInformation = generateSykmelding(perioder = listOf(
+                    generatePeriode(
+                            fom = LocalDate.now(),
+                            tom = LocalDate.now().plusMonths(3).plusDays(1),
+                            reisetilskudd = false
                     )
             ))
 
