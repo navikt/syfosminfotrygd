@@ -5,6 +5,7 @@ import java.time.LocalDate
 import java.util.concurrent.TimeUnit
 import javax.jms.MessageProducer
 import javax.jms.Session
+import kotlin.math.absoluteValue
 import kotlinx.coroutines.delay
 import net.logstash.logback.argument.StructuredArguments
 import no.nav.helse.eiFellesformat.XMLEIFellesformat
@@ -36,7 +37,6 @@ import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import redis.clients.jedis.Jedis
 import redis.clients.jedis.exceptions.JedisConnectionException
-import kotlin.math.absoluteValue
 
 @KtorExperimentalAPI
 class UpdateInfotrygdService {
@@ -127,7 +127,7 @@ suspend fun sendInfotrygdOppdateringAndValidationResult(
         val forsteFravaersDag = finnForsteFravaersDag(itfh, perioder.first(), loggingMeta)
 
         val sha256String = sha256hashstring(createInfotrygdBlokk(
-                itfh, perioder.first(), personNrPasient, signaturDato,
+                itfh, perioder.first(), personNrPasient, LocalDate.of(2019, 1, 1),
                 behandlerKode, tssid, loggingMeta, navKontorNr, findarbeidsKategori(itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver), forsteFravaersDag)
         )
 
