@@ -137,7 +137,7 @@ suspend fun sendInfotrygdOppdateringAndValidationResult(
 
             when {
                 nyligInfotrygdOppdatering -> {
-                    delay(5000)
+                    delay(10000)
                     kafkaproducerreceivedSykmelding.send(ProducerRecord(infotrygdRetryTopic, receivedSykmelding.sykmelding.id, receivedSykmelding))
                     log.warn("Melding sendt på retry topic {}", StructuredArguments.fields(loggingMeta))
                 }
