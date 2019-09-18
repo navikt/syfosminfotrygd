@@ -51,7 +51,7 @@ class FindNAVKontorService @KtorExperimentalAPI constructor(
         val geografiskTilknytning = fetchGeografiskTilknytning(personV3, receivedSykmelding)
         val patientDiskresjonsKode = fetchDiskresjonsKode(personV3, receivedSykmelding)
         return if (geografiskTilknytning.geografiskTilknytning?.geografiskTilknytning.isNullOrEmpty()) {
-            log.error("GeografiskTilknytning er tomt eller null, benytter nav oppfolings utland nr:$NAV_OPPFOLGING_UTLAND_KONTOR_NR,  {}", fields(loggingMeta))
+            log.warn("GeografiskTilknytning er tomt eller null, benytter nav oppfolings utland nr:$NAV_OPPFOLGING_UTLAND_KONTOR_NR,  {}", fields(loggingMeta))
             NAV_OPPFOLGING_UTLAND_KONTOR_NR
         } else {
             norg2Client.getLocalNAVOffice(geografiskTilknytning.geografiskTilknytning.geografiskTilknytning, patientDiskresjonsKode).enhetNr
