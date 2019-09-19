@@ -132,6 +132,7 @@ suspend fun sendInfotrygdOppdateringAndValidationResult(
         )
 
         try {
+            delay(100)
             val nyligInfotrygdOppdatering = erIRedis(personNrPasient, jedis)
             val duplikatInfotrygdOppdatering = erIRedis(sha256String, jedis)
 
