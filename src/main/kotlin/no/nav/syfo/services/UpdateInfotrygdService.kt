@@ -145,7 +145,7 @@ suspend fun sendInfotrygdOppdateringAndValidationResult(
                 duplikatInfotrygdOppdatering -> log.warn("Melding market som infotrygd duplikat oppdaatering {}", StructuredArguments.fields(loggingMeta))
                 else -> {
                     oppdaterRedis(personNrPasient, jedis, 4, loggingMeta)
-                    oppdaterRedis(sha256String, jedis, TimeUnit.DAYS.toSeconds(14).toInt(), loggingMeta)
+                    oppdaterRedis(sha256String, jedis, TimeUnit.DAYS.toSeconds(30).toInt(), loggingMeta)
                     sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, forsteFravaersDag), loggingMeta)
                     perioder.drop(1).forEach { periode ->
                         sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, periode, personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, forsteFravaersDag, 2), loggingMeta)
