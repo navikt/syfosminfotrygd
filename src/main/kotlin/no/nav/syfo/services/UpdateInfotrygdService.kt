@@ -151,7 +151,7 @@ suspend fun sendInfotrygdOppdateringAndValidationResult(
                 duplikatInfotrygdOppdatering -> log.warn("Melding market som infotrygd duplikat oppdaatering {}", StructuredArguments.fields(loggingMeta))
                 else -> {
                     oppdaterRedis(personNrPasient, jedis, 4, loggingMeta)
-                    oppdaterRedis(sha256String, jedis, TimeUnit.DAYS.toSeconds(30).toInt(), loggingMeta)
+                    oppdaterRedis(sha256String, jedis, TimeUnit.DAYS.toSeconds(60).toInt(), loggingMeta)
                     sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, forsteFravaersDag), loggingMeta)
                     perioder.drop(1).forEach { periode ->
                         sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, periode, personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, forsteFravaersDag, 2), loggingMeta)
@@ -417,6 +417,7 @@ suspend fun sendInfotrygdOppdateringAndValidationResult(
                 log.warn("Melding market som infotrygd duplikat, ikkje opprett manuelloppgave {}", StructuredArguments.fields(loggingMeta))
             } else {
                 createTask(kafkaProducer, receivedSykmelding, validationResult, navKontorNr, loggingMeta, oppgaveTopic)
+                oppdaterRedis(sha256String, jedis, TimeUnit.DAYS.toSeconds(60).toInt(), loggingMeta)
             }
         } catch (connectionException: JedisConnectionException) {
             log.error("Fikk ikkje opprettet kontakt med redis, kaster exception", connectionException)
