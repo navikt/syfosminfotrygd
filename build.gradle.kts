@@ -59,7 +59,6 @@ repositories {
     maven (url = "https://oss.sonatype.org/content/groups/staging/")
 }
 
-
 dependencies {
     implementation(kotlin("stdlib"))
 
