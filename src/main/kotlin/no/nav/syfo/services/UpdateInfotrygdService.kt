@@ -408,7 +408,7 @@ suspend fun sendInfotrygdOppdateringAndValidationResult(
             val forsteFravaersDag = finnForsteFravaersDag(itfh, perioder.first(), loggingMeta)
             val sha256String = sha256hashstring(createInfotrygdBlokk(
                     itfh, perioder.first(), receivedSykmelding.personNrPasient, LocalDate.of(2019, 1, 1),
-                    helsepersonellKategoriVerdi, receivedSykmelding.tssid, loggingMeta, navKontorNr, findarbeidsKategori(itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver), forsteFravaersDag)
+                    helsepersonellKategoriVerdi, "0", loggingMeta, navKontorNr, findarbeidsKategori(itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver), forsteFravaersDag)
             )
 
             val duplikatInfotrygdOppdatering = erIRedis(sha256String, jedis)
