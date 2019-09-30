@@ -27,7 +27,6 @@ import java.io.StringWriter
 import java.nio.file.Paths
 import java.time.Duration
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.Properties
 import java.util.concurrent.TimeUnit
@@ -67,7 +66,6 @@ import no.nav.syfo.rules.Rule
 import no.nav.syfo.rules.TssRuleChain
 import no.nav.syfo.rules.ValidationRuleChain
 import no.nav.syfo.rules.executeFlow
-import no.nav.syfo.sak.avro.PrioritetType
 import no.nav.syfo.sak.avro.ProduceTask
 import no.nav.syfo.services.FindNAVKontorService
 import no.nav.syfo.services.UpdateInfotrygdService
@@ -419,53 +417,6 @@ fun Marshaller.toString(input: Any): String = StringWriter().use {
 
 val inputFactory = XMLInputFactory.newInstance()!!
 inline fun <reified T> unmarshal(text: String): T = fellesformatUnmarshaller.unmarshal(inputFactory.createXMLEventReader(StringReader(text)), T::class.java).value
-
-fun produceManualTaskAndSendValidationResults(
-    kafkaProducer: KafkaProducer<String, ProduceTask>,
-    receivedSykmelding: ReceivedSykmelding,
-    validationResult: ValidationResult,
-    navKontorNr: String,
-    loggingMeta: LoggingMeta,
-    oppgaveTopic: String,
-    sm2013BehandlingsUtfallToipic: String,
-    kafkaproducervalidationResult: KafkaProducer<String, ValidationResult>
-) {
-    sendRuleCheckValidationResult(receivedSykmelding, kafkaproducervalidationResult,
-            validationResult, sm2013BehandlingsUtfallToipic, loggingMeta)
-    createTask(kafkaProducer, receivedSykmelding, validationResult, navKontorNr, loggingMeta, oppgaveTopic)
-}
-
-fun createTask(
-    kafkaProducer: KafkaProducer<String,
-    ProduceTask>,
-    receivedSykmelding: ReceivedSykmelding,
-    validationResult: ValidationResult,
-    navKontorNr: String,
-    loggingMeta: LoggingMeta,
-    oppgaveTopic: String
-) {
-    kafkaProducer.send(ProducerRecord(oppgaveTopic, receivedSykmelding.sykmelding.id,
-            ProduceTask().apply {
-                messageId = receivedSykmelding.msgId
-                aktoerId = receivedSykmelding.sykmelding.pasientAktoerId
-                tildeltEnhetsnr = navKontorNr
-                opprettetAvEnhetsnr = "9999"
-                behandlesAvApplikasjon = "FS22" // Gosys
-                orgnr = receivedSykmelding.legekontorOrgNr ?: ""
-                beskrivelse = "Manuell behandling av sykmelding grunnet følgende regler: ${validationResult.ruleHits.joinToString(", ", "(", ")") { it.messageForSender }}"
-                temagruppe = "ANY"
-                tema = "SYM"
-                behandlingstema = "ANY"
-                oppgavetype = "BEH_EL_SYM"
-                behandlingstype = "ANY"
-                mappeId = 1
-                aktivDato = DateTimeFormatter.ISO_DATE.format(LocalDate.now())
-                fristFerdigstillelse = DateTimeFormatter.ISO_DATE.format(LocalDate.now())
-                prioritet = PrioritetType.NORM
-                metadata = mapOf()
-            }))
-    log.info("Message sendt to topic: aapen-syfo-oppgave-produserOppgave, {}", fields(loggingMeta))
-}
 
 inline fun <reified T> XMLEIFellesformat.get() = this.any.find { it is T } as T
 
