@@ -193,7 +193,7 @@ suspend fun sendInfotrygdOppdateringAndValidationResult(
                 ?.lastOrNull()
 
         if ((typeSMinfo != null && tssid?.toBigInteger() != typeSMinfo.periode.legeInstNr) || operasjonstype == 1.toBigInteger()) {
-            legeEllerInstitusjonsNummer = tssid?.toBigInteger() ?: "".toBigInteger()
+            legeEllerInstitusjonsNummer = tssid?.toBigInteger() ?: "0".toBigInteger()
             legeEllerInstitusjon = if (itfh.healthInformation.behandler != null) {
                 itfh.healthInformation.behandler.formatName()
             } else {
