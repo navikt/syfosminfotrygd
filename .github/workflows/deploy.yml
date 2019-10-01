@@ -40,7 +40,7 @@ jobs:
         with:
           cluster: dev-fss
           team: teamsykefravr
-          resource: naiserator-dev.yaml
+          resources: naiserator-dev.yaml
       - name: deploy to prod-fss
         uses: navikt/deployment-cli/action@0.4.0
         env:
@@ -48,7 +48,7 @@ jobs:
         with:
           cluster: prod-fss
           team: teamsykefravr
-          resource: naiserator-prod.yaml
+          resources: naiserator-prod.yaml
       #- name: deploy redis to prod-fss
       #  uses: navikt/deployment-cli/action@a260e84
       #  env:
