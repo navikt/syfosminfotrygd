@@ -40,9 +40,9 @@ import no.nav.helse.eiFellesformat.XMLEIFellesformat
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.msgHead.XMLMsgHead
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
-import no.nav.syfo.api.AccessTokenClient
 import no.nav.syfo.application.ApplicationServer
 import no.nav.syfo.application.ApplicationState
+import no.nav.syfo.application.api.AccessTokenClient
 import no.nav.syfo.application.createApplicationEngine
 import no.nav.syfo.client.Norg2Client
 import no.nav.syfo.client.NorskHelsenettClient
@@ -179,6 +179,8 @@ fun main() {
                     norg2Client,
                     kafkaproducerreceivedSykmelding,
                     credentials)
+
+    applicationState.ready = true
 }
 
 fun createListener(applicationState: ApplicationState, action: suspend CoroutineScope.() -> Unit): Job =
