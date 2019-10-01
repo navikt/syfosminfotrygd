@@ -3,9 +3,9 @@ package no.nav.syfo.services
 import java.security.MessageDigest
 import net.logstash.logback.argument.StructuredArguments.fields
 import no.nav.helse.sm2013.KontrollsystemBlokkType
-import no.nav.syfo.LoggingMeta
 import no.nav.syfo.log
 import no.nav.syfo.objectMapper
+import no.nav.syfo.util.LoggingMeta
 import redis.clients.jedis.Jedis
 
 fun erIRedis(redisKey: String, jedis: Jedis): Boolean =

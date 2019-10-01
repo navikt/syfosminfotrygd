@@ -19,8 +19,6 @@ import no.nav.helse.msgHead.XMLMsgHead
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.helse.sm2013.KontrollSystemBlokk
 import no.nav.helse.sm2013.KontrollsystemBlokkType
-import no.nav.syfo.XMLDateAdapter
-import no.nav.syfo.XMLDateTimeAdapter
 import org.codehaus.stax2.XMLOutputFactory2
 
 val infotrygdSporringJaxBContext: JAXBContext = JAXBContext.newInstance(InfotrygdForesp::class.java)

@@ -1,4 +1,4 @@
-package no.nav.syfo
+package no.nav.syfo.util
 
 import com.migesok.jaxb.adapter.javatime.LocalDateTimeXmlAdapter
 import com.migesok.jaxb.adapter.javatime.LocalDateXmlAdapter

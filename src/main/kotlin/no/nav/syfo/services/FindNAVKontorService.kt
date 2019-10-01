@@ -5,12 +5,12 @@ import io.ktor.util.KtorExperimentalAPI
 import java.io.IOException
 import java.lang.IllegalStateException
 import net.logstash.logback.argument.StructuredArguments.fields
-import no.nav.syfo.LoggingMeta
 import no.nav.syfo.NAV_OPPFOLGING_UTLAND_KONTOR_NR
 import no.nav.syfo.client.Norg2Client
 import no.nav.syfo.helpers.retry
 import no.nav.syfo.log
 import no.nav.syfo.model.ReceivedSykmelding
+import no.nav.syfo.util.LoggingMeta
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.binding.ArbeidsfordelingV1
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.ArbeidsfordelingKriterier
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.Diskresjonskoder

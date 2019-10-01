@@ -68,7 +68,10 @@ import no.nav.syfo.services.FindNAVKontorService
 import no.nav.syfo.services.UpdateInfotrygdService
 import no.nav.syfo.services.fetchInfotrygdForesp
 import no.nav.syfo.util.JacksonKafkaSerializer
+import no.nav.syfo.util.LoggingMeta
+import no.nav.syfo.util.TrackableException
 import no.nav.syfo.util.fellesformatUnmarshaller
+import no.nav.syfo.util.wrapExceptions
 import no.nav.syfo.ws.createPort
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.binding.ArbeidsfordelingV1
 import no.nav.tjeneste.virksomhet.person.v3.binding.PersonV3
@@ -331,7 +334,7 @@ suspend fun handleMessage(
                 oppgaveTopic,
                 kafkaproducervalidationResult,
                 sm2013BehandlingsUtfallToipic
-                )
+        )
 
         val currentRequestLatency = requestLatency.observeDuration()
 
