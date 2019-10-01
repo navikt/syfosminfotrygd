@@ -1,3 +1,4 @@
+![https://github.com/navikt/syfosminfotrygd/workflows/Deploy%20to%20dev%20and%20prod/badge.svg](Build status)
 # SYFO sykemelding infotrygd
 Application for handling rules used for infotrygd and later on persisting them in infotrygd or create a manuall task
 to persisting them in infotrygd
