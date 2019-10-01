@@ -1,4 +1,4 @@
-package no.nav.syfo
+package no.nav.syfo.model
 
 enum class Diagnosekode(val kithCode: String, val infotrygdCode: String) {
     ICPC_2("2.16.578.1.12.4.1.1.7170", "5"),

@@ -14,6 +14,7 @@ import no.nav.helse.sm2013.CV
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.helse.sm2013.Ident
 import no.nav.helse.sm2013.KontrollSystemBlokk
+import no.nav.syfo.model.HelsepersonellKategori
 import no.nav.syfo.services.UpdateInfotrygdService
 import no.nav.syfo.services.createInfotrygdForesp
 import no.nav.syfo.util.fellesformatMarshaller

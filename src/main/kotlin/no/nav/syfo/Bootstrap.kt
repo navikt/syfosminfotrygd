@@ -11,15 +11,11 @@ import com.ibm.mq.MQEnvironment
 import com.ibm.mq.MQQueue
 import com.ibm.mq.MQQueueManager
 import io.confluent.kafka.serializers.KafkaAvroSerializer
-import io.ktor.application.Application
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.apache.Apache
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.features.json.JacksonSerializer
 import io.ktor.client.features.json.JsonFeature
-import io.ktor.routing.routing
-import io.ktor.server.engine.embeddedServer
-import io.ktor.server.netty.Netty
 import io.ktor.util.KtorExperimentalAPI
 import io.prometheus.client.hotspot.DefaultExports
 import java.io.StringReader
@@ -29,7 +25,6 @@ import java.time.Duration
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 import java.util.Properties
-import java.util.concurrent.TimeUnit
 import javax.jms.MessageProducer
 import javax.jms.Session
 import javax.xml.bind.Marshaller
@@ -46,7 +41,9 @@ import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.msgHead.XMLMsgHead
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.syfo.api.AccessTokenClient
-import no.nav.syfo.api.registerNaisApi
+import no.nav.syfo.application.ApplicationServer
+import no.nav.syfo.application.ApplicationState
+import no.nav.syfo.application.createApplicationEngine
 import no.nav.syfo.client.Norg2Client
 import no.nav.syfo.client.NorskHelsenettClient
 import no.nav.syfo.kafka.loadBaseConfig
@@ -83,8 +80,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import redis.clients.jedis.Jedis
 
-data class ApplicationState(var running: Boolean = true, var initialized: Boolean = false)
-
 val log: Logger = LoggerFactory.getLogger("no.nav.syfo.sminfotrygd")
 val objectMapper: ObjectMapper = ObjectMapper().apply {
     registerKotlinModule()
@@ -100,10 +95,12 @@ fun main() {
     val env = Environment()
     val credentials = objectMapper.readValue<VaultCredentials>(Paths.get("/var/run/secrets/nais.io/vault/credentials.json").toFile())
     val applicationState = ApplicationState()
+    val applicationEngine = createApplicationEngine(
+            env,
+            applicationState)
 
-    val applicationServer = embeddedServer(Netty, env.applicationPort) {
-        initRouting(applicationState)
-    }.start(wait = false)
+    val applicationServer = ApplicationServer(applicationEngine)
+    applicationServer.start()
 
     DefaultExports.initialize()
 
@@ -166,12 +163,6 @@ fun main() {
 
             val norg2Client = Norg2Client(norg2ClientHttpClient, env.norg2V1EndpointURL)
 
-            Runtime.getRuntime().addShutdownHook(Thread {
-                smIkkeOkQueue.close()
-                mqQueueManager.disconnect()
-                applicationServer.stop(10, 10, TimeUnit.SECONDS)
-            })
-
             launchListeners(
                     applicationState,
                     kafkaproducerCreateTask,
@@ -194,7 +185,7 @@ fun createListener(applicationState: ApplicationState, action: suspend Coroutine
             } catch (e: TrackableException) {
                 log.error("En uhåndtert feil oppstod, applikasjonen restarter {}", fields(e.loggingMeta), e.cause)
             } finally {
-                applicationState.running = false
+                applicationState.ready = false
             }
         }
 
@@ -235,7 +226,7 @@ fun launchListeners(
             }
         }
 
-    applicationState.initialized = true
+    applicationState.alive = true
 }
 
 @KtorExperimentalAPI
@@ -258,7 +249,7 @@ suspend fun blockingApplicationLogic(
     infotrygdRetryTopic: String,
     oppgaveTopic: String
 ) {
-    while (applicationState.running) {
+    while (applicationState.ready) {
         kafkaConsumer.poll(Duration.ofMillis(0)).forEach { consumerRecord ->
             val receivedSykmelding: ReceivedSykmelding = objectMapper.readValue(consumerRecord.value())
             val loggingMeta = LoggingMeta(
@@ -392,24 +383,6 @@ fun sendRuleCheckValidationResult(
     log.info("Validation results send to kafka {} $loggingMeta", sm2013BehandlingsUtfallToipic, fields(loggingMeta))
 }
 
-data class InfotrygdForespAndHealthInformation(
-    val infotrygdForesp: InfotrygdForesp,
-    val healthInformation: HelseOpplysningerArbeidsuforhet
-)
-
-fun Application.initRouting(applicationState: ApplicationState) {
-    routing {
-        registerNaisApi(
-                readynessCheck = {
-                    applicationState.initialized
-                },
-                livenessCheck = {
-                    applicationState.running
-                }
-        )
-    }
-}
-
 fun Marshaller.toString(input: Any): String = StringWriter().use {
     marshal(input, it)
     it.toString()
@@ -436,3 +409,8 @@ fun validationResult(results: List<Rule<Any>>): ValidationResult =
         )
 fun List<HelseOpplysningerArbeidsuforhet.Aktivitet.Periode>.sortedFOMDate(): List<LocalDate> =
         map { it.periodeFOMDato }.sorted()
+
+data class InfotrygdForespAndHealthInformation(
+    val infotrygdForesp: InfotrygdForesp,
+    val healthInformation: HelseOpplysningerArbeidsuforhet
+)

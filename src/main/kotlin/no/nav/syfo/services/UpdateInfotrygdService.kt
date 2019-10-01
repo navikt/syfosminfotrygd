@@ -23,6 +23,7 @@ import no.nav.syfo.daysBetween
 import no.nav.syfo.get
 import no.nav.syfo.log
 import no.nav.syfo.metrics.RULE_HIT_STATUS_COUNTER
+import no.nav.syfo.model.HelsepersonellKategori
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.model.RuleInfo
 import no.nav.syfo.model.Status
@@ -105,7 +106,7 @@ class UpdateInfotrygdService {
                 produceManualTaskAndSendValidationResults(kafkaproducerCreateTask, receivedSykmelding, validationResultBehandler,
                         navKontorManuellOppgave, loggingMeta, oppgaveTopic, sm2013BehandlingsUtfallToipic, kafkaproducervalidationResult,
                         InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
-                        "LE", jedis)
+                        HelsepersonellKategori.LEGE.verdi, jedis)
             }
     }
 
@@ -406,9 +407,14 @@ suspend fun sendInfotrygdOppdateringAndValidationResult(
         try {
             val perioder = itfh.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
             val forsteFravaersDag = finnForsteFravaersDag(itfh, perioder.first(), loggingMeta)
+            val tssid = if (receivedSykmelding.tssid != null) {
+                receivedSykmelding.tssid
+            } else {
+                "0"
+            }
             val sha256String = sha256hashstring(createInfotrygdBlokk(
                     itfh, perioder.first(), receivedSykmelding.personNrPasient, LocalDate.of(2019, 1, 1),
-                    helsepersonellKategoriVerdi, "0", loggingMeta, navKontorNr, findarbeidsKategori(itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver), forsteFravaersDag)
+                    helsepersonellKategoriVerdi, tssid, loggingMeta, navKontorNr, findarbeidsKategori(itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver), forsteFravaersDag)
             )
 
             val duplikatInfotrygdOppdatering = erIRedis(sha256String, jedis)
@@ -454,6 +460,6 @@ suspend fun sendInfotrygdOppdateringAndValidationResult(
                     prioritet = PrioritetType.NORM
                     metadata = mapOf()
                 }))
-        log.info("Message sendt to topic: aapen-syfo-oppgave-produserOppgave, {}", StructuredArguments.fields(loggingMeta))
+        log.info("Message sendt to topic: {}, {}", oppgaveTopic, StructuredArguments.fields(loggingMeta))
     }
 }
