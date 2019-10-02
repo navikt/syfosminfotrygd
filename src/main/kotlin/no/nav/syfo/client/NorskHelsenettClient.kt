@@ -11,7 +11,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.HttpStatusCode.Companion.NotFound
 import io.ktor.util.KtorExperimentalAPI
 import java.io.IOException
-import no.nav.syfo.api.AccessTokenClient
+import no.nav.syfo.application.api.AccessTokenClient
 import no.nav.syfo.helpers.retry
 import no.nav.syfo.log
 

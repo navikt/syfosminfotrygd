@@ -12,8 +12,8 @@ import javax.jms.TemporaryQueue
 import javax.jms.TextMessage
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
-import no.nav.syfo.Diagnosekode
 import no.nav.syfo.helpers.retry
+import no.nav.syfo.model.Diagnosekode
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.toString
 import no.nav.syfo.util.infotrygdSporringMarshaller

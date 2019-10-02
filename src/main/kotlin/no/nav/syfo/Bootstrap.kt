@@ -11,15 +11,11 @@ import com.ibm.mq.MQEnvironment
 import com.ibm.mq.MQQueue
 import com.ibm.mq.MQQueueManager
 import io.confluent.kafka.serializers.KafkaAvroSerializer
-import io.ktor.application.Application
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.apache.Apache
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.features.json.JacksonSerializer
 import io.ktor.client.features.json.JsonFeature
-import io.ktor.routing.routing
-import io.ktor.server.engine.embeddedServer
-import io.ktor.server.netty.Netty
 import io.ktor.util.KtorExperimentalAPI
 import io.prometheus.client.hotspot.DefaultExports
 import java.io.StringReader
@@ -27,10 +23,8 @@ import java.io.StringWriter
 import java.nio.file.Paths
 import java.time.Duration
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.Properties
-import java.util.concurrent.TimeUnit
 import javax.jms.MessageProducer
 import javax.jms.Session
 import javax.xml.bind.Marshaller
@@ -46,8 +40,10 @@ import no.nav.helse.eiFellesformat.XMLEIFellesformat
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.msgHead.XMLMsgHead
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
-import no.nav.syfo.api.AccessTokenClient
-import no.nav.syfo.api.registerNaisApi
+import no.nav.syfo.application.ApplicationServer
+import no.nav.syfo.application.ApplicationState
+import no.nav.syfo.application.api.AccessTokenClient
+import no.nav.syfo.application.createApplicationEngine
 import no.nav.syfo.client.Norg2Client
 import no.nav.syfo.client.NorskHelsenettClient
 import no.nav.syfo.kafka.loadBaseConfig
@@ -67,13 +63,15 @@ import no.nav.syfo.rules.Rule
 import no.nav.syfo.rules.TssRuleChain
 import no.nav.syfo.rules.ValidationRuleChain
 import no.nav.syfo.rules.executeFlow
-import no.nav.syfo.sak.avro.PrioritetType
 import no.nav.syfo.sak.avro.ProduceTask
 import no.nav.syfo.services.FindNAVKontorService
 import no.nav.syfo.services.UpdateInfotrygdService
 import no.nav.syfo.services.fetchInfotrygdForesp
 import no.nav.syfo.util.JacksonKafkaSerializer
+import no.nav.syfo.util.LoggingMeta
+import no.nav.syfo.util.TrackableException
 import no.nav.syfo.util.fellesformatUnmarshaller
+import no.nav.syfo.util.wrapExceptions
 import no.nav.syfo.ws.createPort
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.binding.ArbeidsfordelingV1
 import no.nav.tjeneste.virksomhet.person.v3.binding.PersonV3
@@ -84,8 +82,6 @@ import org.apache.kafka.common.serialization.StringDeserializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import redis.clients.jedis.Jedis
-
-data class ApplicationState(var running: Boolean = true, var initialized: Boolean = false)
 
 val log: Logger = LoggerFactory.getLogger("no.nav.syfo.sminfotrygd")
 val objectMapper: ObjectMapper = ObjectMapper().apply {
@@ -102,10 +98,12 @@ fun main() {
     val env = Environment()
     val credentials = objectMapper.readValue<VaultCredentials>(Paths.get("/var/run/secrets/nais.io/vault/credentials.json").toFile())
     val applicationState = ApplicationState()
+    val applicationEngine = createApplicationEngine(
+            env,
+            applicationState)
 
-    val applicationServer = embeddedServer(Netty, env.applicationPort) {
-        initRouting(applicationState)
-    }.start(wait = false)
+    val applicationServer = ApplicationServer(applicationEngine)
+    applicationServer.start()
 
     DefaultExports.initialize()
 
@@ -168,12 +166,6 @@ fun main() {
 
             val norg2Client = Norg2Client(norg2ClientHttpClient, env.norg2V1EndpointURL)
 
-            Runtime.getRuntime().addShutdownHook(Thread {
-                smIkkeOkQueue.close()
-                mqQueueManager.disconnect()
-                applicationServer.stop(10, 10, TimeUnit.SECONDS)
-            })
-
             launchListeners(
                     applicationState,
                     kafkaproducerCreateTask,
@@ -187,6 +179,8 @@ fun main() {
                     norg2Client,
                     kafkaproducerreceivedSykmelding,
                     credentials)
+
+    applicationState.ready = true
 }
 
 fun createListener(applicationState: ApplicationState, action: suspend CoroutineScope.() -> Unit): Job =
@@ -196,7 +190,7 @@ fun createListener(applicationState: ApplicationState, action: suspend Coroutine
             } catch (e: TrackableException) {
                 log.error("En uhåndtert feil oppstod, applikasjonen restarter {}", fields(e.loggingMeta), e.cause)
             } finally {
-                applicationState.running = false
+                applicationState.ready = false
             }
         }
 
@@ -237,7 +231,7 @@ fun launchListeners(
             }
         }
 
-    applicationState.initialized = true
+    applicationState.alive = true
 }
 
 @KtorExperimentalAPI
@@ -260,7 +254,7 @@ suspend fun blockingApplicationLogic(
     infotrygdRetryTopic: String,
     oppgaveTopic: String
 ) {
-    while (applicationState.running) {
+    while (applicationState.ready) {
         kafkaConsumer.poll(Duration.ofMillis(0)).forEach { consumerRecord ->
             val receivedSykmelding: ReceivedSykmelding = objectMapper.readValue(consumerRecord.value())
             val loggingMeta = LoggingMeta(
@@ -342,7 +336,7 @@ suspend fun handleMessage(
                 oppgaveTopic,
                 kafkaproducervalidationResult,
                 sm2013BehandlingsUtfallToipic
-                )
+        )
 
         val currentRequestLatency = requestLatency.observeDuration()
 
@@ -394,24 +388,6 @@ fun sendRuleCheckValidationResult(
     log.info("Validation results send to kafka {} $loggingMeta", sm2013BehandlingsUtfallToipic, fields(loggingMeta))
 }
 
-data class InfotrygdForespAndHealthInformation(
-    val infotrygdForesp: InfotrygdForesp,
-    val healthInformation: HelseOpplysningerArbeidsuforhet
-)
-
-fun Application.initRouting(applicationState: ApplicationState) {
-    routing {
-        registerNaisApi(
-                readynessCheck = {
-                    applicationState.initialized
-                },
-                livenessCheck = {
-                    applicationState.running
-                }
-        )
-    }
-}
-
 fun Marshaller.toString(input: Any): String = StringWriter().use {
     marshal(input, it)
     it.toString()
@@ -419,53 +395,6 @@ fun Marshaller.toString(input: Any): String = StringWriter().use {
 
 val inputFactory = XMLInputFactory.newInstance()!!
 inline fun <reified T> unmarshal(text: String): T = fellesformatUnmarshaller.unmarshal(inputFactory.createXMLEventReader(StringReader(text)), T::class.java).value
-
-fun produceManualTaskAndSendValidationResults(
-    kafkaProducer: KafkaProducer<String, ProduceTask>,
-    receivedSykmelding: ReceivedSykmelding,
-    validationResult: ValidationResult,
-    navKontorNr: String,
-    loggingMeta: LoggingMeta,
-    oppgaveTopic: String,
-    sm2013BehandlingsUtfallToipic: String,
-    kafkaproducervalidationResult: KafkaProducer<String, ValidationResult>
-) {
-    sendRuleCheckValidationResult(receivedSykmelding, kafkaproducervalidationResult,
-            validationResult, sm2013BehandlingsUtfallToipic, loggingMeta)
-    createTask(kafkaProducer, receivedSykmelding, validationResult, navKontorNr, loggingMeta, oppgaveTopic)
-}
-
-fun createTask(
-    kafkaProducer: KafkaProducer<String,
-    ProduceTask>,
-    receivedSykmelding: ReceivedSykmelding,
-    validationResult: ValidationResult,
-    navKontorNr: String,
-    loggingMeta: LoggingMeta,
-    oppgaveTopic: String
-) {
-    kafkaProducer.send(ProducerRecord(oppgaveTopic, receivedSykmelding.sykmelding.id,
-            ProduceTask().apply {
-                messageId = receivedSykmelding.msgId
-                aktoerId = receivedSykmelding.sykmelding.pasientAktoerId
-                tildeltEnhetsnr = navKontorNr
-                opprettetAvEnhetsnr = "9999"
-                behandlesAvApplikasjon = "FS22" // Gosys
-                orgnr = receivedSykmelding.legekontorOrgNr ?: ""
-                beskrivelse = "Manuell behandling av sykmelding grunnet følgende regler: ${validationResult.ruleHits.joinToString(", ", "(", ")") { it.messageForSender }}"
-                temagruppe = "ANY"
-                tema = "SYM"
-                behandlingstema = "ANY"
-                oppgavetype = "BEH_EL_SYM"
-                behandlingstype = "ANY"
-                mappeId = 1
-                aktivDato = DateTimeFormatter.ISO_DATE.format(LocalDate.now())
-                fristFerdigstillelse = DateTimeFormatter.ISO_DATE.format(LocalDate.now())
-                prioritet = PrioritetType.NORM
-                metadata = mapOf()
-            }))
-    log.info("Message sendt to topic: aapen-syfo-oppgave-produserOppgave, {}", fields(loggingMeta))
-}
 
 inline fun <reified T> XMLEIFellesformat.get() = this.any.find { it is T } as T
 
@@ -485,3 +414,8 @@ fun validationResult(results: List<Rule<Any>>): ValidationResult =
         )
 fun List<HelseOpplysningerArbeidsuforhet.Aktivitet.Periode>.sortedFOMDate(): List<LocalDate> =
         map { it.periodeFOMDato }.sorted()
+
+data class InfotrygdForespAndHealthInformation(
+    val infotrygdForesp: InfotrygdForesp,
+    val healthInformation: HelseOpplysningerArbeidsuforhet
+)

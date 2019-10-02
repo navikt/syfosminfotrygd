@@ -8,6 +8,7 @@ import no.nav.helse.infotrygd.foresp.TypeSMinfo
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.syfo.rules.sortedSMInfos
 import no.nav.syfo.services.UpdateInfotrygdService
+import no.nav.syfo.util.LoggingMeta
 import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe

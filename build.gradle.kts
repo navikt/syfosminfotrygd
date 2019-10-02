@@ -18,7 +18,7 @@ val jaxbApiVersion = "2.4.0-b180830.0359"
 val jaxbVersion = "2.3.0.1"
 val jedisVersion = "2.9.0"
 val kafkaVersion = "2.0.0"
-val kafkaEmbeddedVersion = "2.1.1"
+val kafkaEmbeddedVersion = "2.2.3"
 val kluentVersion = "1.39"
 val ktorVersion = "1.2.3"
 val logbackVersion = "1.2.3"
@@ -58,7 +58,6 @@ repositories {
     maven (url= "https://kotlin.bintray.com/kotlinx")
     maven (url = "https://oss.sonatype.org/content/groups/staging/")
 }
-
 
 dependencies {
     implementation(kotlin("stdlib"))
