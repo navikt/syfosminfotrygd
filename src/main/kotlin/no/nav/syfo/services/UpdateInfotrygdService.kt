@@ -406,7 +406,7 @@ suspend fun sendInfotrygdOppdateringAndValidationResult(
                 validationResult, sm2013BehandlingsUtfallToipic, loggingMeta)
         try {
             val perioder = itfh.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
-            val forsteFravaersDag = finnForsteFravaersDag(itfh, perioder.first(), loggingMeta)
+            val forsteFravaersDag = itfh.healthInformation.aktivitet.periode.sortedFOMDate().first()
             val tssid = if (!receivedSykmelding.tssid.isNullOrBlank()) {
                 receivedSykmelding.tssid
             } else {
