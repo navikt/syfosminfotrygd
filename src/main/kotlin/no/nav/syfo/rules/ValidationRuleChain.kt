@@ -76,10 +76,9 @@ enum class ValidationRuleChain(
         sykmelding.perioder.any { sykmeldingPeriode ->
             infotrygdForesp.sMhistorikk?.sykmelding != null && infotrygdForesp.sMhistorikk.sykmelding
                     .any { infotrygdForespSykmelding ->
-                        (infotrygdForespSykmelding.periode?.arbufoerFOM != null && infotrygdForespSykmelding.periode?.arbufoerTOM != null &&
-                        !sammePeriode(infotrygdForespSykmelding.periode, sykmeldingPeriode)) &&
-                        (infotrygdForespSykmelding.periode?.arbufoerFOM != null && infotrygdForespSykmelding.periode.arbufoerFOM in sykmeldingPeriode.range() ||
-                        infotrygdForespSykmelding.periode?.arbufoerTOM != null && infotrygdForespSykmelding.periode.arbufoerTOM in sykmeldingPeriode.range())
+                        infotrygdForespSykmelding.periode?.arbufoerFOM != null &&
+                        infotrygdForespSykmelding.periode?.arbufoerTOM != null &&
+                        sykmeldingPeriode.fom.isBefore(infotrygdForespSykmelding.periode?.arbufoerFOM)
                     }
         }
     }),
