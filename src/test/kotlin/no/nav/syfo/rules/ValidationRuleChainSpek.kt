@@ -173,16 +173,16 @@ object ValidationRuleChainSpek : Spek({
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
                 sykmelding.add(TypeSMinfo().apply {
                     periode = TypeSMinfo.Periode().apply {
-                        arbufoerFOM = LocalDate.of(2018, 1, 2)
-                        arbufoerTOM = LocalDate.of(2018, 1, 8)
+                        arbufoerFOM = LocalDate.of(2019, 1, 1)
+                        arbufoerTOM = LocalDate.of(2019, 1, 5)
                     }
                 })
             }
 
             val healthInformation = generateSykmelding(perioder = listOf(
                     generatePeriode(
-                            fom = LocalDate.of(2018, 1, 1),
-                            tom = LocalDate.now().plusMonths(3).plusDays(1)
+                            fom = LocalDate.of(2019, 1, 1),
+                            tom = LocalDate.of(2019, 1, 4)
                     )
             ))
 
@@ -205,6 +205,28 @@ object ValidationRuleChainSpek : Spek({
                     generatePeriode(
                             fom = LocalDate.of(2018, 1, 2),
                             tom = LocalDate.of(2018, 1, 8)
+                    )
+            ))
+
+            ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+        }
+
+        it("Should check rule PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE, should NOT trigger rule, when same periode") {
+
+            val infotrygdForespResponse = deafaultInfotrygdForesp()
+            infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
+                sykmelding.add(TypeSMinfo().apply {
+                    periode = TypeSMinfo.Periode().apply {
+                        arbufoerFOM = LocalDate.of(2019, 1, 2)
+                        arbufoerTOM = LocalDate.of(2019, 1, 8)
+                    }
+                })
+            }
+
+            val healthInformation = generateSykmelding(perioder = listOf(
+                    generatePeriode(
+                            fom = LocalDate.of(2019, 1, 2),
+                            tom = LocalDate.of(2019, 1, 9)
                     )
             ))
 
