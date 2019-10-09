@@ -13,7 +13,6 @@ import com.ibm.mq.MQQueueManager
 import io.confluent.kafka.serializers.KafkaAvroSerializer
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.apache.Apache
-import io.ktor.client.engine.cio.CIO
 import io.ktor.client.features.json.JacksonSerializer
 import io.ktor.client.features.json.JsonFeature
 import io.ktor.util.KtorExperimentalAPI
@@ -139,7 +138,7 @@ fun main() {
             }
 
             val accessTokenClient = AccessTokenClient(env.aadAccessTokenUrl, env.clientId, credentials.clientsecret)
-            val norskHelsenetthttpClient = HttpClient(CIO) {
+            val httpClient = HttpClient(Apache) {
             install(JsonFeature) {
                 serializer = JacksonSerializer {
                     registerKotlinModule()
@@ -150,21 +149,9 @@ fun main() {
                 expectSuccess = false
                 }
             }
-            val norskHelsenettClient = NorskHelsenettClient(norskHelsenetthttpClient, env.norskHelsenettEndpointURL, accessTokenClient, env.helsenettproxyId)
+            val norskHelsenettClient = NorskHelsenettClient(httpClient, env.norskHelsenettEndpointURL, accessTokenClient, env.helsenettproxyId)
 
-            val norg2ClientHttpClient = HttpClient(Apache) {
-                install(JsonFeature) {
-                    serializer = JacksonSerializer {
-                        registerKotlinModule()
-                        registerModule(JavaTimeModule())
-                        configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-                        configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                    }
-                }
-                expectSuccess = false
-            }
-
-            val norg2Client = Norg2Client(norg2ClientHttpClient, env.norg2V1EndpointURL)
+            val norg2Client = Norg2Client(httpClient, env.norg2V1EndpointURL)
 
             launchListeners(
                     applicationState,
