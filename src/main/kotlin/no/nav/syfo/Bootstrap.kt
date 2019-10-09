@@ -37,6 +37,7 @@ import net.logstash.logback.argument.StructuredArguments.fields
 import net.logstash.logback.argument.StructuredArguments.keyValue
 import no.nav.helse.eiFellesformat.XMLEIFellesformat
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
+import no.nav.helse.infotrygd.foresp.TypeSMinfo
 import no.nav.helse.msgHead.XMLMsgHead
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.syfo.application.ApplicationServer
@@ -51,6 +52,7 @@ import no.nav.syfo.kafka.toProducerConfig
 import no.nav.syfo.metrics.MESSAGES_ON_INFOTRYGD_SMIKKEOK_QUEUE_COUNTER
 import no.nav.syfo.metrics.REQUEST_TIME
 import no.nav.syfo.metrics.RULE_HIT_STATUS_COUNTER
+import no.nav.syfo.model.Behandler
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.model.RuleInfo
 import no.nav.syfo.model.RuleMetadata
@@ -62,6 +64,7 @@ import no.nav.syfo.rules.Rule
 import no.nav.syfo.rules.TssRuleChain
 import no.nav.syfo.rules.ValidationRuleChain
 import no.nav.syfo.rules.executeFlow
+import no.nav.syfo.rules.sortedSMInfos
 import no.nav.syfo.sak.avro.ProduceTask
 import no.nav.syfo.services.FindNAVKontorService
 import no.nav.syfo.services.UpdateInfotrygdService
@@ -299,14 +302,21 @@ suspend fun handleMessage(
                 session,
                 healthInformation)
 
-        val validationResult = ruleCheck(receivedSykmelding, infotrygdForespResponse, loggingMeta)
+        var receivedSykmeldingMedTssId = receivedSykmelding
+        if (receivedSykmelding.tssid.isNullOrBlank()) {
+            val tssId = finnTssIdFraInfotrygdRespons(infotrygdForespResponse.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()?.periode,
+                receivedSykmelding.sykmelding.behandler)
+            receivedSykmeldingMedTssId = receivedSykmelding.copy(tssid = tssId)
+        }
 
-        val findNAVKontorService = FindNAVKontorService(receivedSykmelding, personV3, norg2Client, arbeidsfordelingV1, loggingMeta)
+        val validationResult = ruleCheck(receivedSykmeldingMedTssId, infotrygdForespResponse, loggingMeta)
+
+        val findNAVKontorService = FindNAVKontorService(receivedSykmeldingMedTssId, personV3, norg2Client, arbeidsfordelingV1, loggingMeta)
 
         val behandlendeEnhet = findNAVKontorService.finnBehandlendeEnhet()
         val lokaltNavkontor = findNAVKontorService.finnLokaltNavkontor()
 
-        UpdateInfotrygdService().updateInfotrygd(receivedSykmelding,
+        UpdateInfotrygdService().updateInfotrygd(receivedSykmeldingMedTssId,
                 norskHelsenettClient,
                 validationResult,
                 infotrygdOppdateringProducer,
@@ -331,6 +341,15 @@ suspend fun handleMessage(
                 keyValue("latency", currentRequestLatency),
                 fields(loggingMeta))
     }
+}
+
+fun finnTssIdFraInfotrygdRespons(sisteSmPeriode: TypeSMinfo.Periode?, behandler: Behandler): String? {
+    if (sisteSmPeriode != null &&
+        sisteSmPeriode.legeNavn?.etternavn == behandler.etternavn &&
+        sisteSmPeriode.legeNavn?.fornavn == behandler.fornavn) {
+        return sisteSmPeriode.legeInstNr?.toString()
+    }
+    return null
 }
 
 fun ruleCheck(
