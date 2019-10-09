@@ -75,6 +75,7 @@ enum class ValidationRuleChain(
             { (sykmelding, infotrygdForesp) ->
                 sykmelding.perioder.sortedPeriodeTOMDate().lastOrNull() != null &&
                 infotrygdForesp.sMhistorikk?.sykmelding != null &&
+                sykmelding.perioder.sortedPeriodeTOMDate().lastOrNull() != null &&
                 sykmelding.perioder.sortedPeriodeTOMDate().last().isBefore(infotrygdForesp.sMhistorikk.sykmelding.sortedTOMDate().last())
     }),
 
