@@ -73,8 +73,6 @@ enum class ValidationRuleChain(
             "Hvis delvis sammenfallende sykmeldingsperiode er registrert i Infotrygd",
             "Hvis delvis sammenfallende sykmeldingsperiode er registrert i Infotrygd",
             { (sykmelding, infotrygdForesp) ->
-
-                infotrygdForesp.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()?.periode?.arbufoerTOM != null &&
                 infotrygdForesp.sMhistorikk.sykmelding.sortedTOMDate().lastOrNull() != null &&
                 infotrygdForesp.sMhistorikk?.sykmelding != null &&
                 sykmelding.perioder.sortedPeriodeTOMDate().lastOrNull() != null &&
@@ -378,10 +376,10 @@ fun List<TypeSMinfo>.sortedSMInfos(): List<TypeSMinfo> =
         sortedBy { it.periode.arbufoerTOM }
 
 fun List<TypeSMinfo>.sortedFOMDate(): List<LocalDate> =
-        map { it.periode.arbufoerFOM }.sorted()
+        map { it.periode.arbufoerFOM }.filterNotNull().sorted()
 
 fun List<TypeSMinfo>.sortedTOMDate(): List<LocalDate> =
-        map { it.periode.arbufoerTOM }.sorted()
+        map { it.periode.arbufoerTOM }.filterNotNull().sorted()
 
 fun List<TypeSMinfo.Historikk>.sortedSMinfoHistorikk(): List<TypeSMinfo.Historikk> =
         sortedBy { it.endringsDato }
