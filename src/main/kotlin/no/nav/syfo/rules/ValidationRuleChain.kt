@@ -73,8 +73,8 @@ enum class ValidationRuleChain(
             "Hvis delvis sammenfallende sykmeldingsperiode er registrert i Infotrygd",
             "Hvis delvis sammenfallende sykmeldingsperiode er registrert i Infotrygd",
             { (sykmelding, infotrygdForesp) ->
-                infotrygdForesp.sMhistorikk.sykmelding.sortedTOMDate().lastOrNull() != null &&
                 infotrygdForesp.sMhistorikk?.sykmelding != null &&
+                infotrygdForesp.sMhistorikk.sykmelding.sortedTOMDate().lastOrNull() != null &&
                 sykmelding.perioder.sortedPeriodeTOMDate().lastOrNull() != null &&
                 sykmelding.perioder.sortedPeriodeTOMDate().last().isBefore(infotrygdForesp.sMhistorikk.sykmelding.sortedTOMDate().last())
     }),

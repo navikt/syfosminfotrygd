@@ -189,6 +189,20 @@ object ValidationRuleChainSpek : Spek({
             ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
         }
 
+        it("Should check rule PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE, should not trigger rule") {
+
+            val infotrygdForespResponse = deafaultInfotrygdForesp()
+
+            val healthInformation = generateSykmelding(perioder = listOf(
+                generatePeriode(
+                    fom = LocalDate.of(2019, 1, 1),
+                    tom = LocalDate.of(2019, 1, 4)
+                )
+            ))
+
+            ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+        }
+
         it("Should check rule PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE, should NOT trigger rule, when same periode") {
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
