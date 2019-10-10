@@ -21,6 +21,7 @@ import no.nav.syfo.client.NorskHelsenettClient
 import no.nav.syfo.daysBetween
 import no.nav.syfo.get
 import no.nav.syfo.log
+import no.nav.syfo.metrics.MANUELLE_OPPGAVER_COUNTER
 import no.nav.syfo.metrics.RULE_HIT_STATUS_COUNTER
 import no.nav.syfo.model.HelsepersonellKategori
 import no.nav.syfo.model.ReceivedSykmelding
@@ -462,6 +463,7 @@ suspend fun sendInfotrygdOppdateringAndValidationResult(
                     prioritet = PrioritetType.NORM
                     metadata = mapOf()
                 }))
+        MANUELLE_OPPGAVER_COUNTER.inc()
         log.info("Message sendt to topic: {}, {}", oppgaveTopic, StructuredArguments.fields(loggingMeta))
     }
 }
