@@ -173,20 +173,34 @@ object ValidationRuleChainSpek : Spek({
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
                 sykmelding.add(TypeSMinfo().apply {
                     periode = TypeSMinfo.Periode().apply {
-                        arbufoerFOM = LocalDate.of(2018, 1, 2)
-                        arbufoerTOM = LocalDate.of(2018, 1, 8)
+                        arbufoerFOM = LocalDate.of(2019, 1, 1)
+                        arbufoerTOM = LocalDate.of(2019, 1, 5)
                     }
                 })
             }
 
             val healthInformation = generateSykmelding(perioder = listOf(
                     generatePeriode(
-                            fom = LocalDate.of(2018, 1, 1),
-                            tom = LocalDate.now().plusMonths(3).plusDays(1)
+                            fom = LocalDate.of(2019, 1, 1),
+                            tom = LocalDate.of(2019, 1, 4)
                     )
             ))
 
             ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
+        }
+
+        it("Should check rule PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE, should not trigger rule") {
+
+            val infotrygdForespResponse = deafaultInfotrygdForesp()
+
+            val healthInformation = generateSykmelding(perioder = listOf(
+                generatePeriode(
+                    fom = LocalDate.of(2019, 1, 1),
+                    tom = LocalDate.of(2019, 1, 4)
+                )
+            ))
+
+            ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
         }
 
         it("Should check rule PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE, should NOT trigger rule, when same periode") {
@@ -205,6 +219,28 @@ object ValidationRuleChainSpek : Spek({
                     generatePeriode(
                             fom = LocalDate.of(2018, 1, 2),
                             tom = LocalDate.of(2018, 1, 8)
+                    )
+            ))
+
+            ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+        }
+
+        it("Should check rule PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE, should NOT trigger rule, when same periode") {
+
+            val infotrygdForespResponse = deafaultInfotrygdForesp()
+            infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
+                sykmelding.add(TypeSMinfo().apply {
+                    periode = TypeSMinfo.Periode().apply {
+                        arbufoerFOM = LocalDate.of(2019, 1, 2)
+                        arbufoerTOM = LocalDate.of(2019, 1, 8)
+                    }
+                })
+            }
+
+            val healthInformation = generateSykmelding(perioder = listOf(
+                    generatePeriode(
+                            fom = LocalDate.of(2019, 1, 2),
+                            tom = LocalDate.of(2019, 1, 9)
                     )
             ))
 
@@ -233,48 +269,50 @@ object ValidationRuleChainSpek : Spek({
             ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
         }
 
-        it("Should check rule PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE, should trigger rule") {
+        it("should not get null") {
+            val sm = listOf(TypeSMinfo().apply {
+                periode = TypeSMinfo.Periode().apply {
+                    arbufoerTOM = LocalDate.of(2009, 1, 1)
+                }
+            }, TypeSMinfo().apply {
+                periode = TypeSMinfo.Periode().apply {
+                    arbufoerTOM = null
+                }
+            })
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
-                sykmelding.add(TypeSMinfo().apply {
-                    periode = TypeSMinfo.Periode().apply {
-                        arbufoerFOM = LocalDate.of(2018, 1, 2)
-                        arbufoerTOM = LocalDate.of(2018, 1, 10)
-                    }
-                })
+                sykmelding.addAll(sm)
             }
 
             val healthInformation = generateSykmelding(perioder = listOf(
                     generatePeriode(
-                            fom = LocalDate.of(2018, 1, 3),
-                            tom = LocalDate.of(2018, 1, 10)
+                            fom = LocalDate.of(2018, 1, 9),
+                            tom = LocalDate.of(2018, 1, 15)
                     )
             ))
 
-            ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
+            ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
         }
 
-        it("Should check rule PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE, should trigger rule") {
-
+        it("should check rule PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE, should not get null pointer") {
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
                 sykmelding.add(TypeSMinfo().apply {
                     periode = TypeSMinfo.Periode().apply {
-                        arbufoerFOM = LocalDate.of(2018, 1, 8)
-                        arbufoerTOM = LocalDate.of(2018, 1, 10)
+                        arbufoerTOM = null
                     }
                 })
             }
 
             val healthInformation = generateSykmelding(perioder = listOf(
                     generatePeriode(
-                            fom = LocalDate.of(2018, 1, 3),
-                            tom = LocalDate.of(2018, 1, 9)
+                            fom = LocalDate.of(2018, 1, 9),
+                            tom = LocalDate.of(2018, 1, 15)
                     )
             ))
 
-            ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
+            ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
         }
 
         it("Should check rule SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_1, should trigger rule") {

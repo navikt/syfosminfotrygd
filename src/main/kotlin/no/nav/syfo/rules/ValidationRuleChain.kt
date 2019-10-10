@@ -73,15 +73,10 @@ enum class ValidationRuleChain(
             "Hvis delvis sammenfallende sykmeldingsperiode er registrert i Infotrygd",
             "Hvis delvis sammenfallende sykmeldingsperiode er registrert i Infotrygd",
             { (sykmelding, infotrygdForesp) ->
-        sykmelding.perioder.any { sykmeldingPeriode ->
-            infotrygdForesp.sMhistorikk?.sykmelding != null && infotrygdForesp.sMhistorikk.sykmelding
-                    .any { infotrygdForespSykmelding ->
-                        (infotrygdForespSykmelding.periode?.arbufoerFOM != null && infotrygdForespSykmelding.periode?.arbufoerTOM != null &&
-                        !sammePeriode(infotrygdForespSykmelding.periode, sykmeldingPeriode)) &&
-                        (infotrygdForespSykmelding.periode?.arbufoerFOM != null && infotrygdForespSykmelding.periode.arbufoerFOM in sykmeldingPeriode.range() ||
-                        infotrygdForespSykmelding.periode?.arbufoerTOM != null && infotrygdForespSykmelding.periode.arbufoerTOM in sykmeldingPeriode.range())
-                    }
-        }
+                infotrygdForesp.sMhistorikk?.sykmelding != null &&
+                infotrygdForesp.sMhistorikk.sykmelding.sortedTOMDate().lastOrNull() != null &&
+                sykmelding.perioder.sortedPeriodeTOMDate().lastOrNull() != null &&
+                sykmelding.perioder.sortedPeriodeTOMDate().last().isBefore(infotrygdForesp.sMhistorikk.sykmelding.sortedTOMDate().last())
     }),
 
     @Description("Hvis sykmeldingen er forlengelse av registrert sykepengehistorikk fra annet kontor så medlingen gå til manuell behandling slik at saksbehandler kan registrere sykepengetilfellet på ny identdato og  send oppgave til Nav forvaltning for registrering av inntektsopplysninger")
@@ -381,7 +376,10 @@ fun List<TypeSMinfo>.sortedSMInfos(): List<TypeSMinfo> =
         sortedBy { it.periode.arbufoerTOM }
 
 fun List<TypeSMinfo>.sortedFOMDate(): List<LocalDate> =
-        map { it.periode.arbufoerFOM }.sorted()
+        map { it.periode.arbufoerFOM }.filterNotNull().sorted()
+
+fun List<TypeSMinfo>.sortedTOMDate(): List<LocalDate> =
+        map { it.periode.arbufoerTOM }.filterNotNull().sorted()
 
 fun List<TypeSMinfo.Historikk>.sortedSMinfoHistorikk(): List<TypeSMinfo.Historikk> =
         sortedBy { it.endringsDato }
