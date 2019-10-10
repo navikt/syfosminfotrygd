@@ -306,6 +306,7 @@ suspend fun handleMessage(
         if (receivedSykmelding.tssid.isNullOrBlank()) {
             val tssId = finnTssIdFraInfotrygdRespons(infotrygdForespResponse.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()?.periode,
                 receivedSykmelding.sykmelding.behandler)
+            log.info("Sykmelding mangler tssid, har hentet tssid $tssId fra infotrygd, {}", fields(loggingMeta))
             receivedSykmeldingMedTssId = receivedSykmelding.copy(tssid = tssId)
         }
 
