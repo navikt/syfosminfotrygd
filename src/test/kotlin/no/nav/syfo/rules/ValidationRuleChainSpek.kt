@@ -995,35 +995,7 @@ object ValidationRuleChainSpek : Spek({
             ValidationRuleChain.ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
         }
 
-        it("Should check rule UFOREGRADEN_ER_HOYERE_ENN_I_INFOTRYGD, should trigger rule") {
-            val healthInformation = generateSykmelding(perioder = listOf(
-                    generatePeriode(
-                            fom = LocalDate.of(2019, 6, 27),
-                            tom = LocalDate.of(2019, 6, 28),
-                            gradert = Gradert(
-                                    reisetilskudd = true,
-                                    grad = 90
-                            )
-                    )
-            ))
-
-            val infotrygdForespResponse = deafaultInfotrygdForesp()
-            infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
-                sykmelding.add(TypeSMinfo().apply {
-                    periode = TypeSMinfo.Periode().apply {
-                        arbufoerFOM = LocalDate.of(2019, 6, 26)
-                        ufoeregrad = 80.toBigInteger()
-                    }
-                })
-                status = StatusType().apply {
-                    kodeMelding = "01"
-                }
-            }
-
-            ValidationRuleChain.UFOREGRADEN_ER_HOYERE_ENN_I_INFOTRYGD(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
-        }
-
-        it("Should check rule UFOREGRADEN_ER_HOYERE_ENN_I_INFOTRYGD, should trigger rule") {
+        it("Should check rule UFOREGRADEN_ER_100_OG_HOYERE_ENN_I_INFOTRYGD, should trigger rule") {
             val healthInformation = generateSykmelding(perioder = listOf(
                     generatePeriode(
                             fom = LocalDate.of(2019, 6, 27),
@@ -1044,10 +1016,34 @@ object ValidationRuleChainSpek : Spek({
                 }
             }
 
-            ValidationRuleChain.UFOREGRADEN_ER_HOYERE_ENN_I_INFOTRYGD(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
+            ValidationRuleChain.UFOREGRADEN_ER_100_OG_HOYERE_ENN_I_INFOTRYGD(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
         }
 
-        it("Should check rule UFOREGRADEN_ER_HOYERE_ENN_I_INFOTRYGD, should NOT trigger rule") {
+        it("Should check rule UFOREGRADEN_ER_100_OG_HOYERE_ENN_I_INFOTRYGD, should trigger rule") {
+            val healthInformation = generateSykmelding(perioder = listOf(
+                    generatePeriode(
+                            fom = LocalDate.of(2019, 6, 27),
+                            tom = LocalDate.of(2019, 6, 28)
+                    )
+            ))
+
+            val infotrygdForespResponse = deafaultInfotrygdForesp()
+            infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
+                sykmelding.add(TypeSMinfo().apply {
+                    periode = TypeSMinfo.Periode().apply {
+                        arbufoerFOM = LocalDate.of(2019, 6, 26)
+                        ufoeregrad = 80.toBigInteger()
+                    }
+                })
+                status = StatusType().apply {
+                    kodeMelding = "01"
+                }
+            }
+
+            ValidationRuleChain.UFOREGRADEN_ER_100_OG_HOYERE_ENN_I_INFOTRYGD(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
+        }
+
+        it("Should check rule UFOREGRADEN_ER_100_OG_HOYERE_ENN_I_INFOTRYGD, should NOT trigger rule") {
             val healthInformation = generateSykmelding(perioder = listOf(
                     generatePeriode(
                             fom = LocalDate.of(2019, 6, 27),
@@ -1072,10 +1068,10 @@ object ValidationRuleChainSpek : Spek({
                 }
             }
 
-            ValidationRuleChain.UFOREGRADEN_ER_HOYERE_ENN_I_INFOTRYGD(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+            ValidationRuleChain.UFOREGRADEN_ER_100_OG_HOYERE_ENN_I_INFOTRYGD(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
         }
 
-        it("Should check rule UFOREGRADEN_ER_HOYERE_ENN_I_INFOTRYGD, should NOT trigger rule") {
+        it("Should check rule UFOREGRADEN_ER_100_OG_HOYERE_ENN_I_INFOTRYGD, should NOT trigger rule") {
             val healthInformation = generateSykmelding(perioder = listOf(
                     generatePeriode(
                             fom = LocalDate.of(2019, 6, 27),
@@ -1101,10 +1097,10 @@ object ValidationRuleChainSpek : Spek({
                 }
             }
 
-            ValidationRuleChain.UFOREGRADEN_ER_HOYERE_ENN_I_INFOTRYGD(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+            ValidationRuleChain.UFOREGRADEN_ER_100_OG_HOYERE_ENN_I_INFOTRYGD(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
         }
 
-        it("Should check rule UFOREGRADEN_ER_HOYERE_ENN_I_INFOTRYGD, should NOT trigger rule") {
+        it("Should check rule UFOREGRADEN_ER_100_OG_HOYERE_ENN_I_INFOTRYGD, should NOT trigger rule") {
             val healthInformation = generateSykmelding(perioder = listOf(
                     generatePeriode(
                             fom = LocalDate.of(2019, 6, 27),
@@ -1130,7 +1126,7 @@ object ValidationRuleChainSpek : Spek({
                 }
             }
 
-            ValidationRuleChain.UFOREGRADEN_ER_HOYERE_ENN_I_INFOTRYGD(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+            ValidationRuleChain.UFOREGRADEN_ER_100_OG_HOYERE_ENN_I_INFOTRYGD(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
         }
 
         it("Should check rule ERROR_FROM_IT_ARBEIDUFORETOM_MANGLER, should NOT trigger rule") {

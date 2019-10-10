@@ -186,7 +186,7 @@ enum class ValidationRuleChain(
     }),
 
     @Description("Hvis uføregrad er høyere enn det er i infotrygd går meldingen til manuell behandling")
-    UFOREGRADEN_ER_HOYERE_ENN_I_INFOTRYGD(
+    UFOREGRADEN_ER_100_OG_HOYERE_ENN_I_INFOTRYGD(
             1530,
             Status.MANUAL_PROCESSING,
             "Uføregrad er økt, må registreres manuelt i Infotrygd",
@@ -197,7 +197,8 @@ enum class ValidationRuleChain(
                         !sykmelding.perioder.isNullOrEmpty() &&
                         !forstegangsSykmelding(infotrygdForesp, sykmelding.perioder.sortedSykmeldingPeriodeFOMDate().first()) &&
                     sykmelding.perioder.any { periode ->
-                        infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.ufoeregrad < periode.findGrad().toBigInteger()
+                        infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.ufoeregrad < periode.findGrad().toBigInteger() &&
+                        periode.findGrad() == 100
                     }
             }),
 
