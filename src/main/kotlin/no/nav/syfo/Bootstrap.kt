@@ -345,8 +345,8 @@ suspend fun handleMessage(
 
 fun finnTssIdFraInfotrygdRespons(sisteSmPeriode: TypeSMinfo.Periode?, behandler: Behandler): String? {
     if (sisteSmPeriode != null &&
-        sisteSmPeriode.legeNavn?.etternavn == behandler.etternavn &&
-        sisteSmPeriode.legeNavn?.fornavn == behandler.fornavn) {
+        behandler.etternavn.equals(sisteSmPeriode.legeNavn?.etternavn, true) &&
+        behandler.fornavn.equals(sisteSmPeriode.legeNavn?.fornavn, true)) {
         return sisteSmPeriode.legeInstNr?.toString()
     }
     return null
