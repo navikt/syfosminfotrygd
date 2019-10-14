@@ -41,6 +41,8 @@ import org.apache.kafka.clients.producer.ProducerRecord
 import redis.clients.jedis.Jedis
 import redis.clients.jedis.exceptions.JedisConnectionException
 
+const val INFOTRYGD = "INFOTRYGD"
+
 @KtorExperimentalAPI
 class UpdateInfotrygdService {
 
@@ -152,8 +154,8 @@ suspend fun sendInfotrygdOppdateringAndValidationResult(
                 }
                 duplikatInfotrygdOppdatering -> log.warn("Melding market som infotrygd duplikat oppdaatering {}", StructuredArguments.fields(loggingMeta))
                 else -> {
-                    oppdaterRedis(personNrPasient, jedis, 4, loggingMeta)
-                    oppdaterRedis(sha256String, jedis, TimeUnit.DAYS.toSeconds(60).toInt(), loggingMeta)
+                    oppdaterRedis(personNrPasient, personNrPasient, jedis, 4, loggingMeta)
+                    oppdaterRedis(sha256String, sha256String, jedis, TimeUnit.DAYS.toSeconds(60).toInt(), loggingMeta)
                     sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, forsteFravaersDag), loggingMeta)
                     perioder.drop(1).forEach { periode ->
                         sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, periode, personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, forsteFravaersDag, 2), loggingMeta)
@@ -422,11 +424,21 @@ suspend fun sendInfotrygdOppdateringAndValidationResult(
 
             val duplikatInfotrygdOppdatering = erIRedis(sha256String, jedis)
 
+            if (errorFromInfotrygd(validationResult.ruleHits)) {
+                oppdaterAntallErrorIInfotrygd(INFOTRYGD, "0", jedis, TimeUnit.MINUTES.toSeconds(1).toInt(), loggingMeta)
+            }
+
+            val antallErrorFraInfotrygd = antallErrorIInfotrygd(INFOTRYGD, jedis, loggingMeta)
+
+            if (antallErrorFraInfotrygd > 50) {
+                throw RuntimeException("For mange error fra infotrygd på kort tid")
+            }
+
             if (duplikatInfotrygdOppdatering) {
                 log.warn("Melding market som infotrygd duplikat, ikkje opprett manuelloppgave {}", StructuredArguments.fields(loggingMeta))
             } else {
                 createTask(kafkaProducer, receivedSykmelding, validationResult, navKontorNr, loggingMeta, oppgaveTopic)
-                oppdaterRedis(sha256String, jedis, TimeUnit.DAYS.toSeconds(60).toInt(), loggingMeta)
+                oppdaterRedis(sha256String, sha256String, jedis, TimeUnit.DAYS.toSeconds(60).toInt(), loggingMeta)
             }
         } catch (connectionException: JedisConnectionException) {
             log.error("Fikk ikkje opprettet kontakt med redis, kaster exception", connectionException)
@@ -466,4 +478,13 @@ suspend fun sendInfotrygdOppdateringAndValidationResult(
         MANUELLE_OPPGAVER_COUNTER.inc()
         log.info("Message sendt to topic: {}, {}", oppgaveTopic, StructuredArguments.fields(loggingMeta))
     }
+
+    fun errorFromInfotrygd(rules: List<RuleInfo>): Boolean =
+        rules.any { ruleInfo ->
+            ruleInfo.ruleName.equals("ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING")
+            ruleInfo.ruleName.equals("ERROR_FROM_IT_SMHISTORIKK_STATUS_KODEMELDING")
+            ruleInfo.ruleName.equals("ERROR_FROM_IT_PARALELLYTELSER_STATUS_KODEMELDING")
+            ruleInfo.ruleName.equals("ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING")
+            ruleInfo.ruleName.equals("ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING")
+        }
 }

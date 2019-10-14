@@ -40,6 +40,7 @@ val smCommonVersion = "2019.09.25-05-44-08e26429f4e37cd57d99ba4d39fc74099a078b97
 val kontrollsystemblokk = "2019.07.29-02-53-86b22e73f7843e422ee500b486dac387a582f2d1"
 val javaxJaxwsApiVersion = "2.2.1"
 val jaxbTimeAdaptersVersion = "1.1.3"
+val embeddedRedisVersion = "0.6"
 
 plugins {
     java
@@ -129,6 +130,7 @@ dependencies {
     testImplementation ("no.nav:kafka-embedded-env:$kafkaEmbeddedVersion")
     testImplementation ("org.apache.activemq:artemis-server:$artemisVersion")
     testImplementation ("org.apache.activemq:artemis-jms-client:$artemisVersion")
+    testImplementation ("com.github.kstyrc:embedded-redis:$embeddedRedisVersion")
 
     testImplementation ("org.spekframework.spek2:spek-dsl-jvm:$spekVersion") {
         exclude(group = "org.jetbrains.kotlin")
