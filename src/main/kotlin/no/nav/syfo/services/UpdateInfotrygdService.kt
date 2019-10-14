@@ -430,7 +430,7 @@ suspend fun sendInfotrygdOppdateringAndValidationResult(
 
             val antallErrorFraInfotrygd = antallErrorIInfotrygd(INFOTRYGD, jedis, loggingMeta)
 
-            if (antallErrorFraInfotrygd > 50) {
+            if (antallErrorFraInfotrygd > 3) {
                 throw RuntimeException("For mange error fra infotrygd på kort tid")
             }
 
