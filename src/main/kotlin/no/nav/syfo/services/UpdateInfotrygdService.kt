@@ -425,7 +425,7 @@ suspend fun sendInfotrygdOppdateringAndValidationResult(
             val duplikatInfotrygdOppdatering = erIRedis(sha256String, jedis)
 
             if (errorFromInfotrygd(validationResult.ruleHits)) {
-                oppdaterAntallErrorIInfotrygd(INFOTRYGD, "0", jedis, TimeUnit.MINUTES.toSeconds(1).toInt(), loggingMeta)
+                oppdaterAntallErrorIInfotrygd(INFOTRYGD, "1", jedis, TimeUnit.MINUTES.toSeconds(1).toInt(), loggingMeta)
             }
 
             val antallErrorFraInfotrygd = antallErrorIInfotrygd(INFOTRYGD, jedis, loggingMeta)
