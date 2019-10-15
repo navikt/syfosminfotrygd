@@ -16,6 +16,7 @@ import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.helse.sm2013.KontrollSystemBlokk
 import no.nav.helse.sm2013.KontrollsystemBlokkType
 import no.nav.syfo.InfotrygdForespAndHealthInformation
+import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.client.Behandler
 import no.nav.syfo.client.NorskHelsenettClient
 import no.nav.syfo.daysBetween
@@ -63,7 +64,8 @@ class UpdateInfotrygdService {
         infotrygdRetryTopic: String,
         oppgaveTopic: String,
         kafkaproducervalidationResult: KafkaProducer<String, ValidationResult>,
-        sm2013BehandlingsUtfallToipic: String
+        sm2013BehandlingsUtfallToipic: String,
+        applicationState: ApplicationState
     ) {
         val helsepersonell = norskHelsenettClient.finnBehandler(receivedSykmelding.personNrLege, receivedSykmelding.msgId)
 
@@ -75,7 +77,7 @@ class UpdateInfotrygdService {
                                 navKontorManuellOppgave, loggingMeta, oppgaveTopic, sm2013BehandlingsUtfallToipic,
                                 kafkaproducervalidationResult,
                                 InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
-                                helsepersonellKategoriVerdi, jedis)
+                                helsepersonellKategoriVerdi, jedis, applicationState)
                     else -> sendInfotrygdOppdateringAndValidationResult(
                             infotrygdOppdateringProducer,
                             session,
@@ -109,7 +111,7 @@ class UpdateInfotrygdService {
                 produceManualTaskAndSendValidationResults(kafkaproducerCreateTask, receivedSykmelding, validationResultBehandler,
                         navKontorManuellOppgave, loggingMeta, oppgaveTopic, sm2013BehandlingsUtfallToipic, kafkaproducervalidationResult,
                         InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
-                        HelsepersonellKategori.LEGE.verdi, jedis)
+                        HelsepersonellKategori.LEGE.verdi, jedis, applicationState)
             }
     }
 
@@ -403,7 +405,8 @@ suspend fun sendInfotrygdOppdateringAndValidationResult(
         kafkaproducervalidationResult: KafkaProducer<String, ValidationResult>,
         itfh: InfotrygdForespAndHealthInformation,
         helsepersonellKategoriVerdi: String,
-        jedis: Jedis
+        jedis: Jedis,
+        applicationState: ApplicationState
     ) {
         sendRuleCheckValidationResult(receivedSykmelding, kafkaproducervalidationResult,
                 validationResult, sm2013BehandlingsUtfallToipic, loggingMeta)
@@ -431,7 +434,7 @@ suspend fun sendInfotrygdOppdateringAndValidationResult(
             val antallErrorFraInfotrygd = antallErrorIInfotrygd(INFOTRYGD, jedis, loggingMeta)
 
             if (antallErrorFraInfotrygd > 3) {
-                throw RuntimeException("For mange error fra infotrygd på kort tid")
+                applicationState.ready = false
             }
 
             if (duplikatInfotrygdOppdatering) {

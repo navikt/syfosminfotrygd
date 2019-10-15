@@ -259,7 +259,7 @@ suspend fun blockingApplicationLogic(
                     infotrygdOppdateringProducer, infotrygdSporringProducer,
                     session, personV3, arbeidsfordelingV1, sm2013BehandlingsUtfallToipic, norskHelsenettClient,
                     smIkkeOkQueue, loggingMeta, norg2Client, jedis, kafkaproducerreceivedSykmelding,
-                    infotrygdRetryTopic, oppgaveTopic)
+                    infotrygdRetryTopic, oppgaveTopic, applicationState)
         }
         delay(100)
     }
@@ -283,7 +283,8 @@ suspend fun handleMessage(
     jedis: Jedis,
     kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
     infotrygdRetryTopic: String,
-    oppgaveTopic: String
+    oppgaveTopic: String,
+    applicationState: ApplicationState
 ) {
     wrapExceptions(loggingMeta) {
         log.info("Received a SM2013, {}", fields(loggingMeta))
@@ -333,7 +334,8 @@ suspend fun handleMessage(
                 infotrygdRetryTopic,
                 oppgaveTopic,
                 kafkaproducervalidationResult,
-                sm2013BehandlingsUtfallToipic
+                sm2013BehandlingsUtfallToipic,
+                applicationState
         )
 
         val currentRequestLatency = requestLatency.observeDuration()
