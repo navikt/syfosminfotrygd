@@ -185,23 +185,6 @@ enum class ValidationRuleChain(
                 sykmelding.perioder.sortedPeriodeTOMDate().last().isBefore(infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.friskmeldtDato)
     }),
 
-    @Description("Hvis uføregrad er høyere enn det er i infotrygd går meldingen til manuell behandling")
-    UFOREGRADEN_ER_100_OG_HOYERE_ENN_I_INFOTRYGD(
-            1530,
-            Status.MANUAL_PROCESSING,
-            "Uføregrad er økt, må registreres manuelt i Infotrygd",
-            "Uføregrad er økt, må registreres manuelt i Infotrygd",
-            { (sykmelding, infotrygdForesp) ->
-                infotrygdForesp.sMhistorikk != null &&
-                infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().lastOrNull() != null &&
-                        !sykmelding.perioder.isNullOrEmpty() &&
-                        !forstegangsSykmelding(infotrygdForesp, sykmelding.perioder.sortedSykmeldingPeriodeFOMDate().first()) &&
-                    sykmelding.perioder.any { periode ->
-                        infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.ufoeregrad < periode.findGrad().toBigInteger() &&
-                        periode.findGrad() == 100
-                    }
-            }),
-
     @Description("Hvis forlengelse utover registrert tiltak FA tiltak")
     EXTANION_OVER_FA(
             1544,
