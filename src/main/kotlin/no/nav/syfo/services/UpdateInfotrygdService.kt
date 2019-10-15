@@ -433,8 +433,8 @@ suspend fun sendInfotrygdOppdateringAndValidationResult(
 
             val antallErrorFraInfotrygd = antallErrorIInfotrygd(INFOTRYGD, jedis, loggingMeta)
 
-            if (antallErrorFraInfotrygd > 3) {
-                log.info("Setter applicationState.ready til false")
+            if (antallErrorFraInfotrygd > 50) {
+                log.error("Setter applicationState.ready til false")
                 applicationState.ready = false
             }
 
