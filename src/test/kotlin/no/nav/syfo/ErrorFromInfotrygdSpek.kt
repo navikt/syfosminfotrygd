@@ -31,7 +31,7 @@ object ErrorFromInfotrygdSpek : Spek({
             updateInfotrygdService.errorFromInfotrygd(rules) shouldEqual true
         }
 
-        it("Should set errorFromInfotrygd to true") {
+        it("Should set errorFromInfotrygd to false") {
             val updateInfotrygdService = UpdateInfotrygdService()
 
             val rules = listOf(RuleInfo(
@@ -47,6 +47,24 @@ object ErrorFromInfotrygdSpek : Spek({
             )
 
             updateInfotrygdService.errorFromInfotrygd(rules) shouldEqual false
+        }
+
+        it("Should set errorFromInfotrygd to true") {
+            val updateInfotrygdService = UpdateInfotrygdService()
+
+            val rules = listOf(RuleInfo(
+                    ruleName = ValidationRuleChain.TRAVEL_SUBSIDY_SPECIFIED.name,
+                    messageForSender = ValidationRuleChain.TRAVEL_SUBSIDY_SPECIFIED.messageForSender,
+                    messageForUser = ValidationRuleChain.TRAVEL_SUBSIDY_SPECIFIED.messageForUser,
+                    ruleStatus = Status.MANUAL_PROCESSING),
+                    RuleInfo(
+                            ruleName = ValidationRuleChain.ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING.name,
+                            messageForSender = ValidationRuleChain.ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING.messageForSender,
+                            messageForUser = ValidationRuleChain.ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING.messageForUser,
+                            ruleStatus = Status.MANUAL_PROCESSING)
+            )
+
+            updateInfotrygdService.errorFromInfotrygd(rules) shouldEqual true
         }
     }
 })

@@ -485,10 +485,10 @@ suspend fun sendInfotrygdOppdateringAndValidationResult(
 
     fun errorFromInfotrygd(rules: List<RuleInfo>): Boolean =
         rules.any { ruleInfo ->
-            ruleInfo.ruleName.equals("ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING")
-            ruleInfo.ruleName.equals("ERROR_FROM_IT_SMHISTORIKK_STATUS_KODEMELDING")
-            ruleInfo.ruleName.equals("ERROR_FROM_IT_PARALELLYTELSER_STATUS_KODEMELDING")
-            ruleInfo.ruleName.equals("ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING")
+            ruleInfo.ruleName.equals("ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING") ||
+            ruleInfo.ruleName.equals("ERROR_FROM_IT_SMHISTORIKK_STATUS_KODEMELDING") ||
+            ruleInfo.ruleName.equals("ERROR_FROM_IT_PARALELLYTELSER_STATUS_KODEMELDING") ||
+            ruleInfo.ruleName.equals("ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING") ||
             ruleInfo.ruleName.equals("ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING")
         }
 }
