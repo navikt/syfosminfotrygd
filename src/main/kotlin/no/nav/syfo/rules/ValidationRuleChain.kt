@@ -273,8 +273,12 @@ enum class ValidationRuleChain(
             "Hvis maks sykepenger er utbetalt",
             "Hvis maks sykepenger er utbetalt",
             { (sykmelding, infotrygdForesp) ->
-        infotrygdForesp.sMhistorikk?.sykmelding != null &&
-                infotrygdForesp.sMhistorikk.sykmelding.findOverlapping(sykmelding.perioder.toRange())?.periode?.stans.equals("MAX")
+                sykmelding.perioder.any {
+                    !infotrygdForesp.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()?.periode?.stans.isNullOrBlank() &&
+                        infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.stans == "MAX" &&
+                        infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.arbufoerTOM != null &&
+                        it.fom.isBefore(infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.arbufoerTOM.plusMonths(6))
+                }
     }),
 
     @Description("Infotrygd returnerte en feil, vi kan ikke automatisk oppdatere Infotrygd")

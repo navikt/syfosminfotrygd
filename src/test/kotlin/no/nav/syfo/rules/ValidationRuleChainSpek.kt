@@ -759,7 +759,28 @@ object ValidationRuleChainSpek : Spek({
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
                 sykmelding.add(TypeSMinfo().apply {
                     periode = TypeSMinfo.Periode().apply {
-                        arbufoerFOM = LocalDate.of(2017, 2, 2)
+                        arbufoerTOM = LocalDate.of(2017, 2, 2)
+                        stans = "MAX"
+                    }
+                })
+            }
+
+            ValidationRuleChain.MAX_SICK_LEAVE_PAYOUT(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
+        }
+
+        it("Should check rule MAX_SICK_LEAVE_PAYOUT, should trigger rule") {
+
+            val healthInformation = generateSykmelding(perioder = listOf(
+                generatePeriode(
+                    fom = LocalDate.of(2017, 8, 1),
+                    tom = LocalDate.of(2017, 8, 10))
+            ))
+
+            val infotrygdForespResponse = deafaultInfotrygdForesp()
+            infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
+                sykmelding.add(TypeSMinfo().apply {
+                    periode = TypeSMinfo.Periode().apply {
+                        arbufoerTOM = LocalDate.of(2017, 2, 2)
                         stans = "MAX"
                     }
                 })
@@ -781,14 +802,14 @@ object ValidationRuleChainSpek : Spek({
                 sykmelding.add(TypeSMinfo().apply {
                     periode = TypeSMinfo.Periode().apply {
                         arbufoerFOM = LocalDate.of(2017, 2, 2)
-                        arbufoerFOM = LocalDate.of(2017, 2, 10)
+                        arbufoerTOM = LocalDate.of(2017, 2, 10)
                     }
                 })
 
                 sykmelding.add(TypeSMinfo().apply {
                     periode = TypeSMinfo.Periode().apply {
                         arbufoerFOM = LocalDate.of(2016, 2, 2)
-                        arbufoerFOM = LocalDate.of(2016, 2, 10)
+                        arbufoerTOM = LocalDate.of(2016, 2, 10)
                         stans = "MAX"
                     }
                 })
