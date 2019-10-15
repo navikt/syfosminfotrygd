@@ -14,9 +14,21 @@ fun erIRedis(redisKey: String, jedis: Jedis): Boolean =
             else -> true
         }
 
-fun oppdaterRedis(redisKey: String, jedis: Jedis, sekunder: Int, loggingMeta: LoggingMeta) {
+fun oppdaterRedis(redisKey: String, redisValue: String, jedis: Jedis, sekunder: Int, loggingMeta: LoggingMeta) {
             log.info("Oppdaterer redis {}", fields(loggingMeta))
-            jedis.setex(redisKey, sekunder, redisKey)
+            jedis.setex(redisKey, sekunder, redisValue)
+}
+
+fun oppdaterAntallErrorIInfotrygd(redisKey: String, redisValue: String, jedis: Jedis, sekunder: Int, loggingMeta: LoggingMeta) {
+    when (jedis.get(redisKey)) {
+        null -> oppdaterRedis(redisKey, redisValue, jedis, sekunder, loggingMeta)
+        else -> jedis.incr(redisKey)
+    }
+}
+
+fun antallErrorIInfotrygd(redisKey: String, jedis: Jedis, loggingMeta: LoggingMeta): Int {
+    log.info("Henter ut antall infotrygd error i redis {}", fields(loggingMeta))
+    return jedis.get(redisKey)?.toInt() ?: 0
 }
 
 fun sha256hashstring(infotrygdblokk: KontrollsystemBlokkType.InfotrygdBlokk): String =
