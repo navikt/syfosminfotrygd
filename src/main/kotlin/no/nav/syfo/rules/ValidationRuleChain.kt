@@ -137,7 +137,7 @@ enum class ValidationRuleChain(
         infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.hovedDiagnosekode != "000" &&
         infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.friskKode != "H"
     }),
-
+/* TODO fjerne regel viss den ikkje er nødvendig
     @Description("Hvis ny friskmeldingsdato er mindre enn arbuforTOM registrert i Infotrygd")
     NEW_CLEAN_BILL_DATE_BEFORE_ARBUFORTOM(
             1516,
@@ -153,6 +153,7 @@ enum class ValidationRuleChain(
                 sykmelding.perioder.sortedPeriodeTOMDate().last() == (infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.arbufoerTOM) ||
                 sykmelding.perioder.sortedPeriodeTOMDate().last().isBefore(infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.arbufoerTOM))
     }),
+ */
 
     @Description("Hvis ny friskmeldingsdato er mindre enn utbetalingTOM registrert i Infotrygd")
     NEW_CLEAN_BILL_DATE_BEFORE_PAYOUT(

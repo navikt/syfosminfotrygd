@@ -449,6 +449,7 @@ object ValidationRuleChainSpek : Spek({
             ValidationRuleChain.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_3(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
         }
 
+        /* TODO fjerne regel viss den ikkje er nødvendig
         it("Should check rule NEW_CLEAN_BILL_DATE_BEFORE_ARBUFORTOM, should trigger rule") {
             val healthInformation = generateSykmelding(perioder = listOf(
                     generatePeriode(
@@ -487,6 +488,7 @@ object ValidationRuleChainSpek : Spek({
 
             ValidationRuleChain.NEW_CLEAN_BILL_DATE_BEFORE_ARBUFORTOM(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
         }
+         */
 
         it("Should check rule NEW_CLEAN_BILL_DATE_BEFORE_PAYOUT, should trigger rule") {
             val healthInformation = generateSykmelding(perioder = listOf(
