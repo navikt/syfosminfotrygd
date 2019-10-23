@@ -441,11 +441,11 @@ suspend fun sendInfotrygdOppdateringAndValidationResult(
                 applicationState.ready = false
             }
 
-            val dropInfotrygdUpdate = dropInfotrygdUpdate(receivedSykmelding, validationResult)
+            val skalIkkeOppdatereInfotrygd = skalIkkeOppdatereInfotrygd(receivedSykmelding, validationResult)
 
             if (duplikatInfotrygdOppdatering) {
                 log.warn("Melding market som infotrygd duplikat, ikkje opprett manuelloppgave {}", StructuredArguments.fields(loggingMeta))
-            } else if (dropInfotrygdUpdate) {
+            } else if (skalIkkeOppdatereInfotrygd) {
                 log.warn("Melding market som unødvendig å oppdatere infotrygd, ikkje opprett manuelloppgave {}", StructuredArguments.fields(loggingMeta))
             } else {
                 createTask(kafkaProducer, receivedSykmelding, validationResult, navKontorNr, loggingMeta, oppgaveTopic)
@@ -499,11 +499,11 @@ suspend fun sendInfotrygdOppdateringAndValidationResult(
             ruleInfo.ruleName.equals("ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING")
         }
 
-    fun dropInfotrygdUpdate(
+    fun skalIkkeOppdatereInfotrygd(
         receivedSykmelding: ReceivedSykmelding,
         validationResult: ValidationResult
     ): Boolean =
-            validationResult.ruleHits.any {
+            validationResult.ruleHits.isNotEmpty() && validationResult.ruleHits.any {
                 it.ruleName == ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE.name
-            } && (receivedSykmelding.sykmelding.perioder.sortedPeriodeFOMDate().last()..receivedSykmelding.sykmelding.perioder.sortedPeriodeTOMDate().last()).daysBetween() <= 3
+            } && receivedSykmelding.sykmelding.perioder.sortedPeriodeFOMDate().lastOrNull() != null && receivedSykmelding.sykmelding.perioder.sortedPeriodeTOMDate().lastOrNull() != null && (receivedSykmelding.sykmelding.perioder.sortedPeriodeFOMDate().last()..receivedSykmelding.sykmelding.perioder.sortedPeriodeTOMDate().last()).daysBetween() <= 3
 }

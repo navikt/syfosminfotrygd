@@ -12,12 +12,12 @@ import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
 @KtorExperimentalAPI
-object DropInfotrygdUpdateSpek : Spek({
+object SkalIkkeOppdatereInfotrygdSpek : Spek({
 
-    describe("Testing dropping infotrygd update") {
+    describe("Testing av metoden skalIkkeOppdatereInfotrygd") {
         val updateInfotrygdService = UpdateInfotrygdService()
 
-        it("Should dropinfotrygd update to true") {
+        it("Skal ikkje oppdatere infotrygd, pga lik eller under 3 dager i sykmeldings peridene totalt") {
             val validationResult = ValidationResult(status = Status.MANUAL_PROCESSING, ruleHits = listOf(
                     RuleInfo(ruleName = ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE.name,
                             messageForUser = "",
@@ -39,10 +39,10 @@ object DropInfotrygdUpdateSpek : Spek({
             )
             )
 
-            updateInfotrygdService.dropInfotrygdUpdate(receivedSykmelding, validationResult) shouldEqual true
+            updateInfotrygdService.skalIkkeOppdatereInfotrygd(receivedSykmelding, validationResult) shouldEqual true
         }
 
-        it("Should dropinfotrygd update to false") {
+        it("Skal oppdatere infotrygd, pga større enn 3 dager i sykmeldings peridene totalt") {
 
             val validationResult = ValidationResult(status = Status.MANUAL_PROCESSING, ruleHits = listOf(
                     RuleInfo(ruleName = ValidationRuleChain.PERIOD_IS_AF.name,
@@ -65,10 +65,10 @@ object DropInfotrygdUpdateSpek : Spek({
             )
             )
 
-            updateInfotrygdService.dropInfotrygdUpdate(receivedSykmelding, validationResult) shouldEqual false
+            updateInfotrygdService.skalIkkeOppdatereInfotrygd(receivedSykmelding, validationResult) shouldEqual false
         }
 
-        it("Should dropinfotrygd update to false") {
+        it("Skal oppdatere infotrygd, pga større enn 3 dager i sykmeldings peridene totalt") {
 
             val validationResult = ValidationResult(status = Status.MANUAL_PROCESSING, ruleHits = listOf(
                     RuleInfo(ruleName = ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE.name,
@@ -91,7 +91,7 @@ object DropInfotrygdUpdateSpek : Spek({
                 )
             )
 
-            updateInfotrygdService.dropInfotrygdUpdate(receivedSykmelding, validationResult) shouldEqual false
+            updateInfotrygdService.skalIkkeOppdatereInfotrygd(receivedSykmelding, validationResult) shouldEqual false
         }
     }
 })
