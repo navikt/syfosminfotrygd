@@ -1,10 +1,8 @@
 package no.nav.syfo.rules
 
-import java.time.DayOfWeek
 import java.time.LocalDate
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.infotrygd.foresp.TypeSMinfo
-import no.nav.syfo.daysBetween
 import no.nav.syfo.model.Periode
 import no.nav.syfo.model.Status
 
@@ -137,23 +135,6 @@ enum class ValidationRuleChain(
         infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.hovedDiagnosekode != "000" &&
         infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.friskKode != "H"
     }),
-/* TODO fjerne regel viss den ikkje er nødvendig
-    @Description("Hvis ny friskmeldingsdato er mindre enn arbuforTOM registrert i Infotrygd")
-    NEW_CLEAN_BILL_DATE_BEFORE_ARBUFORTOM(
-            1516,
-            Status.MANUAL_PROCESSING,
-            "Hvis ny friskmeldingsdato er mindre enn arbuforTOM registrert i Infotrygd",
-            "Hvis ny friskmeldingsdato er mindre enn arbuforTOM registrert i Infotrygd",
-            { (sykmelding, infotrygdForesp) ->
-                sykmelding.prognose?.arbeidsforEtterPeriode != null &&
-                sykmelding.prognose?.arbeidsforEtterPeriode ?: false &&
-                infotrygdForesp.sMhistorikk?.sykmelding != null &&
-                infotrygdForesp.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()?.periode?.arbufoerTOM != null &&
-                sykmelding.perioder.sortedPeriodeTOMDate().lastOrNull() != null && (
-                sykmelding.perioder.sortedPeriodeTOMDate().last() == (infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.arbufoerTOM) ||
-                sykmelding.perioder.sortedPeriodeTOMDate().last().isBefore(infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.arbufoerTOM))
-    }),
- */
 
     @Description("Hvis ny friskmeldingsdato er mindre enn utbetalingTOM registrert i Infotrygd")
     NEW_CLEAN_BILL_DATE_BEFORE_PAYOUT(
@@ -332,34 +313,11 @@ enum class ValidationRuleChain(
             }),
 }
 
-private fun List<Periode>.toRange(): ClosedRange<LocalDate> =
-        map { it.fom }.sorted().first().rangeTo(map { it.tom }.sorted().first())
-
-private fun List<TypeSMinfo>.findOverlapping(smRange: ClosedRange<LocalDate>): TypeSMinfo? =
-        firstOrNull { // Whenever the start of the period is the same
-            smRange.start == it.periode.arbufoerFOM
-        } ?: firstOrNull { // Whenever it starts before and overlaps the period
-            it.periode.arbufoerFOM < smRange.start && it.periode.arbufoerTOM != null && it.periode.arbufoerTOM >= smRange.start
-        } ?: firstOrNull { // Whenever the period is within the range
-            it.periode.arbufoerFOM > smRange.start && it.periode.arbufoerTOM != null && it.periode.arbufoerTOM <= smRange.endInclusive
-        } ?: firstOrNull { // Whenever the period is within the range
-            it.periode.arbufoerFOM > smRange.start
-        } ?: sortedBy { it.periode.arbufoerFOM }.firstOrNull { // Find the first period that is an extension from the next day
-            it.periode.arbufoerTOM != null && it.periode.arbufoerTOM.plusDays(1) == smRange.start
-        } ?: firstOrNull { // Whenever its an extension from the next day over a weekend
-            it.periode.arbufoerFOM != null && it.periode.arbufoerTOM != null && it.periode.arbufoerFOM.dayOfWeek in arrayOf(DayOfWeek.FRIDAY, DayOfWeek.SATURDAY, DayOfWeek.SUNDAY) &&
-                    smRange.start.dayOfWeek in arrayOf(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY, DayOfWeek.MONDAY) &&
-                    it.periode.arbufoerTOM.plusDays(3) >= smRange.start
-        }
-
 fun List<Periode>.sortedPeriodeTOMDate(): List<LocalDate> =
         map { it.tom }.sorted()
 
 fun List<Periode>.sortedPeriodeFOMDate(): List<LocalDate> =
         map { it.fom }.sorted()
-
-fun List<Periode>.sortedSykmeldingPeriodeFOMDate(): List<Periode> =
-        sortedBy { it.fom }
 
 fun List<TypeSMinfo>.sortedSMInfos(): List<TypeSMinfo> =
         sortedBy { it.periode.arbufoerTOM }
@@ -374,26 +332,3 @@ fun List<TypeSMinfo.Historikk>.sortedSMinfoHistorikk(): List<TypeSMinfo.Historik
         sortedBy { it.endringsDato }
 
 fun Periode.range(): ClosedRange<LocalDate> = fom.rangeTo(tom)
-
-fun TypeSMinfo.Historikk.Tilltak.range(): ClosedRange<LocalDate> = fom.rangeTo(tom)
-
-fun Periode.findGrad(): Int =
-        if (gradert?.grad != null) {
-            gradert!!.grad
-        } else {
-            100
-        }
-
-fun forstegangsSykmelding(infotrygdForesp: InfotrygdForesp, periode: Periode): Boolean {
-    val typeSMinfo = infotrygdForesp.sMhistorikk?.sykmelding
-            ?.sortedSMInfos()
-            ?.lastOrNull()
-            ?: return true
-
-    return (infotrygdForesp.sMhistorikk.status.kodeMelding == "04" ||
-            (typeSMinfo.periode.arbufoerTOM != null && (typeSMinfo.periode.arbufoerTOM..periode.fom).daysBetween() > 1))
-}
-
-fun sammePeriode(infotrygdPeriode: TypeSMinfo.Periode, sykemldingsPeriode: Periode): Boolean {
-    return infotrygdPeriode.arbufoerFOM == sykemldingsPeriode.fom && infotrygdPeriode.arbufoerTOM == sykemldingsPeriode.tom
-}
