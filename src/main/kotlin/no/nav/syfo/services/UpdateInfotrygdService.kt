@@ -29,6 +29,9 @@ import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.model.RuleInfo
 import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
+import no.nav.syfo.rules.ValidationRuleChain
+import no.nav.syfo.rules.sortedPeriodeFOMDate
+import no.nav.syfo.rules.sortedPeriodeTOMDate
 import no.nav.syfo.rules.sortedSMInfos
 import no.nav.syfo.sak.avro.PrioritetType
 import no.nav.syfo.sak.avro.ProduceTask
@@ -438,8 +441,12 @@ suspend fun sendInfotrygdOppdateringAndValidationResult(
                 applicationState.ready = false
             }
 
+            val skalIkkeOppdatereInfotrygd = skalIkkeOppdatereInfotrygd(receivedSykmelding, validationResult)
+
             if (duplikatInfotrygdOppdatering) {
                 log.warn("Melding market som infotrygd duplikat, ikkje opprett manuelloppgave {}", StructuredArguments.fields(loggingMeta))
+            } else if (skalIkkeOppdatereInfotrygd) {
+                log.warn("Melding market som unødvendig å oppdatere infotrygd, ikkje opprett manuelloppgave {}", StructuredArguments.fields(loggingMeta))
             } else {
                 createTask(kafkaProducer, receivedSykmelding, validationResult, navKontorNr, loggingMeta, oppgaveTopic)
                 oppdaterRedis(sha256String, sha256String, jedis, TimeUnit.DAYS.toSeconds(60).toInt(), loggingMeta)
@@ -491,4 +498,12 @@ suspend fun sendInfotrygdOppdateringAndValidationResult(
             ruleInfo.ruleName.equals("ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING") ||
             ruleInfo.ruleName.equals("ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING")
         }
+
+    fun skalIkkeOppdatereInfotrygd(
+        receivedSykmelding: ReceivedSykmelding,
+        validationResult: ValidationResult
+    ): Boolean =
+            validationResult.ruleHits.isNotEmpty() && validationResult.ruleHits.any {
+                it.ruleName == ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE.name
+            } && receivedSykmelding.sykmelding.perioder.sortedPeriodeFOMDate().lastOrNull() != null && receivedSykmelding.sykmelding.perioder.sortedPeriodeTOMDate().lastOrNull() != null && (receivedSykmelding.sykmelding.perioder.sortedPeriodeFOMDate().last()..receivedSykmelding.sykmelding.perioder.sortedPeriodeTOMDate().last()).daysBetween() <= 3
 }
