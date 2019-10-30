@@ -111,6 +111,6 @@ class FindNAVKontorService @KtorExperimentalAPI constructor(
                                     .withType(Personidenter().withValue("FNR")))))
                 }
             } catch (hentGeografiskTilknytningPersonIkkeFunnet: HentGeografiskTilknytningPersonIkkeFunnet) {
-                 null
+                null
             }
 }
