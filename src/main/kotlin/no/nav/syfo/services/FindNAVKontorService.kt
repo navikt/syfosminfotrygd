@@ -19,6 +19,7 @@ import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.Oppgavetyper
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.informasjon.Tema
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.meldinger.FinnBehandlendeEnhetListeRequest
 import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.meldinger.FinnBehandlendeEnhetListeResponse
+import no.nav.tjeneste.virksomhet.person.v3.binding.HentGeografiskTilknytningPersonIkkeFunnet
 import no.nav.tjeneste.virksomhet.person.v3.binding.PersonV3
 import no.nav.tjeneste.virksomhet.person.v3.informasjon.GeografiskTilknytning
 import no.nav.tjeneste.virksomhet.person.v3.informasjon.NorskIdent
@@ -39,8 +40,8 @@ class FindNAVKontorService @KtorExperimentalAPI constructor(
     suspend fun finnBehandlendeEnhet(): String {
         val geografiskTilknytning = fetchGeografiskTilknytning(personV3, receivedSykmelding)
         val patientDiskresjonsKode = fetchDiskresjonsKode(personV3, receivedSykmelding)
-        val finnBehandlendeEnhetListeResponse = fetchBehandlendeEnhet(arbeidsfordelingV1, geografiskTilknytning.geografiskTilknytning, patientDiskresjonsKode)
-        if (finnBehandlendeEnhetListeResponse?.behandlendeEnhetListe?.firstOrNull()?.enhetId == null) {
+        val finnBehandlendeEnhetListeResponse = fetchBehandlendeEnhet(arbeidsfordelingV1, geografiskTilknytning?.geografiskTilknytning, patientDiskresjonsKode)
+        if (geografiskTilknytning == null || finnBehandlendeEnhetListeResponse?.behandlendeEnhetListe?.firstOrNull()?.enhetId == null) {
             log.warn("arbeidsfordeling fant ingen nav-enheter {}", fields(loggingMeta))
         }
         return finnBehandlendeEnhetListeResponse?.behandlendeEnhetListe?.firstOrNull()?.enhetId ?: NAV_OPPFOLGING_UTLAND_KONTOR_NR
@@ -50,7 +51,7 @@ class FindNAVKontorService @KtorExperimentalAPI constructor(
     suspend fun finnLokaltNavkontor(): String {
         val geografiskTilknytning = fetchGeografiskTilknytning(personV3, receivedSykmelding)
         val patientDiskresjonsKode = fetchDiskresjonsKode(personV3, receivedSykmelding)
-        return if (geografiskTilknytning.geografiskTilknytning?.geografiskTilknytning.isNullOrEmpty()) {
+        return if (geografiskTilknytning == null || geografiskTilknytning.geografiskTilknytning?.geografiskTilknytning.isNullOrEmpty()) {
             log.warn("GeografiskTilknytning er tomt eller null, benytter nav oppfolings utland nr:$NAV_OPPFOLGING_UTLAND_KONTOR_NR,  {}", fields(loggingMeta))
             NAV_OPPFOLGING_UTLAND_KONTOR_NR
         } else {
@@ -73,7 +74,7 @@ class FindNAVKontorService @KtorExperimentalAPI constructor(
                     legalExceptions = *arrayOf(IOException::class, WstxException::class)) {
                 arbeidsfordelingV1.finnBehandlendeEnhetListe(FinnBehandlendeEnhetListeRequest().apply {
                     val afk = ArbeidsfordelingKriterier()
-                    if (geografiskTilknytning?.geografiskTilknytning != null) {
+                    if (geografiskTilknytning != null && geografiskTilknytning.geografiskTilknytning != null) {
                         afk.geografiskTilknytning = Geografi().apply {
                             value = geografiskTilknytning.geografiskTilknytning
                         }
@@ -99,13 +100,17 @@ class FindNAVKontorService @KtorExperimentalAPI constructor(
     suspend fun fetchGeografiskTilknytning(
         personV3: PersonV3,
         receivedSykmelding: ReceivedSykmelding
-    ): HentGeografiskTilknytningResponse =
-            retry(callName = "tps_hent_geografisktilknytning",
-                    retryIntervals = arrayOf(500L, 1000L, 3000L, 5000L, 10000L),
-                    legalExceptions = *arrayOf(IOException::class, WstxException::class, IllegalStateException::class)) {
-                personV3.hentGeografiskTilknytning(HentGeografiskTilknytningRequest().withAktoer(PersonIdent().withIdent(
-                        NorskIdent()
-                                .withIdent(receivedSykmelding.personNrPasient)
-                                .withType(Personidenter().withValue("FNR")))))
+    ): HentGeografiskTilknytningResponse? =
+            try {
+                retry(callName = "tps_hent_geografisktilknytning",
+                        retryIntervals = arrayOf(500L, 1000L, 3000L, 5000L, 10000L),
+                        legalExceptions = *arrayOf(IOException::class, WstxException::class, IllegalStateException::class)) {
+                    personV3.hentGeografiskTilknytning(HentGeografiskTilknytningRequest().withAktoer(PersonIdent().withIdent(
+                            NorskIdent()
+                                    .withIdent(receivedSykmelding.personNrPasient)
+                                    .withType(Personidenter().withValue("FNR")))))
+                }
+            } catch (hentGeografiskTilknytningPersonIkkeFunnet: HentGeografiskTilknytningPersonIkkeFunnet) {
+                 null
             }
 }
