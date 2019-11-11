@@ -6,17 +6,17 @@ metadata:
   name: syfosminfotrygd-redis
   namespace: default
 spec:
-  image: redis:5.0.6-alpine
+  image: redis:5-alpine
   port: 6379
   replicas:
     min: 1
     max: 4
   resources:
     limits:
-      cpu: 500m
-      memory: 512Mi
+      cpu: 250m
+      memory: 256Mi
     requests:
-      cpu: 500m
-      memory: 512Mi
+      cpu: 250m
+      memory: 256Mi
   service:
     port: 6379
