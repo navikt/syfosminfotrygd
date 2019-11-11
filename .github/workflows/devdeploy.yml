@@ -48,11 +48,3 @@ jobs:
           cluster: dev-fss
           team: teamsykefravr
           resources: naiserator-dev.yaml
-      - name: deploy redis to dev-fss
-        uses: navikt/deployment-cli/action@0.4.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          cluster: dev-fss
-          team: teamsykefravr
-          resources: redis.yaml
