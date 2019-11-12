@@ -14,16 +14,6 @@ enum class ValidationRuleChain(
     override val predicate: (RuleData<InfotrygdForesp>) -> Boolean
 ) : Rule<RuleData<InfotrygdForesp>> {
 
-    @Description("Hvis gradert sykmelding og reisetilskudd er oppgitt for samme periode")
-    GRADUAL_SYKMELDING_COMBINED_WITH_TRAVEL(
-            1250,
-            Status.MANUAL_PROCESSING,
-            "Hvis gradert sykmelding og reisetilskudd er oppgitt for samme periode",
-            "Hvis gradert sykmelding og reisetilskudd er oppgitt for samme periode",
-            { (sykmelding, _) ->
-        sykmelding.perioder.any { it.gradert != null && it.gradert?.reisetilskudd ?: false }
-    }),
-
     @Description("Hvis behandlingsdager er angitt sendes meldingen til manuell behandling.")
     NUMBER_OF_TREATMENT_DAYS_SET(
             1260,
@@ -35,7 +25,7 @@ enum class ValidationRuleChain(
     }),
 
     @Description("Hvis sykmeldingen angir og er gradert reisetilskudd går meldingen til manuell behandling.")
-    GRADERT_TRAVEL_SUBSIDY_SPECIFIED(
+    GRADERT_REISETILSKUDD_ER_OPPGITT(
             1270,
             Status.MANUAL_PROCESSING,
             "Hvis sykmeldingen angir reisetilskudd går meldingen til manuell behandling.",
