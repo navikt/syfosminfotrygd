@@ -28,7 +28,7 @@ object ValidationRuleChainSpek : Spek({
 
     describe("Testing infotrygd rules and checking the rule outcomes") {
 
-        it("Should check rule GRADUAL_SYKMELDING_COMBINED_WITH_TRAVEL, should trigger rule") {
+        it("Should check rule GRADERT_REISETILSKUDD_ER_OPPGITT, should trigger rule") {
             val healthInformation = generateSykmelding(perioder = listOf(
                     generatePeriode(
                             fom = LocalDate.now(),
@@ -42,7 +42,7 @@ object ValidationRuleChainSpek : Spek({
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
 
-            ValidationRuleChain.GRADUAL_SYKMELDING_COMBINED_WITH_TRAVEL(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
+            ValidationRuleChain.GRADERT_REISETILSKUDD_ER_OPPGITT(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
         }
 
         it("Should check rule GRADUAL_SYKMELDING_COMBINED_WITH_TRAVEL, should NOT trigger rule") {
@@ -59,7 +59,7 @@ object ValidationRuleChainSpek : Spek({
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
 
-            ValidationRuleChain.GRADUAL_SYKMELDING_COMBINED_WITH_TRAVEL(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+            ValidationRuleChain.GRADERT_REISETILSKUDD_ER_OPPGITT(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
         }
 
         it("Should check rule NUMBER_OF_TREATMENT_DAYS_SET, should trigger rule") {
@@ -99,7 +99,7 @@ object ValidationRuleChainSpek : Spek({
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
 
-            ValidationRuleChain.GRADERT_TRAVEL_SUBSIDY_SPECIFIED(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
+            ValidationRuleChain.GRADERT_REISETILSKUDD_ER_OPPGITT(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
         }
 
         it("Should check rule GRADERT_TRAVEL_SUBSIDY_SPECIFIED, should NOT trigger rule") {
@@ -116,7 +116,7 @@ object ValidationRuleChainSpek : Spek({
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
 
-            ValidationRuleChain.GRADERT_TRAVEL_SUBSIDY_SPECIFIED(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+            ValidationRuleChain.GRADERT_REISETILSKUDD_ER_OPPGITT(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
         }
 
         it("Should check rule TRAVEL_SUBSIDY_SPECIFIED, should trigger rule") {
