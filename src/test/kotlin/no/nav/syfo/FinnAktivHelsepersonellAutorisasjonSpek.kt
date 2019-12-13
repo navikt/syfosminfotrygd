@@ -126,7 +126,5 @@ object FinnAktivHelsepersonellAutorisasjonSpek : Spek({
 
             updateInfotrygdService.finnAktivHelsepersonellAutorisasjons(helsepersonelPerson) shouldBeEqualTo ""
         }
-
-
     }
 })
