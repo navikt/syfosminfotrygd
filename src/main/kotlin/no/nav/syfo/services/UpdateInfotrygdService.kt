@@ -107,11 +107,11 @@ class UpdateInfotrygdService {
                     ruleHits = listOf(RuleInfo(
                             ruleName = "BEHANDLER_NOT_IN_HPR",
                             messageForSender = "Den som har skrevet sykmeldingen din har ikke autorisasjon til dette.",
-                            messageForUser = "Behandler er ikke register i HPR",
+                            messageForUser = "Behandler er ikke registert i HPR",
                             ruleStatus = Status.MANUAL_PROCESSING))
             )
             RULE_HIT_STATUS_COUNTER.labels(validationResultBehandler.status.name).inc()
-            log.warn("Behandler er ikke register i HPR")
+            log.warn("Behandler er ikke registert i HPR")
             produceManualTaskAndSendValidationResults(kafkaproducerCreateTask, receivedSykmelding, validationResultBehandler,
                     navKontorManuellOppgave, loggingMeta, oppgaveTopic, sm2013BehandlingsUtfallToipic, kafkaproducervalidationResult,
                     InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
