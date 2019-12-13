@@ -242,6 +242,11 @@ class UpdateInfotrygdService {
             isErSvangerskapsrelatert = true
         }
 
+        if (itfh.healthInformation.prognose != null && itfh.healthInformation.prognose.isArbeidsforEtterEndtPeriode != null &&
+                itfh.healthInformation.prognose.isArbeidsforEtterEndtPeriode) {
+            friskmeldtDato = periode.periodeTOMDato
+        }
+
         arbeidsufoerTOM = periode.periodeTOMDato
         ufoeregrad = when {
             periode.gradertSykmelding != null -> periode.gradertSykmelding.sykmeldingsgrad.toBigInteger()
