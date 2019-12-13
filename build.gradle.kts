@@ -20,7 +20,7 @@ val jedisVersion = "2.9.0"
 val kafkaVersion = "2.0.0"
 val kafkaEmbeddedVersion = "2.2.3"
 val kluentVersion = "1.39"
-val ktorVersion = "1.2.5"
+val ktorVersion = "1.2.6"
 val logbackVersion = "1.2.3"
 val logstashEncoderVersion = "5.1"
 val prometheusVersion = "0.5.0"
@@ -44,7 +44,7 @@ val embeddedRedisVersion = "0.6"
 
 plugins {
     java
-    kotlin("jvm") version "1.3.50"
+    kotlin("jvm") version "1.3.61"
     id("org.jmailen.kotlinter") version "2.1.1"
     id("com.diffplug.gradle.spotless") version "3.23.1"
     id("com.github.johnrengelman.shadow") version "4.0.4"

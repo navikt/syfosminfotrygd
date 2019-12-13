@@ -4,9 +4,9 @@ metadata:
   name: syfosminfotrygd
   namespace: default
   labels:
-    team: {{team}}
+    team: teamsykefravr
 spec:
-  image: "docker.pkg.github.com/navikt/syfosminfotrygd:{{tag}}"
+  image: {{ image }}
   replicas:
     min: 1
     max: 1

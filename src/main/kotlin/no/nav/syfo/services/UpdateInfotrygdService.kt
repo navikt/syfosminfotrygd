@@ -18,6 +18,7 @@ import no.nav.helse.sm2013.KontrollsystemBlokkType
 import no.nav.syfo.InfotrygdForespAndHealthInformation
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.client.Behandler
+import no.nav.syfo.client.Godkjenning
 import no.nav.syfo.client.NorskHelsenettClient
 import no.nav.syfo.daysBetween
 import no.nav.syfo.get
@@ -72,67 +73,67 @@ class UpdateInfotrygdService {
     ) {
         val helsepersonell = norskHelsenettClient.finnBehandler(receivedSykmelding.personNrLege, receivedSykmelding.msgId)
 
-            if (helsepersonell != null) {
-                val helsepersonellKategoriVerdi = finnAktivHelsepersonellAutorisasjons(helsepersonell)
-                when {
-                    validationResult.status in arrayOf(Status.MANUAL_PROCESSING) ->
-                        produceManualTaskAndSendValidationResults(kafkaproducerCreateTask, receivedSykmelding, validationResult,
-                                navKontorManuellOppgave, loggingMeta, oppgaveTopic, sm2013BehandlingsUtfallToipic,
-                                kafkaproducervalidationResult,
-                                InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
-                                helsepersonellKategoriVerdi, jedis, applicationState)
-                    else -> sendInfotrygdOppdateringAndValidationResult(
-                            infotrygdOppdateringProducer,
-                            session,
-                            loggingMeta,
-                            InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
-                            receivedSykmelding,
-                            helsepersonellKategoriVerdi,
-                            navKontorLokalKontor,
-                            jedis,
-                            kafkaproducerreceivedSykmelding,
-                            infotrygdRetryTopic,
+        if (helsepersonell != null) {
+            val helsepersonellKategoriVerdi = finnAktivHelsepersonellAutorisasjons(helsepersonell)
+            when {
+                validationResult.status in arrayOf(Status.MANUAL_PROCESSING) ->
+                    produceManualTaskAndSendValidationResults(kafkaproducerCreateTask, receivedSykmelding, validationResult,
+                            navKontorManuellOppgave, loggingMeta, oppgaveTopic, sm2013BehandlingsUtfallToipic,
                             kafkaproducervalidationResult,
-                            sm2013BehandlingsUtfallToipic,
-                            validationResult)
-                }
-
-                log.info("Message(${StructuredArguments.fields(loggingMeta)}) got outcome {}, {}, processing took {}s",
-                        StructuredArguments.keyValue("status", validationResult.status),
-                        StructuredArguments.keyValue("ruleHits", validationResult.ruleHits.joinToString(", ", "(", ")") { it.ruleName }))
-            } else {
-                val validationResultBehandler = ValidationResult(
-                        status = Status.MANUAL_PROCESSING,
-                        ruleHits = listOf(RuleInfo(
-                                ruleName = "BEHANDLER_NOT_IN_HPR",
-                                messageForSender = "Den som har skrevet sykmeldingen din har ikke autorisasjon til dette.",
-                                messageForUser = "Behandler er ikke register i HPR",
-                                ruleStatus = Status.MANUAL_PROCESSING))
-                )
-                RULE_HIT_STATUS_COUNTER.labels(validationResultBehandler.status.name).inc()
-                log.warn("Behandler er ikke register i HPR")
-                produceManualTaskAndSendValidationResults(kafkaproducerCreateTask, receivedSykmelding, validationResultBehandler,
-                        navKontorManuellOppgave, loggingMeta, oppgaveTopic, sm2013BehandlingsUtfallToipic, kafkaproducervalidationResult,
+                            InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
+                            helsepersonellKategoriVerdi, jedis, applicationState)
+                else -> sendInfotrygdOppdateringAndValidationResult(
+                        infotrygdOppdateringProducer,
+                        session,
+                        loggingMeta,
                         InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
-                        HelsepersonellKategori.LEGE.verdi, jedis, applicationState)
+                        receivedSykmelding,
+                        helsepersonellKategoriVerdi,
+                        navKontorLokalKontor,
+                        jedis,
+                        kafkaproducerreceivedSykmelding,
+                        infotrygdRetryTopic,
+                        kafkaproducervalidationResult,
+                        sm2013BehandlingsUtfallToipic,
+                        validationResult)
             }
+
+            log.info("Message(${StructuredArguments.fields(loggingMeta)}) got outcome {}, {}, processing took {}s",
+                    StructuredArguments.keyValue("status", validationResult.status),
+                    StructuredArguments.keyValue("ruleHits", validationResult.ruleHits.joinToString(", ", "(", ")") { it.ruleName }))
+        } else {
+            val validationResultBehandler = ValidationResult(
+                    status = Status.MANUAL_PROCESSING,
+                    ruleHits = listOf(RuleInfo(
+                            ruleName = "BEHANDLER_NOT_IN_HPR",
+                            messageForSender = "Den som har skrevet sykmeldingen din har ikke autorisasjon til dette.",
+                            messageForUser = "Behandler er ikke registert i HPR",
+                            ruleStatus = Status.MANUAL_PROCESSING))
+            )
+            RULE_HIT_STATUS_COUNTER.labels(validationResultBehandler.status.name).inc()
+            log.warn("Behandler er ikke registert i HPR")
+            produceManualTaskAndSendValidationResults(kafkaproducerCreateTask, receivedSykmelding, validationResultBehandler,
+                    navKontorManuellOppgave, loggingMeta, oppgaveTopic, sm2013BehandlingsUtfallToipic, kafkaproducervalidationResult,
+                    InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
+                    HelsepersonellKategori.LEGE.verdi, jedis, applicationState)
+        }
     }
 
-suspend fun sendInfotrygdOppdateringAndValidationResult(
-    producer: MessageProducer,
-    session: Session,
-    loggingMeta: LoggingMeta,
-    itfh: InfotrygdForespAndHealthInformation,
-    receivedSykmelding: ReceivedSykmelding,
-    behandlerKode: String,
-    navKontorNr: String,
-    jedis: Jedis,
-    kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
-    infotrygdRetryTopic: String,
-    kafkaproducervalidationResult: KafkaProducer<String, ValidationResult>,
-    sm2013BehandlingsUtfallToipic: String,
-    validationResult: ValidationResult
-) {
+    suspend fun sendInfotrygdOppdateringAndValidationResult(
+        producer: MessageProducer,
+        session: Session,
+        loggingMeta: LoggingMeta,
+        itfh: InfotrygdForespAndHealthInformation,
+        receivedSykmelding: ReceivedSykmelding,
+        behandlerKode: String,
+        navKontorNr: String,
+        jedis: Jedis,
+        kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
+        infotrygdRetryTopic: String,
+        kafkaproducervalidationResult: KafkaProducer<String, ValidationResult>,
+        sm2013BehandlingsUtfallToipic: String,
+        validationResult: ValidationResult
+    ) {
         val perioder = itfh.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
         val marshalledFellesformat = receivedSykmelding.fellesformat
         val personNrPasient = receivedSykmelding.personNrPasient
@@ -239,6 +240,11 @@ suspend fun sendInfotrygdOppdateringAndValidationResult(
         if (itfh.healthInformation.medisinskVurdering?.isSvangerskap != null &&
                 itfh.healthInformation.medisinskVurdering.isSvangerskap) {
             isErSvangerskapsrelatert = true
+        }
+
+        if (itfh.healthInformation.prognose != null && itfh.healthInformation.prognose.isArbeidsforEtterEndtPeriode != null &&
+                itfh.healthInformation.prognose.isArbeidsforEtterEndtPeriode) {
+            friskmeldtDato = periode.periodeTOMDato
         }
 
         arbeidsufoerTOM = periode.periodeTOMDato
@@ -353,12 +359,34 @@ suspend fun sendInfotrygdOppdateringAndValidationResult(
         }
     }
 
-    fun finnAktivHelsepersonellAutorisasjons(helsepersonelPerson: Behandler): String =
-            helsepersonelPerson.godkjenninger.firstOrNull {
-                it.helsepersonellkategori?.aktiv != null &&
-                        it.autorisasjon?.aktiv == true &&
-                        it.helsepersonellkategori.verdi != null
-            }?.helsepersonellkategori?.verdi ?: ""
+    fun finnAktivHelsepersonellAutorisasjons(helsepersonelPerson: Behandler): String {
+        val godkjennteHelsepersonellAutorisasjonsAktiv = godkjennteHelsepersonellAutorisasjonsAktiv(helsepersonelPerson)
+
+        if (godkjennteHelsepersonellAutorisasjonsAktiv.isNullOrEmpty()) {
+            return ""
+        }
+
+        return when (helsepersonellGodkjenningSom(godkjennteHelsepersonellAutorisasjonsAktiv, listOf(
+                    HelsepersonellKategori.LEGE.verdi))) {
+                true -> HelsepersonellKategori.LEGE.verdi
+                else -> godkjennteHelsepersonellAutorisasjonsAktiv.firstOrNull()?.helsepersonellkategori?.verdi ?: ""
+            }
+    }
+
+    fun godkjennteHelsepersonellAutorisasjonsAktiv(helsepersonelPerson: Behandler): List<Godkjenning> =
+            helsepersonelPerson.godkjenninger.filter { godkjenning ->
+                        godkjenning.helsepersonellkategori?.aktiv != null &&
+                        godkjenning.autorisasjon?.aktiv == true &&
+                        godkjenning.helsepersonellkategori.verdi != null &&
+                        godkjenning.helsepersonellkategori.aktiv
+            }
+
+    fun helsepersonellGodkjenningSom(helsepersonellGodkjenning: List<Godkjenning>, helsepersonerVerdi: List<String>): Boolean =
+        helsepersonellGodkjenning.any { godkjenning ->
+            godkjenning.helsepersonellkategori.let { kode ->
+                kode?.verdi in helsepersonerVerdi
+            }
+        }
 
     fun HelseOpplysningerArbeidsuforhet.Behandler.formatName(): String =
             if (navn.mellomnavn == null) {
@@ -459,7 +487,7 @@ suspend fun sendInfotrygdOppdateringAndValidationResult(
 
     fun createTask(
         kafkaProducer: KafkaProducer<String,
-            ProduceTask>,
+                ProduceTask>,
         receivedSykmelding: ReceivedSykmelding,
         validationResult: ValidationResult,
         navKontorNr: String,
@@ -491,13 +519,13 @@ suspend fun sendInfotrygdOppdateringAndValidationResult(
     }
 
     fun errorFromInfotrygd(rules: List<RuleInfo>): Boolean =
-        rules.any { ruleInfo ->
-            ruleInfo.ruleName.equals("ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING") ||
-            ruleInfo.ruleName.equals("ERROR_FROM_IT_SMHISTORIKK_STATUS_KODEMELDING") ||
-            ruleInfo.ruleName.equals("ERROR_FROM_IT_PARALELLYTELSER_STATUS_KODEMELDING") ||
-            ruleInfo.ruleName.equals("ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING") ||
-            ruleInfo.ruleName.equals("ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING")
-        }
+            rules.any { ruleInfo ->
+                ruleInfo.ruleName.equals("ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING") ||
+                        ruleInfo.ruleName.equals("ERROR_FROM_IT_SMHISTORIKK_STATUS_KODEMELDING") ||
+                        ruleInfo.ruleName.equals("ERROR_FROM_IT_PARALELLYTELSER_STATUS_KODEMELDING") ||
+                        ruleInfo.ruleName.equals("ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING") ||
+                        ruleInfo.ruleName.equals("ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING")
+            }
 
     fun skalIkkeOppdatereInfotrygd(
         receivedSykmelding: ReceivedSykmelding,
