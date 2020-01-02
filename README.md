@@ -30,7 +30,7 @@ repositories {
             username = githubUser
             password = githubPassword
         }
-        setUrl("https://maven.pkg.github.com/navikt/helse-sykepenger-beregning")
+        setUrl("https://maven.pkg.github.com/navikt/syfosm-commons")
     }
 }
 ```
@@ -80,6 +80,7 @@ Deploying redis can be done with the following command:
 * Andreas Nilsen, `andreas.nilsen@nav.no`
 * Sebastian Knudsen, `sebastian.knudsen@nav.no`
 * Tia Firing, `tia.firing@nav.no`
+* Jonas Henie, `jonas.henie@nav.no`
 
 ### For NAV employees
 We are available at the Slack channel #team-sykmelding

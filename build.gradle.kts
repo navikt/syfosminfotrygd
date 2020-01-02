@@ -6,7 +6,7 @@ group = "no.nav.syfo"
 version = "1.0.0"
 
 val artemisVersion = "2.6.4"
-val confluentVersion = "4.1.1"
+val confluentVersion = "5.3.1"
 val syfooppgaveSchemasVersion = "c8be932543e7356a34690ce7979d494c5d8516d8"
 val coroutinesVersion = "1.2.2"
 val infotrygdForespVersion = "2019.07.29-02-53-86b22e73f7843e422ee500b486dac387a582f2d1"
@@ -17,8 +17,8 @@ val jacksonVersion = "2.9.7"
 val jaxbApiVersion = "2.4.0-b180830.0359"
 val jaxbVersion = "2.3.0.1"
 val jedisVersion = "2.9.0"
-val kafkaVersion = "2.0.0"
-val kafkaEmbeddedVersion = "2.2.3"
+val kafkaVersion = "2.4.0"
+val kafkaEmbeddedVersion = "2.3.0"
 val kluentVersion = "1.39"
 val ktorVersion = "1.2.6"
 val logbackVersion = "1.2.3"
@@ -36,7 +36,7 @@ val javaxAnnotationApiVersion = "1.3.2"
 val jaxwsToolsVersion = "2.3.1"
 val jaxbRuntimeVersion = "2.4.0-b180830.0438"
 val kithHodemeldingVersion = "2019.07.30-12-26-5c924ef4f04022bbb850aaf299eb8e4464c1ca6a"
-val smCommonVersion = "1.bba46d9"
+val smCommonVersion = "1.7bf5e6f"
 val kontrollsystemblokk = "2019.07.29-02-53-86b22e73f7843e422ee500b486dac387a582f2d1"
 val javaxJaxwsApiVersion = "2.2.1"
 val jaxbTimeAdaptersVersion = "1.1.3"
@@ -45,7 +45,7 @@ val embeddedRedisVersion = "0.6"
 plugins {
     java
     kotlin("jvm") version "1.3.61"
-    id("org.jmailen.kotlinter") version "2.1.1"
+    id("org.jmailen.kotlinter") version "2.2.0"
     id("com.diffplug.gradle.spotless") version "3.23.1"
     id("com.github.johnrengelman.shadow") version "4.0.4"
 }
@@ -88,7 +88,7 @@ dependencies {
 
     implementation ("com.ibm.mq:com.ibm.mq.allclient:$ibmMqVersion")
 
-    implementation ("org.apache.kafka:kafka_2.12:$kafkaVersion")
+    implementation ("org.apache.kafka:kafka_2.13:$kafkaVersion")
     implementation ("io.confluent:kafka-avro-serializer:$confluentVersion")
 
     implementation ("com.fasterxml.jackson.module:jackson-module-jaxb-annotations:$jacksonVersion")
@@ -158,7 +158,6 @@ tasks {
     }
 
     create("printVersion") {
-
         doLast {
             println(project.version)
         }
@@ -174,7 +173,6 @@ tasks {
             include("bus-extensions.txt")
         }
     }
-
 
     withType<Test> {
         useJUnitPlatform {
