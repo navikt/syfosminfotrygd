@@ -109,70 +109,68 @@ fun main() {
 
     DefaultExports.initialize()
 
-    val kafkaBaseConfig = loadBaseConfig(env, credentials)
-    val consumerProperties = kafkaBaseConfig.toConsumerConfig("${env.applicationName}-consumer", valueDeserializer = StringDeserializer::class)
-    val producerPropertiesCreateTask = kafkaBaseConfig.toProducerConfig(env.applicationName, valueSerializer = KafkaAvroSerializer::class)
+            val kafkaBaseConfig = loadBaseConfig(env, credentials)
+            val consumerProperties = kafkaBaseConfig.toConsumerConfig("${env.applicationName}-consumer", valueDeserializer = StringDeserializer::class)
+            val producerPropertiesCreateTask = kafkaBaseConfig.toProducerConfig(env.applicationName, valueSerializer = KafkaAvroSerializer::class)
 
-    val producerPropertiesvalidationResult = kafkaBaseConfig.toProducerConfig(env.applicationName, valueSerializer = JacksonKafkaSerializer::class)
+            val producerPropertiesvalidationResult = kafkaBaseConfig.toProducerConfig(env.applicationName, valueSerializer = JacksonKafkaSerializer::class)
 
-    val producerPropertiesReceivedSykmelding = kafkaBaseConfig.toProducerConfig(env.applicationName, valueSerializer = JacksonKafkaSerializer::class)
+            val producerPropertiesReceivedSykmelding = kafkaBaseConfig.toProducerConfig(env.applicationName, valueSerializer = JacksonKafkaSerializer::class)
 
-    val kafkaproducerreceivedSykmelding = KafkaProducer<String, ReceivedSykmelding>(producerPropertiesReceivedSykmelding)
+            val kafkaproducerreceivedSykmelding = KafkaProducer<String, ReceivedSykmelding>(producerPropertiesReceivedSykmelding)
 
-    val kafkaproducerCreateTask = KafkaProducer<String, ProduceTask>(producerPropertiesCreateTask)
+            val kafkaproducerCreateTask = KafkaProducer<String, ProduceTask>(producerPropertiesCreateTask)
 
-    val kafkaproducervalidationResult = KafkaProducer<String, ValidationResult>(producerPropertiesvalidationResult)
+            val kafkaproducervalidationResult = KafkaProducer<String, ValidationResult>(producerPropertiesvalidationResult)
 
-    MQEnvironment.channel = env.mqChannelName
-    MQEnvironment.port = env.mqPort
-    MQEnvironment.hostname = env.mqHostname
-    MQEnvironment.userID = credentials.mqUsername
-    MQEnvironment.password = credentials.mqPassword
-    val mqQueueManager = MQQueueManager(env.mqGatewayName)
-    val openOptions = MQC.MQOO_INQUIRE + MQC.MQOO_BROWSE + MQC.MQOO_FAIL_IF_QUIESCING + MQC.MQOO_INPUT_SHARED
-    val smIkkeOkQueue = mqQueueManager.accessQueue(env.infotrygdSmIkkeOKQueue, openOptions)
+            MQEnvironment.channel = env.mqChannelName
+            MQEnvironment.port = env.mqPort
+            MQEnvironment.hostname = env.mqHostname
+            MQEnvironment.userID = credentials.mqUsername
+            MQEnvironment.password = credentials.mqPassword
+            val mqQueueManager = MQQueueManager(env.mqGatewayName)
+            val openOptions = MQC.MQOO_INQUIRE + MQC.MQOO_BROWSE + MQC.MQOO_FAIL_IF_QUIESCING + MQC.MQOO_INPUT_SHARED
+            val smIkkeOkQueue = mqQueueManager.accessQueue(env.infotrygdSmIkkeOKQueue, openOptions)
 
-    val personV3 = createPort<PersonV3>(env.personV3EndpointURL) {
-        port { withSTS(credentials.serviceuserUsername, credentials.serviceuserPassword, env.securityTokenServiceUrl) }
-    }
-
-    val arbeidsfordelingV1 = createPort<ArbeidsfordelingV1>(env.arbeidsfordelingV1EndpointURL) {
-        port { withSTS(credentials.serviceuserUsername, credentials.serviceuserPassword, env.securityTokenServiceUrl) }
-    }
-
-    val accessTokenClient = AccessTokenClient(env.aadAccessTokenUrl, env.clientId, credentials.clientsecret)
-    val httpClient = HttpClient(Apache) {
-        install(JsonFeature) {
-            serializer = JacksonSerializer {
-                registerKotlinModule()
-                registerModule(JavaTimeModule())
-                configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-                configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            val personV3 = createPort<PersonV3>(env.personV3EndpointURL) {
+                port { withSTS(credentials.serviceuserUsername, credentials.serviceuserPassword, env.securityTokenServiceUrl) }
             }
-            expectSuccess = false
-        }
-    }
-    val norskHelsenettClient = NorskHelsenettClient(httpClient, env.norskHelsenettEndpointURL, accessTokenClient, env.helsenettproxyId)
 
-    val norg2Client = Norg2Client(httpClient, env.norg2V1EndpointURL)
+            val arbeidsfordelingV1 = createPort<ArbeidsfordelingV1>(env.arbeidsfordelingV1EndpointURL) {
+                port { withSTS(credentials.serviceuserUsername, credentials.serviceuserPassword, env.securityTokenServiceUrl) }
+            }
+
+            val accessTokenClient = AccessTokenClient(env.aadAccessTokenUrl, env.clientId, credentials.clientsecret)
+            val httpClient = HttpClient(Apache) {
+            install(JsonFeature) {
+                serializer = JacksonSerializer {
+                    registerKotlinModule()
+                    registerModule(JavaTimeModule())
+                    configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+                    configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                    }
+                expectSuccess = false
+                }
+            }
+            val norskHelsenettClient = NorskHelsenettClient(httpClient, env.norskHelsenettEndpointURL, accessTokenClient, env.helsenettproxyId)
+
+            val norg2Client = Norg2Client(httpClient, env.norg2V1EndpointURL)
+
+            launchListeners(
+                    applicationState,
+                    kafkaproducerCreateTask,
+                    kafkaproducervalidationResult,
+                    personV3,
+                    arbeidsfordelingV1,
+                    env,
+                    norskHelsenettClient,
+                    consumerProperties,
+                    smIkkeOkQueue,
+                    norg2Client,
+                    kafkaproducerreceivedSykmelding,
+                    credentials)
 
     applicationState.ready = true
-
-//    launchListeners(
-//            applicationState,
-//            kafkaproducerCreateTask,
-//            kafkaproducervalidationResult,
-//            personV3,
-//            arbeidsfordelingV1,
-//            env,
-//            norskHelsenettClient,
-//            consumerProperties,
-//            smIkkeOkQueue,
-//            norg2Client,
-//            kafkaproducerreceivedSykmelding,
-//            credentials)
-
-
 }
 
 fun createListener(applicationState: ApplicationState, action: suspend CoroutineScope.() -> Unit): Job =
@@ -188,27 +186,27 @@ fun createListener(applicationState: ApplicationState, action: suspend Coroutine
 
 @KtorExperimentalAPI
 fun launchListeners(
-        applicationState: ApplicationState,
-        kafkaproducerCreateTask: KafkaProducer<String, ProduceTask>,
-        kafkaproducervalidationResult: KafkaProducer<String, ValidationResult>,
-        personV3: PersonV3,
-        arbeidsfordelingV1: ArbeidsfordelingV1,
-        env: Environment,
-        norskHelsenettClient: NorskHelsenettClient,
-        consumerProperties: Properties,
-        smIkkeOkQueue: MQQueue,
-        norg2Client: Norg2Client,
-        kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
-        credentials: VaultCredentials
+    applicationState: ApplicationState,
+    kafkaproducerCreateTask: KafkaProducer<String, ProduceTask>,
+    kafkaproducervalidationResult: KafkaProducer<String, ValidationResult>,
+    personV3: PersonV3,
+    arbeidsfordelingV1: ArbeidsfordelingV1,
+    env: Environment,
+    norskHelsenettClient: NorskHelsenettClient,
+    consumerProperties: Properties,
+    smIkkeOkQueue: MQQueue,
+    norg2Client: Norg2Client,
+    kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
+    credentials: VaultCredentials
 ) {
-    val kafkaconsumerRecievedSykmelding = KafkaConsumer<String, String>(consumerProperties)
+        val kafkaconsumerRecievedSykmelding = KafkaConsumer<String, String>(consumerProperties)
 
-    kafkaconsumerRecievedSykmelding.subscribe(
-            listOf(env.sm2013AutomaticHandlingTopic, env.smPaperAutomaticHandlingTopic, env.sm2013infotrygdRetry)
-    )
-    createListener(applicationState) {
-        connectionFactory(env).createConnection(credentials.mqUsername, credentials.mqPassword).use { connection ->
-            Jedis(env.redishost, 6379).use { jedis ->
+        kafkaconsumerRecievedSykmelding.subscribe(
+                listOf(env.sm2013AutomaticHandlingTopic, env.smPaperAutomaticHandlingTopic, env.sm2013infotrygdRetry)
+        )
+        createListener(applicationState) {
+            connectionFactory(env).createConnection(credentials.mqUsername, credentials.mqPassword).use { connection ->
+                Jedis(env.redishost, 6379).use { jedis ->
                 connection.start()
                 val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
                 val infotrygdOppdateringProducer = session.producerForQueue("queue:///${env.infotrygdOppdateringQueue}?targetClient=1")
@@ -219,32 +217,32 @@ fun launchListeners(
                         session, personV3, arbeidsfordelingV1, env.sm2013BehandlingsUtfallToipic, norskHelsenettClient,
                         smIkkeOkQueue, norg2Client, jedis, kafkaproducerreceivedSykmelding, env.sm2013infotrygdRetry,
                         env.sm2013OpppgaveTopic)
+                }
             }
         }
-    }
 
     applicationState.alive = true
 }
 
 @KtorExperimentalAPI
 suspend fun blockingApplicationLogic(
-        applicationState: ApplicationState,
-        kafkaConsumer: KafkaConsumer<String, String>,
-        kafkaproducerCreateTask: KafkaProducer<String, ProduceTask>,
-        kafkaproducervalidationResult: KafkaProducer<String, ValidationResult>,
-        infotrygdOppdateringProducer: MessageProducer,
-        infotrygdSporringProducer: MessageProducer,
-        session: Session,
-        personV3: PersonV3,
-        arbeidsfordelingV1: ArbeidsfordelingV1,
-        sm2013BehandlingsUtfallToipic: String,
-        norskHelsenettClient: NorskHelsenettClient,
-        smIkkeOkQueue: MQQueue,
-        norg2Client: Norg2Client,
-        jedis: Jedis,
-        kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
-        infotrygdRetryTopic: String,
-        oppgaveTopic: String
+    applicationState: ApplicationState,
+    kafkaConsumer: KafkaConsumer<String, String>,
+    kafkaproducerCreateTask: KafkaProducer<String, ProduceTask>,
+    kafkaproducervalidationResult: KafkaProducer<String, ValidationResult>,
+    infotrygdOppdateringProducer: MessageProducer,
+    infotrygdSporringProducer: MessageProducer,
+    session: Session,
+    personV3: PersonV3,
+    arbeidsfordelingV1: ArbeidsfordelingV1,
+    sm2013BehandlingsUtfallToipic: String,
+    norskHelsenettClient: NorskHelsenettClient,
+    smIkkeOkQueue: MQQueue,
+    norg2Client: Norg2Client,
+    jedis: Jedis,
+    kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
+    infotrygdRetryTopic: String,
+    oppgaveTopic: String
 ) {
     while (applicationState.ready) {
         kafkaConsumer.poll(Duration.ofMillis(0)).forEach { consumerRecord ->
@@ -269,24 +267,24 @@ suspend fun blockingApplicationLogic(
 
 @KtorExperimentalAPI
 suspend fun handleMessage(
-        receivedSykmelding: ReceivedSykmelding,
-        kafkaproducerCreateTask: KafkaProducer<String, ProduceTask>,
-        kafkaproducervalidationResult: KafkaProducer<String, ValidationResult>,
-        infotrygdOppdateringProducer: MessageProducer,
-        infotrygdSporringProducer: MessageProducer,
-        session: Session,
-        personV3: PersonV3,
-        arbeidsfordelingV1: ArbeidsfordelingV1,
-        sm2013BehandlingsUtfallToipic: String,
-        norskHelsenettClient: NorskHelsenettClient,
-        smIkkeOkQueue: MQQueue,
-        loggingMeta: LoggingMeta,
-        norg2Client: Norg2Client,
-        jedis: Jedis,
-        kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
-        infotrygdRetryTopic: String,
-        oppgaveTopic: String,
-        applicationState: ApplicationState
+    receivedSykmelding: ReceivedSykmelding,
+    kafkaproducerCreateTask: KafkaProducer<String, ProduceTask>,
+    kafkaproducervalidationResult: KafkaProducer<String, ValidationResult>,
+    infotrygdOppdateringProducer: MessageProducer,
+    infotrygdSporringProducer: MessageProducer,
+    session: Session,
+    personV3: PersonV3,
+    arbeidsfordelingV1: ArbeidsfordelingV1,
+    sm2013BehandlingsUtfallToipic: String,
+    norskHelsenettClient: NorskHelsenettClient,
+    smIkkeOkQueue: MQQueue,
+    loggingMeta: LoggingMeta,
+    norg2Client: Norg2Client,
+    jedis: Jedis,
+    kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
+    infotrygdRetryTopic: String,
+    oppgaveTopic: String,
+    applicationState: ApplicationState
 ) {
     wrapExceptions(loggingMeta) {
         log.info("Received a SM2013, {}", fields(loggingMeta))
@@ -308,7 +306,7 @@ suspend fun handleMessage(
         var receivedSykmeldingMedTssId = receivedSykmelding
         if (receivedSykmelding.tssid.isNullOrBlank()) {
             val tssId = finnTssIdFraInfotrygdRespons(infotrygdForespResponse.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()?.periode,
-                    receivedSykmelding.sykmelding.behandler)
+                receivedSykmelding.sykmelding.behandler)
             log.info("Sykmelding mangler tssid, har hentet tssid $tssId fra infotrygd, {}", fields(loggingMeta))
             receivedSykmeldingMedTssId = receivedSykmelding.copy(tssid = tssId)
         }
@@ -350,17 +348,17 @@ suspend fun handleMessage(
 
 fun finnTssIdFraInfotrygdRespons(sisteSmPeriode: TypeSMinfo.Periode?, behandler: Behandler): String? {
     if (sisteSmPeriode != null &&
-            behandler.etternavn.equals(sisteSmPeriode.legeNavn?.etternavn, true) &&
-            behandler.fornavn.equals(sisteSmPeriode.legeNavn?.fornavn, true)) {
+        behandler.etternavn.equals(sisteSmPeriode.legeNavn?.etternavn, true) &&
+        behandler.fornavn.equals(sisteSmPeriode.legeNavn?.fornavn, true)) {
         return sisteSmPeriode.legeInstNr?.toString()
     }
     return null
 }
 
 fun ruleCheck(
-        receivedSykmelding: ReceivedSykmelding,
-        infotrygdForespResponse: InfotrygdForesp,
-        loggingMeta: LoggingMeta
+    receivedSykmelding: ReceivedSykmelding,
+    infotrygdForespResponse: InfotrygdForesp,
+    loggingMeta: LoggingMeta
 ): ValidationResult {
 
     log.info("Going through rules {}", fields(loggingMeta))
@@ -389,11 +387,11 @@ fun ruleCheck(
 }
 
 fun sendRuleCheckValidationResult(
-        receivedSykmelding: ReceivedSykmelding,
-        kafkaproducervalidationResult: KafkaProducer<String, ValidationResult>,
-        validationResult: ValidationResult,
-        sm2013BehandlingsUtfallToipic: String,
-        loggingMeta: LoggingMeta
+    receivedSykmelding: ReceivedSykmelding,
+    kafkaproducervalidationResult: KafkaProducer<String, ValidationResult>,
+    validationResult: ValidationResult,
+    sm2013BehandlingsUtfallToipic: String,
+    loggingMeta: LoggingMeta
 ) {
     kafkaproducervalidationResult.send(ProducerRecord(sm2013BehandlingsUtfallToipic, receivedSykmelding.sykmelding.id, validationResult))
     log.info("Validation results send to kafka {} $loggingMeta", sm2013BehandlingsUtfallToipic, fields(loggingMeta))
@@ -423,11 +421,10 @@ fun validationResult(results: List<Rule<Any>>): ValidationResult =
                         },
                 ruleHits = results.map { rule -> RuleInfo(rule.name, rule.messageForUser!!, rule.messageForSender!!, rule.status) }
         )
-
 fun List<HelseOpplysningerArbeidsuforhet.Aktivitet.Periode>.sortedFOMDate(): List<LocalDate> =
         map { it.periodeFOMDato }.sorted()
 
 data class InfotrygdForespAndHealthInformation(
-        val infotrygdForesp: InfotrygdForesp,
-        val healthInformation: HelseOpplysningerArbeidsuforhet
+    val infotrygdForesp: InfotrygdForesp,
+    val healthInformation: HelseOpplysningerArbeidsuforhet
 )
