@@ -156,8 +156,6 @@ fun main() {
 
     val norg2Client = Norg2Client(httpClient, env.norg2V1EndpointURL)
 
-    applicationState.ready = true
-
     launchListeners(
             applicationState,
             kafkaproducerCreateTask,
@@ -211,6 +209,8 @@ fun launchListeners(
                 val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
                 val infotrygdOppdateringProducer = session.producerForQueue("queue:///${env.infotrygdOppdateringQueue}?targetClient=1")
                 val infotrygdSporringProducer = session.producerForQueue("queue:///${env.infotrygdSporringQueue}?targetClient=1")
+
+                applicationState.ready = true
 
                 blockingApplicationLogic(applicationState, kafkaconsumerRecievedSykmelding, kafkaproducerCreateTask,
                         kafkaproducervalidationResult, infotrygdOppdateringProducer, infotrygdSporringProducer,
