@@ -9,6 +9,7 @@ import javax.jms.Session
 import kotlin.math.absoluteValue
 import kotlinx.coroutines.delay
 import net.logstash.logback.argument.StructuredArguments
+import net.logstash.logback.argument.StructuredArguments.fields
 import no.nav.helse.eiFellesformat.XMLEIFellesformat
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.infotrygd.foresp.TypeSMinfo
@@ -75,8 +76,8 @@ class UpdateInfotrygdService {
 
         if (helsepersonell != null) {
             val helsepersonellKategoriVerdi = finnAktivHelsepersonellAutorisasjons(helsepersonell)
-            when {
-                validationResult.status in arrayOf(Status.MANUAL_PROCESSING) ->
+            when (validationResult.status) {
+                in arrayOf(Status.MANUAL_PROCESSING) ->
                     produceManualTaskAndSendValidationResults(kafkaproducerCreateTask, receivedSykmelding, validationResult,
                             navKontorManuellOppgave, loggingMeta, oppgaveTopic, sm2013BehandlingsUtfallToipic,
                             kafkaproducervalidationResult,
@@ -98,7 +99,7 @@ class UpdateInfotrygdService {
                         validationResult)
             }
 
-            log.info("Message(${StructuredArguments.fields(loggingMeta)}) got outcome {}, {}, processing took {}s",
+            log.info("Message(${fields(loggingMeta)}) got outcome {}, {}, processing took {}s",
                     StructuredArguments.keyValue("status", validationResult.status),
                     StructuredArguments.keyValue("ruleHits", validationResult.ruleHits.joinToString(", ", "(", ")") { it.ruleName }))
         } else {
@@ -156,9 +157,17 @@ class UpdateInfotrygdService {
                 nyligInfotrygdOppdatering -> {
                     delay(10000)
                     kafkaproducerreceivedSykmelding.send(ProducerRecord(infotrygdRetryTopic, receivedSykmelding.sykmelding.id, receivedSykmelding))
-                    log.warn("Melding sendt på retry topic {}", StructuredArguments.fields(loggingMeta))
+                    log.warn("Melding sendt på retry topic {}", fields(loggingMeta))
                 }
-                duplikatInfotrygdOppdatering -> log.warn("Melding market som infotrygd duplikat oppdaatering {}", StructuredArguments.fields(loggingMeta))
+                duplikatInfotrygdOppdatering -> {
+                    sendRuleCheckValidationResult(
+                            receivedSykmelding,
+                            kafkaproducervalidationResult,
+                            validationResult,
+                            sm2013BehandlingsUtfallToipic,
+                            loggingMeta)
+                    log.warn("Melding market som infotrygd duplikat oppdaatering {}", fields(loggingMeta))
+                }
                 else -> {
                     oppdaterRedis(personNrPasient, personNrPasient, jedis, 4, loggingMeta)
                     oppdaterRedis(sha256String, sha256String, jedis, TimeUnit.DAYS.toSeconds(60).toInt(), loggingMeta)
@@ -273,7 +282,7 @@ class UpdateInfotrygdService {
         } else if (forstegangsSykmelding(periode, itfh, typeSMinfo)) {
             1
         } else {
-            log.error("Could not determined operasjonstype {}", StructuredArguments.fields(loggingMeta))
+            log.error("Could not determined operasjonstype {}", fields(loggingMeta))
             throw RuntimeException("Could not determined operasjonstype")
         }
     }
@@ -347,7 +356,7 @@ class UpdateInfotrygdService {
         })
     }
 
-    fun findbBehandlingsDato(itfh: InfotrygdForespAndHealthInformation, signaturDato: LocalDate): LocalDate {
+    private fun findbBehandlingsDato(itfh: InfotrygdForespAndHealthInformation, signaturDato: LocalDate): LocalDate {
         return if (itfh.healthInformation.kontaktMedPasient?.kontaktDato != null &&
                 itfh.healthInformation.kontaktMedPasient?.behandletDato != null) {
             listOf(itfh.healthInformation.kontaktMedPasient.kontaktDato,
@@ -395,11 +404,11 @@ class UpdateInfotrygdService {
                 "${navn.etternavn.toUpperCase()} ${navn.fornavn.toUpperCase()} ${navn.mellomnavn.toUpperCase()}"
             }
 
-    fun sammePeriodeInfotrygd(infotrygdPeriode: TypeSMinfo.Periode, sykemldingsPeriode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode): Boolean {
+    private fun sammePeriodeInfotrygd(infotrygdPeriode: TypeSMinfo.Periode, sykemldingsPeriode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode): Boolean {
         return infotrygdPeriode.arbufoerFOM == sykemldingsPeriode.periodeFOMDato && infotrygdPeriode.arbufoerTOM == sykemldingsPeriode.periodeTOMDato
     }
 
-    fun sendInfotrygdOppdateringMq(
+    private fun sendInfotrygdOppdateringMq(
         producer: MessageProducer,
         session: Session,
         fellesformat: XMLEIFellesformat,
@@ -425,7 +434,7 @@ class UpdateInfotrygdService {
         }
     }
 
-    fun produceManualTaskAndSendValidationResults(
+    private fun produceManualTaskAndSendValidationResults(
         kafkaProducer: KafkaProducer<String, ProduceTask>,
         receivedSykmelding: ReceivedSykmelding,
         validationResult: ValidationResult,
@@ -485,7 +494,7 @@ class UpdateInfotrygdService {
         }
     }
 
-    fun createTask(
+    private fun createTask(
         kafkaProducer: KafkaProducer<String,
                 ProduceTask>,
         receivedSykmelding: ReceivedSykmelding,
@@ -520,11 +529,11 @@ class UpdateInfotrygdService {
 
     fun errorFromInfotrygd(rules: List<RuleInfo>): Boolean =
             rules.any { ruleInfo ->
-                ruleInfo.ruleName.equals("ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING") ||
-                        ruleInfo.ruleName.equals("ERROR_FROM_IT_SMHISTORIKK_STATUS_KODEMELDING") ||
-                        ruleInfo.ruleName.equals("ERROR_FROM_IT_PARALELLYTELSER_STATUS_KODEMELDING") ||
-                        ruleInfo.ruleName.equals("ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING") ||
-                        ruleInfo.ruleName.equals("ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING")
+                ruleInfo.ruleName == "ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING" ||
+                        ruleInfo.ruleName == "ERROR_FROM_IT_SMHISTORIKK_STATUS_KODEMELDING" ||
+                        ruleInfo.ruleName == "ERROR_FROM_IT_PARALELLYTELSER_STATUS_KODEMELDING" ||
+                        ruleInfo.ruleName == "ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING" ||
+                        ruleInfo.ruleName == "ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING"
             }
 
     fun skalIkkeOppdatereInfotrygd(
