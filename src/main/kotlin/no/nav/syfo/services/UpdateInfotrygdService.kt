@@ -253,7 +253,7 @@ class UpdateInfotrygdService {
 
         if (itfh.healthInformation.prognose != null && itfh.healthInformation.prognose.isArbeidsforEtterEndtPeriode != null &&
                 itfh.healthInformation.prognose.isArbeidsforEtterEndtPeriode) {
-            friskmeldtDato = periode.periodeTOMDato
+            friskmeldtDato = periode.periodeTOMDato.plusDays(1)
         }
 
         arbeidsufoerTOM = periode.periodeTOMDato
