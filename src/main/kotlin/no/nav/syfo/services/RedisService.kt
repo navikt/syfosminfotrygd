@@ -14,15 +14,11 @@ fun erIRedis(redisKey: String, jedis: Jedis): Boolean =
             else -> true
         }
 
-fun oppdaterRedis(redisKey: String, redisValue: String, jedis: Jedis, sekunder: Int, loggingMeta: LoggingMeta) {
-            log.info("Oppdaterer redis {}", fields(loggingMeta))
-            jedis.setex(redisKey, sekunder, redisValue)
-}
-/*
 fun oppdaterRedis(redisKey: String, redisValue: String, jedis: Jedis, sekunder: Int, loggingMeta: LoggingMeta): String? {
     log.info("Oppdaterer redis {}", fields(loggingMeta))
-    return jedis.set(redisKey, redisValue, "will expire in a minute", "EX", sekunder)
-}*/
+    sekunder.toString()
+    return jedis.set(redisKey, redisValue,  "nx", "ex", sekunder.toLong())
+}
 
 fun oppdaterAntallErrorIInfotrygd(redisKey: String, redisValue: String, jedis: Jedis, sekunder: Int, loggingMeta: LoggingMeta) {
     when (jedis.get(redisKey)) {

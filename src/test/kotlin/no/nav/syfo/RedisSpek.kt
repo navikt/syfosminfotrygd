@@ -79,7 +79,7 @@ object RedisSpek : Spek({
                 )
 
                val oppdaterRedis = oppdaterRedis(INFOTRYGD, "1", jedis, TimeUnit.MINUTES.toSeconds(5).toInt(), loggingMeta)
-                oppdaterRedis shouldEqual 1L
+                oppdaterRedis shouldEqual "OK"
             }
             redisServer.stop()
         }
@@ -101,7 +101,7 @@ object RedisSpek : Spek({
 
                 oppdaterRedis(INFOTRYGD, "1", jedis, TimeUnit.MINUTES.toSeconds(5).toInt(), loggingMeta)
                 val oppdaterRedisFAIL = oppdaterRedis(INFOTRYGD, "1", jedis, TimeUnit.MINUTES.toSeconds(5).toInt(), loggingMeta)
-                oppdaterRedisFAIL shouldEqual 0L
+                oppdaterRedisFAIL shouldEqual null
             }
             redisServer.stop()
         }
@@ -123,7 +123,7 @@ object RedisSpek : Spek({
 
                 oppdaterRedis(INFOTRYGD, "1", jedis, TimeUnit.MINUTES.toSeconds(5).toInt(), loggingMeta)
                 val oppdaterRedisFAIL = oppdaterRedis(INFOTRYGD, "1", jedis, TimeUnit.MINUTES.toSeconds(5).toInt(), loggingMeta)
-                oppdaterRedisFAIL shouldEqual 0L
+                oppdaterRedisFAIL shouldEqual null
             }
             redisServer.stop()
         }
