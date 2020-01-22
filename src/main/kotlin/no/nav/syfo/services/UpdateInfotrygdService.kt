@@ -150,16 +150,16 @@ class UpdateInfotrygdService {
 
         try {
             delay(100)
-            val nyligInfotrygdOppdatering = erIRedis(personNrPasient, jedis)
-            val duplikatInfotrygdOppdatering = erIRedis(sha256String, jedis)
+            val nyligInfotrygdOppdatering = oppdaterRedis(personNrPasient, personNrPasient, jedis, 4, loggingMeta)
+            val duplikatInfotrygdOppdatering = oppdaterRedis(sha256String, sha256String, jedis, TimeUnit.DAYS.toSeconds(60).toInt(), loggingMeta)
 
             when {
-                nyligInfotrygdOppdatering -> {
+                nyligInfotrygdOppdatering == null -> {
                     delay(10000)
                     kafkaproducerreceivedSykmelding.send(ProducerRecord(infotrygdRetryTopic, receivedSykmelding.sykmelding.id, receivedSykmelding))
                     log.warn("Melding sendt på retry topic {}", fields(loggingMeta))
                 }
-                duplikatInfotrygdOppdatering -> {
+                duplikatInfotrygdOppdatering == null -> {
                     sendRuleCheckValidationResult(
                             receivedSykmelding,
                             kafkaproducervalidationResult,
@@ -169,8 +169,6 @@ class UpdateInfotrygdService {
                     log.warn("Melding market som infotrygd duplikat oppdaatering {}", fields(loggingMeta))
                 }
                 else -> {
-                    oppdaterRedis(personNrPasient, personNrPasient, jedis, 4, loggingMeta)
-                    oppdaterRedis(sha256String, sha256String, jedis, TimeUnit.DAYS.toSeconds(60).toInt(), loggingMeta)
                     sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, forsteFravaersDag), loggingMeta)
                     perioder.drop(1).forEach { periode ->
                         sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, periode, personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, forsteFravaersDag, 2), loggingMeta)

@@ -16,8 +16,7 @@ fun erIRedis(redisKey: String, jedis: Jedis): Boolean =
 
 fun oppdaterRedis(redisKey: String, redisValue: String, jedis: Jedis, sekunder: Int, loggingMeta: LoggingMeta): String? {
     log.info("Oppdaterer redis {}", fields(loggingMeta))
-    sekunder.toString()
-    return jedis.set(redisKey, redisValue,  "nx", "ex", sekunder.toLong())
+    return jedis.set(redisKey, redisValue, "nx", "ex", sekunder.toLong())
 }
 
 fun oppdaterAntallErrorIInfotrygd(redisKey: String, redisValue: String, jedis: Jedis, sekunder: Int, loggingMeta: LoggingMeta) {

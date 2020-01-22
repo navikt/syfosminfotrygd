@@ -78,7 +78,7 @@ object RedisSpek : Spek({
                         sykmeldingId = "0"
                 )
 
-               val oppdaterRedis = oppdaterRedis(INFOTRYGD, "1", jedis, TimeUnit.MINUTES.toSeconds(5).toInt(), loggingMeta)
+                val oppdaterRedis = oppdaterRedis(INFOTRYGD, "1", jedis, TimeUnit.MINUTES.toSeconds(5).toInt(), loggingMeta)
                 oppdaterRedis shouldEqual "OK"
             }
             redisServer.stop()
