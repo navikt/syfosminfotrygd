@@ -18,6 +18,11 @@ fun oppdaterRedis(redisKey: String, redisValue: String, jedis: Jedis, sekunder: 
             log.info("Oppdaterer redis {}", fields(loggingMeta))
             jedis.setex(redisKey, sekunder, redisValue)
 }
+/*
+fun oppdaterRedis(redisKey: String, redisValue: String, jedis: Jedis, sekunder: Int, loggingMeta: LoggingMeta): String? {
+    log.info("Oppdaterer redis {}", fields(loggingMeta))
+    return jedis.set(redisKey, redisValue, "will expire in a minute", "EX", sekunder)
+}*/
 
 fun oppdaterAntallErrorIInfotrygd(redisKey: String, redisValue: String, jedis: Jedis, sekunder: Int, loggingMeta: LoggingMeta) {
     when (jedis.get(redisKey)) {
