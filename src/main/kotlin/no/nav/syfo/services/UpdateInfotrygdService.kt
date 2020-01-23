@@ -120,7 +120,7 @@ class UpdateInfotrygdService {
         }
     }
 
-    suspend fun sendInfotrygdOppdateringAndValidationResult(
+    private suspend fun sendInfotrygdOppdateringAndValidationResult(
         producer: MessageProducer,
         session: Session,
         loggingMeta: LoggingMeta,
@@ -148,44 +148,46 @@ class UpdateInfotrygdService {
                 behandlerKode, tssid, loggingMeta, navKontorNr, findarbeidsKategori(itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver), forsteFravaersDag)
         )
 
-        try {
-            delay(100)
-            val nyligInfotrygdOppdatering = erIRedis(personNrPasient, jedis)
-            val duplikatInfotrygdOppdatering = erIRedis(sha256String, jedis)
+        delay(100)
+        val nyligInfotrygdOppdatering = oppdaterRedis(personNrPasient, personNrPasient, jedis, 4, loggingMeta)
 
-            when {
-                nyligInfotrygdOppdatering -> {
-                    delay(10000)
-                    kafkaproducerreceivedSykmelding.send(ProducerRecord(infotrygdRetryTopic, receivedSykmelding.sykmelding.id, receivedSykmelding))
-                    log.warn("Melding sendt på retry topic {}", fields(loggingMeta))
-                }
-                duplikatInfotrygdOppdatering -> {
-                    sendRuleCheckValidationResult(
-                            receivedSykmelding,
-                            kafkaproducervalidationResult,
-                            validationResult,
-                            sm2013BehandlingsUtfallToipic,
-                            loggingMeta)
-                    log.warn("Melding market som infotrygd duplikat oppdaatering {}", fields(loggingMeta))
-                }
-                else -> {
-                    oppdaterRedis(personNrPasient, personNrPasient, jedis, 4, loggingMeta)
-                    oppdaterRedis(sha256String, sha256String, jedis, TimeUnit.DAYS.toSeconds(60).toInt(), loggingMeta)
-                    sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, forsteFravaersDag), loggingMeta)
-                    perioder.drop(1).forEach { periode ->
-                        sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, periode, personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, forsteFravaersDag, 2), loggingMeta)
+        when {
+            nyligInfotrygdOppdatering == null -> {
+                delay(10000)
+                kafkaproducerreceivedSykmelding.send(ProducerRecord(infotrygdRetryTopic, receivedSykmelding.sykmelding.id, receivedSykmelding))
+                log.warn("Melding sendt på retry topic {}", fields(loggingMeta))
+            }
+            else -> {
+                val duplikatInfotrygdOppdatering = oppdaterRedis(sha256String, sha256String, jedis, TimeUnit.DAYS.toSeconds(60).toInt(), loggingMeta)
+                when {
+                    duplikatInfotrygdOppdatering == null -> {
+                        sendRuleCheckValidationResult(
+                                receivedSykmelding,
+                                kafkaproducervalidationResult,
+                                validationResult,
+                                sm2013BehandlingsUtfallToipic,
+                                loggingMeta)
+                        log.warn("Melding market som infotrygd duplikat oppdaatering {}", fields(loggingMeta))
                     }
-                    sendRuleCheckValidationResult(
-                            receivedSykmelding,
-                            kafkaproducervalidationResult,
-                            validationResult,
-                            sm2013BehandlingsUtfallToipic,
-                            loggingMeta)
+                    else ->
+                        try {
+                            sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, forsteFravaersDag), loggingMeta)
+                            perioder.drop(1).forEach { periode ->
+                                sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, periode, personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, forsteFravaersDag, 2), loggingMeta)
+                            }
+                            sendRuleCheckValidationResult(
+                                    receivedSykmelding,
+                                    kafkaproducervalidationResult,
+                                    validationResult,
+                                    sm2013BehandlingsUtfallToipic,
+                                    loggingMeta)
+                        } catch (exception: Exception) {
+                            slettRedisKey(sha256String, jedis, loggingMeta)
+                            log.error("Feilet i infotrygd oppdaternings biten, kaster exception", exception)
+                            throw exception
+                        }
                 }
             }
-        } catch (connectionException: JedisConnectionException) {
-            log.error("Fikk ikkje opprettet kontakt med redis, kaster exception", connectionException)
-            throw connectionException
         }
     }
 
@@ -275,19 +277,24 @@ class UpdateInfotrygdService {
                 ?.lastOrNull()
                 ?: return 1
 
-        return if (endringSykmelding(periode, itfh, typeSMinfo)) {
-            3
-        } else if (paafolgendeSykmelding(periode, itfh, typeSMinfo)) {
-            2
-        } else if (forstegangsSykmelding(periode, itfh, typeSMinfo)) {
-            1
-        } else {
-            log.error("Could not determined operasjonstype {}", fields(loggingMeta))
-            throw RuntimeException("Could not determined operasjonstype")
+        return when {
+            endringSykmelding(periode, itfh, typeSMinfo) -> {
+                3
+            }
+            paafolgendeSykmelding(periode, itfh, typeSMinfo) -> {
+                2
+            }
+            forstegangsSykmelding(periode, itfh, typeSMinfo) -> {
+                1
+            }
+            else -> {
+                log.error("Could not determined operasjonstype {}", fields(loggingMeta))
+                throw RuntimeException("Could not determined operasjonstype")
+            }
         }
     }
 
-    fun forstegangsSykmelding(
+    private fun forstegangsSykmelding(
         periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode,
         itfh: InfotrygdForespAndHealthInformation,
         typeSMinfo: TypeSMinfo
@@ -295,7 +302,7 @@ class UpdateInfotrygdService {
             itfh.infotrygdForesp.sMhistorikk.status.kodeMelding == "04" ||
                     (typeSMinfo.periode.arbufoerTOM != null && (typeSMinfo.periode.arbufoerTOM..periode.periodeFOMDato).daysBetween().absoluteValue >= 1)
 
-    fun paafolgendeSykmelding(
+    private fun paafolgendeSykmelding(
         periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode,
         itfh: InfotrygdForespAndHealthInformation,
         typeSMinfo: TypeSMinfo
@@ -305,7 +312,7 @@ class UpdateInfotrygdService {
                     ((periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerTOM) &&
                             (typeSMinfo.periode.arbufoerTOM..periode.periodeFOMDato).daysBetween() <= 1))
 
-    fun endringSykmelding(
+    private fun endringSykmelding(
         periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode,
         itfh: InfotrygdForespAndHealthInformation,
         typeSMinfo: TypeSMinfo
@@ -319,7 +326,7 @@ class UpdateInfotrygdService {
                     !(periode.periodeFOMDato.isEqual(typeSMinfo.periode.arbufoerTOM)) &&
                     !(periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerTOM))
 
-    fun findarbeidsKategori(navnArbeidsgiver: String?): String {
+    private fun findarbeidsKategori(navnArbeidsgiver: String?): String {
         return if (navnArbeidsgiver == null || navnArbeidsgiver.isBlank() || navnArbeidsgiver.isEmpty()) {
             "030"
         } else {
@@ -382,7 +389,7 @@ class UpdateInfotrygdService {
             }
     }
 
-    fun godkjennteHelsepersonellAutorisasjonsAktiv(helsepersonelPerson: Behandler): List<Godkjenning> =
+    private fun godkjennteHelsepersonellAutorisasjonsAktiv(helsepersonelPerson: Behandler): List<Godkjenning> =
             helsepersonelPerson.godkjenninger.filter { godkjenning ->
                         godkjenning.helsepersonellkategori?.aktiv != null &&
                         godkjenning.autorisasjon?.aktiv == true &&
@@ -390,14 +397,14 @@ class UpdateInfotrygdService {
                         godkjenning.helsepersonellkategori.aktiv
             }
 
-    fun helsepersonellGodkjenningSom(helsepersonellGodkjenning: List<Godkjenning>, helsepersonerVerdi: List<String>): Boolean =
+    private fun helsepersonellGodkjenningSom(helsepersonellGodkjenning: List<Godkjenning>, helsepersonerVerdi: List<String>): Boolean =
         helsepersonellGodkjenning.any { godkjenning ->
             godkjenning.helsepersonellkategori.let { kode ->
                 kode?.verdi in helsepersonerVerdi
             }
         }
 
-    fun HelseOpplysningerArbeidsuforhet.Behandler.formatName(): String =
+    private fun HelseOpplysningerArbeidsuforhet.Behandler.formatName(): String =
             if (navn.mellomnavn == null) {
                 "${navn.etternavn.toUpperCase()} ${navn.fornavn.toUpperCase()}"
             } else {
@@ -480,13 +487,17 @@ class UpdateInfotrygdService {
 
             val skalIkkeOppdatereInfotrygd = skalIkkeOppdatereInfotrygd(receivedSykmelding, validationResult)
 
-            if (duplikatInfotrygdOppdatering) {
-                log.warn("Melding market som infotrygd duplikat, ikkje opprett manuelloppgave {}", StructuredArguments.fields(loggingMeta))
-            } else if (skalIkkeOppdatereInfotrygd) {
-                log.warn("Melding market som unødvendig å oppdatere infotrygd, ikkje opprett manuelloppgave {}", StructuredArguments.fields(loggingMeta))
-            } else {
-                createTask(kafkaProducer, receivedSykmelding, validationResult, navKontorNr, loggingMeta, oppgaveTopic)
-                oppdaterRedis(sha256String, sha256String, jedis, TimeUnit.DAYS.toSeconds(60).toInt(), loggingMeta)
+            when {
+                duplikatInfotrygdOppdatering -> {
+                    log.warn("Melding market som infotrygd duplikat, ikkje opprett manuelloppgave {}", fields(loggingMeta))
+                }
+                skalIkkeOppdatereInfotrygd -> {
+                    log.warn("Melding market som unødvendig å oppdatere infotrygd, ikkje opprett manuelloppgave {}", fields(loggingMeta))
+                }
+                else -> {
+                    createTask(kafkaProducer, receivedSykmelding, validationResult, navKontorNr, loggingMeta, oppgaveTopic)
+                    oppdaterRedis(sha256String, sha256String, jedis, TimeUnit.DAYS.toSeconds(60).toInt(), loggingMeta)
+                }
             }
         } catch (connectionException: JedisConnectionException) {
             log.error("Fikk ikkje opprettet kontakt med redis, kaster exception", connectionException)
@@ -524,7 +535,7 @@ class UpdateInfotrygdService {
                     metadata = mapOf()
                 }))
         MANUELLE_OPPGAVER_COUNTER.inc()
-        log.info("Message sendt to topic: {}, {}", oppgaveTopic, StructuredArguments.fields(loggingMeta))
+        log.info("Message sendt to topic: {}, {}", oppgaveTopic, fields(loggingMeta))
     }
 
     fun errorFromInfotrygd(rules: List<RuleInfo>): Boolean =

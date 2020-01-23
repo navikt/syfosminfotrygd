@@ -14,9 +14,14 @@ fun erIRedis(redisKey: String, jedis: Jedis): Boolean =
             else -> true
         }
 
-fun oppdaterRedis(redisKey: String, redisValue: String, jedis: Jedis, sekunder: Int, loggingMeta: LoggingMeta) {
-            log.info("Oppdaterer redis {}", fields(loggingMeta))
-            jedis.setex(redisKey, sekunder, redisValue)
+fun oppdaterRedis(redisKey: String, redisValue: String, jedis: Jedis, sekunder: Int, loggingMeta: LoggingMeta): String? {
+    log.info("Prøver å oppdaterer redis {}", fields(loggingMeta))
+    return jedis.set(redisKey, redisValue, "nx", "ex", sekunder.toLong())
+}
+
+fun slettRedisKey(redisKey: String, jedis: Jedis, loggingMeta: LoggingMeta): Long? {
+    log.info("Prøver å slette redis key for {}", fields(loggingMeta))
+    return jedis.del(redisKey)
 }
 
 fun oppdaterAntallErrorIInfotrygd(redisKey: String, redisValue: String, jedis: Jedis, sekunder: Int, loggingMeta: LoggingMeta) {
