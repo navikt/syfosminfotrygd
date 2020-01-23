@@ -60,7 +60,7 @@ class FindNAVKontorService @KtorExperimentalAPI constructor(
         }
     }
 
-    suspend fun fetchDiskresjonsKode(personV3: PersonV3, receivedSykmelding: ReceivedSykmelding): String? =
+    private suspend fun fetchDiskresjonsKode(personV3: PersonV3, receivedSykmelding: ReceivedSykmelding): String? =
             try {
                 retry(callName = "tps_hent_person",
                         retryIntervals = arrayOf(500L, 1000L, 3000L, 5000L, 10000L),
