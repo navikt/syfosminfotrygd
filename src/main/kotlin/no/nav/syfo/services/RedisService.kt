@@ -19,6 +19,11 @@ fun oppdaterRedis(redisKey: String, redisValue: String, jedis: Jedis, sekunder: 
     return jedis.set(redisKey, redisValue, "nx", "ex", sekunder.toLong())
 }
 
+fun slettRedisKey(redisKey: String, jedis: Jedis, loggingMeta: LoggingMeta): Long? {
+    log.info("Prøver å slette redis key for {}", fields(loggingMeta))
+    return jedis.del(redisKey)
+}
+
 fun oppdaterAntallErrorIInfotrygd(redisKey: String, redisValue: String, jedis: Jedis, sekunder: Int, loggingMeta: LoggingMeta) {
     when (jedis.get(redisKey)) {
         null -> oppdaterRedis(redisKey, redisValue, jedis, sekunder, loggingMeta)

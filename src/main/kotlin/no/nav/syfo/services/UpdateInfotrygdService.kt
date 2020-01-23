@@ -148,42 +148,46 @@ class UpdateInfotrygdService {
                 behandlerKode, tssid, loggingMeta, navKontorNr, findarbeidsKategori(itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver), forsteFravaersDag)
         )
 
-        try {
-            delay(100)
-            val nyligInfotrygdOppdatering = oppdaterRedis(personNrPasient, personNrPasient, jedis, 4, loggingMeta)
-            val duplikatInfotrygdOppdatering = oppdaterRedis(sha256String, sha256String, jedis, TimeUnit.DAYS.toSeconds(60).toInt(), loggingMeta)
+        delay(100)
+        val nyligInfotrygdOppdatering = oppdaterRedis(personNrPasient, personNrPasient, jedis, 4, loggingMeta)
 
-            when {
-                nyligInfotrygdOppdatering == null -> {
-                    delay(10000)
-                    kafkaproducerreceivedSykmelding.send(ProducerRecord(infotrygdRetryTopic, receivedSykmelding.sykmelding.id, receivedSykmelding))
-                    log.warn("Melding sendt på retry topic {}", fields(loggingMeta))
-                }
-                duplikatInfotrygdOppdatering == null -> {
-                    sendRuleCheckValidationResult(
-                            receivedSykmelding,
-                            kafkaproducervalidationResult,
-                            validationResult,
-                            sm2013BehandlingsUtfallToipic,
-                            loggingMeta)
-                    log.warn("Melding market som infotrygd duplikat oppdaatering {}", fields(loggingMeta))
-                }
-                else -> {
-                    sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, forsteFravaersDag), loggingMeta)
-                    perioder.drop(1).forEach { periode ->
-                        sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, periode, personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, forsteFravaersDag, 2), loggingMeta)
+        when {
+            nyligInfotrygdOppdatering == null -> {
+                delay(10000)
+                kafkaproducerreceivedSykmelding.send(ProducerRecord(infotrygdRetryTopic, receivedSykmelding.sykmelding.id, receivedSykmelding))
+                log.warn("Melding sendt på retry topic {}", fields(loggingMeta))
+            }
+            else -> {
+                val duplikatInfotrygdOppdatering = oppdaterRedis(sha256String, sha256String, jedis, TimeUnit.DAYS.toSeconds(60).toInt(), loggingMeta)
+                when {
+                    duplikatInfotrygdOppdatering == null -> {
+                        sendRuleCheckValidationResult(
+                                receivedSykmelding,
+                                kafkaproducervalidationResult,
+                                validationResult,
+                                sm2013BehandlingsUtfallToipic,
+                                loggingMeta)
+                        log.warn("Melding market som infotrygd duplikat oppdaatering {}", fields(loggingMeta))
                     }
-                    sendRuleCheckValidationResult(
-                            receivedSykmelding,
-                            kafkaproducervalidationResult,
-                            validationResult,
-                            sm2013BehandlingsUtfallToipic,
-                            loggingMeta)
+                    else ->
+                        try {
+                            sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, forsteFravaersDag), loggingMeta)
+                            perioder.drop(1).forEach { periode ->
+                                sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, periode, personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, forsteFravaersDag, 2), loggingMeta)
+                            }
+                            sendRuleCheckValidationResult(
+                                    receivedSykmelding,
+                                    kafkaproducervalidationResult,
+                                    validationResult,
+                                    sm2013BehandlingsUtfallToipic,
+                                    loggingMeta)
+                        } catch (exception: Exception) {
+                            slettRedisKey(sha256String, jedis, loggingMeta)
+                            log.error("Feilet i infotrygd oppdaternings biten, kaster exception", exception)
+                            throw exception
+                        }
                 }
             }
-        } catch (connectionException: JedisConnectionException) {
-            log.error("Fikk ikkje opprettet kontakt med redis, kaster exception", connectionException)
-            throw connectionException
         }
     }
 

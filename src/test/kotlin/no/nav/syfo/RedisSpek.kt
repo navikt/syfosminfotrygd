@@ -6,6 +6,7 @@ import no.nav.syfo.services.INFOTRYGD
 import no.nav.syfo.services.antallErrorIInfotrygd
 import no.nav.syfo.services.oppdaterAntallErrorIInfotrygd
 import no.nav.syfo.services.oppdaterRedis
+import no.nav.syfo.services.slettRedisKey
 import no.nav.syfo.util.LoggingMeta
 import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
@@ -124,6 +125,28 @@ object RedisSpek : Spek({
                 oppdaterRedis(INFOTRYGD, "1", jedis, TimeUnit.MINUTES.toSeconds(5).toInt(), loggingMeta)
                 val oppdaterRedisFAIL = oppdaterRedis(INFOTRYGD, "1", jedis, TimeUnit.MINUTES.toSeconds(5).toInt(), loggingMeta)
                 oppdaterRedisFAIL shouldEqual null
+            }
+            redisServer.stop()
+        }
+
+        it("Should delete 1 key") {
+            val redisServer = RedisServer(6379)
+
+            redisServer.start()
+
+            Jedis("localhost", 6379).use { jedis ->
+                jedis.connect()
+
+                val loggingMeta = LoggingMeta(
+                        mottakId = "1313",
+                        orgNr = "0",
+                        msgId = "0",
+                        sykmeldingId = "0"
+                )
+
+                oppdaterRedis(INFOTRYGD, "1", jedis, TimeUnit.MINUTES.toSeconds(10).toInt(), loggingMeta)
+                val antallSlette = slettRedisKey(INFOTRYGD, jedis, loggingMeta)
+                antallSlette shouldEqual 1L
             }
             redisServer.stop()
         }
