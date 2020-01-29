@@ -75,7 +75,6 @@ import no.nav.syfo.util.TrackableException
 import no.nav.syfo.util.fellesformatUnmarshaller
 import no.nav.syfo.util.wrapExceptions
 import no.nav.syfo.ws.createPort
-import no.nav.tjeneste.virksomhet.arbeidsfordeling.v1.binding.ArbeidsfordelingV1
 import no.nav.tjeneste.virksomhet.person.v3.binding.PersonV3
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -136,10 +135,6 @@ fun main() {
                 port { withSTS(credentials.serviceuserUsername, credentials.serviceuserPassword, env.securityTokenServiceUrl) }
             }
 
-            val arbeidsfordelingV1 = createPort<ArbeidsfordelingV1>(env.arbeidsfordelingV1EndpointURL) {
-                port { withSTS(credentials.serviceuserUsername, credentials.serviceuserPassword, env.securityTokenServiceUrl) }
-            }
-
             val accessTokenClient = AccessTokenClient(env.aadAccessTokenUrl, env.clientId, credentials.clientsecret)
             val httpClient = HttpClient(Apache) {
             install(JsonFeature) {
@@ -161,7 +156,6 @@ fun main() {
             kafkaproducerCreateTask,
             kafkaproducervalidationResult,
             personV3,
-            arbeidsfordelingV1,
             env,
             norskHelsenettClient,
             consumerProperties,
@@ -188,7 +182,6 @@ fun launchListeners(
     kafkaproducerCreateTask: KafkaProducer<String, ProduceTask>,
     kafkaproducervalidationResult: KafkaProducer<String, ValidationResult>,
     personV3: PersonV3,
-    arbeidsfordelingV1: ArbeidsfordelingV1,
     env: Environment,
     norskHelsenettClient: NorskHelsenettClient,
     consumerProperties: Properties,
@@ -214,7 +207,7 @@ fun launchListeners(
 
                 blockingApplicationLogic(applicationState, kafkaconsumerRecievedSykmelding, kafkaproducerCreateTask,
                         kafkaproducervalidationResult, infotrygdOppdateringProducer, infotrygdSporringProducer,
-                        session, personV3, arbeidsfordelingV1, env.sm2013BehandlingsUtfallToipic, norskHelsenettClient,
+                        session, personV3, env.sm2013BehandlingsUtfallToipic, norskHelsenettClient,
                         smIkkeOkQueue, norg2Client, jedis, kafkaproducerreceivedSykmelding, env.sm2013infotrygdRetry,
                         env.sm2013OpppgaveTopic)
                 }
@@ -234,7 +227,6 @@ suspend fun blockingApplicationLogic(
     infotrygdSporringProducer: MessageProducer,
     session: Session,
     personV3: PersonV3,
-    arbeidsfordelingV1: ArbeidsfordelingV1,
     sm2013BehandlingsUtfallToipic: String,
     norskHelsenettClient: NorskHelsenettClient,
     smIkkeOkQueue: MQQueue,
@@ -257,7 +249,7 @@ suspend fun blockingApplicationLogic(
             handleMessage(
                     receivedSykmelding, kafkaproducerCreateTask, kafkaproducervalidationResult,
                     infotrygdOppdateringProducer, infotrygdSporringProducer,
-                    session, personV3, arbeidsfordelingV1, sm2013BehandlingsUtfallToipic, norskHelsenettClient,
+                    session, personV3, sm2013BehandlingsUtfallToipic, norskHelsenettClient,
                     smIkkeOkQueue, loggingMeta, norg2Client, jedis, kafkaproducerreceivedSykmelding,
                     infotrygdRetryTopic, oppgaveTopic, applicationState)
         }
@@ -274,7 +266,6 @@ suspend fun handleMessage(
     infotrygdSporringProducer: MessageProducer,
     session: Session,
     personV3: PersonV3,
-    arbeidsfordelingV1: ArbeidsfordelingV1,
     sm2013BehandlingsUtfallToipic: String,
     norskHelsenettClient: NorskHelsenettClient,
     smIkkeOkQueue: MQQueue,
@@ -313,9 +304,8 @@ suspend fun handleMessage(
 
         val validationResult = ruleCheck(receivedSykmeldingMedTssId, infotrygdForespResponse, loggingMeta)
 
-        val findNAVKontorService = FindNAVKontorService(receivedSykmeldingMedTssId, personV3, norg2Client, arbeidsfordelingV1, loggingMeta)
+        val findNAVKontorService = FindNAVKontorService(receivedSykmeldingMedTssId, personV3, norg2Client, loggingMeta)
 
-        val behandlendeEnhet = findNAVKontorService.finnBehandlendeEnhet()
         val lokaltNavkontor = findNAVKontorService.finnLokaltNavkontor()
 
         UpdateInfotrygdService().updateInfotrygd(receivedSykmeldingMedTssId,
@@ -323,7 +313,6 @@ suspend fun handleMessage(
                 validationResult,
                 infotrygdOppdateringProducer,
                 kafkaproducerCreateTask,
-                behandlendeEnhet,
                 lokaltNavkontor,
                 loggingMeta,
                 session,

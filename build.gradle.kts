@@ -99,7 +99,6 @@ dependencies {
     implementation ("no.nav.helse.xml:sm2013:$sykmeldingVersion")
     implementation ("no.nav.helse.xml:xmlfellesformat:$fellesformatVersion")
     implementation ("no.nav.helse.xml:kontrollsystemblokk:$kontrollsystemblokk")
-    implementation ("no.nav.tjenestespesifikasjoner:arbeidsfordeling-v1-tjenestespesifikasjon:$navArbeidsfordelingv1Version")
     implementation ("no.nav.syfo.schemas:syfosmoppgave-avro:$syfooppgaveSchemasVersion")
     implementation ("no.nav.tjenestespesifikasjoner:person-v3-tjenestespesifikasjon:$navPersonv3Version")
     implementation ("no.nav.helse.xml:infotrygd-foresp:$infotrygdForespVersion")
