@@ -1092,14 +1092,8 @@ object ValidationRuleChainSpek : Spek({
                             tom = LocalDate.of(2019, 6, 28)
                     )
             ), medisinskVurdering = generateMedisinskVurdering(hovedDiagnose = null))
-            val infotrygdForespResponse = deafaultInfotrygdForesp()
-            infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
-                status = StatusType().apply {
-                    kodeMelding = "04"
-                }
-            }
 
-            ValidationRuleChain.HOUVEDDIAGNOSE_MANGLER(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
+            ValidationRuleChain.HOUVEDDIAGNOSE_MANGLER(ruleData(healthInformation, deafaultInfotrygdForesp())) shouldEqual true
         }
 
         it("Should check rule HOUVEDDIAGNOSE_MANGLER, should NOT trigger rule") {
@@ -1110,14 +1104,7 @@ object ValidationRuleChainSpek : Spek({
                     )
             ), medisinskVurdering = generateMedisinskVurdering(hovedDiagnose = generateDiagnose()))
 
-            val infotrygdForespResponse = deafaultInfotrygdForesp()
-            infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
-                status = StatusType().apply {
-                    kodeMelding = "04"
-                }
-            }
-
-            ValidationRuleChain.HOUVEDDIAGNOSE_MANGLER(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+            ValidationRuleChain.HOUVEDDIAGNOSE_MANGLER(ruleData(healthInformation, deafaultInfotrygdForesp())) shouldEqual false
         }
     }
 })
