@@ -4,6 +4,8 @@ import java.time.LocalDate
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.infotrygd.foresp.StatusType
 import no.nav.helse.infotrygd.foresp.TypeSMinfo
+import no.nav.syfo.generateDiagnose
+import no.nav.syfo.generateMedisinskVurdering
 import no.nav.syfo.generatePeriode
 import no.nav.syfo.generatePrognose
 import no.nav.syfo.generateSykmelding
@@ -155,7 +157,7 @@ object ValidationRuleChainSpek : Spek({
             }
 
             ValidationRuleChain.PATIENT_NOT_IN_IP(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
-            }
+        }
 
         it("Should check rule PATIENT_NOT_IN_IP, should NOT trigger rule") {
             val healthInformation = generateSykmelding()
@@ -1081,6 +1083,28 @@ object ValidationRuleChainSpek : Spek({
             }
 
             ValidationRuleChain.ARBEIDUFORETOM_MANGLER(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+        }
+
+        it("Should check rule HOUVEDDIAGNOSE_MANGLER, should trigger rule") {
+            val healthInformation = generateSykmelding(perioder = listOf(
+                    generatePeriode(
+                            fom = LocalDate.of(2019, 6, 27),
+                            tom = LocalDate.of(2019, 6, 28)
+                    )
+            ), medisinskVurdering = generateMedisinskVurdering(hovedDiagnose = null))
+
+            ValidationRuleChain.HOUVEDDIAGNOSE_MANGLER(ruleData(healthInformation, deafaultInfotrygdForesp())) shouldEqual true
+        }
+
+        it("Should check rule HOUVEDDIAGNOSE_MANGLER, should NOT trigger rule") {
+            val healthInformation = generateSykmelding(perioder = listOf(
+                    generatePeriode(
+                            fom = LocalDate.of(2019, 6, 27),
+                            tom = LocalDate.of(2019, 6, 28)
+                    )
+            ), medisinskVurdering = generateMedisinskVurdering(hovedDiagnose = generateDiagnose()))
+
+            ValidationRuleChain.HOUVEDDIAGNOSE_MANGLER(ruleData(healthInformation, deafaultInfotrygdForesp())) shouldEqual false
         }
     }
 })
