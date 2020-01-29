@@ -29,7 +29,6 @@ val sykmeldingVersion = "2019.07.29-02-53-86b22e73f7843e422ee500b486dac387a582f2
 val cxfVersion = "3.2.7"
 val jaxwsApiVersion = "2.3.1"
 val commonsTextVersion = "1.4"
-val navArbeidsfordelingv1Version = "1.2019.07.11-06.47-b55f47790a9d"
 val navPersonv3Version = "1.2019.07.11-06.47-b55f47790a9d"
 val jaxbBasicAntVersion = "1.11.1"
 val javaxAnnotationApiVersion = "1.3.2"
