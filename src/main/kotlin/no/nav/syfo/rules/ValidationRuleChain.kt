@@ -290,6 +290,7 @@ enum class ValidationRuleChain(
         infotrygdForesp.pasient?.status?.kodeMelding?.toIntOrNull() != null &&
                 infotrygdForesp.pasient.status.kodeMelding.toInt() > 4
     }),
+
     @Description("Infotrygd returnerte ikke arbufoerTOM dato på sykmeldings historikken, vi kan ikke automatisk oppdatere Infotrygd")
     ARBEIDUFORETOM_MANGLER(
             1591,
@@ -300,6 +301,16 @@ enum class ValidationRuleChain(
                 infotrygdForesp.sMhistorikk?.sykmelding != null &&
                 infotrygdForesp.sMhistorikk.status.kodeMelding != "04" &&
                 infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().lastOrNull()?.periode?.arbufoerTOM == null
+            }),
+
+    @Description("Infotrygd kan ikkje oppdateres automatisk når det mangler houveddiagnose")
+    HOUVEDDIAGNOSE_MANGLER(
+            1591,
+            Status.MANUAL_PROCESSING,
+            "Sykmeldingen inneholder ingen houveddiagnose, vi kan ikke automatisk oppdatere Infotrygd",
+            "Sykmeldingen inneholder ingen houveddiagnose, vi kan ikke automatisk oppdatere Infotrygd",
+            { (sykmelding, _) ->
+                sykmelding.medisinskVurdering.hovedDiagnose == null
             }),
 }
 
