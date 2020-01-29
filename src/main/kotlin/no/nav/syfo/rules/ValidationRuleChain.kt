@@ -305,7 +305,7 @@ enum class ValidationRuleChain(
 
     @Description("Infotrygd kan ikkje oppdateres automatisk når det mangler houveddiagnose")
     HOUVEDDIAGNOSE_MANGLER(
-            ,
+            9999,
             Status.MANUAL_PROCESSING,
             "Sykmeldingen inneholder ingen houveddiagnose, vi kan ikke automatisk oppdatere Infotrygd",
             "Sykmeldingen inneholder ingen houveddiagnose, vi kan ikke automatisk oppdatere Infotrygd",
