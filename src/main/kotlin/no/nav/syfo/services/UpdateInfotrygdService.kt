@@ -495,7 +495,7 @@ class UpdateInfotrygdService {
                     log.warn("Melding market som unødvendig å oppdatere infotrygd, ikkje opprett manuelloppgave {}", fields(loggingMeta))
                 }
                 else -> {
-                    createTask(kafkaProducer, receivedSykmelding, validationResult, navKontorNr, loggingMeta, oppgaveTopic)
+                    opprettOppgave(kafkaProducer, receivedSykmelding, validationResult, navKontorNr, loggingMeta, oppgaveTopic)
                     oppdaterRedis(sha256String, sha256String, jedis, TimeUnit.DAYS.toSeconds(60).toInt(), loggingMeta)
                 }
             }
@@ -505,7 +505,7 @@ class UpdateInfotrygdService {
         }
     }
 
-    private fun createTask(
+    fun opprettOppgave(
         kafkaProducer: KafkaProducer<String,
                 ProduceTask>,
         receivedSykmelding: ReceivedSykmelding,

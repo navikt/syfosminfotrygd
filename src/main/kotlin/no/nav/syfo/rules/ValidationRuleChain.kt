@@ -301,17 +301,7 @@ enum class ValidationRuleChain(
                 infotrygdForesp.sMhistorikk?.sykmelding != null &&
                 infotrygdForesp.sMhistorikk.status.kodeMelding != "04" &&
                 infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().lastOrNull()?.periode?.arbufoerTOM == null
-            }),
-
-    @Description("Infotrygd kan ikkje oppdateres automatisk når det mangler houveddiagnose")
-    HOUVEDDIAGNOSE_MANGLER(
-            9999,
-            Status.MANUAL_PROCESSING,
-            "Sykmeldingen inneholder ingen houveddiagnose, vi kan ikke automatisk oppdatere Infotrygd",
-            "Sykmeldingen inneholder ingen houveddiagnose, vi kan ikke automatisk oppdatere Infotrygd",
-            { (sykmelding, _) ->
-                sykmelding.medisinskVurdering.hovedDiagnose == null
-            }),
+            })
 }
 
 fun List<Periode>.sortedPeriodeTOMDate(): List<LocalDate> =
