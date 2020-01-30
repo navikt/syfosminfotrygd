@@ -288,27 +288,33 @@ suspend fun handleMessage(
         val fellesformat = fellesformatUnmarshaller.unmarshal(StringReader(receivedSykmelding.fellesformat)) as XMLEIFellesformat
         val healthInformation = extractHelseOpplysningerArbeidsuforhet(fellesformat)
 
-        val infotrygdForespResponse = fetchInfotrygdForesp(
+        val validationResultForMottattSykmelding = validerMottattSykmelding(healthInformation)
+        if (validationResultForMottattSykmelding.status == Status.MANUAL_PROCESSING) {
+            log.info("Mottatt sykmelding kan ikke legges inn i infotrygd automatisk, oppretter oppgave", fields(loggingMeta))
+            sendRuleCheckValidationResult(receivedSykmelding, kafkaproducervalidationResult, validationResultForMottattSykmelding, sm2013BehandlingsUtfallToipic, loggingMeta)
+            UpdateInfotrygdService().opprettOppgave(kafkaproducerCreateTask, receivedSykmelding, validationResultForMottattSykmelding, loggingMeta, oppgaveTopic)
+        } else {
+            val infotrygdForespResponse = fetchInfotrygdForesp(
                 receivedSykmelding,
                 infotrygdSporringProducer,
                 session,
                 healthInformation)
 
-        var receivedSykmeldingMedTssId = receivedSykmelding
-        if (receivedSykmelding.tssid.isNullOrBlank()) {
-            val tssId = finnTssIdFraInfotrygdRespons(infotrygdForespResponse.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()?.periode,
-                receivedSykmelding.sykmelding.behandler)
-            log.info("Sykmelding mangler tssid, har hentet tssid $tssId fra infotrygd, {}", fields(loggingMeta))
-            receivedSykmeldingMedTssId = receivedSykmelding.copy(tssid = tssId)
-        }
+            var receivedSykmeldingMedTssId = receivedSykmelding
+            if (receivedSykmelding.tssid.isNullOrBlank()) {
+                val tssId = finnTssIdFraInfotrygdRespons(infotrygdForespResponse.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()?.periode,
+                    receivedSykmelding.sykmelding.behandler)
+                log.info("Sykmelding mangler tssid, har hentet tssid $tssId fra infotrygd, {}", fields(loggingMeta))
+                receivedSykmeldingMedTssId = receivedSykmelding.copy(tssid = tssId)
+            }
 
-        val validationResult = ruleCheck(receivedSykmeldingMedTssId, infotrygdForespResponse, loggingMeta)
+            val validationResult = ruleCheck(receivedSykmeldingMedTssId, infotrygdForespResponse, loggingMeta)
 
         val findNAVKontorService = FindNAVKontorService(receivedSykmeldingMedTssId, personV3, norg2Client, loggingMeta)
 
         val lokaltNavkontor = findNAVKontorService.finnLokaltNavkontor()
 
-        UpdateInfotrygdService().updateInfotrygd(receivedSykmeldingMedTssId,
+            UpdateInfotrygdService().updateInfotrygd(receivedSykmeldingMedTssId,
                 norskHelsenettClient,
                 validationResult,
                 infotrygdOppdateringProducer,
@@ -325,8 +331,8 @@ suspend fun handleMessage(
                 kafkaproducervalidationResult,
                 sm2013BehandlingsUtfallToipic,
                 applicationState
-        )
-
+            )
+        }
         val currentRequestLatency = requestLatency.observeDuration()
 
         log.info("Message processing took {}s, for message {}",
@@ -342,6 +348,20 @@ fun finnTssIdFraInfotrygdRespons(sisteSmPeriode: TypeSMinfo.Periode?, behandler:
         return sisteSmPeriode.legeInstNr?.toString()
     }
     return null
+}
+
+fun validerMottattSykmelding(helseOpplysningerArbeidsuforhet: HelseOpplysningerArbeidsuforhet): ValidationResult {
+    return if (helseOpplysningerArbeidsuforhet.medisinskVurdering.hovedDiagnose == null) {
+        RULE_HIT_STATUS_COUNTER.labels("HOVEDDIAGNOSE_MANGLER").inc()
+        log.warn("Sykmelding mangler hoveddiagnose")
+        ValidationResult(Status.MANUAL_PROCESSING, listOf(
+            RuleInfo("HOVEDDIAGNOSE_MANGLER",
+                "Sykmeldingen inneholder ingen hoveddiagnose, vi kan ikke automatisk oppdatere Infotrygd",
+                "Sykmeldingen inneholder ingen hoveddiagnose, vi kan ikke automatisk oppdatere Infotrygd",
+                Status.MANUAL_PROCESSING)))
+    } else {
+        ValidationResult(Status.OK, emptyList())
+    }
 }
 
 fun ruleCheck(
