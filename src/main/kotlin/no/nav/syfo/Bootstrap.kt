@@ -34,7 +34,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import net.logstash.logback.argument.StructuredArguments.fields
-import net.logstash.logback.argument.StructuredArguments.keyValue
 import no.nav.helse.eiFellesformat.XMLEIFellesformat
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.infotrygd.foresp.TypeSMinfo
@@ -336,7 +335,7 @@ suspend fun handleMessage(
         val currentRequestLatency = requestLatency.observeDuration()
 
         log.info("Message processing took {}s, for message {}",
-                keyValue("latency", currentRequestLatency),
+                currentRequestLatency.toString(),
                 fields(loggingMeta))
     }
 }
@@ -352,7 +351,7 @@ fun finnTssIdFraInfotrygdRespons(sisteSmPeriode: TypeSMinfo.Periode?, behandler:
 
 fun validerMottattSykmelding(helseOpplysningerArbeidsuforhet: HelseOpplysningerArbeidsuforhet): ValidationResult {
     return if (helseOpplysningerArbeidsuforhet.medisinskVurdering.hovedDiagnose == null) {
-        RULE_HIT_STATUS_COUNTER.labels("HOVEDDIAGNOSE_MANGLER").inc()
+        RULE_HIT_STATUS_COUNTER.labels("MANUAL_PROCESSING").inc()
         log.warn("Sykmelding mangler hoveddiagnose")
         ValidationResult(Status.MANUAL_PROCESSING, listOf(
             RuleInfo("HOVEDDIAGNOSE_MANGLER",
