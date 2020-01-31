@@ -289,7 +289,7 @@ suspend fun handleMessage(
 
         val validationResultForMottattSykmelding = validerMottattSykmelding(healthInformation)
         if (validationResultForMottattSykmelding.status == Status.MANUAL_PROCESSING) {
-            log.info("Mottatt sykmelding kan ikke legges inn i infotrygd automatisk, oppretter oppgave", fields(loggingMeta))
+            log.info("Mottatt sykmelding kan ikke legges inn i infotrygd automatisk, oppretter oppgave, {}", fields(loggingMeta))
             sendRuleCheckValidationResult(receivedSykmelding, kafkaproducervalidationResult, validationResultForMottattSykmelding, sm2013BehandlingsUtfallToipic, loggingMeta)
             UpdateInfotrygdService().opprettOppgave(kafkaproducerCreateTask, receivedSykmelding, validationResultForMottattSykmelding, loggingMeta, oppgaveTopic)
         } else {
