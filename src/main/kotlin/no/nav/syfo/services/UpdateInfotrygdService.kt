@@ -58,7 +58,6 @@ class UpdateInfotrygdService {
         validationResult: ValidationResult,
         infotrygdOppdateringProducer: MessageProducer,
         kafkaproducerCreateTask: KafkaProducer<String, ProduceTask>,
-        navKontorManuellOppgave: String,
         navKontorLokalKontor: String,
         loggingMeta: LoggingMeta,
         session: Session,
@@ -79,7 +78,7 @@ class UpdateInfotrygdService {
             when (validationResult.status) {
                 in arrayOf(Status.MANUAL_PROCESSING) ->
                     produceManualTaskAndSendValidationResults(kafkaproducerCreateTask, receivedSykmelding, validationResult,
-                            navKontorManuellOppgave, loggingMeta, oppgaveTopic, sm2013BehandlingsUtfallToipic,
+                            loggingMeta, oppgaveTopic, sm2013BehandlingsUtfallToipic,
                             kafkaproducervalidationResult,
                             InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
                             helsepersonellKategoriVerdi, jedis, applicationState)
@@ -114,7 +113,7 @@ class UpdateInfotrygdService {
             RULE_HIT_STATUS_COUNTER.labels(validationResultBehandler.status.name).inc()
             log.warn("Behandler er ikke registert i HPR")
             produceManualTaskAndSendValidationResults(kafkaproducerCreateTask, receivedSykmelding, validationResultBehandler,
-                    navKontorManuellOppgave, loggingMeta, oppgaveTopic, sm2013BehandlingsUtfallToipic, kafkaproducervalidationResult,
+                    loggingMeta, oppgaveTopic, sm2013BehandlingsUtfallToipic, kafkaproducervalidationResult,
                     InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
                     HelsepersonellKategori.LEGE.verdi, jedis, applicationState)
         }
@@ -445,7 +444,6 @@ class UpdateInfotrygdService {
         kafkaProducer: KafkaProducer<String, ProduceTask>,
         receivedSykmelding: ReceivedSykmelding,
         validationResult: ValidationResult,
-        navKontorNr: String,
         loggingMeta: LoggingMeta,
         oppgaveTopic: String,
         sm2013BehandlingsUtfallToipic: String,
@@ -467,7 +465,7 @@ class UpdateInfotrygdService {
             }
             val sha256String = sha256hashstring(createInfotrygdBlokk(
                     itfh, perioder.first(), receivedSykmelding.personNrPasient, LocalDate.of(2019, 1, 1),
-                    helsepersonellKategoriVerdi, tssid, loggingMeta, navKontorNr,
+                    helsepersonellKategoriVerdi, tssid, loggingMeta, "",
                     findarbeidsKategori(itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver),
                     forsteFravaersDag, 1)
             )
@@ -495,7 +493,7 @@ class UpdateInfotrygdService {
                     log.warn("Melding market som unødvendig å oppdatere infotrygd, ikkje opprett manuelloppgave {}", fields(loggingMeta))
                 }
                 else -> {
-                    opprettOppgave(kafkaProducer, receivedSykmelding, validationResult, navKontorNr, loggingMeta, oppgaveTopic)
+                    opprettOppgave(kafkaProducer, receivedSykmelding, validationResult, loggingMeta, oppgaveTopic)
                     oppdaterRedis(sha256String, sha256String, jedis, TimeUnit.DAYS.toSeconds(60).toInt(), loggingMeta)
                 }
             }
@@ -510,7 +508,6 @@ class UpdateInfotrygdService {
                 ProduceTask>,
         receivedSykmelding: ReceivedSykmelding,
         validationResult: ValidationResult,
-        navKontorNr: String,
         loggingMeta: LoggingMeta,
         oppgaveTopic: String
     ) {
@@ -518,7 +515,7 @@ class UpdateInfotrygdService {
                 ProduceTask().apply {
                     messageId = receivedSykmelding.msgId
                     aktoerId = receivedSykmelding.sykmelding.pasientAktoerId
-                    tildeltEnhetsnr = navKontorNr
+                    tildeltEnhetsnr = ""
                     opprettetAvEnhetsnr = "9999"
                     behandlesAvApplikasjon = "FS22" // Gosys
                     orgnr = receivedSykmelding.legekontorOrgNr ?: ""

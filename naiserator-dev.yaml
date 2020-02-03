@@ -45,8 +45,6 @@ spec:
       value: QA.Q291.IT00_FORESPORSEL_XML
     - name: INFOTRYGD_OPPDATERING_QUEUE
       value: QA.Q291.IT00_SMOPPDATERING
-    - name: ARBEIDSFORDELING_V1_ENDPOINT_URL
-      value: https://app-q1.adeo.no/norg2/ws/Arbeidsfordeling/v1
     - name: MQ_HOST_NAME
       value: b27apvl173.preprod.local
     - name: MQ_PORT
