@@ -189,29 +189,31 @@ fun launchListeners(
     kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
     credentials: VaultCredentials
 ) {
-        val kafkaconsumerRecievedSykmelding = KafkaConsumer<String, String>(consumerProperties)
+    val kafkaconsumerRecievedSykmelding = KafkaConsumer<String, String>(consumerProperties)
 
-        kafkaconsumerRecievedSykmelding.subscribe(
-                listOf(env.sm2013AutomaticHandlingTopic, env.smPaperAutomaticHandlingTopic, env.sm2013infotrygdRetry)
-        )
-        createListener(applicationState) {
-            connectionFactory(env).createConnection(credentials.mqUsername, credentials.mqPassword).use { connection ->
-                Jedis(env.redishost, 6379).use { jedis ->
+    kafkaconsumerRecievedSykmelding.subscribe(
+        listOf(env.sm2013AutomaticHandlingTopic, env.smPaperAutomaticHandlingTopic, env.sm2013infotrygdRetry)
+    )
+    createListener(applicationState) {
+        connectionFactory(env).createConnection(credentials.mqUsername, credentials.mqPassword).use { connection ->
+            Jedis(env.redishost, 6379).use { jedis ->
                 connection.start()
                 val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
                 val infotrygdOppdateringProducer = session.producerForQueue("queue:///${env.infotrygdOppdateringQueue}?targetClient=1")
                 val infotrygdSporringProducer = session.producerForQueue("queue:///${env.infotrygdSporringQueue}?targetClient=1")
 
+                jedis.auth(credentials.redisSecret)
+
                 applicationState.ready = true
 
                 blockingApplicationLogic(applicationState, kafkaconsumerRecievedSykmelding, kafkaproducerCreateTask,
-                        kafkaproducervalidationResult, infotrygdOppdateringProducer, infotrygdSporringProducer,
-                        session, personV3, env.sm2013BehandlingsUtfallToipic, norskHelsenettClient,
-                        smIkkeOkQueue, norg2Client, jedis, kafkaproducerreceivedSykmelding, env.sm2013infotrygdRetry,
-                        env.sm2013OpppgaveTopic)
-                }
+                    kafkaproducervalidationResult, infotrygdOppdateringProducer, infotrygdSporringProducer,
+                    session, personV3, env.sm2013BehandlingsUtfallToipic, norskHelsenettClient,
+                    smIkkeOkQueue, norg2Client, jedis, kafkaproducerreceivedSykmelding, env.sm2013infotrygdRetry,
+                    env.sm2013OpppgaveTopic)
             }
         }
+    }
 
     applicationState.alive = true
 }
