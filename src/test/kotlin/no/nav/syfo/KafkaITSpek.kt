@@ -27,7 +27,7 @@ object KafkaITSpek : Spek({
             topicNames = listOf(topic)
     )
 
-    val credentials = VaultCredentials("", "", "", "", "")
+    val credentials = VaultCredentials("", "", "", "", "", "")
 
     val config = Environment(mqHostname = "mqhost", mqPort = getRandomPort(),
             mqGatewayName = "mqGateway", kafkaBootstrapServers = embeddedEnvironment.brokersURL,
