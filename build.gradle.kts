@@ -40,6 +40,7 @@ val kontrollsystemblokk = "2019.07.29-02-53-86b22e73f7843e422ee500b486dac387a582
 val javaxJaxwsApiVersion = "2.2.1"
 val jaxbTimeAdaptersVersion = "1.1.3"
 val embeddedRedisVersion = "0.6"
+val smCommonDiagnosisCodesVersion = "1.f898112"
 
 plugins {
     java
@@ -111,6 +112,7 @@ dependencies {
     implementation ("no.nav.helse:syfosm-common-networking:$smCommonVersion")
     implementation ("no.nav.helse:syfosm-common-rest-sts:$smCommonVersion")
     implementation ("no.nav.helse:syfosm-common-networking:$smCommonVersion")
+    implementation ("no.nav.helse:syfosm-common-diagnosis-codes:$smCommonDiagnosisCodesVersion")
 
     implementation ("org.apache.commons:commons-text:$commonsTextVersion")
     implementation ("org.apache.cxf:cxf-rt-frontend-jaxws:$cxfVersion")
