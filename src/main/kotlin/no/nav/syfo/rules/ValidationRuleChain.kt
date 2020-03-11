@@ -78,8 +78,8 @@ enum class ValidationRuleChain(
                         infotrygdForesp.sMhistorikk.sykmelding.sortedTOMDate().lastOrNull() != null &&
                         infotrygdForesp.sMhistorikk.sykmelding.sortedFOMDate().lastOrNull() != null &&
                         sykmelding.perioder.sortedPeriodeTOMDate().lastOrNull() != null &&
-                        (sykmelding.perioder.sortedPeriodeTOMDate().last() in infotrygdForesp.sMhistorikk.sykmelding.first().periode.range() ||
-                                sykmelding.perioder.sortedPeriodeFOMDate().last() in infotrygdForesp.sMhistorikk.sykmelding.first().periode.range()
+                        (infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.arbufoerFOM in sykmelding.perioder.sortedPeriodeTOM().last().range() ||
+                                infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.arbufoerTOM in sykmelding.perioder.sortedPeriodeTOM().last().range()
                                 )
             }),
 
@@ -319,6 +319,9 @@ enum class ValidationRuleChain(
                         infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().lastOrNull()?.periode?.arbufoerTOM == null
             })
 }
+
+fun List<Periode>.sortedPeriodeTOM(): List<Periode> =
+        sortedBy { it.tom }
 
 fun List<Periode>.sortedPeriodeTOMDate(): List<LocalDate> =
         map { it.tom }.sorted()
