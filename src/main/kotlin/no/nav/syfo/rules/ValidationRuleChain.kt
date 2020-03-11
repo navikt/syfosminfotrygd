@@ -21,8 +21,8 @@ enum class ValidationRuleChain(
             "Hvis behandlingsdager er angitt sendes meldingen til manuell behandling.",
             "Hvis behandlingsdager er angitt sendes meldingen til manuell behandling.",
             { (sykmelding, _) ->
-        sykmelding.perioder.any { it.behandlingsdager != null }
-    }),
+                sykmelding.perioder.any { it.behandlingsdager != null }
+            }),
 
     @Description("Hvis sykmeldingen angir og er gradert reisetilskudd går meldingen til manuell behandling.")
     GRADERT_REISETILSKUDD_ER_OPPGITT(
@@ -31,8 +31,8 @@ enum class ValidationRuleChain(
             "Hvis sykmeldingen angir reisetilskudd går meldingen til manuell behandling.",
             "Hvis sykmeldingen angir reisetilskudd går meldingen til manuell behandling.",
             { (sykmelding, _) ->
-        sykmelding.perioder.any { it.gradert?.reisetilskudd ?: false }
-    }),
+                sykmelding.perioder.any { it.gradert?.reisetilskudd ?: false }
+            }),
 
     @Description("Hvis sykmeldingen angir reisetilskudd går meldingen til manuell behandling.")
     TRAVEL_SUBSIDY_SPECIFIED(
@@ -51,8 +51,8 @@ enum class ValidationRuleChain(
             "Hvis pasienten ikke finnes i infotrygd",
             "Hvis pasienten ikke finnes i infotrygd",
             { (_, infotrygdForesp) ->
-        infotrygdForesp.pasient?.isFinnes != null && !infotrygdForesp.pasient.isFinnes
-    }),
+                infotrygdForesp.pasient?.isFinnes != null && !infotrygdForesp.pasient.isFinnes
+            }),
 
     @Description("Hvis delvis sammenfallende sykmeldingsperiode er registrert i Infotrygd")
     PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE(
@@ -62,10 +62,26 @@ enum class ValidationRuleChain(
             "Hvis delvis sammenfallende sykmeldingsperiode er registrert i Infotrygd",
             { (sykmelding, infotrygdForesp) ->
                 infotrygdForesp.sMhistorikk?.sykmelding != null &&
-                infotrygdForesp.sMhistorikk.sykmelding.sortedTOMDate().lastOrNull() != null &&
-                sykmelding.perioder.sortedPeriodeTOMDate().lastOrNull() != null &&
-                sykmelding.perioder.sortedPeriodeTOMDate().last().isBefore(infotrygdForesp.sMhistorikk.sykmelding.sortedTOMDate().last())
-    }),
+                        infotrygdForesp.sMhistorikk.sykmelding.sortedTOMDate().lastOrNull() != null &&
+                        sykmelding.perioder.sortedPeriodeTOMDate().lastOrNull() != null &&
+                        sykmelding.perioder.sortedPeriodeTOMDate().last().isBefore(infotrygdForesp.sMhistorikk.sykmelding.sortedTOMDate().last())
+            }),
+
+    @Description("Hvis delvis sammenfallende sykmeldingsperiode er registrert i Infotrygd")
+    PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE_1(
+            1513,
+            Status.MANUAL_PROCESSING,
+            "Hvis delvis sammenfallende sykmeldingsperiode er registrert i Infotrygd",
+            "Hvis delvis sammenfallende sykmeldingsperiode er registrert i Infotrygd",
+            { (sykmelding, infotrygdForesp) ->
+                infotrygdForesp.sMhistorikk?.sykmelding != null &&
+                        infotrygdForesp.sMhistorikk.sykmelding.sortedTOMDate().lastOrNull() != null &&
+                        infotrygdForesp.sMhistorikk.sykmelding.sortedFOMDate().lastOrNull() != null &&
+                        sykmelding.perioder.sortedPeriodeTOMDate().lastOrNull() != null &&
+                        (infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.arbufoerFOM in sykmelding.perioder.sortedPeriodeTOM().last().range() ||
+                                infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.arbufoerTOM in sykmelding.perioder.sortedPeriodeTOM().last().range()
+                                )
+            }),
 
     @Description("Hvis sykmeldingen er forlengelse av registrert sykepengehistorikk fra annet kontor så medlingen gå til manuell behandling slik at saksbehandler kan registrere sykepengetilfellet på ny identdato og  send oppgave til Nav forvaltning for registrering av inntektsopplysninger")
     SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_1(
@@ -74,18 +90,18 @@ enum class ValidationRuleChain(
             "Hvis sykmeldingen er forlengelse av registrert sykepengehistorikk fra annet kontor så medlingen gå til manuell behandling slik at saksbehandler kan registrere sykepengetilfellet på ny identdato og  send oppgave til Nav forvaltning for registrering av inntektsopplysninger",
             "Hvis sykmeldingen er forlengelse av registrert sykepengehistorikk fra annet kontor så medlingen gå til manuell behandling slik at saksbehandler kan registrere sykepengetilfellet på ny identdato og  send oppgave til Nav forvaltning for registrering av inntektsopplysninger",
             { (sykmelding, infotrygdForesp) ->
-        infotrygdForesp.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()?.periode?.arbufoerFOM != null &&
-        sykmelding.perioder.sortedPeriodeFOMDate().lastOrNull() != null &&
-        !infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode?.friskKode.isNullOrBlank() &&
-        !infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode?.hovedDiagnosekode.isNullOrBlank() &&
-        infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.arbufoerFOM.isBefore(
-                sykmelding.perioder.sortedPeriodeFOMDate().last()
-        ) && infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode?.utbetTOM != null &&
-        infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.utbetTOM.isAfter(
-                sykmelding.perioder.sortedPeriodeFOMDate().last()
-        ) && infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.hovedDiagnosekode != "000" &&
-                infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.friskKode != "H"
-    }),
+                infotrygdForesp.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()?.periode?.arbufoerFOM != null &&
+                        sykmelding.perioder.sortedPeriodeFOMDate().lastOrNull() != null &&
+                        !infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode?.friskKode.isNullOrBlank() &&
+                        !infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode?.hovedDiagnosekode.isNullOrBlank() &&
+                        infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.arbufoerFOM.isBefore(
+                                sykmelding.perioder.sortedPeriodeFOMDate().last()
+                        ) && infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode?.utbetTOM != null &&
+                        infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.utbetTOM.isAfter(
+                                sykmelding.perioder.sortedPeriodeFOMDate().last()
+                        ) && infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.hovedDiagnosekode != "000" &&
+                        infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.friskKode != "H"
+            }),
 
     @Description("Hvis sykmeldingen er forlengelse av registrert sykepengehistorikk fra annet kontor så medlingen gå til manuell behandling slik at  saksbehandler kan registrere sykepengetilfellet på ny identdato og  send oppgave til Nav forvaltning for registrering av inntektsopplysninger")
     SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_2(
@@ -94,15 +110,15 @@ enum class ValidationRuleChain(
             "Hvis sykmeldingen er forlengelse av registrert sykepengehistorikk fra annet kontor så medlingen gå til manuell behandling slik at  saksbehandler kan registrere sykepengetilfellet på ny identdato og  send oppgave til Nav forvaltning for registrering av inntektsopplysninger",
             "Hvis sykmeldingen er forlengelse av registrert sykepengehistorikk fra annet kontor så medlingen gå til manuell behandling slik at  saksbehandler kan registrere sykepengetilfellet på ny identdato og  send oppgave til Nav forvaltning for registrering av inntektsopplysninger",
             { (sykmelding, infotrygdForesp) ->
-        infotrygdForesp.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull() != null &&
-        !infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode?.friskKode.isNullOrBlank() &&
-        !infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode?.hovedDiagnosekode.isNullOrBlank() &&
-        infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode?.utbetTOM != null &&
-        infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.utbetTOM.plusDays(1) ==
-        sykmelding.perioder.sortedPeriodeFOMDate().last() &&
-        infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.hovedDiagnosekode != "000" &&
-        infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.friskKode != "H"
-    }),
+                infotrygdForesp.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull() != null &&
+                        !infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode?.friskKode.isNullOrBlank() &&
+                        !infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode?.hovedDiagnosekode.isNullOrBlank() &&
+                        infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode?.utbetTOM != null &&
+                        infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.utbetTOM.plusDays(1) ==
+                        sykmelding.perioder.sortedPeriodeFOMDate().last() &&
+                        infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.hovedDiagnosekode != "000" &&
+                        infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.friskKode != "H"
+            }),
 
     @Description("Hvis sykmeldingen er forlengelse av registrert sykepengehistorikk fra annet kontor så medlingen gå til manuell behandling slik at  saksbehandler kan registrere sykepengetilfellet på ny identdato og send oppgave til Nav forvaltning for registrering av inntektsopplysninger")
     SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_3(
@@ -111,20 +127,20 @@ enum class ValidationRuleChain(
             "Hvis sykmeldingen er forlengelse av registrert sykepengehistorikk fra annet kontor så medlingen gå til manuell behandling slik at  saksbehandler kan registrere sykepengetilfellet på ny identdato og send oppgave til Nav forvaltning for registrering av inntektsopplysninger",
             "Hvis sykmeldingen er forlengelse av registrert sykepengehistorikk fra annet kontor så medlingen gå til manuell behandling slik at  saksbehandler kan registrere sykepengetilfellet på ny identdato og send oppgave til Nav forvaltning for registrering av inntektsopplysninger",
             { (sykmelding, infotrygdForesp) ->
-        sykmelding.perioder.sortedPeriodeFOMDate().lastOrNull() != null &&
-        infotrygdForesp.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()?.periode?.utbetTOM != null &&
-        !infotrygdForesp.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()?.periode?.friskKode.isNullOrBlank() &&
-        !infotrygdForesp.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()?.periode?.hovedDiagnosekode.isNullOrBlank() &&
-        infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.utbetTOM.isBefore(
-                        sykmelding.perioder.sortedPeriodeFOMDate().last()) &&
-        infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.utbetTOM.plusDays(3).isAfter(
-                        sykmelding.perioder.sortedPeriodeFOMDate().last()) &&
-        infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.utbetTOM.dayOfWeek >= java.time.DayOfWeek.FRIDAY &&
-        sykmelding.perioder.sortedPeriodeFOMDate().last().dayOfWeek in arrayOf(
-                java.time.DayOfWeek.SATURDAY, java.time.DayOfWeek.SUNDAY, java.time.DayOfWeek.MONDAY) &&
-        infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.hovedDiagnosekode != "000" &&
-        infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.friskKode != "H"
-    }),
+                sykmelding.perioder.sortedPeriodeFOMDate().lastOrNull() != null &&
+                        infotrygdForesp.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()?.periode?.utbetTOM != null &&
+                        !infotrygdForesp.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()?.periode?.friskKode.isNullOrBlank() &&
+                        !infotrygdForesp.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()?.periode?.hovedDiagnosekode.isNullOrBlank() &&
+                        infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.utbetTOM.isBefore(
+                                sykmelding.perioder.sortedPeriodeFOMDate().last()) &&
+                        infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.utbetTOM.plusDays(3).isAfter(
+                                sykmelding.perioder.sortedPeriodeFOMDate().last()) &&
+                        infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.utbetTOM.dayOfWeek >= java.time.DayOfWeek.FRIDAY &&
+                        sykmelding.perioder.sortedPeriodeFOMDate().last().dayOfWeek in arrayOf(
+                        java.time.DayOfWeek.SATURDAY, java.time.DayOfWeek.SUNDAY, java.time.DayOfWeek.MONDAY) &&
+                        infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.hovedDiagnosekode != "000" &&
+                        infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.friskKode != "H"
+            }),
 
     @Description("Hvis ny friskmeldingsdato er mindre enn utbetalingTOM registrert i Infotrygd")
     NEW_CLEAN_BILL_DATE_BEFORE_PAYOUT(
@@ -134,13 +150,13 @@ enum class ValidationRuleChain(
             "Hvis ny friskmeldingsdato er mindre enn utbetalingTOM registrert i Infotrygd",
             { (sykmelding, infotrygdForesp) ->
                 sykmelding.prognose?.arbeidsforEtterPeriode != null &&
-                sykmelding.prognose?.arbeidsforEtterPeriode ?: false &&
-                infotrygdForesp.sMhistorikk?.sykmelding != null &&
-                sykmelding.perioder.sortedPeriodeTOMDate().lastOrNull() != null &&
-                infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().lastOrNull()?.periode?.utbetTOM != null &&
-                sykmelding.perioder.sortedPeriodeTOMDate().last().isBefore(
-                infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.utbetTOM)
-    }),
+                        sykmelding.prognose?.arbeidsforEtterPeriode ?: false &&
+                        infotrygdForesp.sMhistorikk?.sykmelding != null &&
+                        sykmelding.perioder.sortedPeriodeTOMDate().lastOrNull() != null &&
+                        infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().lastOrNull()?.periode?.utbetTOM != null &&
+                        sykmelding.perioder.sortedPeriodeTOMDate().last().isBefore(
+                                infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.utbetTOM)
+            }),
 
     @Description("Hvis ny friskmeldingsdato er tidligere enn registrert friskmeldingsdato i Infotrygd")
     NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE(
@@ -149,13 +165,13 @@ enum class ValidationRuleChain(
             "Hvis ny friskmeldingsdato er tidligere enn registrert friskmeldingsdato i Infotrygd",
             "Hvis ny friskmeldingsdato er tidligere enn registrert friskmeldingsdato i Infotrygd",
             { (sykmelding, infotrygdForesp) ->
-        infotrygdForesp.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()?.periode?.friskmeldtDato != null &&
-                sykmelding.prognose?.arbeidsforEtterPeriode != null &&
-                sykmelding.prognose?.arbeidsforEtterPeriode ?: false &&
-                sykmelding.perioder.sortedPeriodeTOMDate().lastOrNull() != null &&
-                infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().lastOrNull()?.periode?.friskmeldtDato != null &&
-                sykmelding.perioder.sortedPeriodeTOMDate().last().isBefore(infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.friskmeldtDato)
-    }),
+                infotrygdForesp.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()?.periode?.friskmeldtDato != null &&
+                        sykmelding.prognose?.arbeidsforEtterPeriode != null &&
+                        sykmelding.prognose?.arbeidsforEtterPeriode ?: false &&
+                        sykmelding.perioder.sortedPeriodeTOMDate().lastOrNull() != null &&
+                        infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().lastOrNull()?.periode?.friskmeldtDato != null &&
+                        sykmelding.perioder.sortedPeriodeTOMDate().last().isBefore(infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.friskmeldtDato)
+            }),
 
     @Description("Hvis forlengelse utover registrert tiltak FA tiltak")
     EXTANION_OVER_FA(
@@ -164,19 +180,19 @@ enum class ValidationRuleChain(
             "Hvis forlengelse utover registrert tiltak FA tiltak",
             "Hvis forlengelse utover registrert tiltak FA tiltak",
             { (sykmelding, infotrygdForesp) ->
-        infotrygdForesp.sMhistorikk?.sykmelding != null &&
-        sykmelding.perioder.sortedPeriodeFOMDate().lastOrNull() != null &&
-        infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().lastOrNull()?.historikk?.sortedSMinfoHistorikk()?.lastOrNull()?.tilltak?.type != null &&
-        infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().historikk.sortedSMinfoHistorikk().last().tilltak.type == "FA" &&
-        infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().historikk.sortedSMinfoHistorikk().last().tilltak.tom != null &&
-        sykmelding.perioder.any { periodA ->
-            infotrygdForesp.sMhistorikk.sykmelding.any { sykmeldinger ->
-                sykmeldinger.historikk.any { historikk ->
-                    historikk?.tilltak != null && historikk.tilltak.type == "FA" && historikk.tilltak.fom in periodA.range() || historikk?.tilltak != null && historikk.tilltak.tom in periodA.range()
-                }
-            }
-        }
-    }),
+                infotrygdForesp.sMhistorikk?.sykmelding != null &&
+                        sykmelding.perioder.sortedPeriodeFOMDate().lastOrNull() != null &&
+                        infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().lastOrNull()?.historikk?.sortedSMinfoHistorikk()?.lastOrNull()?.tilltak?.type != null &&
+                        infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().historikk.sortedSMinfoHistorikk().last().tilltak.type == "FA" &&
+                        infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().historikk.sortedSMinfoHistorikk().last().tilltak.tom != null &&
+                        sykmelding.perioder.any { periodA ->
+                            infotrygdForesp.sMhistorikk.sykmelding.any { sykmeldinger ->
+                                sykmeldinger.historikk.any { historikk ->
+                                    historikk?.tilltak != null && historikk.tilltak.type == "FA" && historikk.tilltak.fom in periodA.range() || historikk?.tilltak != null && historikk.tilltak.tom in periodA.range()
+                                }
+                            }
+                        }
+            }),
 
     @Description("Personen har flyttet ( stanskode FL i Infotrygd)")
     PERSON_MOVING_KODE_FL(
@@ -185,11 +201,11 @@ enum class ValidationRuleChain(
             "Personen har flyttet ( stanskode FL i Infotrygd)",
             "Personen har flyttet ( stanskode FL i Infotrygd)",
             { (_, infotrygdForesp) ->
-        infotrygdForesp.sMhistorikk?.sykmelding?.find {
-            it.periode?.arbufoerFOM != null &&
-                it.periode.arbufoerFOM == infotrygdForesp.sMhistorikk?.sykmelding?.sortedFOMDate()?.lastOrNull()
-            }?.periode?.stans == "FL"
-        }),
+                infotrygdForesp.sMhistorikk?.sykmelding?.find {
+                    it.periode?.arbufoerFOM != null &&
+                            it.periode.arbufoerFOM == infotrygdForesp.sMhistorikk?.sykmelding?.sortedFOMDate()?.lastOrNull()
+                }?.periode?.stans == "FL"
+            }),
 
     @Description("Hvis perioden er avsluttet (AA)")
     PERIOD_FOR_AA_ENDED(
@@ -198,13 +214,13 @@ enum class ValidationRuleChain(
             "Hvis perioden er avsluttet (AA)",
             "Hvis perioden er avsluttet (AA)",
             { (sykmelding, infotrygdForesp) ->
-        sykmelding.perioder.any {
+                sykmelding.perioder.any {
                     !infotrygdForesp.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()?.periode?.stans.isNullOrBlank() &&
-                    infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.arbufoerTOM != null &&
-                    infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.stans == "AA" &&
-                    it.fom.isBefore(infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.arbufoerTOM)
-        }
-    }),
+                            infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.arbufoerTOM != null &&
+                            infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.stans == "AA" &&
+                            it.fom.isBefore(infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.arbufoerTOM)
+                }
+            }),
 
     @Description("Hvis perioden er avsluttet-frisk (AF)")
     PERIOD_IS_AF(
@@ -213,13 +229,13 @@ enum class ValidationRuleChain(
             "Hvis perioden er avsluttet-frisk (AF)",
             "Hvis perioden er avsluttet-frisk (AF)",
             { (sykmelding, infotrygdForesp) ->
-        sykmelding.perioder.any {
-            !infotrygdForesp.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()?.periode?.stans.isNullOrBlank() &&
-                    infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.arbufoerTOM != null &&
-                    infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.stans == "AF" &&
-                    it.fom.isBefore(infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.arbufoerTOM)
-        }
-    }),
+                sykmelding.perioder.any {
+                    !infotrygdForesp.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()?.periode?.stans.isNullOrBlank() &&
+                            infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.arbufoerTOM != null &&
+                            infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.stans == "AF" &&
+                            it.fom.isBefore(infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.arbufoerTOM)
+                }
+            }),
 
     @Description("Hvis maks sykepenger er utbetalt")
     MAX_SICK_LEAVE_PAYOUT(
@@ -230,11 +246,11 @@ enum class ValidationRuleChain(
             { (sykmelding, infotrygdForesp) ->
                 sykmelding.perioder.any {
                     !infotrygdForesp.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()?.periode?.stans.isNullOrBlank() &&
-                        infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.stans == "MAX" &&
-                        infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.arbufoerTOM != null &&
-                        it.fom.isBefore(infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.arbufoerTOM.plusMonths(6))
+                            infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.stans == "MAX" &&
+                            infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.arbufoerTOM != null &&
+                            it.fom.isBefore(infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.arbufoerTOM.plusMonths(6))
                 }
-    }),
+            }),
 
     @Description("Infotrygd returnerte en feil, vi kan ikke automatisk oppdatere Infotrygd")
     ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING(
@@ -243,9 +259,9 @@ enum class ValidationRuleChain(
             "Infotrygd returnerte en feil, vi kan ikke automatisk oppdatere Infotrygd",
             "Infotrygd returnerte en feil, vi kan ikke automatisk oppdatere Infotrygd",
             { (_, infotrygdForesp) ->
-        infotrygdForesp.hovedStatus?.kodeMelding?.toIntOrNull() != null &&
-                infotrygdForesp.hovedStatus.kodeMelding.toInt() > 4
-    }),
+                infotrygdForesp.hovedStatus?.kodeMelding?.toIntOrNull() != null &&
+                        infotrygdForesp.hovedStatus.kodeMelding.toInt() > 4
+            }),
 
     @Description("Infotrygd returnerte en feil, vi kan ikke automatisk oppdatere Infotrygd")
     ERROR_FROM_IT_SMHISTORIKK_STATUS_KODEMELDING(
@@ -254,9 +270,9 @@ enum class ValidationRuleChain(
             "Infotrygd returnerte en feil, vi kan ikke automatisk oppdatere Infotrygd",
             "Infotrygd returnerte en feil, vi kan ikke automatisk oppdatere Infotrygd",
             { (_, infotrygdForesp) ->
-        infotrygdForesp.sMhistorikk?.status?.kodeMelding?.toIntOrNull() != null &&
-                infotrygdForesp.sMhistorikk.status.kodeMelding.toInt() > 4
-    }),
+                infotrygdForesp.sMhistorikk?.status?.kodeMelding?.toIntOrNull() != null &&
+                        infotrygdForesp.sMhistorikk.status.kodeMelding.toInt() > 4
+            }),
 
     @Description("Infotrygd returnerte en feil, vi kan ikke automatisk oppdatere Infotrygd")
     ERROR_FROM_IT_PARALELLYTELSER_STATUS_KODEMELDING(
@@ -265,9 +281,9 @@ enum class ValidationRuleChain(
             "Infotrygd returnerte en feil, vi kan ikke automatisk oppdatere Infotrygd",
             "Infotrygd returnerte en feil, vi kan ikke automatisk oppdatere Infotrygd",
             { (_, infotrygdForesp) ->
-        infotrygdForesp.parallelleYtelser?.status?.kodeMelding?.toIntOrNull() != null &&
-                infotrygdForesp.parallelleYtelser.status.kodeMelding.toInt() > 4
-    }),
+                infotrygdForesp.parallelleYtelser?.status?.kodeMelding?.toIntOrNull() != null &&
+                        infotrygdForesp.parallelleYtelser.status.kodeMelding.toInt() > 4
+            }),
 
     @Description("Infotrygd returnerte en feil, vi kan ikke automatisk oppdatere Infotrygd")
     ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING(
@@ -276,9 +292,9 @@ enum class ValidationRuleChain(
             "Infotrygd returnerte en feil, vi kan ikke automatisk oppdatere Infotrygd",
             "Infotrygd returnerte en feil, vi kan ikke automatisk oppdatere Infotrygd",
             { (_, infotrygdForesp) ->
-        infotrygdForesp.diagnosekodeOK?.status?.kodeMelding?.toIntOrNull() != null &&
-                infotrygdForesp.diagnosekodeOK.status.kodeMelding.toInt() > 4
-    }),
+                infotrygdForesp.diagnosekodeOK?.status?.kodeMelding?.toIntOrNull() != null &&
+                        infotrygdForesp.diagnosekodeOK.status.kodeMelding.toInt() > 4
+            }),
 
     @Description("Infotrygd returnerte en feil, vi kan ikke automatisk oppdatere Infotrygd")
     ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING(
@@ -287,9 +303,9 @@ enum class ValidationRuleChain(
             "Infotrygd returnerte en feil, vi kan ikke automatisk oppdatere Infotrygd",
             "Infotrygd returnerte en feil, vi kan ikke automatisk oppdatere Infotrygd",
             { (_, infotrygdForesp) ->
-        infotrygdForesp.pasient?.status?.kodeMelding?.toIntOrNull() != null &&
-                infotrygdForesp.pasient.status.kodeMelding.toInt() > 4
-    }),
+                infotrygdForesp.pasient?.status?.kodeMelding?.toIntOrNull() != null &&
+                        infotrygdForesp.pasient.status.kodeMelding.toInt() > 4
+            }),
 
     @Description("Infotrygd returnerte ikke arbufoerTOM dato på sykmeldings historikken, vi kan ikke automatisk oppdatere Infotrygd")
     ARBEIDUFORETOM_MANGLER(
@@ -299,10 +315,13 @@ enum class ValidationRuleChain(
             "Infotrygd returnerte ikke arbufoerTOM dato på sykmeldings historikken, vi kan ikke automatisk oppdatere Infotrygd",
             { (_, infotrygdForesp) ->
                 infotrygdForesp.sMhistorikk?.sykmelding != null &&
-                infotrygdForesp.sMhistorikk.status.kodeMelding != "04" &&
-                infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().lastOrNull()?.periode?.arbufoerTOM == null
+                        infotrygdForesp.sMhistorikk.status.kodeMelding != "04" &&
+                        infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().lastOrNull()?.periode?.arbufoerTOM == null
             })
 }
+
+fun List<Periode>.sortedPeriodeTOM(): List<Periode> =
+        sortedBy { it.tom }
 
 fun List<Periode>.sortedPeriodeTOMDate(): List<LocalDate> =
         map { it.tom }.sorted()
@@ -323,3 +342,5 @@ fun List<TypeSMinfo.Historikk>.sortedSMinfoHistorikk(): List<TypeSMinfo.Historik
         sortedBy { it.endringsDato }
 
 fun Periode.range(): ClosedRange<LocalDate> = fom.rangeTo(tom)
+
+fun TypeSMinfo.Periode.range(): ClosedRange<LocalDate> = arbufoerFOM.rangeTo(arbufoerTOM)

@@ -549,6 +549,6 @@ class UpdateInfotrygdService {
         validationResult: ValidationResult
     ): Boolean =
             validationResult.ruleHits.isNotEmpty() && validationResult.ruleHits.any {
-                it.ruleName == ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE.name
+                (it.ruleName == ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE.name || it.ruleName == ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE_1.name)
             } && receivedSykmelding.sykmelding.perioder.sortedPeriodeFOMDate().lastOrNull() != null && receivedSykmelding.sykmelding.perioder.sortedPeriodeTOMDate().lastOrNull() != null && (receivedSykmelding.sykmelding.perioder.sortedPeriodeFOMDate().last()..receivedSykmelding.sykmelding.perioder.sortedPeriodeTOMDate().last()).daysBetween() <= 3
 }
