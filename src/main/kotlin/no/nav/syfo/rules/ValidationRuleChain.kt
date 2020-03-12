@@ -78,9 +78,7 @@ enum class ValidationRuleChain(
                         infotrygdForesp.sMhistorikk.sykmelding.sortedTOMDate().lastOrNull() != null &&
                         infotrygdForesp.sMhistorikk.sykmelding.sortedFOMDate().lastOrNull() != null &&
                         sykmelding.perioder.sortedPeriodeTOMDate().lastOrNull() != null &&
-                        (infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.arbufoerFOM in sykmelding.perioder.sortedPeriodeTOM().last().range() ||
                                 infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.arbufoerTOM in sykmelding.perioder.sortedPeriodeTOM().last().range()
-                                )
             }),
 
     @Description("Hvis sykmeldingen er forlengelse av registrert sykepengehistorikk fra annet kontor så medlingen gå til manuell behandling slik at saksbehandler kan registrere sykepengetilfellet på ny identdato og  send oppgave til Nav forvaltning for registrering av inntektsopplysninger")
