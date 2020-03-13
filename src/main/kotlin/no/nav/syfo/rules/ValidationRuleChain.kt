@@ -67,20 +67,6 @@ enum class ValidationRuleChain(
                         sykmelding.perioder.sortedPeriodeTOMDate().last().isBefore(infotrygdForesp.sMhistorikk.sykmelding.sortedTOMDate().last())
             }),
 
-    @Description("Hvis delvis sammenfallende sykmeldingsperiode er registrert i Infotrygd")
-    PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE_1(
-            1513,
-            Status.MANUAL_PROCESSING,
-            "Hvis delvis sammenfallende sykmeldingsperiode er registrert i Infotrygd",
-            "Hvis delvis sammenfallende sykmeldingsperiode er registrert i Infotrygd",
-            { (sykmelding, infotrygdForesp) ->
-                infotrygdForesp.sMhistorikk?.sykmelding != null &&
-                        infotrygdForesp.sMhistorikk.sykmelding.sortedTOMDate().lastOrNull() != null &&
-                        infotrygdForesp.sMhistorikk.sykmelding.sortedFOMDate().lastOrNull() != null &&
-                        sykmelding.perioder.sortedPeriodeTOMDate().lastOrNull() != null &&
-                                infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.arbufoerTOM in sykmelding.perioder.sortedPeriodeTOM().last().range()
-            }),
-
     @Description("Hvis sykmeldingen er forlengelse av registrert sykepengehistorikk fra annet kontor så medlingen gå til manuell behandling slik at saksbehandler kan registrere sykepengetilfellet på ny identdato og  send oppgave til Nav forvaltning for registrering av inntektsopplysninger")
     SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_1(
             1515,
