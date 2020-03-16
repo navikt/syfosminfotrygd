@@ -41,6 +41,7 @@ val javaxJaxwsApiVersion = "2.2.1"
 val jaxbTimeAdaptersVersion = "1.1.3"
 val embeddedRedisVersion = "0.6"
 val smCommonDiagnosisCodesVersion = "1.f898112"
+val syfoXmlCodegen = "1.13d4541-SNAPSHOT"
 
 plugins {
     java
@@ -62,6 +63,14 @@ repositories {
     maven (url= "https://kotlin.bintray.com/kotlinx")
     maven {
         url = uri("https://maven.pkg.github.com/navikt/syfosm-common")
+        credentials {
+            username = githubUser
+            password = githubPassword
+        }
+    }
+
+    maven {
+        url = uri("https://maven.pkg.github.com/navikt/syfo-xml-codegen")
         credentials {
             username = githubUser
             password = githubPassword
@@ -103,6 +112,7 @@ dependencies {
     implementation ("no.nav.tjenestespesifikasjoner:person-v3-tjenestespesifikasjon:$navPersonv3Version")
     implementation ("no.nav.helse.xml:infotrygd-foresp:$infotrygdForespVersion")
     implementation ("no.nav.helse.xml:kith-hodemelding:$kithHodemeldingVersion")
+    implementation ("no.nav.helse.xml:tssSamhandlerData:$syfoXmlCodegen")
 
     implementation ("no.nav.helse:syfosm-common-models:$smCommonVersion")
     implementation ("no.nav.helse:syfosm-common-ws:$smCommonVersion")

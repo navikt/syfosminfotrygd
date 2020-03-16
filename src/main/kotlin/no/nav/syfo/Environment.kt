@@ -27,7 +27,8 @@ data class Environment(
     val helsenettproxyId: String = getEnvVar("HELSENETTPROXY_ID"),
     val aadAccessTokenUrl: String = getEnvVar("AADACCESSTOKEN_URL"),
     val infotrygdSmIkkeOKQueue: String = getEnvVar("MQ_INFOTRYGD_SMIKKEOK_QUEUE"),
-    val redishost: String = getEnvVar("REDIS_HOST", "syfosminfotrygd-redis.default.svc.nais.local")
+    val redishost: String = getEnvVar("REDIS_HOST", "syfosminfotrygd-redis.default.svc.nais.local"),
+    val tssQueue: String = getEnvVar("MQ_TSS_SAMHANDLER_SERVICE_QUEUE")
 ) : MqConfig, KafkaConfig
 
 data class VaultCredentials(
