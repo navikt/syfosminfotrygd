@@ -4,8 +4,6 @@ import com.ctc.wstx.exc.WstxException
 import java.io.IOException
 import java.io.StringReader
 import java.lang.IllegalStateException
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import javax.jms.MessageProducer
 import javax.jms.Session
 import javax.jms.TemporaryQueue
@@ -37,7 +35,6 @@ suspend fun fetchTssSamhandlerInfo(
                                 idOff = receivedSykmelding.personNrLege
                                 kodeIdType = setFnrOrDnr(receivedSykmelding.personNrLege)
                             }
-                            aktuellDato = formaterDato(LocalDate.now())
                             historikk = "J"
                         }
                     }
@@ -85,9 +82,4 @@ fun checkPersonNumberIsDnr(personNumber: String): Boolean {
 
 fun validatePersonDNumberRange(personNumberFirstAndSecoundChar: String): Boolean {
     return personNumberFirstAndSecoundChar.toInt() in 41..71
-}
-
-fun formaterDato(dato: LocalDate): String {
-    val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMdd")
-    return dato.format(formatter)
 }
