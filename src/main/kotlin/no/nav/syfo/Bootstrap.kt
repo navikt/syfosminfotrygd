@@ -330,7 +330,10 @@ suspend fun handleMessage(
             // TODO dette er kun for testing med tssid fjern denne etterpå
             val tssSamhandlerInfoResponse = fetchTssSamhandlerInfo(receivedSykmelding, tssProducer, session)
 
-            val tssIdFraTSS = tssSamhandlerInfoResponse.tssOutputData.samhandlerODataB960.enkeltSamhandler.firstOrNull()?.samhandlerAvd125?.samhAvd?.find {
+            log.info("TSS info:")
+            log.info(objectMapper.writeValueAsString(tssSamhandlerInfoResponse))
+
+            val tssIdFraTSS = tssSamhandlerInfoResponse.tssOutputData.samhandlerODataB960?.enkeltSamhandler?.firstOrNull()?.samhandlerAvd125?.samhAvd?.find {
                 it.avdNr == "01"
             }?.idOffTSS
 
