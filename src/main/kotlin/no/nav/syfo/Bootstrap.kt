@@ -327,6 +327,20 @@ suspend fun handleMessage(
                     log.info("Fant ingen tssider!!!")
                 }
             }
+            // TODO dette er kun for testing med tssid fjern denne etterpå
+            val tssSamhandlerInfoResponse = fetchTssSamhandlerInfo(receivedSykmelding, tssProducer, session)
+
+            val tssIdFraTSS = tssSamhandlerInfoResponse.tssOutputData.samhandlerODataB960.enkeltSamhandler.firstOrNull().samhandlerAvd125.samhAvd.find {
+                it.avdNr == "01"
+            }?.idOffTSS
+
+            if (!tssIdFraTSS.isNullOrBlank()) {
+                log.info("Sykmelding mangler tssid, har hentet tssid $tssIdFraTSS fra tss, {}", fields(loggingMeta))
+                receivedSykmeldingMedTssId = receivedSykmelding.copy(tssid = tssIdFraTSS)
+            } else {
+                log.info("fant ikkje tssid fra tss, {}", fields(loggingMeta))
+            }
+            // TODO dette er kun for testing med tssid fjern denne etterpå
 
             val validationResult = ruleCheck(receivedSykmeldingMedTssId, infotrygdForespResponse, loggingMeta)
 
