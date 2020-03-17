@@ -41,7 +41,7 @@ val javaxJaxwsApiVersion = "2.2.1"
 val jaxbTimeAdaptersVersion = "1.1.3"
 val embeddedRedisVersion = "0.6"
 val smCommonDiagnosisCodesVersion = "1.f898112"
-val syfoXmlCodegen = "1.13d4541-SNAPSHOT"
+val syfoXmlCodegen = "1.35193f7"
 
 plugins {
     java
