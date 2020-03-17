@@ -24,7 +24,7 @@ suspend fun fetchTssSamhandlerInfo(
     session: Session
 ): XMLTssSamhandlerData =
         retry(callName = "tss_hent_samhandler_data",
-                retryIntervals = arrayOf(500L, 1000L, 3000L, 5000L, 10000L, 3600000L, 14400000L),
+                retryIntervals = arrayOf(500L, 1000L, 3000L, 5000L),
                 legalExceptions = *arrayOf(IOException::class, WstxException::class, IllegalStateException::class)
         ) {
             val tssSamhandlerDatainput = XMLTssSamhandlerData().apply {
