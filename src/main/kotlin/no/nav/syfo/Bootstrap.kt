@@ -39,6 +39,7 @@ import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.infotrygd.foresp.TypeSMinfo
 import no.nav.helse.msgHead.XMLMsgHead
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
+import no.nav.helse.tssSamhandlerData.XMLTssSamhandlerData
 import no.nav.syfo.application.ApplicationServer
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.application.api.AccessTokenClient
@@ -178,17 +179,17 @@ fun createListener(applicationState: ApplicationState, action: suspend Coroutine
 
 @KtorExperimentalAPI
 fun launchListeners(
-        applicationState: ApplicationState,
-        kafkaproducerCreateTask: KafkaProducer<String, ProduceTask>,
-        kafkaproducervalidationResult: KafkaProducer<String, ValidationResult>,
-        personV3: PersonV3,
-        env: Environment,
-        norskHelsenettClient: NorskHelsenettClient,
-        consumerProperties: Properties,
-        smIkkeOkQueue: MQQueue,
-        norg2Client: Norg2Client,
-        kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
-        credentials: VaultCredentials
+    applicationState: ApplicationState,
+    kafkaproducerCreateTask: KafkaProducer<String, ProduceTask>,
+    kafkaproducervalidationResult: KafkaProducer<String, ValidationResult>,
+    personV3: PersonV3,
+    env: Environment,
+    norskHelsenettClient: NorskHelsenettClient,
+    consumerProperties: Properties,
+    smIkkeOkQueue: MQQueue,
+    norg2Client: Norg2Client,
+    kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
+    credentials: VaultCredentials
 ) {
     val kafkaconsumerRecievedSykmelding = KafkaConsumer<String, String>(consumerProperties)
 
@@ -222,23 +223,23 @@ fun launchListeners(
 
 @KtorExperimentalAPI
 suspend fun blockingApplicationLogic(
-        applicationState: ApplicationState,
-        kafkaConsumer: KafkaConsumer<String, String>,
-        kafkaproducerCreateTask: KafkaProducer<String, ProduceTask>,
-        kafkaproducervalidationResult: KafkaProducer<String, ValidationResult>,
-        infotrygdOppdateringProducer: MessageProducer,
-        infotrygdSporringProducer: MessageProducer,
-        session: Session,
-        personV3: PersonV3,
-        sm2013BehandlingsUtfallToipic: String,
-        norskHelsenettClient: NorskHelsenettClient,
-        smIkkeOkQueue: MQQueue,
-        norg2Client: Norg2Client,
-        jedis: Jedis,
-        kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
-        infotrygdRetryTopic: String,
-        oppgaveTopic: String,
-        tssProducer: MessageProducer
+    applicationState: ApplicationState,
+    kafkaConsumer: KafkaConsumer<String, String>,
+    kafkaproducerCreateTask: KafkaProducer<String, ProduceTask>,
+    kafkaproducervalidationResult: KafkaProducer<String, ValidationResult>,
+    infotrygdOppdateringProducer: MessageProducer,
+    infotrygdSporringProducer: MessageProducer,
+    session: Session,
+    personV3: PersonV3,
+    sm2013BehandlingsUtfallToipic: String,
+    norskHelsenettClient: NorskHelsenettClient,
+    smIkkeOkQueue: MQQueue,
+    norg2Client: Norg2Client,
+    jedis: Jedis,
+    kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
+    infotrygdRetryTopic: String,
+    oppgaveTopic: String,
+    tssProducer: MessageProducer
 ) {
     while (applicationState.ready) {
         kafkaConsumer.poll(Duration.ofMillis(0)).forEach { consumerRecord ->
@@ -263,24 +264,24 @@ suspend fun blockingApplicationLogic(
 
 @KtorExperimentalAPI
 suspend fun handleMessage(
-        receivedSykmelding: ReceivedSykmelding,
-        kafkaproducerCreateTask: KafkaProducer<String, ProduceTask>,
-        kafkaproducervalidationResult: KafkaProducer<String, ValidationResult>,
-        infotrygdOppdateringProducer: MessageProducer,
-        infotrygdSporringProducer: MessageProducer,
-        session: Session,
-        personV3: PersonV3,
-        sm2013BehandlingsUtfallToipic: String,
-        norskHelsenettClient: NorskHelsenettClient,
-        smIkkeOkQueue: MQQueue,
-        loggingMeta: LoggingMeta,
-        norg2Client: Norg2Client,
-        jedis: Jedis,
-        kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
-        infotrygdRetryTopic: String,
-        oppgaveTopic: String,
-        applicationState: ApplicationState,
-        tssProducer: MessageProducer
+    receivedSykmelding: ReceivedSykmelding,
+    kafkaproducerCreateTask: KafkaProducer<String, ProduceTask>,
+    kafkaproducervalidationResult: KafkaProducer<String, ValidationResult>,
+    infotrygdOppdateringProducer: MessageProducer,
+    infotrygdSporringProducer: MessageProducer,
+    session: Session,
+    personV3: PersonV3,
+    sm2013BehandlingsUtfallToipic: String,
+    norskHelsenettClient: NorskHelsenettClient,
+    smIkkeOkQueue: MQQueue,
+    loggingMeta: LoggingMeta,
+    norg2Client: Norg2Client,
+    jedis: Jedis,
+    kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
+    infotrygdRetryTopic: String,
+    oppgaveTopic: String,
+    applicationState: ApplicationState,
+    tssProducer: MessageProducer
 ) {
     wrapExceptions(loggingMeta) {
         log.info("Received a SM2013, {}", fields(loggingMeta))
@@ -317,18 +318,15 @@ suspend fun handleMessage(
                     try {
                         val tssSamhandlerInfoResponse = fetchTssSamhandlerInfo(receivedSykmelding, tssProducer, session)
 
-                        val tssIdFraTSS = tssSamhandlerInfoResponse.tssOutputData.samhandlerODataB960?.enkeltSamhandler?.firstOrNull()?.samhandlerAvd125?.samhAvd?.find {
-                            it.avdNr == "01"
-                        }?.idOffTSS
+                        val tssIdFraTSS = finnTssIdFraTSSRespons(tssSamhandlerInfoResponse)
 
                         if (!tssIdFraTSS.isNullOrBlank()) {
                             log.info("Sykmelding mangler tssid, har hentet tssid $tssIdFraTSS fra tss, {}", fields(loggingMeta))
                             receivedSykmeldingMedTssId = receivedSykmelding.copy(tssid = tssIdFraTSS)
                         }
                         log.info("Fant ingen tssider fra TSS!!!")
-
                     } catch (e: Exception) {
-                        log.error("Kall mot TSS gikk dårligt")
+                        log.error("Kall mot TSS gikk dårligt", e)
                     }
                 }
             }
@@ -375,13 +373,10 @@ fun finnTssIdFraInfotrygdRespons(sisteSmPeriode: TypeSMinfo.Periode?, behandler:
     return null
 }
 
-fun finnTssIdFraTSSRespons(sisteSmPeriode: TypeSMinfo.Periode?, behandler: Behandler): String? {
-    if (sisteSmPeriode != null &&
-            behandler.etternavn.equals(sisteSmPeriode.legeNavn?.etternavn, true) &&
-            behandler.fornavn.equals(sisteSmPeriode.legeNavn?.fornavn, true)) {
-        return sisteSmPeriode.legeInstNr?.toString()
-    }
-    return null
+fun finnTssIdFraTSSRespons(tssSamhandlerInfoResponse: XMLTssSamhandlerData): String? {
+    return tssSamhandlerInfoResponse.tssOutputData.samhandlerODataB960?.enkeltSamhandler?.firstOrNull()?.samhandlerAvd125?.samhAvd?.find {
+        it.avdNr == "01"
+    }?.idOffTSS
 }
 
 fun validerMottattSykmelding(helseOpplysningerArbeidsuforhet: HelseOpplysningerArbeidsuforhet): ValidationResult {
@@ -399,9 +394,9 @@ fun validerMottattSykmelding(helseOpplysningerArbeidsuforhet: HelseOpplysningerA
 }
 
 fun ruleCheck(
-        receivedSykmelding: ReceivedSykmelding,
-        infotrygdForespResponse: InfotrygdForesp,
-        loggingMeta: LoggingMeta
+    receivedSykmelding: ReceivedSykmelding,
+    infotrygdForespResponse: InfotrygdForesp,
+    loggingMeta: LoggingMeta
 ): ValidationResult {
 
     log.info("Going through rules {}", fields(loggingMeta))
@@ -430,11 +425,11 @@ fun ruleCheck(
 }
 
 fun sendRuleCheckValidationResult(
-        receivedSykmelding: ReceivedSykmelding,
-        kafkaproducervalidationResult: KafkaProducer<String, ValidationResult>,
-        validationResult: ValidationResult,
-        sm2013BehandlingsUtfallToipic: String,
-        loggingMeta: LoggingMeta
+    receivedSykmelding: ReceivedSykmelding,
+    kafkaproducervalidationResult: KafkaProducer<String, ValidationResult>,
+    validationResult: ValidationResult,
+    sm2013BehandlingsUtfallToipic: String,
+    loggingMeta: LoggingMeta
 ) {
     kafkaproducervalidationResult.send(ProducerRecord(sm2013BehandlingsUtfallToipic, receivedSykmelding.sykmelding.id, validationResult))
     log.info("Validation results send to kafka {} $loggingMeta", sm2013BehandlingsUtfallToipic, fields(loggingMeta))
@@ -469,6 +464,6 @@ fun List<HelseOpplysningerArbeidsuforhet.Aktivitet.Periode>.sortedFOMDate(): Lis
         map { it.periodeFOMDato }.sorted()
 
 data class InfotrygdForespAndHealthInformation(
-        val infotrygdForesp: InfotrygdForesp,
-        val healthInformation: HelseOpplysningerArbeidsuforhet
+    val infotrygdForesp: InfotrygdForesp,
+    val healthInformation: HelseOpplysningerArbeidsuforhet
 )
