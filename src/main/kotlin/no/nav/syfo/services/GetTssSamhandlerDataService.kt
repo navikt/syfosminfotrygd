@@ -45,13 +45,8 @@ suspend fun fetchTssSamhandlerInfo(
             try {
                 sendTssSporring(tssSamhnadlerInfoProducer, session, tssSamhandlerDatainput, temporaryQueue)
                 session.createConsumer(temporaryQueue).use { tmpConsumer ->
-                    val consumedMessage = tmpConsumer.receive(20000)
-                    val inputMessageText = when (consumedMessage) {
-                        is TextMessage -> consumedMessage.text
-                        else -> throw RuntimeException("Incoming message needs to be a byte message or text message, JMS type:" + consumedMessage.jmsType)
-                    }
-
-                    tssSamhandlerdataUnmarshaller.unmarshal(StringReader(inputMessageText)) as XMLTssSamhandlerData
+                    val consumedMessage = tmpConsumer.receive(20000) as TextMessage
+                    tssSamhandlerdataUnmarshaller.unmarshal(StringReader(consumedMessage.text)) as XMLTssSamhandlerData
                 }
             } finally {
                 temporaryQueue.delete()
