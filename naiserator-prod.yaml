@@ -67,3 +67,5 @@ spec:
       value: 2c9d40f1-81c2-4f8d-b862-aabd14ab901c
     - name: HELSENETTPROXY_ID
       value: b813133d-82b8-46ef-be96-3b903ea6c048
+    - name: MQ_TSS_SAMHANDLER_SERVICE_QUEUE
+      value: QA.P415.AS10_SAMHANDLER_SERVICE
