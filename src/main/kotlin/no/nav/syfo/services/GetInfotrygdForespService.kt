@@ -29,7 +29,7 @@ import no.nav.syfo.util.infotrygdSporringUnmarshaller
                     retryIntervals = arrayOf(500L, 1000L, 3000L, 5000L, 10000L, 3600000L, 14400000L),
                     legalExceptions = *arrayOf(IOException::class, WstxException::class, IllegalStateException::class)
             ) {
-                val infotrygdForespRequest = createInfotrygdForesp(receivedSykmelding.personNrPasient, healthInformation, receivedSykmelding.personNrLege)
+                val infotrygdForespRequest = createInfotrygdForesp(receivedSykmelding.personNrPasient, healthInformation, finnLegeFnr(receivedSykmelding))
                 val temporaryQueue = session.createTemporaryQueue()
                 try {
                     sendInfotrygdSporring(infotrygdSporringProducer, session, infotrygdForespRequest, temporaryQueue)
@@ -70,6 +70,15 @@ import no.nav.syfo.util.infotrygdSporringUnmarshaller
             }.infotrygdCode
         }
         tkNrFraDato = dateMinus1Year
+    }
+
+    fun finnLegeFnr(receivedSykmelding: ReceivedSykmelding): String {
+        return if (receivedSykmelding.sykmelding.avsenderSystem.navn == "Egenmeldt") {
+            // Testfamilien Aremark stepper inn som lege for egenmeldte sykmeldinger
+            "10108000398"
+        } else {
+            receivedSykmelding.personNrLege
+        }
     }
 
     fun sendInfotrygdSporring(
