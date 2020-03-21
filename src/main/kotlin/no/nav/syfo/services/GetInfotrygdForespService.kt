@@ -13,6 +13,7 @@ import javax.jms.TextMessage
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.syfo.helpers.retry
+import no.nav.syfo.log
 import no.nav.syfo.model.Diagnosekode
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.toString
@@ -75,6 +76,7 @@ import no.nav.syfo.util.infotrygdSporringUnmarshaller
     fun finnLegeFnr(receivedSykmelding: ReceivedSykmelding): String {
         return if (receivedSykmelding.sykmelding.avsenderSystem.navn == "Egenmeldt") {
             // Testfamilien Aremark stepper inn som lege for egenmeldte sykmeldinger
+            log.info("Setter Aremark som lege for egenmeldt sykmelding med id {}", receivedSykmelding.sykmelding.id)
             "10108000398"
         } else {
             receivedSykmelding.personNrLege
