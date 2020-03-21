@@ -20,6 +20,7 @@ import no.nav.syfo.InfotrygdForespAndHealthInformation
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.client.Behandler
 import no.nav.syfo.client.Godkjenning
+import no.nav.syfo.client.Kode
 import no.nav.syfo.client.NorskHelsenettClient
 import no.nav.syfo.daysBetween
 import no.nav.syfo.get
@@ -71,7 +72,11 @@ class UpdateInfotrygdService {
         sm2013BehandlingsUtfallToipic: String,
         applicationState: ApplicationState
     ) {
-        val helsepersonell = norskHelsenettClient.finnBehandler(receivedSykmelding.personNrLege, receivedSykmelding.msgId)
+        val helsepersonell = if (erEgenmeldt(receivedSykmelding)) {
+            Behandler(listOf(Godkjenning(helsepersonellkategori = Kode(aktiv = true, oid = 0, verdi = HelsepersonellKategori.LEGE.verdi), autorisasjon = Kode(aktiv = true, oid = 0, verdi = ""))))
+        } else {
+            norskHelsenettClient.finnBehandler(receivedSykmelding.personNrLege, receivedSykmelding.msgId)
+        }
 
         if (helsepersonell != null) {
             val helsepersonellKategoriVerdi = finnAktivHelsepersonellAutorisasjons(helsepersonell)
@@ -118,6 +123,9 @@ class UpdateInfotrygdService {
                     HelsepersonellKategori.LEGE.verdi, jedis, applicationState)
         }
     }
+
+    fun erEgenmeldt(receivedSykmelding: ReceivedSykmelding): Boolean =
+        receivedSykmelding.sykmelding.avsenderSystem.navn == "Egenmeldt"
 
     private suspend fun sendInfotrygdOppdateringAndValidationResult(
         producer: MessageProducer,
