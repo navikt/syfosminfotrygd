@@ -536,7 +536,7 @@ class UpdateInfotrygdService {
                     behandlingstype = "ANY"
                     mappeId = 1
                     aktivDato = DateTimeFormatter.ISO_DATE.format(LocalDate.now())
-                    fristFerdigstillelse = DateTimeFormatter.ISO_DATE.format(finnFristForFerdigstillingAvOppgave(LocalDate.now()))
+                    fristFerdigstillelse = DateTimeFormatter.ISO_DATE.format(finnFristForFerdigstillingAvOppgave(LocalDate.now().plusDays(4)))
                     prioritet = PrioritetType.NORM
                     metadata = mapOf()
                 }))
@@ -562,8 +562,8 @@ class UpdateInfotrygdService {
             } && receivedSykmelding.sykmelding.perioder.sortedPeriodeFOMDate().lastOrNull() != null && receivedSykmelding.sykmelding.perioder.sortedPeriodeTOMDate().lastOrNull() != null && (receivedSykmelding.sykmelding.perioder.sortedPeriodeFOMDate().last()..receivedSykmelding.sykmelding.perioder.sortedPeriodeTOMDate().last()).daysBetween() <= 3
 }
 
-fun finnFristForFerdigstillingAvOppgave(today: LocalDate): LocalDate {
-    return setToWorkDay(today.plusDays(4))
+fun finnFristForFerdigstillingAvOppgave(ferdistilleDato: LocalDate): LocalDate {
+    return setToWorkDay(ferdistilleDato)
 }
 
 fun setToWorkDay(ferdistilleDato: LocalDate): LocalDate =
