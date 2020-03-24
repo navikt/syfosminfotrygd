@@ -1,6 +1,7 @@
 package no.nav.syfo.services
 
 import io.ktor.util.KtorExperimentalAPI
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
@@ -562,5 +563,12 @@ class UpdateInfotrygdService {
 }
 
 fun finnFristForFerdigstillingAvOppgave(today: LocalDate): LocalDate {
-    return today.plusDays(4)
+    return setToWorkDay(today.plusDays(4))
 }
+
+fun setToWorkDay(ferdistilleDato: LocalDate): LocalDate =
+        when (ferdistilleDato.dayOfWeek) {
+            DayOfWeek.SATURDAY -> ferdistilleDato.plusDays(2)
+            DayOfWeek.SUNDAY -> ferdistilleDato.plusDays(1)
+            else -> ferdistilleDato
+        }
