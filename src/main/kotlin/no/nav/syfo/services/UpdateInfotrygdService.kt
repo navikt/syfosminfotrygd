@@ -1,6 +1,7 @@
 package no.nav.syfo.services
 
 import io.ktor.util.KtorExperimentalAPI
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
@@ -125,7 +126,7 @@ class UpdateInfotrygdService {
     }
 
     fun erEgenmeldt(receivedSykmelding: ReceivedSykmelding): Boolean =
-        receivedSykmelding.sykmelding.avsenderSystem.navn == "Egenmeldt"
+            receivedSykmelding.sykmelding.avsenderSystem.navn == "Egenmeldt"
 
     private suspend fun sendInfotrygdOppdateringAndValidationResult(
         producer: MessageProducer,
@@ -390,26 +391,26 @@ class UpdateInfotrygdService {
         }
 
         return when (helsepersonellGodkjenningSom(godkjennteHelsepersonellAutorisasjonsAktiv, listOf(
-                    HelsepersonellKategori.LEGE.verdi))) {
-                true -> HelsepersonellKategori.LEGE.verdi
-                else -> godkjennteHelsepersonellAutorisasjonsAktiv.firstOrNull()?.helsepersonellkategori?.verdi ?: ""
-            }
+                HelsepersonellKategori.LEGE.verdi))) {
+            true -> HelsepersonellKategori.LEGE.verdi
+            else -> godkjennteHelsepersonellAutorisasjonsAktiv.firstOrNull()?.helsepersonellkategori?.verdi ?: ""
+        }
     }
 
     private fun godkjennteHelsepersonellAutorisasjonsAktiv(helsepersonelPerson: Behandler): List<Godkjenning> =
             helsepersonelPerson.godkjenninger.filter { godkjenning ->
-                        godkjenning.helsepersonellkategori?.aktiv != null &&
+                godkjenning.helsepersonellkategori?.aktiv != null &&
                         godkjenning.autorisasjon?.aktiv == true &&
                         godkjenning.helsepersonellkategori.verdi != null &&
                         godkjenning.helsepersonellkategori.aktiv
             }
 
     private fun helsepersonellGodkjenningSom(helsepersonellGodkjenning: List<Godkjenning>, helsepersonerVerdi: List<String>): Boolean =
-        helsepersonellGodkjenning.any { godkjenning ->
-            godkjenning.helsepersonellkategori.let { kode ->
-                kode?.verdi in helsepersonerVerdi
+            helsepersonellGodkjenning.any { godkjenning ->
+                godkjenning.helsepersonellkategori.let { kode ->
+                    kode?.verdi in helsepersonerVerdi
+                }
             }
-        }
 
     private fun HelseOpplysningerArbeidsuforhet.Behandler.formatName(): String =
             if (navn.mellomnavn == null) {
@@ -535,7 +536,7 @@ class UpdateInfotrygdService {
                     behandlingstype = "ANY"
                     mappeId = 1
                     aktivDato = DateTimeFormatter.ISO_DATE.format(LocalDate.now())
-                    fristFerdigstillelse = DateTimeFormatter.ISO_DATE.format(LocalDate.now())
+                    fristFerdigstillelse = DateTimeFormatter.ISO_DATE.format(finnFristForFerdigstillingAvOppgave(LocalDate.now().plusDays(4)))
                     prioritet = PrioritetType.NORM
                     metadata = mapOf()
                 }))
@@ -560,3 +561,14 @@ class UpdateInfotrygdService {
                 (it.ruleName == ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE.name)
             } && receivedSykmelding.sykmelding.perioder.sortedPeriodeFOMDate().lastOrNull() != null && receivedSykmelding.sykmelding.perioder.sortedPeriodeTOMDate().lastOrNull() != null && (receivedSykmelding.sykmelding.perioder.sortedPeriodeFOMDate().last()..receivedSykmelding.sykmelding.perioder.sortedPeriodeTOMDate().last()).daysBetween() <= 3
 }
+
+fun finnFristForFerdigstillingAvOppgave(ferdistilleDato: LocalDate): LocalDate {
+    return setToWorkDay(ferdistilleDato)
+}
+
+fun setToWorkDay(ferdistilleDato: LocalDate): LocalDate =
+        when (ferdistilleDato.dayOfWeek) {
+            DayOfWeek.SATURDAY -> ferdistilleDato.plusDays(2)
+            DayOfWeek.SUNDAY -> ferdistilleDato.plusDays(1)
+            else -> ferdistilleDato
+        }
