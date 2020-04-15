@@ -34,7 +34,7 @@ object KafkaITSpek : Spek({
             mqChannelName = "syfomottak", infotrygdOppdateringQueue = "apprequeue",
             infotrygdSporringQueue = "infotrygdqueue",
             personV3EndpointURL = "personApi", securityTokenServiceUrl = "secApi",
-            sm2013AutomaticHandlingTopic = "topic1", smPaperAutomaticHandlingTopic = "topic2", applicationName = "syfosminfotrygd",
+            sm2013AutomaticHandlingTopic = "topic1", applicationName = "syfosminfotrygd",
             norskHelsenettEndpointURL = "helseAPi", infotrygdSmIkkeOKQueue = "smikkeok", norg2V1EndpointURL = "/enhet/navkontor",
             clientId = "1313", helsenettproxyId = "12313", aadAccessTokenUrl = "acccess", tssQueue = "tsskø"
 

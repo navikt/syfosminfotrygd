@@ -194,7 +194,7 @@ fun launchListeners(
     val kafkaconsumerRecievedSykmelding = KafkaConsumer<String, String>(consumerProperties)
 
     kafkaconsumerRecievedSykmelding.subscribe(
-            listOf(env.sm2013AutomaticHandlingTopic, env.smPaperAutomaticHandlingTopic, env.sm2013infotrygdRetry)
+            listOf(env.sm2013AutomaticHandlingTopic, env.sm2013infotrygdRetry)
     )
     createListener(applicationState) {
         connectionFactory(env).createConnection(credentials.mqUsername, credentials.mqPassword).use { connection ->
