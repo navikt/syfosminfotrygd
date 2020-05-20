@@ -291,16 +291,6 @@ suspend fun handleMessage(
 
         val requestLatency = REQUEST_TIME.startTimer()
 
-        if (receivedSykmelding.sykmelding.id == "50c04985-7b25-47c5-9d90-7178cccbab5e") {
-            val validationResult = ValidationResult(Status.MANUAL_PROCESSING,
-                listOf(RuleInfo("ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING", "Infotrygd returnerte en feil, vi kan ikke automatisk oppdatere Infotrygd", "Infotrygd returnerte en feil, vi kan ikke automatisk oppdatere Infotrygd", Status.MANUAL_PROCESSING)))
-
-            sendRuleCheckValidationResult(receivedSykmelding, kafkaproducervalidationResult, validationResult, sm2013BehandlingsUtfallToipic, loggingMeta)
-            UpdateInfotrygdService().opprettOppgave(kafkaproducerCreateTask, receivedSykmelding, validationResult, loggingMeta, oppgaveTopic)
-
-            log.info("Sendt behandlingsutfall og opprettet oppgave for {}", receivedSykmelding.sykmelding.id)
-            return@wrapExceptions
-        }
         val fellesformat = fellesformatUnmarshaller.unmarshal(StringReader(receivedSykmelding.fellesformat)) as XMLEIFellesformat
         val healthInformation = extractHelseOpplysningerArbeidsuforhet(fellesformat)
 
