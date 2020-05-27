@@ -251,16 +251,12 @@ suspend fun blockingApplicationLogic(
                     sykmeldingId = receivedSykmelding.sykmelding.id
             )
 
-            if (receivedSykmelding.sykmelding.id == "50c04985-7b25-47c5-9d90-7178cccbab5e") {
-                log.info("ignorerer duplikat sykmelding")
-            } else {
-                handleMessage(
+            handleMessage(
                     receivedSykmelding, kafkaproducerCreateTask, kafkaproducervalidationResult,
                     infotrygdOppdateringProducer, infotrygdSporringProducer,
                     session, personV3, sm2013BehandlingsUtfallToipic, norskHelsenettClient,
                     smIkkeOkQueue, loggingMeta, norg2Client, jedis, kafkaproducerreceivedSykmelding,
                     infotrygdRetryTopic, oppgaveTopic, applicationState, tssProducer)
-            }
         }
         delay(100)
     }
