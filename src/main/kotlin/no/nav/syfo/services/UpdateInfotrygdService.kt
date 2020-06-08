@@ -162,8 +162,13 @@ class UpdateInfotrygdService {
         when {
             nyligInfotrygdOppdatering == null -> {
                 delay(10000)
-                kafkaproducerreceivedSykmelding.send(ProducerRecord(infotrygdRetryTopic, receivedSykmelding.sykmelding.id, receivedSykmelding))
-                log.warn("Melding sendt på retry topic {}", fields(loggingMeta))
+                try {
+                    kafkaproducerreceivedSykmelding.send(ProducerRecord(infotrygdRetryTopic, receivedSykmelding.sykmelding.id, receivedSykmelding)).get()
+                    log.warn("Melding sendt på retry topic {}", fields(loggingMeta))
+                } catch (ex: Exception) {
+                    log.error("Failed to send sykmelding to retrytopic {}", fields(loggingMeta))
+                    throw ex
+                }
             }
             else -> {
                 val duplikatInfotrygdOppdatering = oppdaterRedis(sha256String, sha256String, jedis, TimeUnit.DAYS.toSeconds(60).toInt(), loggingMeta)
@@ -429,9 +434,9 @@ class UpdateInfotrygdService {
         fellesformat: XMLEIFellesformat,
         loggingMeta: LoggingMeta
     ) = producer.send(session.createTextMessage().apply {
-        log.info("Melding har oprasjonstype: {}, tkNummer: {}, {}", fellesformat.get<KontrollsystemBlokkType>().infotrygdBlokk.first().operasjonstype, fellesformat.get<KontrollsystemBlokkType>().infotrygdBlokk.first().tkNummer, StructuredArguments.fields(loggingMeta))
+        log.info("Melding har oprasjonstype: {}, tkNummer: {}, {}", fellesformat.get<KontrollsystemBlokkType>().infotrygdBlokk.first().operasjonstype, fellesformat.get<KontrollsystemBlokkType>().infotrygdBlokk.first().tkNummer, fields(loggingMeta))
         text = xmlObjectWriter.writeValueAsString(fellesformat)
-        log.info("Melding er sendt til infotrygd {}", StructuredArguments.fields(loggingMeta))
+        log.info("Melding er sendt til infotrygd {}", fields(loggingMeta))
     })
 
     fun finnForsteFravaersDag(
@@ -520,28 +525,33 @@ class UpdateInfotrygdService {
         loggingMeta: LoggingMeta,
         oppgaveTopic: String
     ) {
-        kafkaProducer.send(ProducerRecord(oppgaveTopic, receivedSykmelding.sykmelding.id,
-                ProduceTask().apply {
-                    messageId = receivedSykmelding.msgId
-                    aktoerId = receivedSykmelding.sykmelding.pasientAktoerId
-                    tildeltEnhetsnr = ""
-                    opprettetAvEnhetsnr = "9999"
-                    behandlesAvApplikasjon = "FS22" // Gosys
-                    orgnr = receivedSykmelding.legekontorOrgNr ?: ""
-                    beskrivelse = "Manuell behandling av sykmelding grunnet følgende regler: ${validationResult.ruleHits.joinToString(", ", "(", ")") { it.messageForSender }}"
-                    temagruppe = "ANY"
-                    tema = "SYM"
-                    behandlingstema = "ANY"
-                    oppgavetype = "BEH_EL_SYM"
-                    behandlingstype = "ANY"
-                    mappeId = 1
-                    aktivDato = DateTimeFormatter.ISO_DATE.format(LocalDate.now())
-                    fristFerdigstillelse = DateTimeFormatter.ISO_DATE.format(finnFristForFerdigstillingAvOppgave(LocalDate.now().plusDays(4)))
-                    prioritet = PrioritetType.NORM
-                    metadata = mapOf()
-                }))
-        MANUELLE_OPPGAVER_COUNTER.inc()
-        log.info("Message sendt to topic: {}, {}", oppgaveTopic, fields(loggingMeta))
+        try {
+            kafkaProducer.send(ProducerRecord(oppgaveTopic, receivedSykmelding.sykmelding.id,
+                    ProduceTask().apply {
+                        messageId = receivedSykmelding.msgId
+                        aktoerId = receivedSykmelding.sykmelding.pasientAktoerId
+                        tildeltEnhetsnr = ""
+                        opprettetAvEnhetsnr = "9999"
+                        behandlesAvApplikasjon = "FS22" // Gosys
+                        orgnr = receivedSykmelding.legekontorOrgNr ?: ""
+                        beskrivelse = "Manuell behandling av sykmelding grunnet følgende regler: ${validationResult.ruleHits.joinToString(", ", "(", ")") { it.messageForSender }}"
+                        temagruppe = "ANY"
+                        tema = "SYM"
+                        behandlingstema = "ANY"
+                        oppgavetype = "BEH_EL_SYM"
+                        behandlingstype = "ANY"
+                        mappeId = 1
+                        aktivDato = DateTimeFormatter.ISO_DATE.format(LocalDate.now())
+                        fristFerdigstillelse = DateTimeFormatter.ISO_DATE.format(finnFristForFerdigstillingAvOppgave(LocalDate.now().plusDays(4)))
+                        prioritet = PrioritetType.NORM
+                        metadata = mapOf()
+                    })).get()
+            MANUELLE_OPPGAVER_COUNTER.inc()
+            log.info("Message sendt to topic: {}, {}", oppgaveTopic, fields(loggingMeta))
+        } catch (ex: Exception) {
+            log.error("Error when writing to oppgave kafka topic {}", fields(loggingMeta))
+            throw ex
+        }
     }
 
     fun errorFromInfotrygd(rules: List<RuleInfo>): Boolean =

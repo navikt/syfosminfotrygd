@@ -431,8 +431,13 @@ fun sendRuleCheckValidationResult(
     sm2013BehandlingsUtfallToipic: String,
     loggingMeta: LoggingMeta
 ) {
-    kafkaproducervalidationResult.send(ProducerRecord(sm2013BehandlingsUtfallToipic, receivedSykmelding.sykmelding.id, validationResult))
-    log.info("Validation results send to kafka {} $loggingMeta", sm2013BehandlingsUtfallToipic, fields(loggingMeta))
+    try {
+        kafkaproducervalidationResult.send(ProducerRecord(sm2013BehandlingsUtfallToipic, receivedSykmelding.sykmelding.id, validationResult)).get()
+        log.info("Validation results send to kafka {} $loggingMeta", sm2013BehandlingsUtfallToipic, fields(loggingMeta))
+    } catch (ex: Exception) {
+        log.error("Error writing validationResult to kafka for sykmelding {} {}", loggingMeta.sykmeldingId, loggingMeta)
+        throw ex
+    }
 }
 
 fun Marshaller.toString(input: Any): String = StringWriter().use {
