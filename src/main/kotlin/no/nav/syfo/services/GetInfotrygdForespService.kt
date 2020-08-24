@@ -27,7 +27,7 @@ import no.nav.syfo.util.infotrygdSporringUnmarshaller
         healthInformation: HelseOpplysningerArbeidsuforhet
     ): InfotrygdForesp =
             retry(callName = "it_hent_infotrygdForesp",
-                    retryIntervals = arrayOf(500L, 1000L, 3000L, 5000L, 10000L, 3600000L, 14400000L),
+                    retryIntervals = arrayOf(500L, 1000L, 3000L, 5000L, 10000L),
                     legalExceptions = *arrayOf(IOException::class, WstxException::class, IllegalStateException::class)
             ) {
                 val infotrygdForespRequest = createInfotrygdForesp(receivedSykmelding.personNrPasient, healthInformation, finnLegeFnr(receivedSykmelding))
