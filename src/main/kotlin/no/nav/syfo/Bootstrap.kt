@@ -242,8 +242,8 @@ suspend fun blockingApplicationLogic(
     tssProducer: MessageProducer
 ) {
     while (applicationState.ready) {
-        kafkaConsumer.poll(Duration.ofMillis(0)).forEach { consumerRecord ->
-            val receivedSykmelding: ReceivedSykmelding = objectMapper.readValue(consumerRecord.value())
+        kafkaConsumer.poll(Duration.ofMillis(0)).mapNotNull { it.value() }.forEach { receivedSykmeldingString ->
+            val receivedSykmelding: ReceivedSykmelding = objectMapper.readValue(receivedSykmeldingString)
             val loggingMeta = LoggingMeta(
                     mottakId = receivedSykmelding.navLogId,
                     orgNr = receivedSykmelding.legekontorOrgNr,
