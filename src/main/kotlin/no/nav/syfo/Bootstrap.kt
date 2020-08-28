@@ -22,6 +22,8 @@ import java.io.StringWriter
 import java.nio.file.Paths
 import java.time.Duration
 import java.time.LocalDate
+import java.time.OffsetTime
+import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 import java.util.Properties
 import javax.jms.MessageProducer
@@ -174,6 +176,7 @@ fun createListener(applicationState: ApplicationState, action: suspend Coroutine
                 log.error("En uhåndtert feil oppstod, applikasjonen restarter {}", fields(e.loggingMeta), e.cause)
             } finally {
                 applicationState.alive = false
+                applicationState.ready = false
             }
         }
 
@@ -193,9 +196,6 @@ fun launchListeners(
 ) {
     val kafkaconsumerRecievedSykmelding = KafkaConsumer<String, String>(consumerProperties)
 
-    kafkaconsumerRecievedSykmelding.subscribe(
-            listOf(env.sm2013AutomaticHandlingTopic, env.sm2013infotrygdRetry)
-    )
     createListener(applicationState) {
         connectionFactory(env).createConnection(credentials.mqUsername, credentials.mqPassword).use { connection ->
             Jedis(env.redishost, 6379).use { jedis ->
@@ -213,7 +213,7 @@ fun launchListeners(
                         kafkaproducervalidationResult, infotrygdOppdateringProducer, infotrygdSporringProducer,
                         session, personV3, env.sm2013BehandlingsUtfallToipic, norskHelsenettClient,
                         smIkkeOkQueue, norg2Client, jedis, kafkaproducerreceivedSykmelding, env.sm2013infotrygdRetry,
-                        env.sm2013OpppgaveTopic, tssProducer)
+                        env.sm2013OpppgaveTopic, tssProducer, env)
             }
         }
     }
@@ -239,9 +239,25 @@ suspend fun blockingApplicationLogic(
     kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
     infotrygdRetryTopic: String,
     oppgaveTopic: String,
-    tssProducer: MessageProducer
+    tssProducer: MessageProducer,
+    env: Environment
 ) {
     while (applicationState.ready) {
+        if (shouldRun(getCurrentTime())) {
+            log.info("Starter KafkaConsumer")
+            kafkaConsumer.subscribe(
+                    listOf(env.sm2013AutomaticHandlingTopic, env.sm2013infotrygdRetry)
+            )
+            runKafkaConsumer(kafkaConsumer, kafkaproducerCreateTask, kafkaproducervalidationResult, infotrygdOppdateringProducer, infotrygdSporringProducer, session, personV3, sm2013BehandlingsUtfallToipic, norskHelsenettClient, smIkkeOkQueue, norg2Client, jedis, kafkaproducerreceivedSykmelding, infotrygdRetryTopic, oppgaveTopic, applicationState, tssProducer)
+            kafkaConsumer.unsubscribe()
+            log.info("Stopper KafkaConsumer")
+        }
+        delay(100)
+    }
+}
+
+private suspend fun runKafkaConsumer(kafkaConsumer: KafkaConsumer<String, String>, kafkaproducerCreateTask: KafkaProducer<String, ProduceTask>, kafkaproducervalidationResult: KafkaProducer<String, ValidationResult>, infotrygdOppdateringProducer: MessageProducer, infotrygdSporringProducer: MessageProducer, session: Session, personV3: PersonV3, sm2013BehandlingsUtfallToipic: String, norskHelsenettClient: NorskHelsenettClient, smIkkeOkQueue: MQQueue, norg2Client: Norg2Client, jedis: Jedis, kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>, infotrygdRetryTopic: String, oppgaveTopic: String, applicationState: ApplicationState, tssProducer: MessageProducer) {
+    while (applicationState.ready && shouldRun(getCurrentTime())) {
         kafkaConsumer.poll(Duration.ofMillis(0)).mapNotNull { it.value() }.forEach { receivedSykmeldingString ->
             val receivedSykmelding: ReceivedSykmelding = objectMapper.readValue(receivedSykmeldingString)
             val loggingMeta = LoggingMeta(
@@ -260,6 +276,14 @@ suspend fun blockingApplicationLogic(
         }
         delay(100)
     }
+}
+
+fun getCurrentTime(): OffsetTime {
+    return OffsetTime.now(ZoneId.of("Europe/Oslo"))
+}
+
+fun shouldRun(now: OffsetTime): Boolean {
+    return now.hour in 5..20
 }
 
 @KtorExperimentalAPI
