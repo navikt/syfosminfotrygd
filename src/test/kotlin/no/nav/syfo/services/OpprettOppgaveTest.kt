@@ -37,22 +37,22 @@ object OpprettOppgaveTest : Spek({
 
             val oppgave = opprettProduceTask(receivedSykmelding, validationResults, "dev-fss", LocalDate.of(2021, 1, 10), loggingMeta)
 
-            oppgave.behandlingstype shouldEqual "ANY"
+            oppgave.behandlingstema shouldEqual "ANY"
         }
         it("Behandlingstype er ANY hvis sykmelding har behandlingsdager og miljø er prod og nå er før 31/12 2020") {
             val oppgave = opprettProduceTask(receivedSykmeldingMedBehandlingsdager, validationResults, "prod-fss", LocalDate.of(2020, 12, 10), loggingMeta)
 
-            oppgave.behandlingstype shouldEqual "ANY"
+            oppgave.behandlingstema shouldEqual "ANY"
         }
         it("Behandlingstype er ab0351 hvis sykmelding har behandlingsdager og miljø er prod og nå er etter 31/12 2020") {
             val oppgave = opprettProduceTask(receivedSykmeldingMedBehandlingsdager, validationResults, "prod-fss", LocalDate.of(2021, 1, 1), loggingMeta)
 
-            oppgave.behandlingstype shouldEqual "ab0351"
+            oppgave.behandlingstema shouldEqual "ab0351"
         }
         it("Behandlingstype er ab0351 hvis sykmelding har behandlingsdager og miljø er dev") {
             val oppgave = opprettProduceTask(receivedSykmeldingMedBehandlingsdager, validationResults, "dev-fss", LocalDate.of(2020, 12, 10), loggingMeta)
 
-            oppgave.behandlingstype shouldEqual "ab0351"
+            oppgave.behandlingstema shouldEqual "ab0351"
         }
     }
 })

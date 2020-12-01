@@ -580,7 +580,7 @@ fun opprettProduceTask(receivedSykmelding: ReceivedSykmelding, validationResult:
     }
     if (skalSendeTilNay(naiscluster, now) && receivedSykmelding.sykmelding.perioder.any { it.behandlingsdager != null }) {
         log.info("Sykmelding inneholder behandlingsdager, {}", fields(loggingMeta))
-        oppgave.behandlingstype = "ab0351"
+        oppgave.behandlingstema = "ab0351"
     }
     return oppgave
 }
