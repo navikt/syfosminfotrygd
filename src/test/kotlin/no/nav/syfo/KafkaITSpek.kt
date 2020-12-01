@@ -29,7 +29,7 @@ object KafkaITSpek : Spek({
 
     val credentials = VaultCredentials("", "", "", "", "", "")
 
-    val config = Environment(mqHostname = "mqhost", mqPort = getRandomPort(),
+    val config = Environment(mqHostname = "mqhost", mqPort = getRandomPort(), naiscluster = "",
             mqGatewayName = "mqGateway", kafkaBootstrapServers = embeddedEnvironment.brokersURL,
             mqChannelName = "syfomottak", infotrygdOppdateringQueue = "apprequeue",
             infotrygdSporringQueue = "infotrygdqueue",
