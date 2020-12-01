@@ -71,7 +71,8 @@ class UpdateInfotrygdService {
         oppgaveTopic: String,
         kafkaproducervalidationResult: KafkaProducer<String, ValidationResult>,
         sm2013BehandlingsUtfallToipic: String,
-        applicationState: ApplicationState
+        applicationState: ApplicationState,
+        naiscluster: String
     ) {
         val helsepersonell = if (erEgenmeldt(receivedSykmelding)) {
             Behandler(listOf(Godkjenning(helsepersonellkategori = Kode(aktiv = true, oid = 0, verdi = HelsepersonellKategori.LEGE.verdi), autorisasjon = Kode(aktiv = true, oid = 0, verdi = ""))))
@@ -87,7 +88,7 @@ class UpdateInfotrygdService {
                             loggingMeta, oppgaveTopic, sm2013BehandlingsUtfallToipic,
                             kafkaproducervalidationResult,
                             InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
-                            helsepersonellKategoriVerdi, jedis, applicationState)
+                            helsepersonellKategoriVerdi, jedis, applicationState, naiscluster)
                 else -> sendInfotrygdOppdateringAndValidationResult(
                         infotrygdOppdateringProducer,
                         session,
@@ -121,7 +122,7 @@ class UpdateInfotrygdService {
             produceManualTaskAndSendValidationResults(kafkaproducerCreateTask, receivedSykmelding, validationResultBehandler,
                     loggingMeta, oppgaveTopic, sm2013BehandlingsUtfallToipic, kafkaproducervalidationResult,
                     InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
-                    HelsepersonellKategori.LEGE.verdi, jedis, applicationState)
+                    HelsepersonellKategori.LEGE.verdi, jedis, applicationState, naiscluster)
         }
     }
 
@@ -465,7 +466,8 @@ class UpdateInfotrygdService {
         itfh: InfotrygdForespAndHealthInformation,
         helsepersonellKategoriVerdi: String,
         jedis: Jedis,
-        applicationState: ApplicationState
+        applicationState: ApplicationState,
+        naiscluster: String
     ) {
         sendRuleCheckValidationResult(receivedSykmelding, kafkaproducervalidationResult,
                 validationResult, sm2013BehandlingsUtfallToipic, loggingMeta)
@@ -507,7 +509,7 @@ class UpdateInfotrygdService {
                     log.warn("Melding market som unødvendig å oppdatere infotrygd, ikkje opprett manuelloppgave {}", fields(loggingMeta))
                 }
                 else -> {
-                    opprettOppgave(kafkaProducer, receivedSykmelding, validationResult, loggingMeta, oppgaveTopic)
+                    opprettOppgave(kafkaProducer, receivedSykmelding, validationResult, naiscluster, loggingMeta, oppgaveTopic)
                     oppdaterRedis(sha256String, sha256String, jedis, TimeUnit.DAYS.toSeconds(60).toInt(), loggingMeta)
                 }
             }
@@ -522,30 +524,14 @@ class UpdateInfotrygdService {
                 ProduceTask>,
         receivedSykmelding: ReceivedSykmelding,
         validationResult: ValidationResult,
+        naiscluster: String,
         loggingMeta: LoggingMeta,
         oppgaveTopic: String
     ) {
         try {
             kafkaProducer.send(ProducerRecord(oppgaveTopic, receivedSykmelding.sykmelding.id,
-                    ProduceTask().apply {
-                        messageId = receivedSykmelding.msgId
-                        aktoerId = receivedSykmelding.sykmelding.pasientAktoerId
-                        tildeltEnhetsnr = ""
-                        opprettetAvEnhetsnr = "9999"
-                        behandlesAvApplikasjon = "FS22" // Gosys
-                        orgnr = receivedSykmelding.legekontorOrgNr ?: ""
-                        beskrivelse = "Manuell behandling av sykmelding grunnet følgende regler: ${validationResult.ruleHits.joinToString(", ", "(", ")") { it.messageForSender }}"
-                        temagruppe = "ANY"
-                        tema = "SYM"
-                        behandlingstema = "ANY"
-                        oppgavetype = "BEH_EL_SYM"
-                        behandlingstype = "ANY"
-                        mappeId = 1
-                        aktivDato = DateTimeFormatter.ISO_DATE.format(LocalDate.now())
-                        fristFerdigstillelse = DateTimeFormatter.ISO_DATE.format(finnFristForFerdigstillingAvOppgave(LocalDate.now().plusDays(4)))
-                        prioritet = PrioritetType.NORM
-                        metadata = mapOf()
-                    })).get()
+                opprettProduceTask(receivedSykmelding, validationResult, naiscluster, LocalDate.now(), loggingMeta)
+            )).get()
             MANUELLE_OPPGAVER_COUNTER.inc()
             log.info("Message sendt to topic: {}, {}", oppgaveTopic, fields(loggingMeta))
         } catch (ex: Exception) {
@@ -570,6 +556,37 @@ class UpdateInfotrygdService {
             validationResult.ruleHits.isNotEmpty() && validationResult.ruleHits.any {
                 (it.ruleName == ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE.name)
             } && receivedSykmelding.sykmelding.perioder.sortedPeriodeFOMDate().lastOrNull() != null && receivedSykmelding.sykmelding.perioder.sortedPeriodeTOMDate().lastOrNull() != null && (receivedSykmelding.sykmelding.perioder.sortedPeriodeFOMDate().last()..receivedSykmelding.sykmelding.perioder.sortedPeriodeTOMDate().last()).daysBetween() <= 3
+}
+
+fun opprettProduceTask(receivedSykmelding: ReceivedSykmelding, validationResult: ValidationResult, naiscluster: String, now: LocalDate, loggingMeta: LoggingMeta): ProduceTask {
+    val oppgave = ProduceTask().apply {
+        messageId = receivedSykmelding.msgId
+        aktoerId = receivedSykmelding.sykmelding.pasientAktoerId
+        tildeltEnhetsnr = ""
+        opprettetAvEnhetsnr = "9999"
+        behandlesAvApplikasjon = "FS22" // Gosys
+        orgnr = receivedSykmelding.legekontorOrgNr ?: ""
+        beskrivelse = "Manuell behandling av sykmelding grunnet følgende regler: ${validationResult.ruleHits.joinToString(", ", "(", ")") { it.messageForSender }}"
+        temagruppe = "ANY"
+        tema = "SYM"
+        behandlingstema = "ANY"
+        oppgavetype = "BEH_EL_SYM"
+        behandlingstype = "ANY"
+        mappeId = 1
+        aktivDato = DateTimeFormatter.ISO_DATE.format(LocalDate.now())
+        fristFerdigstillelse = DateTimeFormatter.ISO_DATE.format(finnFristForFerdigstillingAvOppgave(LocalDate.now().plusDays(4)))
+        prioritet = PrioritetType.NORM
+        metadata = mapOf()
+    }
+    if (skalSendeTilNay(naiscluster, now) && receivedSykmelding.sykmelding.perioder.any { it.behandlingsdager != null }) {
+        log.info("Sykmelding inneholder behandlingsdager, {}", fields(loggingMeta))
+        oppgave.behandlingstema = "ab0351"
+    }
+    return oppgave
+}
+
+private fun skalSendeTilNay(naiscluster: String, now: LocalDate): Boolean {
+    return naiscluster == "dev-fss" || now.isAfter(LocalDate.of(2020, 12, 31))
 }
 
 fun finnFristForFerdigstillingAvOppgave(ferdistilleDato: LocalDate): LocalDate {
