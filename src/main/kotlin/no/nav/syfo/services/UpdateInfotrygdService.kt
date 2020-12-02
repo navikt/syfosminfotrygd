@@ -578,9 +578,15 @@ fun opprettProduceTask(receivedSykmelding: ReceivedSykmelding, validationResult:
         prioritet = PrioritetType.NORM
         metadata = mapOf()
     }
-    if (skalSendeTilNay(naiscluster, now) && receivedSykmelding.sykmelding.perioder.any { it.behandlingsdager != null }) {
-        log.info("Sykmelding inneholder behandlingsdager, {}", fields(loggingMeta))
-        oppgave.behandlingstema = "ab0351"
+    if (skalSendeTilNay(naiscluster, now)) {
+        if (receivedSykmelding.sykmelding.perioder.any { it.behandlingsdager != null }) {
+            log.info("Sykmelding inneholder behandlingsdager, {}", fields(loggingMeta))
+            oppgave.behandlingstema = "ab0351"
+        }
+        if (receivedSykmelding.sykmelding.perioder.any { it.reisetilskudd || (it.gradert?.reisetilskudd == true) }) {
+            log.info("Sykmelding inneholder reisetilskudd, {}", fields(loggingMeta))
+            oppgave.behandlingstema = "ab0237"
+        }
     }
     return oppgave
 }
