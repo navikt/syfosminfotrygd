@@ -38,7 +38,7 @@ spec:
   webproxy: true
   env:
     - name: PERSON_V3_ENDPOINT_URL
-      value: https://wasapp.adeo.no/tpsws/ws/Person/v3
+      value: https://app.adeo.no/tpsws-aura/ws/Person/v3
     - name: SECURITY_TOKEN_SERVICE_URL
       value: https://sts.adeo.no/SecurityTokenServiceProvider/
     - name: INFOTRYGD_SPORRING_QUEUE
