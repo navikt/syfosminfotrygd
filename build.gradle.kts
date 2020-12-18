@@ -42,6 +42,7 @@ val jaxbTimeAdaptersVersion = "1.1.3"
 val embeddedRedisVersion = "0.6"
 val smCommonDiagnosisCodesVersion = "1.68817ee"
 val syfoXmlCodegen = "1.35193f7"
+val mockkVersion = "1.9.3"
 
 plugins {
     java
@@ -151,6 +152,7 @@ dependencies {
     testImplementation ("org.apache.activemq:artemis-server:$artemisVersion")
     testImplementation ("org.apache.activemq:artemis-jms-client:$artemisVersion")
     testImplementation ("com.github.kstyrc:embedded-redis:$embeddedRedisVersion")
+    testImplementation("io.mockk:mockk:$mockkVersion")
 
     testImplementation ("org.spekframework.spek2:spek-dsl-jvm:$spekVersion") {
         exclude(group = "org.jetbrains.kotlin")
