@@ -23,6 +23,7 @@ import no.nav.syfo.client.Behandler
 import no.nav.syfo.client.Godkjenning
 import no.nav.syfo.client.Kode
 import no.nav.syfo.client.NorskHelsenettClient
+import no.nav.syfo.client.SyfosmreglerClient
 import no.nav.syfo.daysBetween
 import no.nav.syfo.get
 import no.nav.syfo.log
@@ -56,6 +57,7 @@ class UpdateInfotrygdService {
 
     suspend fun updateInfotrygd(
         receivedSykmelding: ReceivedSykmelding,
+        syfosmreglerClient: SyfosmreglerClient,
         norskHelsenettClient: NorskHelsenettClient,
         validationResult: ValidationResult,
         infotrygdOppdateringProducer: MessageProducer,
@@ -84,7 +86,7 @@ class UpdateInfotrygdService {
             val helsepersonellKategoriVerdi = finnAktivHelsepersonellAutorisasjons(helsepersonell)
             when (validationResult.status) {
                 in arrayOf(Status.MANUAL_PROCESSING) ->
-                    produceManualTaskAndSendValidationResults(kafkaproducerCreateTask, receivedSykmelding, validationResult,
+                    produceManualTaskAndSendValidationResults(kafkaproducerCreateTask, syfosmreglerClient, receivedSykmelding, validationResult,
                             loggingMeta, oppgaveTopic, sm2013BehandlingsUtfallToipic,
                             kafkaproducervalidationResult,
                             InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
@@ -119,7 +121,7 @@ class UpdateInfotrygdService {
             )
             RULE_HIT_STATUS_COUNTER.labels(validationResultBehandler.status.name).inc()
             log.warn("Behandler er ikke registert i HPR")
-            produceManualTaskAndSendValidationResults(kafkaproducerCreateTask, receivedSykmelding, validationResultBehandler,
+            produceManualTaskAndSendValidationResults(kafkaproducerCreateTask, syfosmreglerClient, receivedSykmelding, validationResultBehandler,
                     loggingMeta, oppgaveTopic, sm2013BehandlingsUtfallToipic, kafkaproducervalidationResult,
                     InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
                     HelsepersonellKategori.LEGE.verdi, jedis, applicationState, naiscluster)
@@ -455,8 +457,9 @@ class UpdateInfotrygdService {
         }
     }
 
-    private fun produceManualTaskAndSendValidationResults(
+    private suspend fun produceManualTaskAndSendValidationResults(
         kafkaProducer: KafkaProducer<String, ProduceTask>,
+        syfosmreglerClient: SyfosmreglerClient,
         receivedSykmelding: ReceivedSykmelding,
         validationResult: ValidationResult,
         loggingMeta: LoggingMeta,
@@ -509,7 +512,7 @@ class UpdateInfotrygdService {
                     log.warn("Melding market som unødvendig å oppdatere infotrygd, ikkje opprett manuelloppgave {}", fields(loggingMeta))
                 }
                 else -> {
-                    opprettOppgave(kafkaProducer, receivedSykmelding, validationResult, naiscluster, loggingMeta, oppgaveTopic)
+                    opprettOppgave(kafkaProducer, syfosmreglerClient, receivedSykmelding, validationResult, naiscluster, loggingMeta, oppgaveTopic)
                     oppdaterRedis(sha256String, sha256String, jedis, TimeUnit.DAYS.toSeconds(60).toInt(), loggingMeta)
                 }
             }
@@ -519,9 +522,10 @@ class UpdateInfotrygdService {
         }
     }
 
-    fun opprettOppgave(
+    suspend fun opprettOppgave(
         kafkaProducer: KafkaProducer<String,
                 ProduceTask>,
+        syfosmreglerClient: SyfosmreglerClient,
         receivedSykmelding: ReceivedSykmelding,
         validationResult: ValidationResult,
         naiscluster: String,
@@ -530,7 +534,7 @@ class UpdateInfotrygdService {
     ) {
         try {
             kafkaProducer.send(ProducerRecord(oppgaveTopic, receivedSykmelding.sykmelding.id,
-                opprettProduceTask(receivedSykmelding, validationResult, naiscluster, LocalDate.now(), loggingMeta)
+                opprettProduceTask(syfosmreglerClient, receivedSykmelding, validationResult, naiscluster, LocalDate.now(), loggingMeta)
             )).get()
             MANUELLE_OPPGAVER_COUNTER.inc()
             log.info("Message sendt to topic: {}, {}", oppgaveTopic, fields(loggingMeta))
@@ -558,7 +562,8 @@ class UpdateInfotrygdService {
             } && receivedSykmelding.sykmelding.perioder.sortedPeriodeFOMDate().lastOrNull() != null && receivedSykmelding.sykmelding.perioder.sortedPeriodeTOMDate().lastOrNull() != null && (receivedSykmelding.sykmelding.perioder.sortedPeriodeFOMDate().last()..receivedSykmelding.sykmelding.perioder.sortedPeriodeTOMDate().last()).daysBetween() <= 3
 }
 
-fun opprettProduceTask(receivedSykmelding: ReceivedSykmelding, validationResult: ValidationResult, naiscluster: String, now: LocalDate, loggingMeta: LoggingMeta): ProduceTask {
+@KtorExperimentalAPI
+suspend fun opprettProduceTask(syfosmreglerClient: SyfosmreglerClient, receivedSykmelding: ReceivedSykmelding, validationResult: ValidationResult, naiscluster: String, now: LocalDate, loggingMeta: LoggingMeta): ProduceTask {
     val oppgave = ProduceTask().apply {
         messageId = receivedSykmelding.msgId
         aktoerId = receivedSykmelding.sykmelding.pasientAktoerId
@@ -587,12 +592,25 @@ fun opprettProduceTask(receivedSykmelding: ReceivedSykmelding, validationResult:
             log.info("Sykmelding inneholder reisetilskudd, {}", fields(loggingMeta))
             oppgave.behandlingstema = "ab0237"
         }
+        if (behandletAvManuell(syfosmreglerClient, receivedSykmelding, loggingMeta)) {
+            oppgave.behandlingstype = "ae0256"
+        }
     }
     return oppgave
 }
 
 private fun skalSendeTilNay(naiscluster: String, now: LocalDate): Boolean {
     return naiscluster == "dev-fss" || now.isAfter(LocalDate.of(2020, 12, 31))
+}
+
+@KtorExperimentalAPI
+suspend fun behandletAvManuell(syfosmreglerClient: SyfosmreglerClient, receivedSykmelding: ReceivedSykmelding, loggingMeta: LoggingMeta): Boolean {
+    val validationResult = syfosmreglerClient.executeRuleValidation(receivedSykmelding, loggingMeta)
+    validationResult.ruleHits.find { it.ruleName == "TILBAKEDATERT_MER_ENN_8_DAGER_FORSTE_SYKMELDING_MED_BEGRUNNELSE" || it.ruleName == "TILBAKEDATERT_MED_BEGRUNNELSE_FORLENGELSE" }?.let {
+        log.info("sykmelding har vært behandlet av syfosmmanuell, {}", fields(loggingMeta))
+        return true
+    }
+    return false
 }
 
 fun finnFristForFerdigstillingAvOppgave(ferdistilleDato: LocalDate): LocalDate {
