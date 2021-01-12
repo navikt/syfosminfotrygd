@@ -584,14 +584,6 @@ suspend fun opprettProduceTask(syfosmreglerClient: SyfosmreglerClient, receivedS
         metadata = mapOf()
     }
     if (skalSendeTilNay(naiscluster, now)) {
-        if (receivedSykmelding.sykmelding.perioder.any { it.behandlingsdager != null }) {
-            log.info("Sykmelding inneholder behandlingsdager, {}", fields(loggingMeta))
-            oppgave.behandlingstema = "ab0351"
-        }
-        if (receivedSykmelding.sykmelding.perioder.any { it.reisetilskudd || (it.gradert?.reisetilskudd == true) }) {
-            log.info("Sykmelding inneholder reisetilskudd, {}", fields(loggingMeta))
-            oppgave.behandlingstema = "ab0237"
-        }
         if (behandletAvManuell(syfosmreglerClient, receivedSykmelding, loggingMeta)) {
             oppgave.behandlingstype = "ae0256"
         }
