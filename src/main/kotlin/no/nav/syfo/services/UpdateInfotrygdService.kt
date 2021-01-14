@@ -73,8 +73,7 @@ class UpdateInfotrygdService {
         oppgaveTopic: String,
         kafkaproducervalidationResult: KafkaProducer<String, ValidationResult>,
         sm2013BehandlingsUtfallToipic: String,
-        applicationState: ApplicationState,
-        naiscluster: String
+        applicationState: ApplicationState
     ) {
         val helsepersonell = if (erEgenmeldt(receivedSykmelding)) {
             Behandler(listOf(Godkjenning(helsepersonellkategori = Kode(aktiv = true, oid = 0, verdi = HelsepersonellKategori.LEGE.verdi), autorisasjon = Kode(aktiv = true, oid = 0, verdi = ""))))
@@ -90,7 +89,7 @@ class UpdateInfotrygdService {
                             loggingMeta, oppgaveTopic, sm2013BehandlingsUtfallToipic,
                             kafkaproducervalidationResult,
                             InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
-                            helsepersonellKategoriVerdi, jedis, applicationState, naiscluster)
+                            helsepersonellKategoriVerdi, jedis, applicationState)
                 else -> sendInfotrygdOppdateringAndValidationResult(
                         infotrygdOppdateringProducer,
                         session,
@@ -124,7 +123,7 @@ class UpdateInfotrygdService {
             produceManualTaskAndSendValidationResults(kafkaproducerCreateTask, syfosmreglerClient, receivedSykmelding, validationResultBehandler,
                     loggingMeta, oppgaveTopic, sm2013BehandlingsUtfallToipic, kafkaproducervalidationResult,
                     InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
-                    HelsepersonellKategori.LEGE.verdi, jedis, applicationState, naiscluster)
+                    HelsepersonellKategori.LEGE.verdi, jedis, applicationState)
         }
     }
 
@@ -469,8 +468,7 @@ class UpdateInfotrygdService {
         itfh: InfotrygdForespAndHealthInformation,
         helsepersonellKategoriVerdi: String,
         jedis: Jedis,
-        applicationState: ApplicationState,
-        naiscluster: String
+        applicationState: ApplicationState
     ) {
         sendRuleCheckValidationResult(receivedSykmelding, kafkaproducervalidationResult,
                 validationResult, sm2013BehandlingsUtfallToipic, loggingMeta)
@@ -512,7 +510,7 @@ class UpdateInfotrygdService {
                     log.warn("Melding market som unødvendig å oppdatere infotrygd, ikkje opprett manuelloppgave {}", fields(loggingMeta))
                 }
                 else -> {
-                    opprettOppgave(kafkaProducer, syfosmreglerClient, receivedSykmelding, validationResult, naiscluster, loggingMeta, oppgaveTopic)
+                    opprettOppgave(kafkaProducer, syfosmreglerClient, receivedSykmelding, validationResult, loggingMeta, oppgaveTopic)
                     oppdaterRedis(sha256String, sha256String, jedis, TimeUnit.DAYS.toSeconds(60).toInt(), loggingMeta)
                 }
             }
@@ -528,13 +526,12 @@ class UpdateInfotrygdService {
         syfosmreglerClient: SyfosmreglerClient,
         receivedSykmelding: ReceivedSykmelding,
         validationResult: ValidationResult,
-        naiscluster: String,
         loggingMeta: LoggingMeta,
         oppgaveTopic: String
     ) {
         try {
             kafkaProducer.send(ProducerRecord(oppgaveTopic, receivedSykmelding.sykmelding.id,
-                opprettProduceTask(syfosmreglerClient, receivedSykmelding, validationResult, naiscluster, LocalDate.now(), loggingMeta)
+                opprettProduceTask(syfosmreglerClient, receivedSykmelding, validationResult, loggingMeta)
             )).get()
             MANUELLE_OPPGAVER_COUNTER.inc()
             log.info("Message sendt to topic: {}, {}", oppgaveTopic, fields(loggingMeta))
@@ -563,7 +560,7 @@ class UpdateInfotrygdService {
 }
 
 @KtorExperimentalAPI
-suspend fun opprettProduceTask(syfosmreglerClient: SyfosmreglerClient, receivedSykmelding: ReceivedSykmelding, validationResult: ValidationResult, naiscluster: String, now: LocalDate, loggingMeta: LoggingMeta): ProduceTask {
+suspend fun opprettProduceTask(syfosmreglerClient: SyfosmreglerClient, receivedSykmelding: ReceivedSykmelding, validationResult: ValidationResult, loggingMeta: LoggingMeta): ProduceTask {
     val oppgave = ProduceTask().apply {
         messageId = receivedSykmelding.msgId
         aktoerId = receivedSykmelding.sykmelding.pasientAktoerId
@@ -583,16 +580,10 @@ suspend fun opprettProduceTask(syfosmreglerClient: SyfosmreglerClient, receivedS
         prioritet = PrioritetType.NORM
         metadata = mapOf()
     }
-    if (skalSendeTilNay(naiscluster, now)) {
-        if (behandletAvManuell(syfosmreglerClient, receivedSykmelding, loggingMeta)) {
-            oppgave.behandlingstype = "ae0256"
-        }
+    if (behandletAvManuell(syfosmreglerClient, receivedSykmelding, loggingMeta)) {
+        oppgave.behandlingstype = "ae0256"
     }
     return oppgave
-}
-
-private fun skalSendeTilNay(naiscluster: String, now: LocalDate): Boolean {
-    return naiscluster == "dev-fss" || now.isAfter(LocalDate.of(2020, 12, 31))
 }
 
 @KtorExperimentalAPI
