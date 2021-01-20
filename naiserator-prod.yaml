@@ -60,7 +60,7 @@ spec:
     - name: MQ_INFOTRYGD_SMIKKEOK_QUEUE
       value: P414.AS07_SMIKKEOK
     - name: NORG2_V1_ENDPOINT_URL
-      value: https://app.adeo.no/norg2/api/v1
+      value: https://norg2.nais.adeo.no/norg2/api/v1
     - name: AADACCESSTOKEN_URL
       value: https://login.microsoftonline.com/navno.onmicrosoft.com/oauth2/token
     - name: CLIENT_ID
