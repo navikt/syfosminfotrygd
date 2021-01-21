@@ -20,7 +20,7 @@ class Norg2Client(
     private val endpointUrl: String
 ) {
 
-    suspend fun getLocalNAVOffice(geografiskOmraade: String, diskresjonskode: String?): Enhet =
+    suspend fun getLocalNAVOffice(geografiskOmraade: String?, diskresjonskode: String?): Enhet =
             retry("find_local_nav_office") {
                 val httpResponse = httpClient.get<HttpStatement>("$endpointUrl/enhet/navkontor/$geografiskOmraade") {
                     accept(ContentType.Application.Json)

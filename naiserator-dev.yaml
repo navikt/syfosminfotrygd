@@ -37,8 +37,6 @@ spec:
     enabled: true
   webproxy: true
   env:
-    - name: PERSON_V3_ENDPOINT_URL
-      value: https://app-q1.adeo.no/tpsws-aura/ws/Person/v3
     - name: SECURITY_TOKEN_SERVICE_URL
       value: https://sts-q1.preprod.local/SecurityTokenServiceProvider/
     - name: INFOTRYGD_SPORRING_QUEUE
@@ -69,3 +67,5 @@ spec:
       value: c18eba24-f676-47db-9a97-3c66e9304aee
     - name: MQ_TSS_SAMHANDLER_SERVICE_QUEUE
       value: QA.Q1_415.AS10_SAMHANDLER_SERVICE
+    - name: PDL_GRAPHQL_PATH
+      value: https://pdl-api.nais.preprod.local/graphql
