@@ -62,7 +62,7 @@ object PdlPersonServiceTest : Spek({
                 }
             }
         }
-        it("Skal feile hvis geografiskTilknytning for person ikke finnes i PDL") {
+        it("Setter GT=null hvis geografiskTilknytning for person ikke finnes i PDL") {
             coEvery { pdlClient.getPerson(any(), any()) } returns GetPersonResponse(
                 ResponseData(
                     hentGeografiskTilknytning = null,
@@ -70,10 +70,10 @@ object PdlPersonServiceTest : Spek({
                 ),
                 errors = null)
 
-            assertFailsWith<RuntimeException> {
-                runBlocking {
-                    pdlPersonService.getPerson("fnr", loggingMeta)
-                }
+            runBlocking {
+                val person = pdlPersonService.getPerson("fnr", loggingMeta)
+
+                person.gt shouldEqual null
             }
         }
     }

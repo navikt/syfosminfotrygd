@@ -26,12 +26,11 @@ class PdlPersonService(private val pdlClient: PdlClient, private val stsOidcClie
             throw RuntimeException("Fant ikke person i PDL")
         }
         if (pdlResponse.data.hentGeografiskTilknytning == null) {
-            log.error("Fant ikke GT for person i PDL {}", StructuredArguments.fields(loggingMeta))
-            throw RuntimeException("Fant ikke GT for person i PDL")
+            log.warn("Fant ikke GT for person i PDL {}", StructuredArguments.fields(loggingMeta))
         }
 
         return PdlPerson(
-            gt = pdlResponse.data.hentGeografiskTilknytning.finnGT(),
+            gt = pdlResponse.data.hentGeografiskTilknytning?.finnGT(),
             adressebeskyttelse = pdlResponse.data.hentPerson.adressebeskyttelse?.firstOrNull()?.gradering
         )
     }
