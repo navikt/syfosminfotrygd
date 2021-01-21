@@ -37,8 +37,6 @@ spec:
     enabled: true
   webproxy: true
   env:
-    - name: PERSON_V3_ENDPOINT_URL
-      value: https://app-q1.adeo.no/tpsws-aura/ws/Person/v3
     - name: SECURITY_TOKEN_SERVICE_URL
       value: https://sts-q1.preprod.local/SecurityTokenServiceProvider/
     - name: INFOTRYGD_SPORRING_QUEUE
@@ -60,7 +58,7 @@ spec:
     - name: MQ_INFOTRYGD_SMIKKEOK_QUEUE
       value: Q414.AS07_SMIKKEOK
     - name: NORG2_V1_ENDPOINT_URL
-      value: https://app-q1.adeo.no/norg2/api/v1
+      value: https://norg2.dev.adeo.no/norg2/api/v1
     - name: AADACCESSTOKEN_URL
       value: https://login.microsoftonline.com/navq.onmicrosoft.com/oauth2/token
     - name: CLIENT_ID
@@ -69,3 +67,5 @@ spec:
       value: c18eba24-f676-47db-9a97-3c66e9304aee
     - name: MQ_TSS_SAMHANDLER_SERVICE_QUEUE
       value: QA.Q1_415.AS10_SAMHANDLER_SERVICE
+    - name: PDL_GRAPHQL_PATH
+      value: https://pdl-api.nais.preprod.local/graphql

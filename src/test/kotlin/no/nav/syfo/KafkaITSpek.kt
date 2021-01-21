@@ -32,11 +32,10 @@ object KafkaITSpek : Spek({
     val config = Environment(mqHostname = "mqhost", mqPort = getRandomPort(), naiscluster = "",
             mqGatewayName = "mqGateway", kafkaBootstrapServers = embeddedEnvironment.brokersURL,
             mqChannelName = "syfomottak", infotrygdOppdateringQueue = "apprequeue",
-            infotrygdSporringQueue = "infotrygdqueue",
-            personV3EndpointURL = "personApi", securityTokenServiceUrl = "secApi",
+            infotrygdSporringQueue = "infotrygdqueue", securityTokenServiceUrl = "secApi",
             sm2013AutomaticHandlingTopic = "topic1", applicationName = "syfosminfotrygd",
             norskHelsenettEndpointURL = "helseAPi", infotrygdSmIkkeOKQueue = "smikkeok", norg2V1EndpointURL = "/enhet/navkontor",
-            clientId = "1313", helsenettproxyId = "12313", aadAccessTokenUrl = "acccess", tssQueue = "tsskø"
+            clientId = "1313", helsenettproxyId = "12313", aadAccessTokenUrl = "acccess", tssQueue = "tsskø", pdlGraphqlPath = "pdl"
 
     )
 

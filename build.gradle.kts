@@ -29,7 +29,6 @@ val sykmeldingVersion = "2019.07.29-02-53-86b22e73f7843e422ee500b486dac387a582f2
 val cxfVersion = "3.2.7"
 val jaxwsApiVersion = "2.3.1"
 val commonsTextVersion = "1.4"
-val navPersonv3Version = "1.2019.07.11-06.47-b55f47790a9d"
 val jaxbBasicAntVersion = "1.11.1"
 val javaxAnnotationApiVersion = "1.3.2"
 val jaxwsToolsVersion = "2.3.1"
@@ -110,7 +109,6 @@ dependencies {
     implementation ("no.nav.helse.xml:xmlfellesformat:$fellesformatVersion")
     implementation ("no.nav.helse.xml:kontrollsystemblokk:$kontrollsystemblokk")
     implementation ("no.nav.syfo.schemas:syfosmoppgave-avro:$syfooppgaveSchemasVersion")
-    implementation ("no.nav.tjenestespesifikasjoner:person-v3-tjenestespesifikasjon:$navPersonv3Version")
     implementation ("no.nav.helse.xml:infotrygd-foresp:$infotrygdForespVersion")
     implementation ("no.nav.helse.xml:kith-hodemelding:$kithHodemeldingVersion")
     implementation ("no.nav.helse.xml:tssSamhandlerData:$syfoXmlCodegen")
