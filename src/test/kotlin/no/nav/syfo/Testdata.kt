@@ -43,8 +43,8 @@ fun receivedSykmelding(id: String, sykmelding: Sykmelding = generateSykmelding()
         mottattDato = LocalDateTime.now(),
         rulesetVersion = "",
         fellesformat = "",
-        tssid = ""
-
+        tssid = "",
+        merknader = null
 )
 
 fun generateSykmelding(
