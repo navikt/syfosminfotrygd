@@ -29,7 +29,10 @@ data class Environment(
     val redishost: String = getEnvVar("REDIS_HOST", "syfosminfotrygd-redis.default.svc.nais.local"),
     val tssQueue: String = getEnvVar("MQ_TSS_SAMHANDLER_SERVICE_QUEUE"),
     val syfosmreglerUrl: String = getEnvVar("SYFOSMREGLER_URL", "http://syfosmregler"),
-    val pdlGraphqlPath: String = getEnvVar("PDL_GRAPHQL_PATH")
+    val pdlGraphqlPath: String = getEnvVar("PDL_GRAPHQL_PATH"),
+    override val truststore: String? = getEnvVar("NAV_TRUSTSTORE_PATH"),
+    override val truststorePassword: String? = getEnvVar("NAV_TRUSTSTORE_PASSWORD"),
+    override val cluster: String = getEnvVar("NAIS_CLUSTER_NAME")
 ) : MqConfig, KafkaConfig
 
 data class VaultCredentials(
