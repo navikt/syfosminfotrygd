@@ -1,8 +1,5 @@
 package no.nav.syfo
 
-import java.net.ServerSocket
-import java.time.Duration
-import java.util.Properties
 import no.nav.common.KafkaEnvironment
 import no.nav.syfo.kafka.loadBaseConfig
 import no.nav.syfo.kafka.toConsumerConfig
@@ -15,6 +12,9 @@ import org.apache.kafka.common.serialization.StringDeserializer
 import org.apache.kafka.common.serialization.StringSerializer
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.net.ServerSocket
+import java.time.Duration
+import java.util.Properties
 
 object KafkaITSpek : Spek({
     val topic = "aapen-test-topic"
@@ -23,20 +23,21 @@ object KafkaITSpek : Spek({
     }
 
     val embeddedEnvironment = KafkaEnvironment(
-            autoStart = false,
-            topicNames = listOf(topic)
+        autoStart = false,
+        topicNames = listOf(topic)
     )
 
     val credentials = VaultCredentials("", "", "", "", "", "")
 
-    val config = Environment(mqHostname = "mqhost", mqPort = getRandomPort(), naiscluster = "",
-            mqGatewayName = "mqGateway", kafkaBootstrapServers = embeddedEnvironment.brokersURL,
-            mqChannelName = "syfomottak", infotrygdOppdateringQueue = "apprequeue",
-            infotrygdSporringQueue = "infotrygdqueue", securityTokenServiceUrl = "secApi",
-            sm2013AutomaticHandlingTopic = "topic1", applicationName = "syfosminfotrygd",
-            norskHelsenettEndpointURL = "helseAPi", infotrygdSmIkkeOKQueue = "smikkeok", norg2V1EndpointURL = "/enhet/navkontor",
-            clientId = "1313", helsenettproxyId = "12313", aadAccessTokenUrl = "acccess", tssQueue = "tsskø", pdlGraphqlPath = "pdl",
-            truststore = "truststore", truststorePassword = "pwd", cluster = "cluster"
+    val config = Environment(
+        mqHostname = "mqhost", mqPort = getRandomPort(), naiscluster = "",
+        mqGatewayName = "mqGateway", kafkaBootstrapServers = embeddedEnvironment.brokersURL,
+        mqChannelName = "syfomottak", infotrygdOppdateringQueue = "apprequeue",
+        infotrygdSporringQueue = "infotrygdqueue", securityTokenServiceUrl = "secApi",
+        sm2013AutomaticHandlingTopic = "topic1", applicationName = "syfosminfotrygd",
+        norskHelsenettEndpointURL = "helseAPi", infotrygdSmIkkeOKQueue = "smikkeok", norg2V1EndpointURL = "/enhet/navkontor",
+        clientId = "1313", helsenettproxyId = "12313", aadAccessTokenUrl = "acccess", tssQueue = "tsskø", pdlGraphqlPath = "pdl",
+        truststore = "truststore", truststorePassword = "pwd", cluster = "cluster"
 
     )
 
@@ -48,11 +49,11 @@ object KafkaITSpek : Spek({
     val baseConfig = loadBaseConfig(config, credentials).overrideForTest()
 
     val producerProperties = baseConfig
-            .toProducerConfig("spek.integration", valueSerializer = StringSerializer::class)
+        .toProducerConfig("spek.integration", valueSerializer = StringSerializer::class)
     val producer = KafkaProducer<String, String>(producerProperties)
 
     val consumerProperties = baseConfig
-            .toConsumerConfig("spek.integration-consumer", valueDeserializer = StringDeserializer::class)
+        .toConsumerConfig("spek.integration-consumer", valueDeserializer = StringDeserializer::class)
     val consumer = KafkaConsumer<String, String>(consumerProperties)
     consumer.subscribe(listOf(topic))
 

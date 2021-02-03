@@ -17,19 +17,6 @@ import io.ktor.client.features.json.JacksonSerializer
 import io.ktor.client.features.json.JsonFeature
 import io.ktor.util.KtorExperimentalAPI
 import io.prometheus.client.hotspot.DefaultExports
-import java.io.StringReader
-import java.io.StringWriter
-import java.nio.file.Paths
-import java.time.Duration
-import java.time.LocalDate
-import java.time.OffsetTime
-import java.time.ZoneId
-import java.time.temporal.ChronoUnit
-import java.util.Properties
-import javax.jms.MessageProducer
-import javax.jms.Session
-import javax.xml.bind.Marshaller
-import javax.xml.stream.XMLInputFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
@@ -87,6 +74,19 @@ import org.apache.kafka.common.serialization.StringDeserializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import redis.clients.jedis.Jedis
+import java.io.StringReader
+import java.io.StringWriter
+import java.nio.file.Paths
+import java.time.Duration
+import java.time.LocalDate
+import java.time.OffsetTime
+import java.time.ZoneId
+import java.time.temporal.ChronoUnit
+import java.util.Properties
+import javax.jms.MessageProducer
+import javax.jms.Session
+import javax.xml.bind.Marshaller
+import javax.xml.stream.XMLInputFactory
 
 val log: Logger = LoggerFactory.getLogger("no.nav.syfo.sminfotrygd")
 val objectMapper: ObjectMapper = ObjectMapper().apply {
@@ -104,8 +104,9 @@ fun main() {
     val credentials = objectMapper.readValue<VaultCredentials>(Paths.get("/var/run/secrets/nais.io/vault/credentials.json").toFile())
     val applicationState = ApplicationState()
     val applicationEngine = createApplicationEngine(
-            env,
-            applicationState)
+        env,
+        applicationState
+    )
 
     val applicationServer = ApplicationServer(applicationEngine)
     applicationServer.start()
@@ -160,30 +161,31 @@ fun main() {
     val syfosmreglerClient = SyfosmreglerClient(env.syfosmreglerUrl, httpClient)
 
     launchListeners(
-            applicationState,
-            kafkaproducerCreateTask,
-            kafkaproducervalidationResult,
-            finnNAVKontorService,
-            env,
-            norskHelsenettClient,
-            syfosmreglerClient,
-            consumerProperties,
-            smIkkeOkQueue,
-            kafkaproducerreceivedSykmelding,
-            credentials)
+        applicationState,
+        kafkaproducerCreateTask,
+        kafkaproducervalidationResult,
+        finnNAVKontorService,
+        env,
+        norskHelsenettClient,
+        syfosmreglerClient,
+        consumerProperties,
+        smIkkeOkQueue,
+        kafkaproducerreceivedSykmelding,
+        credentials
+    )
 }
 
 fun createListener(applicationState: ApplicationState, action: suspend CoroutineScope.() -> Unit): Job =
-        GlobalScope.launch {
-            try {
-                action()
-            } catch (e: TrackableException) {
-                log.error("En uhåndtert feil oppstod, applikasjonen restarter {}", fields(e.loggingMeta), e.cause)
-            } finally {
-                applicationState.alive = false
-                applicationState.ready = false
-            }
+    GlobalScope.launch {
+        try {
+            action()
+        } catch (e: TrackableException) {
+            log.error("En uhåndtert feil oppstod, applikasjonen restarter {}", fields(e.loggingMeta), e.cause)
+        } finally {
+            applicationState.alive = false
+            applicationState.ready = false
         }
+    }
 
 @KtorExperimentalAPI
 fun launchListeners(
@@ -214,11 +216,13 @@ fun launchListeners(
 
                 applicationState.ready = true
 
-                blockingApplicationLogic(applicationState, kafkaconsumerRecievedSykmelding, kafkaproducerCreateTask,
-                        kafkaproducervalidationResult, infotrygdOppdateringProducer, infotrygdSporringProducer,
-                        session, finnNAVKontorService, env.sm2013BehandlingsUtfallToipic, norskHelsenettClient, syfosmreglerClient,
-                        smIkkeOkQueue, jedis, kafkaproducerreceivedSykmelding, env.sm2013infotrygdRetry,
-                        env.sm2013OpppgaveTopic, tssProducer, env)
+                blockingApplicationLogic(
+                    applicationState, kafkaconsumerRecievedSykmelding, kafkaproducerCreateTask,
+                    kafkaproducervalidationResult, infotrygdOppdateringProducer, infotrygdSporringProducer,
+                    session, finnNAVKontorService, env.sm2013BehandlingsUtfallToipic, norskHelsenettClient, syfosmreglerClient,
+                    smIkkeOkQueue, jedis, kafkaproducerreceivedSykmelding, env.sm2013infotrygdRetry,
+                    env.sm2013OpppgaveTopic, tssProducer, env
+                )
             }
         }
     }
@@ -251,7 +255,7 @@ suspend fun blockingApplicationLogic(
         if (shouldRun(getCurrentTime())) {
             log.info("Starter KafkaConsumer")
             kafkaConsumer.subscribe(
-                    listOf(env.sm2013AutomaticHandlingTopic, env.sm2013infotrygdRetry)
+                listOf(env.sm2013AutomaticHandlingTopic, env.sm2013infotrygdRetry)
             )
             runKafkaConsumer(kafkaConsumer, kafkaproducerCreateTask, kafkaproducervalidationResult, infotrygdOppdateringProducer, infotrygdSporringProducer, session, finnNAVKontorService, sm2013BehandlingsUtfallToipic, norskHelsenettClient, syfosmreglerClient, smIkkeOkQueue, jedis, kafkaproducerreceivedSykmelding, infotrygdRetryTopic, oppgaveTopic, applicationState, tssProducer)
             kafkaConsumer.unsubscribe()
@@ -285,18 +289,19 @@ private suspend fun runKafkaConsumer(
         kafkaConsumer.poll(Duration.ofMillis(0)).mapNotNull { it.value() }.forEach { receivedSykmeldingString ->
             val receivedSykmelding: ReceivedSykmelding = objectMapper.readValue(receivedSykmeldingString)
             val loggingMeta = LoggingMeta(
-                    mottakId = receivedSykmelding.navLogId,
-                    orgNr = receivedSykmelding.legekontorOrgNr,
-                    msgId = receivedSykmelding.msgId,
-                    sykmeldingId = receivedSykmelding.sykmelding.id
+                mottakId = receivedSykmelding.navLogId,
+                orgNr = receivedSykmelding.legekontorOrgNr,
+                msgId = receivedSykmelding.msgId,
+                sykmeldingId = receivedSykmelding.sykmelding.id
             )
 
             handleMessage(
-                    receivedSykmelding, syfosmreglerClient, kafkaproducerCreateTask, kafkaproducervalidationResult,
-                    infotrygdOppdateringProducer, infotrygdSporringProducer,
-                    session, finnNAVKontorService, sm2013BehandlingsUtfallTopic, norskHelsenettClient,
-                    smIkkeOkQueue, loggingMeta, jedis, kafkaproducerreceivedSykmelding,
-                    infotrygdRetryTopic, oppgaveTopic, applicationState, tssProducer)
+                receivedSykmelding, syfosmreglerClient, kafkaproducerCreateTask, kafkaproducervalidationResult,
+                infotrygdOppdateringProducer, infotrygdSporringProducer,
+                session, finnNAVKontorService, sm2013BehandlingsUtfallTopic, norskHelsenettClient,
+                smIkkeOkQueue, loggingMeta, jedis, kafkaproducerreceivedSykmelding,
+                infotrygdRetryTopic, oppgaveTopic, applicationState, tssProducer
+            )
         }
         delay(100)
     }
@@ -349,16 +354,19 @@ suspend fun handleMessage(
             UpdateInfotrygdService().opprettOppgave(kafkaproducerCreateTask, syfosmreglerClient, receivedSykmelding, validationResultForMottattSykmelding, loggingMeta, oppgaveTopic)
         } else {
             val infotrygdForespResponse = fetchInfotrygdForesp(
-                    receivedSykmelding,
-                    infotrygdSporringProducer,
-                    session,
-                    healthInformation)
+                receivedSykmelding,
+                infotrygdSporringProducer,
+                session,
+                healthInformation
+            )
 
             var receivedSykmeldingMedTssId = receivedSykmelding
 
             if (receivedSykmelding.tssid.isNullOrBlank()) {
-                val tssIdInfotrygd = finnTssIdFraInfotrygdRespons(infotrygdForespResponse.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()?.periode,
-                        receivedSykmelding.sykmelding.behandler)
+                val tssIdInfotrygd = finnTssIdFraInfotrygdRespons(
+                    infotrygdForespResponse.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()?.periode,
+                    receivedSykmelding.sykmelding.behandler
+                )
                 if (!tssIdInfotrygd.isNullOrBlank()) {
                     log.info("Sykmelding mangler tssid, har hentet tssid $tssIdInfotrygd fra infotrygd, {}", fields(loggingMeta))
                     receivedSykmeldingMedTssId = receivedSykmelding.copy(tssid = tssIdInfotrygd)
@@ -383,38 +391,42 @@ suspend fun handleMessage(
 
             val lokaltNavkontor = finnNAVKontorService.finnLokaltNavkontor(receivedSykmelding.personNrPasient, loggingMeta)
 
-            UpdateInfotrygdService().updateInfotrygd(receivedSykmeldingMedTssId,
-                    syfosmreglerClient,
-                    norskHelsenettClient,
-                    validationResult,
-                    infotrygdOppdateringProducer,
-                    kafkaproducerCreateTask,
-                    lokaltNavkontor,
-                    loggingMeta,
-                    session,
-                    infotrygdForespResponse,
-                    healthInformation,
-                    jedis,
-                    kafkaproducerreceivedSykmelding,
-                    infotrygdRetryTopic,
-                    oppgaveTopic,
-                    kafkaproducervalidationResult,
-                    sm2013BehandlingsUtfallToipic,
-                    applicationState
+            UpdateInfotrygdService().updateInfotrygd(
+                receivedSykmeldingMedTssId,
+                syfosmreglerClient,
+                norskHelsenettClient,
+                validationResult,
+                infotrygdOppdateringProducer,
+                kafkaproducerCreateTask,
+                lokaltNavkontor,
+                loggingMeta,
+                session,
+                infotrygdForespResponse,
+                healthInformation,
+                jedis,
+                kafkaproducerreceivedSykmelding,
+                infotrygdRetryTopic,
+                oppgaveTopic,
+                kafkaproducervalidationResult,
+                sm2013BehandlingsUtfallToipic,
+                applicationState
             )
         }
         val currentRequestLatency = requestLatency.observeDuration()
 
-        log.info("Message processing took {}s, for message {}",
-                currentRequestLatency.toString(),
-                fields(loggingMeta))
+        log.info(
+            "Message processing took {}s, for message {}",
+            currentRequestLatency.toString(),
+            fields(loggingMeta)
+        )
     }
 }
 
 fun finnTssIdFraInfotrygdRespons(sisteSmPeriode: TypeSMinfo.Periode?, behandler: Behandler): String? {
     if (sisteSmPeriode != null &&
-            behandler.etternavn.equals(sisteSmPeriode.legeNavn?.etternavn, true) &&
-            behandler.fornavn.equals(sisteSmPeriode.legeNavn?.fornavn, true)) {
+        behandler.etternavn.equals(sisteSmPeriode.legeNavn?.etternavn, true) &&
+        behandler.fornavn.equals(sisteSmPeriode.legeNavn?.fornavn, true)
+    ) {
         return sisteSmPeriode.legeInstNr?.toString()
     }
     return null
@@ -430,11 +442,17 @@ fun validerMottattSykmelding(helseOpplysningerArbeidsuforhet: HelseOpplysningerA
     return if (helseOpplysningerArbeidsuforhet.medisinskVurdering.hovedDiagnose == null) {
         RULE_HIT_STATUS_COUNTER.labels("MANUAL_PROCESSING").inc()
         log.warn("Sykmelding mangler hoveddiagnose")
-        ValidationResult(Status.MANUAL_PROCESSING, listOf(
-                RuleInfo("HOVEDDIAGNOSE_MANGLER",
-                        "Sykmeldingen inneholder ingen hoveddiagnose, vi kan ikke automatisk oppdatere Infotrygd",
-                        "Sykmeldingen inneholder ingen hoveddiagnose, vi kan ikke automatisk oppdatere Infotrygd",
-                        Status.MANUAL_PROCESSING)))
+        ValidationResult(
+            Status.MANUAL_PROCESSING,
+            listOf(
+                RuleInfo(
+                    "HOVEDDIAGNOSE_MANGLER",
+                    "Sykmeldingen inneholder ingen hoveddiagnose, vi kan ikke automatisk oppdatere Infotrygd",
+                    "Sykmeldingen inneholder ingen hoveddiagnose, vi kan ikke automatisk oppdatere Infotrygd",
+                    Status.MANUAL_PROCESSING
+                )
+            )
+        )
     } else {
         ValidationResult(Status.OK, emptyList())
     }
@@ -449,19 +467,21 @@ fun ruleCheck(
     log.info("Going through rules {}", fields(loggingMeta))
 
     val validationRuleResults = ValidationRuleChain.values().executeFlow(
-            receivedSykmelding.sykmelding,
-            infotrygdForespResponse)
+        receivedSykmelding.sykmelding,
+        infotrygdForespResponse
+    )
 
     val tssRuleResults = TssRuleChain.values().executeFlow(
-            receivedSykmelding.sykmelding,
-            RuleMetadata(
-                    receivedDate = receivedSykmelding.mottattDato,
-                    signatureDate = receivedSykmelding.sykmelding.signaturDato,
-                    patientPersonNumber = receivedSykmelding.personNrPasient,
-                    rulesetVersion = receivedSykmelding.rulesetVersion,
-                    legekontorOrgnr = receivedSykmelding.legekontorOrgNr,
-                    tssid = receivedSykmelding.tssid
-            ))
+        receivedSykmelding.sykmelding,
+        RuleMetadata(
+            receivedDate = receivedSykmelding.mottattDato,
+            signatureDate = receivedSykmelding.sykmelding.signaturDato,
+            patientPersonNumber = receivedSykmelding.personNrPasient,
+            rulesetVersion = receivedSykmelding.rulesetVersion,
+            legekontorOrgnr = receivedSykmelding.legekontorOrgNr,
+            tssid = receivedSykmelding.tssid
+        )
+    )
 
     val results = listOf(validationRuleResults, tssRuleResults).flatten()
     log.info("Rules hit {}, $loggingMeta", results.map { rule -> rule.name }, fields(loggingMeta))
@@ -498,22 +518,22 @@ inline fun <reified T> unmarshal(text: String): T = fellesformatUnmarshaller.unm
 inline fun <reified T> XMLEIFellesformat.get() = this.any.find { it is T } as T
 
 fun extractHelseOpplysningerArbeidsuforhet(fellesformat: XMLEIFellesformat): HelseOpplysningerArbeidsuforhet =
-        fellesformat.get<XMLMsgHead>().document[0].refDoc.content.any[0] as HelseOpplysningerArbeidsuforhet
+    fellesformat.get<XMLMsgHead>().document[0].refDoc.content.any[0] as HelseOpplysningerArbeidsuforhet
 
 fun ClosedRange<LocalDate>.daysBetween(): Long = ChronoUnit.DAYS.between(start, endInclusive)
 
 fun validationResult(results: List<Rule<Any>>): ValidationResult =
-        ValidationResult(
-                status = results
-                        .map { status -> status.status }.let {
-                            it.firstOrNull { status -> status == Status.MANUAL_PROCESSING }
-                                    ?: Status.OK
-                        },
-                ruleHits = results.map { rule -> RuleInfo(rule.name, rule.messageForUser!!, rule.messageForSender!!, rule.status) }
-        )
+    ValidationResult(
+        status = results
+            .map { status -> status.status }.let {
+                it.firstOrNull { status -> status == Status.MANUAL_PROCESSING }
+                    ?: Status.OK
+            },
+        ruleHits = results.map { rule -> RuleInfo(rule.name, rule.messageForUser!!, rule.messageForSender!!, rule.status) }
+    )
 
 fun List<HelseOpplysningerArbeidsuforhet.Aktivitet.Periode>.sortedFOMDate(): List<LocalDate> =
-        map { it.periodeFOMDato }.sorted()
+    map { it.periodeFOMDato }.sorted()
 
 data class InfotrygdForespAndHealthInformation(
     val infotrygdForesp: InfotrygdForesp,

@@ -4,7 +4,6 @@ import io.ktor.util.KtorExperimentalAPI
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
 import io.mockk.mockk
-import kotlin.test.assertFailsWith
 import kotlinx.coroutines.runBlocking
 import no.nav.syfo.client.OidcToken
 import no.nav.syfo.client.StsOidcClient
@@ -18,6 +17,7 @@ import no.nav.syfo.util.LoggingMeta
 import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import kotlin.test.assertFailsWith
 
 @KtorExperimentalAPI
 object PdlPersonServiceTest : Spek({
@@ -39,7 +39,8 @@ object PdlPersonServiceTest : Spek({
                     hentGeografiskTilknytning = HentGeografiskTilknytning(gtType = "BYDEL", gtKommune = null, gtBydel = "030102", gtLand = null),
                     hentPerson = HentPerson(adressebeskyttelse = listOf(Adressebeskyttelse("FORTROLIG")))
                 ),
-                errors = null)
+                errors = null
+            )
 
             runBlocking {
                 val person = pdlPersonService.getPerson("fnr", loggingMeta)
@@ -54,7 +55,8 @@ object PdlPersonServiceTest : Spek({
                     hentGeografiskTilknytning = HentGeografiskTilknytning(gtType = "BYDEL", gtKommune = null, gtBydel = "030102", gtLand = null),
                     hentPerson = null
                 ),
-                errors = null)
+                errors = null
+            )
 
             assertFailsWith<RuntimeException> {
                 runBlocking {
@@ -68,7 +70,8 @@ object PdlPersonServiceTest : Spek({
                     hentGeografiskTilknytning = null,
                     hentPerson = HentPerson(emptyList())
                 ),
-                errors = null)
+                errors = null
+            )
 
             runBlocking {
                 val person = pdlPersonService.getPerson("fnr", loggingMeta)
