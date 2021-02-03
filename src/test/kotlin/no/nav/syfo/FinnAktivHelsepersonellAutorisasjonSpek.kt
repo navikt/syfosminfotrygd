@@ -18,33 +18,33 @@ object FinnAktivHelsepersonellAutorisasjonSpek : Spek({
         it("Sjekker at man velger Lege verdien dersom fleire helsepersonell autorisasjoner") {
 
             val helsepersonelPerson = Behandler(
-                    listOf(
-                            Godkjenning(
-                                    autorisasjon = Kode(
-                                            aktiv = true,
-                                            oid = 0,
-                                            verdi = ""
-                                    ),
-                                    helsepersonellkategori = Kode(
-                                            aktiv = true,
-                                            oid = 0,
-                                            verdi = HelsepersonellKategori.KIROPRAKTOR.verdi
-                                    )
-                            ),
-                            Godkjenning(
-                            autorisasjon = Kode(
-                                    aktiv = true,
-                                    oid = 0,
-                                    verdi = ""
-                            ),
-                            helsepersonellkategori = Kode(
-                                    aktiv = true,
-                                    oid = 0,
-                                    verdi = HelsepersonellKategori.LEGE.verdi
-                            )
+                listOf(
+                    Godkjenning(
+                        autorisasjon = Kode(
+                            aktiv = true,
+                            oid = 0,
+                            verdi = ""
+                        ),
+                        helsepersonellkategori = Kode(
+                            aktiv = true,
+                            oid = 0,
+                            verdi = HelsepersonellKategori.KIROPRAKTOR.verdi
+                        )
+                    ),
+                    Godkjenning(
+                        autorisasjon = Kode(
+                            aktiv = true,
+                            oid = 0,
+                            verdi = ""
+                        ),
+                        helsepersonellkategori = Kode(
+                            aktiv = true,
+                            oid = 0,
+                            verdi = HelsepersonellKategori.LEGE.verdi
+                        )
                     )
 
-                    )
+                )
             )
 
             updateInfotrygdService.finnAktivHelsepersonellAutorisasjons(helsepersonelPerson) shouldBeEqualTo HelsepersonellKategori.LEGE.verdi
@@ -53,33 +53,33 @@ object FinnAktivHelsepersonellAutorisasjonSpek : Spek({
         it("Sjekker at man velger Kiropraktor verdien dersom dei andre helsepersonell autorisasjoner er inaktiv") {
 
             val helsepersonelPerson = Behandler(
-                    listOf(
-                            Godkjenning(
-                                    autorisasjon = Kode(
-                                            aktiv = true,
-                                            oid = 0,
-                                            verdi = ""
-                                    ),
-                                    helsepersonellkategori = Kode(
-                                            aktiv = true,
-                                            oid = 0,
-                                            verdi = HelsepersonellKategori.KIROPRAKTOR.verdi
-                                    )
-                            ),
-                            Godkjenning(
-                                    autorisasjon = Kode(
-                                            aktiv = true,
-                                            oid = 0,
-                                            verdi = ""
-                                    ),
-                                    helsepersonellkategori = Kode(
-                                            aktiv = false,
-                                            oid = 0,
-                                            verdi = HelsepersonellKategori.LEGE.verdi
-                                    )
-                            )
-
+                listOf(
+                    Godkjenning(
+                        autorisasjon = Kode(
+                            aktiv = true,
+                            oid = 0,
+                            verdi = ""
+                        ),
+                        helsepersonellkategori = Kode(
+                            aktiv = true,
+                            oid = 0,
+                            verdi = HelsepersonellKategori.KIROPRAKTOR.verdi
+                        )
+                    ),
+                    Godkjenning(
+                        autorisasjon = Kode(
+                            aktiv = true,
+                            oid = 0,
+                            verdi = ""
+                        ),
+                        helsepersonellkategori = Kode(
+                            aktiv = false,
+                            oid = 0,
+                            verdi = HelsepersonellKategori.LEGE.verdi
+                        )
                     )
+
+                )
             )
 
             updateInfotrygdService.finnAktivHelsepersonellAutorisasjons(helsepersonelPerson) shouldBeEqualTo HelsepersonellKategori.KIROPRAKTOR.verdi
@@ -88,33 +88,33 @@ object FinnAktivHelsepersonellAutorisasjonSpek : Spek({
         it("Sjekker at man velger tomt verdi dersom ingen er aktive helsepersonellkategori verdier") {
 
             val helsepersonelPerson = Behandler(
-                    listOf(
-                            Godkjenning(
-                                    autorisasjon = Kode(
-                                            aktiv = true,
-                                            oid = 0,
-                                            verdi = ""
-                                    ),
-                                    helsepersonellkategori = Kode(
-                                            aktiv = false,
-                                            oid = 0,
-                                            verdi = HelsepersonellKategori.KIROPRAKTOR.verdi
-                                    )
-                            ),
-                            Godkjenning(
-                                    autorisasjon = Kode(
-                                            aktiv = true,
-                                            oid = 0,
-                                            verdi = ""
-                                    ),
-                                    helsepersonellkategori = Kode(
-                                            aktiv = false,
-                                            oid = 0,
-                                            verdi = HelsepersonellKategori.LEGE.verdi
-                                    )
-                            )
-
+                listOf(
+                    Godkjenning(
+                        autorisasjon = Kode(
+                            aktiv = true,
+                            oid = 0,
+                            verdi = ""
+                        ),
+                        helsepersonellkategori = Kode(
+                            aktiv = false,
+                            oid = 0,
+                            verdi = HelsepersonellKategori.KIROPRAKTOR.verdi
+                        )
+                    ),
+                    Godkjenning(
+                        autorisasjon = Kode(
+                            aktiv = true,
+                            oid = 0,
+                            verdi = ""
+                        ),
+                        helsepersonellkategori = Kode(
+                            aktiv = false,
+                            oid = 0,
+                            verdi = HelsepersonellKategori.LEGE.verdi
+                        )
                     )
+
+                )
             )
 
             updateInfotrygdService.finnAktivHelsepersonellAutorisasjons(helsepersonelPerson) shouldBeEqualTo ""

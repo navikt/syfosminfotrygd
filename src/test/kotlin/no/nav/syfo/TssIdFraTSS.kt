@@ -38,47 +38,55 @@ object TssIdFraTSS : Spek({
                 }
                 samhandlerODataB960 = XMLTypeOD960().apply {
                     antallSamhandlere = "1"
-                    enkeltSamhandler.add(XMLTypeKomplett().apply {
-                        samhandler110 = XMLTypeSamhandler().apply {
-                            antSamh = "1"
-                            samhandler.add(XMLSamhandlerType().apply {
-                                idOff = "123134151"
-                                kodeIdentType = "FNR"
-                                kodeSamhType = "LE"
-                                beskSamhType = "Lege"
-                                datoSamhFom = "20041101"
-                                datoSamhTom = null
-                                navnSamh = "PER HANSEN"
-                                kodeSpraak = "NB"
-                                etatsMerke = null
-                                utbetSperre = "N"
-                                kodeKontrInt = "0006"
-                                beskrKontrInt = "Hver gang"
-                                kodeStatus = "GYLD"
-                                beskrStatus = "Gyldig"
-                                kilde = "HPR"
-                                brukerId = "INITLOAD"
-                                tidReg = "200510201032"
-                            })
+                    enkeltSamhandler.add(
+                        XMLTypeKomplett().apply {
+                            samhandler110 = XMLTypeSamhandler().apply {
+                                antSamh = "1"
+                                samhandler.add(
+                                    XMLSamhandlerType().apply {
+                                        idOff = "123134151"
+                                        kodeIdentType = "FNR"
+                                        kodeSamhType = "LE"
+                                        beskSamhType = "Lege"
+                                        datoSamhFom = "20041101"
+                                        datoSamhTom = null
+                                        navnSamh = "PER HANSEN"
+                                        kodeSpraak = "NB"
+                                        etatsMerke = null
+                                        utbetSperre = "N"
+                                        kodeKontrInt = "0006"
+                                        beskrKontrInt = "Hver gang"
+                                        kodeStatus = "GYLD"
+                                        beskrStatus = "Gyldig"
+                                        kilde = "HPR"
+                                        brukerId = "INITLOAD"
+                                        tidReg = "200510201032"
+                                    }
+                                )
+                            }
+                            samhandlerAvd125 = XMLTypeSamhAvd().apply {
+                                antSamhAvd = "1"
+                                samhAvd.add(
+                                    (
+                                        XMLSamhAvdPraType().apply {
+                                            avdNr = "01"
+                                            avdNavn = null
+                                            typeAvd = null
+                                            beskrTypeAvd = null
+                                            datoAvdFom = "20041101"
+                                            datoAvdTom = null
+                                            gyldigAvd = "J"
+                                            idOffTSS = "80000007415"
+                                            offNrAvd = null
+                                            kilde = "HPR"
+                                            brukerId = "INITLOAD"
+                                            tidReg = "200510201032"
+                                        }
+                                        )
+                                )
+                            }
                         }
-                        samhandlerAvd125 = XMLTypeSamhAvd().apply {
-                            antSamhAvd = "1"
-                            samhAvd.add((XMLSamhAvdPraType().apply {
-                                avdNr = "01"
-                                avdNavn = null
-                                typeAvd = null
-                                beskrTypeAvd = null
-                                datoAvdFom = "20041101"
-                                datoAvdTom = null
-                                gyldigAvd = "J"
-                                idOffTSS = "80000007415"
-                                offNrAvd = null
-                                kilde = "HPR"
-                                brukerId = "INITLOAD"
-                                tidReg = "200510201032"
-                            }))
-                        }
-                    })
+                    )
                 }
             }
 
