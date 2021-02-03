@@ -1,12 +1,12 @@
 package no.nav.syfo.rules
 
+import java.time.LocalDateTime
 import no.nav.syfo.generateSykmelding
 import no.nav.syfo.model.RuleMetadata
 import no.nav.syfo.model.Sykmelding
 import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.time.LocalDateTime
 
 object TssRuleChainSpek : Spek({
     fun ruleData(

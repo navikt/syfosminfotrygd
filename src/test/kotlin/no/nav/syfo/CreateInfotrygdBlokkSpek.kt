@@ -1,6 +1,7 @@
 package no.nav.syfo
 
 import io.ktor.util.KtorExperimentalAPI
+import java.time.LocalDate
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.infotrygd.foresp.StatusType
 import no.nav.helse.infotrygd.foresp.TypeSMinfo
@@ -11,7 +12,6 @@ import no.nav.syfo.util.LoggingMeta
 import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.time.LocalDate
 
 @KtorExperimentalAPI
 object CreateInfotrygdBlokkSpek : Spek({
@@ -24,10 +24,10 @@ object CreateInfotrygdBlokkSpek : Spek({
             val healthInformation = HelseOpplysningerArbeidsuforhet().apply {
                 aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
                     periode.add(
-                        HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                            periodeFOMDato = LocalDate.of(2019, 1, 1)
-                            periodeTOMDato = LocalDate.of(2019, 1, 2)
-                        }
+                            HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
+                                periodeFOMDato = LocalDate.of(2019, 1, 1)
+                                periodeTOMDato = LocalDate.of(2019, 1, 2)
+                            }
                     )
                 }
             }
@@ -46,17 +46,17 @@ object CreateInfotrygdBlokkSpek : Spek({
             val forsteFravaersDag = updateInfotrygdService.finnForsteFravaersDag(ifth, perioder.first(), LoggingMeta("mottakId", "12315", "", ""))
 
             val infotrygdBlokk = updateInfotrygdService.createInfotrygdBlokk(
-                ifth,
-                healthInformation.aktivitet.periode.last(),
-                "2134",
-                LocalDate.now(),
-                "LE",
-                "12345",
-                LoggingMeta("mottakId", "12315", "", ""),
-                "1234",
-                "NAV IKT",
-                forsteFravaersDag,
-                1
+                    ifth,
+                    healthInformation.aktivitet.periode.last(),
+                    "2134",
+                    LocalDate.now(),
+                    "LE",
+                    "12345",
+                    LoggingMeta("mottakId", "12315", "", ""),
+                    "1234",
+                    "NAV IKT",
+                    forsteFravaersDag,
+                    1
 
             )
 
@@ -68,30 +68,28 @@ object CreateInfotrygdBlokkSpek : Spek({
             val healthInformation = HelseOpplysningerArbeidsuforhet().apply {
                 aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
                     periode.add(
-                        HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                            periodeFOMDato = LocalDate.of(2019, 1, 2)
-                            periodeTOMDato = LocalDate.of(2019, 1, 3)
-                        }
+                            HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
+                                periodeFOMDato = LocalDate.of(2019, 1, 2)
+                                periodeTOMDato = LocalDate.of(2019, 1, 3)
+                            }
                     )
                     periode.add(
-                        HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                            periodeFOMDato = LocalDate.of(2019, 1, 4)
-                            periodeTOMDato = LocalDate.of(2019, 1, 5)
-                        }
+                            HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
+                                periodeFOMDato = LocalDate.of(2019, 1, 4)
+                                periodeTOMDato = LocalDate.of(2019, 1, 5)
+                            }
                     )
                 }
             }
 
             val infotrygdForesp = InfotrygdForesp().apply {
                 sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
-                    sykmelding.add(
-                        TypeSMinfo().apply {
+                        sykmelding.add(TypeSMinfo().apply {
                             periode = TypeSMinfo.Periode().apply {
                                 arbufoerFOM = LocalDate.of(2019, 1, 1)
                                 arbufoerTOM = LocalDate.of(2019, 1, 1)
                             }
-                        }
-                    )
+                        })
                     status = StatusType().apply {
                         kodeMelding = "00"
                     }
@@ -104,41 +102,41 @@ object CreateInfotrygdBlokkSpek : Spek({
             val forsteFravaersDag = updateInfotrygdService.finnForsteFravaersDag(ifth, perioder.first(), LoggingMeta("mottakId", "12315", "", ""))
 
             val infotrygdfirstBlokk = updateInfotrygdService.createInfotrygdBlokk(
-                ifth,
-                healthInformation.aktivitet.periode.first(),
-                "2134",
-                LocalDate.now(),
-                "LE",
-                "12345",
-                LoggingMeta("mottakId", "12315", "", ""),
-                "1234",
-                "NAV IKT",
-                forsteFravaersDag,
-                2
+                    ifth,
+                    healthInformation.aktivitet.periode.first(),
+                    "2134",
+                    LocalDate.now(),
+                    "LE",
+                    "12345",
+                    LoggingMeta("mottakId", "12315", "", ""),
+                    "1234",
+                    "NAV IKT",
+                    forsteFravaersDag,
+                    2
 
             )
 
             val infotrygdlastBlokk = updateInfotrygdService.createInfotrygdBlokk(
-                ifth,
-                healthInformation.aktivitet.periode.last(),
-                "2134",
-                LocalDate.now(),
-                "LE",
-                "12345",
-                LoggingMeta("mottakId", "12315", "", ""),
-                "1234",
-                "NAV IKT",
-                forsteFravaersDag,
-                2
+                    ifth,
+                    healthInformation.aktivitet.periode.last(),
+                    "2134",
+                    LocalDate.now(),
+                    "LE",
+                    "12345",
+                    LoggingMeta("mottakId", "12315", "", ""),
+                    "1234",
+                    "NAV IKT",
+                    forsteFravaersDag,
+                    2
 
             )
 
             infotrygdfirstBlokk.forsteFravaersDag shouldEqual ifth.infotrygdForesp.sMhistorikk.sykmelding
-                .sortedSMInfos()
-                .last().periode.arbufoerFOM
+                    .sortedSMInfos()
+                    .last().periode.arbufoerFOM
             infotrygdlastBlokk.forsteFravaersDag shouldEqual ifth.infotrygdForesp.sMhistorikk.sykmelding
-                .sortedSMInfos()
-                .last().periode.arbufoerFOM
+                    .sortedSMInfos()
+                    .last().periode.arbufoerFOM
         }
 
         it("Should set forsteFravaersDag correctly, when oprasjosntype 1 and more than 1 periode") {
@@ -146,30 +144,28 @@ object CreateInfotrygdBlokkSpek : Spek({
             val healthInformation = HelseOpplysningerArbeidsuforhet().apply {
                 aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
                     periode.add(
-                        HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                            periodeFOMDato = LocalDate.of(2019, 1, 3)
-                            periodeTOMDato = LocalDate.of(2019, 1, 4)
-                        }
+                            HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
+                                periodeFOMDato = LocalDate.of(2019, 1, 3)
+                                periodeTOMDato = LocalDate.of(2019, 1, 4)
+                            }
                     )
                     periode.add(
-                        HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                            periodeFOMDato = LocalDate.of(2019, 1, 5)
-                            periodeTOMDato = LocalDate.of(2019, 1, 6)
-                        }
+                            HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
+                                periodeFOMDato = LocalDate.of(2019, 1, 5)
+                                periodeTOMDato = LocalDate.of(2019, 1, 6)
+                            }
                     )
                 }
             }
 
             val infotrygdForesp = InfotrygdForesp().apply {
                 sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
-                    sykmelding.add(
-                        TypeSMinfo().apply {
-                            periode = TypeSMinfo.Periode().apply {
-                                arbufoerFOM = LocalDate.of(2019, 1, 1)
-                                arbufoerTOM = LocalDate.of(2019, 1, 1)
-                            }
+                    sykmelding.add(TypeSMinfo().apply {
+                        periode = TypeSMinfo.Periode().apply {
+                            arbufoerFOM = LocalDate.of(2019, 1, 1)
+                            arbufoerTOM = LocalDate.of(2019, 1, 1)
                         }
-                    )
+                    })
                     status = StatusType().apply {
                         kodeMelding = "00"
                     }
@@ -182,32 +178,32 @@ object CreateInfotrygdBlokkSpek : Spek({
             val forsteFravaersDag = updateInfotrygdService.finnForsteFravaersDag(ifth, perioder.first(), LoggingMeta("mottakId", "12315", "", ""))
 
             val infotrygdfirstBlokk = updateInfotrygdService.createInfotrygdBlokk(
-                ifth,
-                healthInformation.aktivitet.periode.first(),
-                "2134",
-                LocalDate.now(),
-                "LE",
-                "12345",
-                LoggingMeta("mottakId", "12315", "", ""),
-                "1234",
-                "NAV IKT",
-                forsteFravaersDag,
-                1
+                    ifth,
+                    healthInformation.aktivitet.periode.first(),
+                    "2134",
+                    LocalDate.now(),
+                    "LE",
+                    "12345",
+                    LoggingMeta("mottakId", "12315", "", ""),
+                    "1234",
+                    "NAV IKT",
+                    forsteFravaersDag,
+                    1
 
             )
 
             val infotrygdlastBlokk = updateInfotrygdService.createInfotrygdBlokk(
-                ifth,
-                healthInformation.aktivitet.periode.last(),
-                "2134",
-                LocalDate.now(),
-                "LE",
-                "12345",
-                LoggingMeta("mottakId", "12315", "", ""),
-                "1234",
-                "NAV IKT",
-                forsteFravaersDag,
-                2
+                    ifth,
+                    healthInformation.aktivitet.periode.last(),
+                    "2134",
+                    LocalDate.now(),
+                    "LE",
+                    "12345",
+                    LoggingMeta("mottakId", "12315", "", ""),
+                    "1234",
+                    "NAV IKT",
+                    forsteFravaersDag,
+                    2
 
             )
 

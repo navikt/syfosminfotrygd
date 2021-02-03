@@ -1,10 +1,10 @@
 package no.nav.syfo
 
+import java.time.OffsetTime
+import java.time.ZoneOffset
 import org.amshove.kluent.shouldEqualTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.time.OffsetTime
-import java.time.ZoneOffset
 
 class BootstrapKtTest : Spek({
     describe("Test runtime") {

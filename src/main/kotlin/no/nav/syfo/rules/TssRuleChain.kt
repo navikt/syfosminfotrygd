@@ -12,12 +12,10 @@ enum class TssRuleChain(
 ) : Rule<RuleData<RuleMetadata>> {
     @Description("Behandlers TSS-ident er ikke funnet automatisk av systemet")
     TSS_IDENT_MANGLER(
-        9999,
-        Status.MANUAL_PROCESSING,
-        "Behandlers TSS-ident er ikke funnet automatisk av systemet",
-        "Behandlers TSS-ident er ikke funnet automatisk av systemet",
-        { (_, metadata) ->
-            metadata.tssid.isNullOrBlank()
-        }
-    ),
+            9999,
+            Status.MANUAL_PROCESSING,
+            "Behandlers TSS-ident er ikke funnet automatisk av systemet",
+            "Behandlers TSS-ident er ikke funnet automatisk av systemet", { (_, metadata) ->
+        metadata.tssid.isNullOrBlank()
+    }),
 }
