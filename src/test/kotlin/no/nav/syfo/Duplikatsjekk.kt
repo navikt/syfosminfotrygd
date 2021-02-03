@@ -1,6 +1,7 @@
 package no.nav.syfo
 
 import io.ktor.util.KtorExperimentalAPI
+import java.time.LocalDate
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.infotrygd.foresp.StatusType
 import no.nav.helse.infotrygd.foresp.TypeSMinfo
@@ -12,7 +13,6 @@ import no.nav.syfo.util.LoggingMeta
 import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.time.LocalDate
 
 @KtorExperimentalAPI
 object Duplikatsjekk : Spek({
@@ -24,22 +24,20 @@ object Duplikatsjekk : Spek({
             val healthInformationForstemelding = HelseOpplysningerArbeidsuforhet().apply {
                 aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
                     periode.add(
-                        HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                            periodeFOMDato = LocalDate.of(2019, 1, 1)
-                            periodeTOMDato = LocalDate.of(2019, 1, 2)
-                        }
+                            HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
+                                periodeFOMDato = LocalDate.of(2019, 1, 1)
+                                periodeTOMDato = LocalDate.of(2019, 1, 2)
+                            }
                     )
                 }
             }
 
             val infotrygdForesp = InfotrygdForesp().apply {
                 sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
-                    sykmelding.add(
-                        TypeSMinfo().apply {
-                            periode = TypeSMinfo.Periode().apply {
-                            }
+                    sykmelding.add(TypeSMinfo().apply {
+                        periode = TypeSMinfo.Periode().apply {
                         }
-                    )
+                    })
                     status = StatusType().apply {
                         kodeMelding = "00"
                     }
@@ -49,27 +47,27 @@ object Duplikatsjekk : Spek({
             val ifthForstemelding = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformationForstemelding)
 
             val infotrygdBlokkForsteMelding = updateInfotrygdService.createInfotrygdBlokk(
-                ifthForstemelding,
-                healthInformationForstemelding.aktivitet.periode.last(),
-                "2134",
-                LocalDate.now(),
-                "LE",
-                "12345",
-                LoggingMeta("mottakId", "12315", "", ""),
-                "1234",
-                "NAV IKT",
-                LocalDate.now(),
-                1
+                    ifthForstemelding,
+                    healthInformationForstemelding.aktivitet.periode.last(),
+                    "2134",
+                    LocalDate.now(),
+                    "LE",
+                    "12345",
+                    LoggingMeta("mottakId", "12315", "", ""),
+                    "1234",
+                    "NAV IKT",
+                    LocalDate.now(),
+                    1
 
             )
 
             val healthInformationAndreMelding = HelseOpplysningerArbeidsuforhet().apply {
                 aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
                     periode.add(
-                        HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                            periodeFOMDato = LocalDate.of(2019, 1, 1)
-                            periodeTOMDato = LocalDate.of(2019, 1, 2)
-                        }
+                            HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
+                                periodeFOMDato = LocalDate.of(2019, 1, 1)
+                                periodeTOMDato = LocalDate.of(2019, 1, 2)
+                            }
                     )
                 }
                 arbeidsgiver = HelseOpplysningerArbeidsuforhet.Arbeidsgiver().apply {
@@ -84,17 +82,17 @@ object Duplikatsjekk : Spek({
             val ifthAndreMelding = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformationAndreMelding)
 
             val infotrygdBlokkAndreMelding = updateInfotrygdService.createInfotrygdBlokk(
-                ifthAndreMelding,
-                healthInformationAndreMelding.aktivitet.periode.last(),
-                "2134",
-                LocalDate.now(),
-                "LE",
-                "12345",
-                LoggingMeta("mottakId", "12315", "2424", "2424"),
-                "1234",
-                "NAV IKT",
-                LocalDate.now(),
-                1
+                    ifthAndreMelding,
+                    healthInformationAndreMelding.aktivitet.periode.last(),
+                    "2134",
+                    LocalDate.now(),
+                    "LE",
+                    "12345",
+                    LoggingMeta("mottakId", "12315", "2424", "2424"),
+                    "1234",
+                    "NAV IKT",
+                    LocalDate.now(),
+                    1
 
             )
 

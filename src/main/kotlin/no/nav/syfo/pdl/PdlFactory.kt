@@ -14,11 +14,9 @@ class PdlFactory private constructor() {
             return PdlPersonService(getPdlClient(httpClient, environment), oidcClient)
         }
         private fun getPdlClient(httpClient: HttpClient, environment: Environment): PdlClient {
-            return PdlClient(
-                httpClient,
-                environment.pdlGraphqlPath,
-                PdlClient::class.java.getResource("/graphql/getPerson.graphql").readText()
-            )
+            return PdlClient(httpClient,
+                    environment.pdlGraphqlPath,
+                    PdlClient::class.java.getResource("/graphql/getPerson.graphql").readText())
         }
     }
 }

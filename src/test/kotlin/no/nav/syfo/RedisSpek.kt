@@ -1,6 +1,7 @@
 package no.nav.syfo
 
 import io.ktor.util.KtorExperimentalAPI
+import java.util.concurrent.TimeUnit
 import no.nav.syfo.services.INFOTRYGD
 import no.nav.syfo.services.antallErrorIInfotrygd
 import no.nav.syfo.services.oppdaterAntallErrorIInfotrygd
@@ -12,7 +13,6 @@ import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import redis.clients.jedis.Jedis
 import redis.embedded.RedisServer
-import java.util.concurrent.TimeUnit
 
 @KtorExperimentalAPI
 object RedisSpek : Spek({
@@ -27,10 +27,10 @@ object RedisSpek : Spek({
                 jedis.connect()
 
                 val loggingMeta = LoggingMeta(
-                    mottakId = "1313",
-                    orgNr = "0",
-                    msgId = "0",
-                    sykmeldingId = "0"
+                        mottakId = "1313",
+                        orgNr = "0",
+                        msgId = "0",
+                        sykmeldingId = "0"
                 )
 
                 oppdaterAntallErrorIInfotrygd(INFOTRYGD, "1", jedis, TimeUnit.MINUTES.toSeconds(5).toInt(), loggingMeta)
@@ -49,10 +49,10 @@ object RedisSpek : Spek({
                 jedis.connect()
 
                 val loggingMeta = LoggingMeta(
-                    mottakId = "1313",
-                    orgNr = "0",
-                    msgId = "0",
-                    sykmeldingId = "0"
+                        mottakId = "1313",
+                        orgNr = "0",
+                        msgId = "0",
+                        sykmeldingId = "0"
                 )
 
                 oppdaterAntallErrorIInfotrygd(INFOTRYGD, "1", jedis, TimeUnit.MINUTES.toSeconds(5).toInt(), loggingMeta)
@@ -73,10 +73,10 @@ object RedisSpek : Spek({
                 jedis.connect()
 
                 val loggingMeta = LoggingMeta(
-                    mottakId = "1313",
-                    orgNr = "0",
-                    msgId = "0",
-                    sykmeldingId = "0"
+                        mottakId = "1313",
+                        orgNr = "0",
+                        msgId = "0",
+                        sykmeldingId = "0"
                 )
 
                 val oppdaterRedis = oppdaterRedis(INFOTRYGD, "1", jedis, TimeUnit.MINUTES.toSeconds(5).toInt(), loggingMeta)
@@ -94,10 +94,10 @@ object RedisSpek : Spek({
                 jedis.connect()
 
                 val loggingMeta = LoggingMeta(
-                    mottakId = "1313",
-                    orgNr = "0",
-                    msgId = "0",
-                    sykmeldingId = "0"
+                        mottakId = "1313",
+                        orgNr = "0",
+                        msgId = "0",
+                        sykmeldingId = "0"
                 )
 
                 oppdaterRedis(INFOTRYGD, "1", jedis, TimeUnit.MINUTES.toSeconds(5).toInt(), loggingMeta)
@@ -116,10 +116,10 @@ object RedisSpek : Spek({
                 jedis.connect()
 
                 val loggingMeta = LoggingMeta(
-                    mottakId = "1313",
-                    orgNr = "0",
-                    msgId = "0",
-                    sykmeldingId = "0"
+                        mottakId = "1313",
+                        orgNr = "0",
+                        msgId = "0",
+                        sykmeldingId = "0"
                 )
 
                 oppdaterRedis(INFOTRYGD, "1", jedis, TimeUnit.MINUTES.toSeconds(5).toInt(), loggingMeta)
@@ -138,10 +138,10 @@ object RedisSpek : Spek({
                 jedis.connect()
 
                 val loggingMeta = LoggingMeta(
-                    mottakId = "1313",
-                    orgNr = "0",
-                    msgId = "0",
-                    sykmeldingId = "0"
+                        mottakId = "1313",
+                        orgNr = "0",
+                        msgId = "0",
+                        sykmeldingId = "0"
                 )
 
                 oppdaterRedis(INFOTRYGD, "1", jedis, TimeUnit.MINUTES.toSeconds(10).toInt(), loggingMeta)

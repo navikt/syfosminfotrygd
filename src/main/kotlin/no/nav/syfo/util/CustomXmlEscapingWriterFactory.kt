@@ -1,9 +1,9 @@
 package no.nav.syfo.util
 
-import org.codehaus.stax2.io.EscapingWriterFactory
 import java.io.IOException
 import java.io.OutputStream
 import java.io.Writer
+import org.codehaus.stax2.io.EscapingWriterFactory
 
 object CustomXmlEscapingWriterFactory : EscapingWriterFactory {
     override fun createEscapingWriterFor(writer: Writer, enc: String): Writer {

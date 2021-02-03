@@ -1,18 +1,18 @@
 package no.nav.syfo.services
 
+import java.security.MessageDigest
 import net.logstash.logback.argument.StructuredArguments.fields
 import no.nav.helse.sm2013.KontrollsystemBlokkType
 import no.nav.syfo.log
 import no.nav.syfo.objectMapper
 import no.nav.syfo.util.LoggingMeta
 import redis.clients.jedis.Jedis
-import java.security.MessageDigest
 
 fun erIRedis(redisKey: String, jedis: Jedis): Boolean =
-    when (jedis.get(redisKey)) {
-        null -> false
-        else -> true
-    }
+        when (jedis.get(redisKey)) {
+            null -> false
+            else -> true
+        }
 
 fun oppdaterRedis(redisKey: String, redisValue: String, jedis: Jedis, sekunder: Int, loggingMeta: LoggingMeta): String? {
     log.info("Prøver å oppdaterer redis {}", fields(loggingMeta))
@@ -37,6 +37,6 @@ fun antallErrorIInfotrygd(redisKey: String, jedis: Jedis, loggingMeta: LoggingMe
 }
 
 fun sha256hashstring(infotrygdblokk: KontrollsystemBlokkType.InfotrygdBlokk): String =
-    MessageDigest.getInstance("SHA-256")
-        .digest(objectMapper.writeValueAsBytes(infotrygdblokk))
-        .fold("") { str, it -> str + "%02x".format(it) }
+        MessageDigest.getInstance("SHA-256")
+                .digest(objectMapper.writeValueAsBytes(infotrygdblokk))
+                .fold("") { str, it -> str + "%02x".format(it) }

@@ -1,6 +1,13 @@
 package no.nav.syfo.services
 
 import io.ktor.util.KtorExperimentalAPI
+import java.time.DayOfWeek
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.concurrent.TimeUnit
+import javax.jms.MessageProducer
+import javax.jms.Session
+import kotlin.math.absoluteValue
 import kotlinx.coroutines.delay
 import net.logstash.logback.argument.StructuredArguments
 import net.logstash.logback.argument.StructuredArguments.fields
@@ -42,13 +49,6 @@ import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import redis.clients.jedis.Jedis
 import redis.clients.jedis.exceptions.JedisConnectionException
-import java.time.DayOfWeek
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.util.concurrent.TimeUnit
-import javax.jms.MessageProducer
-import javax.jms.Session
-import kotlin.math.absoluteValue
 
 const val INFOTRYGD = "INFOTRYGD"
 
@@ -85,60 +85,50 @@ class UpdateInfotrygdService {
             val helsepersonellKategoriVerdi = finnAktivHelsepersonellAutorisasjons(helsepersonell)
             when (validationResult.status) {
                 in arrayOf(Status.MANUAL_PROCESSING) ->
-                    produceManualTaskAndSendValidationResults(
-                        kafkaproducerCreateTask, syfosmreglerClient, receivedSykmelding, validationResult,
-                        loggingMeta, oppgaveTopic, sm2013BehandlingsUtfallToipic,
-                        kafkaproducervalidationResult,
-                        InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
-                        helsepersonellKategoriVerdi, jedis, applicationState
-                    )
+                    produceManualTaskAndSendValidationResults(kafkaproducerCreateTask, syfosmreglerClient, receivedSykmelding, validationResult,
+                            loggingMeta, oppgaveTopic, sm2013BehandlingsUtfallToipic,
+                            kafkaproducervalidationResult,
+                            InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
+                            helsepersonellKategoriVerdi, jedis, applicationState)
                 else -> sendInfotrygdOppdateringAndValidationResult(
-                    infotrygdOppdateringProducer,
-                    session,
-                    loggingMeta,
-                    InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
-                    receivedSykmelding,
-                    helsepersonellKategoriVerdi,
-                    navKontorLokalKontor,
-                    jedis,
-                    kafkaproducerreceivedSykmelding,
-                    infotrygdRetryTopic,
-                    kafkaproducervalidationResult,
-                    sm2013BehandlingsUtfallToipic,
-                    validationResult
-                )
+                        infotrygdOppdateringProducer,
+                        session,
+                        loggingMeta,
+                        InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
+                        receivedSykmelding,
+                        helsepersonellKategoriVerdi,
+                        navKontorLokalKontor,
+                        jedis,
+                        kafkaproducerreceivedSykmelding,
+                        infotrygdRetryTopic,
+                        kafkaproducervalidationResult,
+                        sm2013BehandlingsUtfallToipic,
+                        validationResult)
             }
 
-            log.info(
-                "Message(${fields(loggingMeta)}) got outcome {}, {}, processing took {}s",
-                StructuredArguments.keyValue("status", validationResult.status),
-                StructuredArguments.keyValue("ruleHits", validationResult.ruleHits.joinToString(", ", "(", ")") { it.ruleName })
-            )
+            log.info("Message(${fields(loggingMeta)}) got outcome {}, {}, processing took {}s",
+                    StructuredArguments.keyValue("status", validationResult.status),
+                    StructuredArguments.keyValue("ruleHits", validationResult.ruleHits.joinToString(", ", "(", ")") { it.ruleName }))
         } else {
             val validationResultBehandler = ValidationResult(
-                status = Status.MANUAL_PROCESSING,
-                ruleHits = listOf(
-                    RuleInfo(
-                        ruleName = "BEHANDLER_NOT_IN_HPR",
-                        messageForSender = "Den som har skrevet sykmeldingen din har ikke autorisasjon til dette.",
-                        messageForUser = "Behandler er ikke registert i HPR",
-                        ruleStatus = Status.MANUAL_PROCESSING
-                    )
-                )
+                    status = Status.MANUAL_PROCESSING,
+                    ruleHits = listOf(RuleInfo(
+                            ruleName = "BEHANDLER_NOT_IN_HPR",
+                            messageForSender = "Den som har skrevet sykmeldingen din har ikke autorisasjon til dette.",
+                            messageForUser = "Behandler er ikke registert i HPR",
+                            ruleStatus = Status.MANUAL_PROCESSING))
             )
             RULE_HIT_STATUS_COUNTER.labels(validationResultBehandler.status.name).inc()
             log.warn("Behandler er ikke registert i HPR")
-            produceManualTaskAndSendValidationResults(
-                kafkaproducerCreateTask, syfosmreglerClient, receivedSykmelding, validationResultBehandler,
-                loggingMeta, oppgaveTopic, sm2013BehandlingsUtfallToipic, kafkaproducervalidationResult,
-                InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
-                HelsepersonellKategori.LEGE.verdi, jedis, applicationState
-            )
+            produceManualTaskAndSendValidationResults(kafkaproducerCreateTask, syfosmreglerClient, receivedSykmelding, validationResultBehandler,
+                    loggingMeta, oppgaveTopic, sm2013BehandlingsUtfallToipic, kafkaproducervalidationResult,
+                    InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
+                    HelsepersonellKategori.LEGE.verdi, jedis, applicationState)
         }
     }
 
     fun erEgenmeldt(receivedSykmelding: ReceivedSykmelding): Boolean =
-        receivedSykmelding.sykmelding.avsenderSystem.navn == "Egenmeldt"
+            receivedSykmelding.sykmelding.avsenderSystem.navn == "Egenmeldt"
 
     private suspend fun sendInfotrygdOppdateringAndValidationResult(
         producer: MessageProducer,
@@ -163,11 +153,9 @@ class UpdateInfotrygdService {
 
         val forsteFravaersDag = finnForsteFravaersDag(itfh, perioder.first(), loggingMeta)
 
-        val sha256String = sha256hashstring(
-            createInfotrygdBlokk(
+        val sha256String = sha256hashstring(createInfotrygdBlokk(
                 itfh, perioder.first(), personNrPasient, LocalDate.of(2019, 1, 1),
-                behandlerKode, tssid, loggingMeta, navKontorNr, findarbeidsKategori(itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver), forsteFravaersDag
-            )
+                behandlerKode, tssid, loggingMeta, navKontorNr, findarbeidsKategori(itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver), forsteFravaersDag)
         )
 
         delay(100)
@@ -189,12 +177,11 @@ class UpdateInfotrygdService {
                 when {
                     duplikatInfotrygdOppdatering == null -> {
                         sendRuleCheckValidationResult(
-                            receivedSykmelding,
-                            kafkaproducervalidationResult,
-                            validationResult,
-                            sm2013BehandlingsUtfallToipic,
-                            loggingMeta
-                        )
+                                receivedSykmelding,
+                                kafkaproducervalidationResult,
+                                validationResult,
+                                sm2013BehandlingsUtfallToipic,
+                                loggingMeta)
                         log.warn("Melding market som infotrygd duplikat oppdaatering {}", fields(loggingMeta))
                     }
                     else ->
@@ -204,12 +191,11 @@ class UpdateInfotrygdService {
                                 sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, periode, personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, forsteFravaersDag, 2), loggingMeta)
                             }
                             sendRuleCheckValidationResult(
-                                receivedSykmelding,
-                                kafkaproducervalidationResult,
-                                validationResult,
-                                sm2013BehandlingsUtfallToipic,
-                                loggingMeta
-                            )
+                                    receivedSykmelding,
+                                    kafkaproducervalidationResult,
+                                    validationResult,
+                                    sm2013BehandlingsUtfallToipic,
+                                    loggingMeta)
                         } catch (exception: Exception) {
                             slettRedisKey(sha256String, jedis, loggingMeta)
                             log.error("Feilet i infotrygd oppdaternings biten, kaster exception", exception)
@@ -239,8 +225,8 @@ class UpdateInfotrygdService {
         operasjonstype = operasjonstypeKode.toBigInteger()
 
         val typeSMinfo = itfh.infotrygdForesp.sMhistorikk?.sykmelding
-            ?.sortedSMInfos()
-            ?.lastOrNull()
+                ?.sortedSMInfos()
+                ?.lastOrNull()
 
         if ((typeSMinfo != null && tssid?.toBigInteger() != typeSMinfo.periode.legeInstNr) || operasjonstype == 1.toBigInteger()) {
             legeEllerInstitusjonsNummer = tssid?.toBigInteger() ?: "0".toBigInteger()
@@ -269,9 +255,8 @@ class UpdateInfotrygdService {
             saksbehandler = "Auto"
 
             if (itfh.infotrygdForesp.biDiagnosekodeverk != null &&
-                itfh.healthInformation.medisinskVurdering.biDiagnoser.diagnosekode.firstOrNull()?.dn != null &&
-                itfh.infotrygdForesp.diagnosekodeOK != null
-            ) {
+                    itfh.healthInformation.medisinskVurdering.biDiagnoser.diagnosekode.firstOrNull()?.dn != null &&
+                    itfh.infotrygdForesp.diagnosekodeOK != null) {
                 biDiagnose = itfh.infotrygdForesp.biDiagnoseKode
                 biDiagnoseGruppe = itfh.infotrygdForesp.biDiagnosekodeverk.toBigInteger()
                 biDiagnoseTekst = itfh.infotrygdForesp.diagnosekodeOK.bidiagnoseTekst
@@ -279,14 +264,12 @@ class UpdateInfotrygdService {
         }
 
         if (itfh.healthInformation.medisinskVurdering?.isSvangerskap != null &&
-            itfh.healthInformation.medisinskVurdering.isSvangerskap
-        ) {
+                itfh.healthInformation.medisinskVurdering.isSvangerskap) {
             isErSvangerskapsrelatert = true
         }
 
         if (itfh.healthInformation.prognose != null && itfh.healthInformation.prognose.isArbeidsforEtterEndtPeriode != null &&
-            itfh.healthInformation.prognose.isArbeidsforEtterEndtPeriode
-        ) {
+                itfh.healthInformation.prognose.isArbeidsforEtterEndtPeriode) {
             friskmeldtDato = periode.periodeTOMDato.plusDays(1)
         }
 
@@ -305,9 +288,9 @@ class UpdateInfotrygdService {
     ): Int {
         // FORSTEGANGS = 1, PAFOLGENDE = 2, ENDRING = 3
         val typeSMinfo = itfh.infotrygdForesp.sMhistorikk?.sykmelding
-            ?.sortedSMInfos()
-            ?.lastOrNull()
-            ?: return 1
+                ?.sortedSMInfos()
+                ?.lastOrNull()
+                ?: return 1
 
         return when {
             endringSykmelding(periode, itfh, typeSMinfo) -> {
@@ -331,40 +314,32 @@ class UpdateInfotrygdService {
         itfh: InfotrygdForespAndHealthInformation,
         typeSMinfo: TypeSMinfo
     ): Boolean =
-        itfh.infotrygdForesp.sMhistorikk.status.kodeMelding == "04" ||
-            (typeSMinfo.periode.arbufoerTOM != null && (typeSMinfo.periode.arbufoerTOM..periode.periodeFOMDato).daysBetween().absoluteValue >= 1)
+            itfh.infotrygdForesp.sMhistorikk.status.kodeMelding == "04" ||
+                    (typeSMinfo.periode.arbufoerTOM != null && (typeSMinfo.periode.arbufoerTOM..periode.periodeFOMDato).daysBetween().absoluteValue >= 1)
 
     private fun paafolgendeSykmelding(
         periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode,
         itfh: InfotrygdForespAndHealthInformation,
         typeSMinfo: TypeSMinfo
     ): Boolean =
-        itfh.infotrygdForesp.sMhistorikk.status.kodeMelding != "04" &&
-            periode.periodeFOMDato.isEqual(typeSMinfo.periode.arbufoerTOM) ||
-            (
-                (
-                    periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerTOM) &&
-                        (typeSMinfo.periode.arbufoerTOM..periode.periodeFOMDato).daysBetween() <= 1
-                    )
-                )
+            itfh.infotrygdForesp.sMhistorikk.status.kodeMelding != "04" &&
+                    periode.periodeFOMDato.isEqual(typeSMinfo.periode.arbufoerTOM) ||
+                    ((periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerTOM) &&
+                            (typeSMinfo.periode.arbufoerTOM..periode.periodeFOMDato).daysBetween() <= 1))
 
     private fun endringSykmelding(
         periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode,
         itfh: InfotrygdForespAndHealthInformation,
         typeSMinfo: TypeSMinfo
     ): Boolean =
-        itfh.infotrygdForesp.sMhistorikk.status.kodeMelding != "04" &&
-            (
-                typeSMinfo.periode.arbufoerFOM == periode.periodeFOMDato ||
-                    (typeSMinfo.periode.arbufoerFOM.isBefore(periode.periodeFOMDato)) ||
-                    (
-                        typeSMinfo.periode.arbufoerFOM != null &&
-                            sammePeriodeInfotrygd(typeSMinfo.periode, periode)
-                        )
-                ) &&
-            !(typeSMinfo.periode.arbufoerTOM == null && (typeSMinfo.periode.arbufoerFOM..periode.periodeFOMDato).daysBetween() > 1) &&
-            !(periode.periodeFOMDato.isEqual(typeSMinfo.periode.arbufoerTOM)) &&
-            !(periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerTOM))
+            itfh.infotrygdForesp.sMhistorikk.status.kodeMelding != "04" &&
+                    (typeSMinfo.periode.arbufoerFOM == periode.periodeFOMDato ||
+                            (typeSMinfo.periode.arbufoerFOM.isBefore(periode.periodeFOMDato)) ||
+                            (typeSMinfo.periode.arbufoerFOM != null &&
+                                    sammePeriodeInfotrygd(typeSMinfo.periode, periode))) &&
+                    !(typeSMinfo.periode.arbufoerTOM == null && (typeSMinfo.periode.arbufoerFOM..periode.periodeFOMDato).daysBetween() > 1) &&
+                    !(periode.periodeFOMDato.isEqual(typeSMinfo.periode.arbufoerTOM)) &&
+                    !(periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerTOM))
 
     private fun findarbeidsKategori(navnArbeidsgiver: String?): String {
         return if (navnArbeidsgiver == null || navnArbeidsgiver.isBlank() || navnArbeidsgiver.isEmpty()) {
@@ -387,35 +362,27 @@ class UpdateInfotrygdService {
         identDato: LocalDate,
         operasjonstypeKode: Int = findOperasjonstype(periode, itfh, loggingMeta)
     ) = unmarshal<XMLEIFellesformat>(marshalledFellesformat).apply {
-        any.add(
-            KontrollSystemBlokk().apply {
-                infotrygdBlokk.add(
-                    createInfotrygdBlokk(
-                        itfh,
-                        periode,
-                        personNrPasient,
-                        signaturDato,
-                        helsepersonellKategoriVerdi,
-                        tssid,
-                        loggingMeta,
-                        navKontorNr,
-                        itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver,
-                        identDato,
-                        operasjonstypeKode
-                    )
-                )
-            }
-        )
+        any.add(KontrollSystemBlokk().apply {
+            infotrygdBlokk.add(createInfotrygdBlokk(
+                    itfh,
+                    periode,
+                    personNrPasient,
+                    signaturDato,
+                    helsepersonellKategoriVerdi,
+                    tssid,
+                    loggingMeta,
+                    navKontorNr,
+                    itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver,
+                    identDato,
+                    operasjonstypeKode))
+        })
     }
 
     private fun findbBehandlingsDato(itfh: InfotrygdForespAndHealthInformation, signaturDato: LocalDate): LocalDate {
         return if (itfh.healthInformation.kontaktMedPasient?.kontaktDato != null &&
-            itfh.healthInformation.kontaktMedPasient?.behandletDato != null
-        ) {
-            listOf(
-                itfh.healthInformation.kontaktMedPasient.kontaktDato,
-                itfh.healthInformation.kontaktMedPasient.behandletDato.toLocalDate()
-            ).sorted().first()
+                itfh.healthInformation.kontaktMedPasient?.behandletDato != null) {
+            listOf(itfh.healthInformation.kontaktMedPasient.kontaktDato,
+                    itfh.healthInformation.kontaktMedPasient.behandletDato.toLocalDate()).sorted().first()
         } else if (itfh.healthInformation.kontaktMedPasient?.behandletDato != null) {
             itfh.healthInformation.kontaktMedPasient.behandletDato.toLocalDate()
         } else {
@@ -430,40 +397,34 @@ class UpdateInfotrygdService {
             return ""
         }
 
-        return when (
-            helsepersonellGodkjenningSom(
-                godkjennteHelsepersonellAutorisasjonsAktiv,
-                listOf(
-                    HelsepersonellKategori.LEGE.verdi
-                )
-            )
-        ) {
+        return when (helsepersonellGodkjenningSom(godkjennteHelsepersonellAutorisasjonsAktiv, listOf(
+                HelsepersonellKategori.LEGE.verdi))) {
             true -> HelsepersonellKategori.LEGE.verdi
             else -> godkjennteHelsepersonellAutorisasjonsAktiv.firstOrNull()?.helsepersonellkategori?.verdi ?: ""
         }
     }
 
     private fun godkjennteHelsepersonellAutorisasjonsAktiv(helsepersonelPerson: Behandler): List<Godkjenning> =
-        helsepersonelPerson.godkjenninger.filter { godkjenning ->
-            godkjenning.helsepersonellkategori?.aktiv != null &&
-                godkjenning.autorisasjon?.aktiv == true &&
-                godkjenning.helsepersonellkategori.verdi != null &&
-                godkjenning.helsepersonellkategori.aktiv
-        }
+            helsepersonelPerson.godkjenninger.filter { godkjenning ->
+                godkjenning.helsepersonellkategori?.aktiv != null &&
+                        godkjenning.autorisasjon?.aktiv == true &&
+                        godkjenning.helsepersonellkategori.verdi != null &&
+                        godkjenning.helsepersonellkategori.aktiv
+            }
 
     private fun helsepersonellGodkjenningSom(helsepersonellGodkjenning: List<Godkjenning>, helsepersonerVerdi: List<String>): Boolean =
-        helsepersonellGodkjenning.any { godkjenning ->
-            godkjenning.helsepersonellkategori.let { kode ->
-                kode?.verdi in helsepersonerVerdi
+            helsepersonellGodkjenning.any { godkjenning ->
+                godkjenning.helsepersonellkategori.let { kode ->
+                    kode?.verdi in helsepersonerVerdi
+                }
             }
-        }
 
     private fun HelseOpplysningerArbeidsuforhet.Behandler.formatName(): String =
-        if (navn.mellomnavn == null) {
-            "${navn.etternavn.toUpperCase()} ${navn.fornavn.toUpperCase()}"
-        } else {
-            "${navn.etternavn.toUpperCase()} ${navn.fornavn.toUpperCase()} ${navn.mellomnavn.toUpperCase()}"
-        }
+            if (navn.mellomnavn == null) {
+                "${navn.etternavn.toUpperCase()} ${navn.fornavn.toUpperCase()}"
+            } else {
+                "${navn.etternavn.toUpperCase()} ${navn.fornavn.toUpperCase()} ${navn.mellomnavn.toUpperCase()}"
+            }
 
     private fun sammePeriodeInfotrygd(infotrygdPeriode: TypeSMinfo.Periode, sykemldingsPeriode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode): Boolean {
         return infotrygdPeriode.arbufoerFOM == sykemldingsPeriode.periodeFOMDato && infotrygdPeriode.arbufoerTOM == sykemldingsPeriode.periodeTOMDato
@@ -474,13 +435,11 @@ class UpdateInfotrygdService {
         session: Session,
         fellesformat: XMLEIFellesformat,
         loggingMeta: LoggingMeta
-    ) = producer.send(
-        session.createTextMessage().apply {
-            log.info("Melding har oprasjonstype: {}, tkNummer: {}, {}", fellesformat.get<KontrollsystemBlokkType>().infotrygdBlokk.first().operasjonstype, fellesformat.get<KontrollsystemBlokkType>().infotrygdBlokk.first().tkNummer, fields(loggingMeta))
-            text = xmlObjectWriter.writeValueAsString(fellesformat)
-            log.info("Melding er sendt til infotrygd {}", fields(loggingMeta))
-        }
-    )
+    ) = producer.send(session.createTextMessage().apply {
+        log.info("Melding har oprasjonstype: {}, tkNummer: {}, {}", fellesformat.get<KontrollsystemBlokkType>().infotrygdBlokk.first().operasjonstype, fellesformat.get<KontrollsystemBlokkType>().infotrygdBlokk.first().tkNummer, fields(loggingMeta))
+        text = xmlObjectWriter.writeValueAsString(fellesformat)
+        log.info("Melding er sendt til infotrygd {}", fields(loggingMeta))
+    })
 
     fun finnForsteFravaersDag(
         itfh: InfotrygdForespAndHealthInformation,
@@ -488,8 +447,8 @@ class UpdateInfotrygdService {
         loggingMeta: LoggingMeta
     ): LocalDate {
         val typeSMinfo = itfh.infotrygdForesp.sMhistorikk?.sykmelding
-            ?.sortedSMInfos()
-            ?.lastOrNull()
+                ?.sortedSMInfos()
+                ?.lastOrNull()
         return if (findOperasjonstype(forstePeriode, itfh, loggingMeta) == 1) {
             itfh.healthInformation.aktivitet.periode.sortedFOMDate().first()
         } else {
@@ -511,10 +470,8 @@ class UpdateInfotrygdService {
         jedis: Jedis,
         applicationState: ApplicationState
     ) {
-        sendRuleCheckValidationResult(
-            receivedSykmelding, kafkaproducervalidationResult,
-            validationResult, sm2013BehandlingsUtfallToipic, loggingMeta
-        )
+        sendRuleCheckValidationResult(receivedSykmelding, kafkaproducervalidationResult,
+                validationResult, sm2013BehandlingsUtfallToipic, loggingMeta)
         try {
             val perioder = itfh.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
             val forsteFravaersDag = itfh.healthInformation.aktivitet.periode.sortedFOMDate().first()
@@ -523,13 +480,11 @@ class UpdateInfotrygdService {
             } else {
                 "0"
             }
-            val sha256String = sha256hashstring(
-                createInfotrygdBlokk(
+            val sha256String = sha256hashstring(createInfotrygdBlokk(
                     itfh, perioder.first(), receivedSykmelding.personNrPasient, LocalDate.of(2019, 1, 1),
                     helsepersonellKategoriVerdi, tssid, loggingMeta, "",
                     findarbeidsKategori(itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver),
-                    forsteFravaersDag, 1
-                )
+                    forsteFravaersDag, 1)
             )
 
             val duplikatInfotrygdOppdatering = erIRedis(sha256String, jedis)
@@ -566,7 +521,8 @@ class UpdateInfotrygdService {
     }
 
     suspend fun opprettOppgave(
-        kafkaProducer: KafkaProducer<String, ProduceTask>,
+        kafkaProducer: KafkaProducer<String,
+                ProduceTask>,
         syfosmreglerClient: SyfosmreglerClient,
         receivedSykmelding: ReceivedSykmelding,
         validationResult: ValidationResult,
@@ -574,12 +530,9 @@ class UpdateInfotrygdService {
         oppgaveTopic: String
     ) {
         try {
-            kafkaProducer.send(
-                ProducerRecord(
-                    oppgaveTopic, receivedSykmelding.sykmelding.id,
-                    opprettProduceTask(syfosmreglerClient, receivedSykmelding, validationResult, loggingMeta)
-                )
-            ).get()
+            kafkaProducer.send(ProducerRecord(oppgaveTopic, receivedSykmelding.sykmelding.id,
+                opprettProduceTask(syfosmreglerClient, receivedSykmelding, validationResult, loggingMeta)
+            )).get()
             MANUELLE_OPPGAVER_COUNTER.inc()
             log.info("Message sendt to topic: {}, {}", oppgaveTopic, fields(loggingMeta))
         } catch (ex: Exception) {
@@ -589,21 +542,21 @@ class UpdateInfotrygdService {
     }
 
     fun errorFromInfotrygd(rules: List<RuleInfo>): Boolean =
-        rules.any { ruleInfo ->
-            ruleInfo.ruleName == "ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING" ||
-                ruleInfo.ruleName == "ERROR_FROM_IT_SMHISTORIKK_STATUS_KODEMELDING" ||
-                ruleInfo.ruleName == "ERROR_FROM_IT_PARALELLYTELSER_STATUS_KODEMELDING" ||
-                ruleInfo.ruleName == "ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING" ||
-                ruleInfo.ruleName == "ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING"
-        }
+            rules.any { ruleInfo ->
+                ruleInfo.ruleName == "ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING" ||
+                        ruleInfo.ruleName == "ERROR_FROM_IT_SMHISTORIKK_STATUS_KODEMELDING" ||
+                        ruleInfo.ruleName == "ERROR_FROM_IT_PARALELLYTELSER_STATUS_KODEMELDING" ||
+                        ruleInfo.ruleName == "ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING" ||
+                        ruleInfo.ruleName == "ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING"
+            }
 
     fun skalIkkeOppdatereInfotrygd(
         receivedSykmelding: ReceivedSykmelding,
         validationResult: ValidationResult
     ): Boolean =
-        validationResult.ruleHits.isNotEmpty() && validationResult.ruleHits.any {
-            (it.ruleName == ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE.name)
-        } && receivedSykmelding.sykmelding.perioder.sortedPeriodeFOMDate().lastOrNull() != null && receivedSykmelding.sykmelding.perioder.sortedPeriodeTOMDate().lastOrNull() != null && (receivedSykmelding.sykmelding.perioder.sortedPeriodeFOMDate().last()..receivedSykmelding.sykmelding.perioder.sortedPeriodeTOMDate().last()).daysBetween() <= 3
+            validationResult.ruleHits.isNotEmpty() && validationResult.ruleHits.any {
+                (it.ruleName == ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE.name)
+            } && receivedSykmelding.sykmelding.perioder.sortedPeriodeFOMDate().lastOrNull() != null && receivedSykmelding.sykmelding.perioder.sortedPeriodeTOMDate().lastOrNull() != null && (receivedSykmelding.sykmelding.perioder.sortedPeriodeFOMDate().last()..receivedSykmelding.sykmelding.perioder.sortedPeriodeTOMDate().last()).daysBetween() <= 3
 }
 
 @KtorExperimentalAPI
@@ -648,8 +601,8 @@ fun finnFristForFerdigstillingAvOppgave(ferdistilleDato: LocalDate): LocalDate {
 }
 
 fun setToWorkDay(ferdistilleDato: LocalDate): LocalDate =
-    when (ferdistilleDato.dayOfWeek) {
-        DayOfWeek.SATURDAY -> ferdistilleDato.plusDays(2)
-        DayOfWeek.SUNDAY -> ferdistilleDato.plusDays(1)
-        else -> ferdistilleDato
-    }
+        when (ferdistilleDato.dayOfWeek) {
+            DayOfWeek.SATURDAY -> ferdistilleDato.plusDays(2)
+            DayOfWeek.SUNDAY -> ferdistilleDato.plusDays(1)
+            else -> ferdistilleDato
+        }
