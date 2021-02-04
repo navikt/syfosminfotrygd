@@ -5,7 +5,7 @@ import no.nav.syfo.model.RuleInfo
 import no.nav.syfo.model.Status
 import no.nav.syfo.rules.ValidationRuleChain
 import no.nav.syfo.services.UpdateInfotrygdService
-import org.amshove.kluent.shouldEqual
+import org.amshove.kluent.shouldBeEqualTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -31,7 +31,7 @@ object ErrorFromInfotrygdSpek : Spek({
                 )
             )
 
-            updateInfotrygdService.errorFromInfotrygd(rules) shouldEqual true
+            updateInfotrygdService.errorFromInfotrygd(rules) shouldBeEqualTo true
         }
 
         it("Should set errorFromInfotrygd to false") {
@@ -52,7 +52,7 @@ object ErrorFromInfotrygdSpek : Spek({
                 )
             )
 
-            updateInfotrygdService.errorFromInfotrygd(rules) shouldEqual false
+            updateInfotrygdService.errorFromInfotrygd(rules) shouldBeEqualTo false
         }
 
         it("Should set errorFromInfotrygd to true") {
@@ -73,7 +73,7 @@ object ErrorFromInfotrygdSpek : Spek({
                 )
             )
 
-            updateInfotrygdService.errorFromInfotrygd(rules) shouldEqual true
+            updateInfotrygdService.errorFromInfotrygd(rules) shouldBeEqualTo true
         }
     }
 })

@@ -4,7 +4,7 @@ import io.ktor.util.KtorExperimentalAPI
 import no.nav.helse.sm2013.CV
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.syfo.model.Status
-import org.amshove.kluent.shouldEqual
+import org.amshove.kluent.shouldBeEqualTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -21,7 +21,7 @@ object ValiderMottattSykmeldingSpek : Spek({
                 }
             }
 
-            validerMottattSykmelding(helseOpplysningerArbeidsuforhet).status shouldEqual Status.OK
+            validerMottattSykmelding(helseOpplysningerArbeidsuforhet).status shouldBeEqualTo Status.OK
         }
 
         it("ValiderMottattSykmelding skal returnere MANUAL_PROCESSING hvis hoveddiagnose er null") {
@@ -31,7 +31,7 @@ object ValiderMottattSykmeldingSpek : Spek({
                 }
             }
 
-            validerMottattSykmelding(helseOpplysningerArbeidsuforhet).status shouldEqual Status.MANUAL_PROCESSING
+            validerMottattSykmelding(helseOpplysningerArbeidsuforhet).status shouldBeEqualTo Status.MANUAL_PROCESSING
         }
     }
 })

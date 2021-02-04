@@ -6,7 +6,7 @@ import no.nav.helse.infotrygd.foresp.StatusType
 import no.nav.helse.infotrygd.foresp.TypeSMinfo
 import no.nav.syfo.util.infotrygdSporringMarshaller
 import no.nav.syfo.util.infotrygdSporringUnmarshaller
-import org.amshove.kluent.shouldEqual
+import org.amshove.kluent.shouldBeEqualTo
 import org.apache.activemq.artemis.core.config.impl.ConfigurationImpl
 import org.apache.activemq.artemis.core.server.ActiveMQServers
 import org.spekframework.spek2.Spek
@@ -80,7 +80,7 @@ object MqSpek : Spek({
                 }
 
                 val infotrygdForespResponse = infotrygdSporringUnmarshaller.unmarshal(StringReader(inputMessageText)) as InfotrygdForesp
-                infotrygdForespResponse.fodselsnummer shouldEqual null
+                infotrygdForespResponse.fodselsnummer shouldBeEqualTo null
             }
         }
     }

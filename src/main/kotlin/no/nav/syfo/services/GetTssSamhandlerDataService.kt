@@ -1,6 +1,7 @@
 package no.nav.syfo.services
 
 import com.ctc.wstx.exc.WstxException
+import io.ktor.util.KtorExperimentalAPI
 import no.nav.helse.tssSamhandlerData.XMLSamhandlerIDataB910Type
 import no.nav.helse.tssSamhandlerData.XMLTServicerutiner
 import no.nav.helse.tssSamhandlerData.XMLTidOFF1
@@ -18,6 +19,7 @@ import javax.jms.Session
 import javax.jms.TemporaryQueue
 import javax.jms.TextMessage
 
+@KtorExperimentalAPI
 suspend fun fetchTssSamhandlerInfo(
     receivedSykmelding: ReceivedSykmelding,
     tssSamhnadlerInfoProducer: MessageProducer,
@@ -26,7 +28,7 @@ suspend fun fetchTssSamhandlerInfo(
     retry(
         callName = "tss_hent_samhandler_data",
         retryIntervals = arrayOf(500L, 1000L, 3000L, 5000L),
-        legalExceptions = *arrayOf(IOException::class, WstxException::class, IllegalStateException::class)
+        legalExceptions = arrayOf(IOException::class, WstxException::class, IllegalStateException::class)
     ) {
         val tssSamhandlerDatainput = XMLTssSamhandlerData().apply {
             tssInputData = XMLTssSamhandlerData.TssInputData().apply {

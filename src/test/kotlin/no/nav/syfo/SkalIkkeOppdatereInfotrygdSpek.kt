@@ -6,7 +6,7 @@ import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.rules.ValidationRuleChain
 import no.nav.syfo.services.UpdateInfotrygdService
-import org.amshove.kluent.shouldEqual
+import org.amshove.kluent.shouldBeEqualTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.time.LocalDate
@@ -48,7 +48,7 @@ object SkalIkkeOppdatereInfotrygdSpek : Spek({
                 )
             )
 
-            updateInfotrygdService.skalIkkeOppdatereInfotrygd(receivedSykmelding, validationResult) shouldEqual true
+            updateInfotrygdService.skalIkkeOppdatereInfotrygd(receivedSykmelding, validationResult) shouldBeEqualTo true
         }
 
         it("Skal oppdatere infotrygd, pga større enn 3 dager i sykmeldings peridene totalt") {
@@ -83,7 +83,7 @@ object SkalIkkeOppdatereInfotrygdSpek : Spek({
                 )
             )
 
-            updateInfotrygdService.skalIkkeOppdatereInfotrygd(receivedSykmelding, validationResult) shouldEqual false
+            updateInfotrygdService.skalIkkeOppdatereInfotrygd(receivedSykmelding, validationResult) shouldBeEqualTo false
         }
 
         it("Skal oppdatere infotrygd, pga større enn 3 dager i sykmeldings peridene totalt") {
@@ -118,7 +118,7 @@ object SkalIkkeOppdatereInfotrygdSpek : Spek({
                 )
             )
 
-            updateInfotrygdService.skalIkkeOppdatereInfotrygd(receivedSykmelding, validationResult) shouldEqual false
+            updateInfotrygdService.skalIkkeOppdatereInfotrygd(receivedSykmelding, validationResult) shouldBeEqualTo false
         }
     }
 })

@@ -13,7 +13,7 @@ import no.nav.helse.tssSamhandlerData.XMLTypeOD960
 import no.nav.helse.tssSamhandlerData.XMLTypeSamhAvd
 import no.nav.helse.tssSamhandlerData.XMLTypeSamhandler
 import no.nav.syfo.services.setFnrOrDnr
-import org.amshove.kluent.shouldEqual
+import org.amshove.kluent.shouldBeEqualTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -90,16 +90,16 @@ object TssIdFraTSS : Spek({
                 }
             }
 
-            finnTssIdFraTSSRespons(tssSamhandlerInfoResponse) shouldEqual "80000007415"
+            finnTssIdFraTSSRespons(tssSamhandlerInfoResponse) shouldBeEqualTo "80000007415"
         }
         it("Should set kodeIdType to FNR") {
             val kodeIdType = setFnrOrDnr("04030350265")
-            kodeIdType shouldEqual "FNR"
+            kodeIdType shouldBeEqualTo "FNR"
         }
 
         it("Should set kodeIdType to DNR") {
             val kodeIdType = setFnrOrDnr("41019111197")
-            kodeIdType shouldEqual "DNR"
+            kodeIdType shouldBeEqualTo "DNR"
         }
     }
 })

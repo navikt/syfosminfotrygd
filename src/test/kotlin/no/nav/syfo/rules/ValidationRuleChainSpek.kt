@@ -8,7 +8,7 @@ import no.nav.syfo.generatePrognose
 import no.nav.syfo.generateSykmelding
 import no.nav.syfo.model.Gradert
 import no.nav.syfo.model.Sykmelding
-import org.amshove.kluent.shouldEqual
+import org.amshove.kluent.shouldBeEqualTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.time.LocalDate
@@ -44,7 +44,7 @@ object ValidationRuleChainSpek : Spek({
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
 
-            ValidationRuleChain.GRADERT_REISETILSKUDD_ER_OPPGITT(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
+            ValidationRuleChain.GRADERT_REISETILSKUDD_ER_OPPGITT(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo true
         }
 
         it("Should check rule GRADUAL_SYKMELDING_COMBINED_WITH_TRAVEL, should NOT trigger rule") {
@@ -63,7 +63,7 @@ object ValidationRuleChainSpek : Spek({
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
 
-            ValidationRuleChain.GRADERT_REISETILSKUDD_ER_OPPGITT(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+            ValidationRuleChain.GRADERT_REISETILSKUDD_ER_OPPGITT(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo false
         }
 
         it("Should check rule NUMBER_OF_TREATMENT_DAYS_SET, should trigger rule") {
@@ -80,7 +80,7 @@ object ValidationRuleChainSpek : Spek({
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
 
-            ValidationRuleChain.NUMBER_OF_TREATMENT_DAYS_SET(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
+            ValidationRuleChain.NUMBER_OF_TREATMENT_DAYS_SET(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo true
         }
 
         it("Should check rule NUMBER_OF_TREATMENT_DAYS_SET, should NOT trigger rule") {
@@ -88,7 +88,7 @@ object ValidationRuleChainSpek : Spek({
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
 
-            ValidationRuleChain.NUMBER_OF_TREATMENT_DAYS_SET(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+            ValidationRuleChain.NUMBER_OF_TREATMENT_DAYS_SET(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo false
         }
 
         it("Should check rule GRADERT_TRAVEL_SUBSIDY_SPECIFIED, should trigger rule") {
@@ -107,7 +107,7 @@ object ValidationRuleChainSpek : Spek({
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
 
-            ValidationRuleChain.GRADERT_REISETILSKUDD_ER_OPPGITT(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
+            ValidationRuleChain.GRADERT_REISETILSKUDD_ER_OPPGITT(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo true
         }
 
         it("Should check rule GRADERT_TRAVEL_SUBSIDY_SPECIFIED, should NOT trigger rule") {
@@ -126,7 +126,7 @@ object ValidationRuleChainSpek : Spek({
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
 
-            ValidationRuleChain.GRADERT_REISETILSKUDD_ER_OPPGITT(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+            ValidationRuleChain.GRADERT_REISETILSKUDD_ER_OPPGITT(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo false
         }
 
         it("Should check rule TRAVEL_SUBSIDY_SPECIFIED, should trigger rule") {
@@ -142,7 +142,7 @@ object ValidationRuleChainSpek : Spek({
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
 
-            ValidationRuleChain.TRAVEL_SUBSIDY_SPECIFIED(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
+            ValidationRuleChain.TRAVEL_SUBSIDY_SPECIFIED(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo true
         }
 
         it("Should check rule GRADERT_TRAVEL_SUBSIDY_SPECIFIED, should NOT trigger rule") {
@@ -158,7 +158,7 @@ object ValidationRuleChainSpek : Spek({
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
 
-            ValidationRuleChain.TRAVEL_SUBSIDY_SPECIFIED(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+            ValidationRuleChain.TRAVEL_SUBSIDY_SPECIFIED(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo false
         }
 
         it("Should check rule PATIENT_NOT_IN_IP, should trigger rule") {
@@ -168,7 +168,7 @@ object ValidationRuleChainSpek : Spek({
                 isFinnes = false
             }
 
-            ValidationRuleChain.PATIENT_NOT_IN_IP(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
+            ValidationRuleChain.PATIENT_NOT_IN_IP(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo true
         }
 
         it("Should check rule PATIENT_NOT_IN_IP, should NOT trigger rule") {
@@ -178,7 +178,7 @@ object ValidationRuleChainSpek : Spek({
                 isFinnes = true
             }
 
-            ValidationRuleChain.PATIENT_NOT_IN_IP(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+            ValidationRuleChain.PATIENT_NOT_IN_IP(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo false
         }
 
         it("Should check rule PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE, should trigger rule") {
@@ -204,7 +204,7 @@ object ValidationRuleChainSpek : Spek({
                 )
             )
 
-            ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
+            ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo true
         }
 
         it("Should check rule PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE, should not trigger rule") {
@@ -220,7 +220,7 @@ object ValidationRuleChainSpek : Spek({
                 )
             )
 
-            ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+            ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo false
         }
 
         it("Should check rule PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE, should NOT trigger rule, when same periode") {
@@ -246,7 +246,7 @@ object ValidationRuleChainSpek : Spek({
                 )
             )
 
-            ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+            ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo false
         }
 
         it("Should check rule PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE, should NOT trigger rule, when same periode") {
@@ -272,7 +272,7 @@ object ValidationRuleChainSpek : Spek({
                 )
             )
 
-            ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+            ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo false
         }
 
         it("Should check rule PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE, should NOT trigger rule") {
@@ -298,7 +298,7 @@ object ValidationRuleChainSpek : Spek({
                 )
             )
 
-            ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+            ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo false
         }
 
         it("should not get null") {
@@ -329,7 +329,7 @@ object ValidationRuleChainSpek : Spek({
                 )
             )
 
-            ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+            ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo false
         }
 
         it("should check rule PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE, should not get null pointer") {
@@ -353,7 +353,7 @@ object ValidationRuleChainSpek : Spek({
                 )
             )
 
-            ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+            ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo false
         }
 
         it("Should check rule SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_1, should trigger rule") {
@@ -380,7 +380,7 @@ object ValidationRuleChainSpek : Spek({
                 )
             }
 
-            ValidationRuleChain.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_1(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
+            ValidationRuleChain.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_1(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo true
         }
 
         it("Should check rule SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_1, should NOT trigger rule") {
@@ -407,7 +407,7 @@ object ValidationRuleChainSpek : Spek({
                 )
             }
 
-            ValidationRuleChain.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_1(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+            ValidationRuleChain.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_1(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo false
         }
 
         it("Should check rule SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_2, should trigger rule") {
@@ -433,7 +433,7 @@ object ValidationRuleChainSpek : Spek({
                 )
             }
 
-            ValidationRuleChain.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_2(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
+            ValidationRuleChain.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_2(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo true
         }
 
         it("Should check rule SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_2, should NOT trigger rule") {
@@ -459,7 +459,7 @@ object ValidationRuleChainSpek : Spek({
                 )
             }
 
-            ValidationRuleChain.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_2(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+            ValidationRuleChain.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_2(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo false
         }
 
         it("Should check rule SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_3, should trigger rule") {
@@ -485,7 +485,7 @@ object ValidationRuleChainSpek : Spek({
                 )
             }
 
-            ValidationRuleChain.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_3(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
+            ValidationRuleChain.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_3(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo true
         }
 
         it("Should check rule SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_3, should NOT trigger rule") {
@@ -511,7 +511,7 @@ object ValidationRuleChainSpek : Spek({
                 )
             }
 
-            ValidationRuleChain.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_3(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+            ValidationRuleChain.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_3(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo false
         }
 
         it("Should check rule NEW_CLEAN_BILL_DATE_BEFORE_PAYOUT, should trigger rule") {
@@ -536,7 +536,7 @@ object ValidationRuleChainSpek : Spek({
                 )
             }
 
-            ValidationRuleChain.NEW_CLEAN_BILL_DATE_BEFORE_PAYOUT(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
+            ValidationRuleChain.NEW_CLEAN_BILL_DATE_BEFORE_PAYOUT(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo true
         }
 
         it("Should check rule NEW_CLEAN_BILL_DATE_BEFORE_PAYOUT, should NOT trigger rule") {
@@ -561,7 +561,7 @@ object ValidationRuleChainSpek : Spek({
                 )
             }
 
-            ValidationRuleChain.NEW_CLEAN_BILL_DATE_BEFORE_PAYOUT(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+            ValidationRuleChain.NEW_CLEAN_BILL_DATE_BEFORE_PAYOUT(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo false
         }
 
         it("Should check rule NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE, should trigger rule") {
@@ -584,7 +584,7 @@ object ValidationRuleChainSpek : Spek({
                     }
                 )
             }
-            ValidationRuleChain.NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
+            ValidationRuleChain.NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo true
         }
 
         it("Should check rule NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE, should NOT trigger rule") {
@@ -608,7 +608,7 @@ object ValidationRuleChainSpek : Spek({
                     }
                 )
             }
-            ValidationRuleChain.NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+            ValidationRuleChain.NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo false
         }
 
         it("Should check rule NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE, should NOT trigger rule") {
@@ -629,7 +629,7 @@ object ValidationRuleChainSpek : Spek({
                     }
                 )
             }
-            ValidationRuleChain.NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+            ValidationRuleChain.NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo false
         }
 
         it("Should check rule EXTANION_OVER_FA, should trigger rule") {
@@ -658,7 +658,7 @@ object ValidationRuleChainSpek : Spek({
                     }
                 )
             }
-            ValidationRuleChain.EXTANION_OVER_FA(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
+            ValidationRuleChain.EXTANION_OVER_FA(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo true
         }
 
         it("Should check rule EXTANION_OVER_FA, should NOT trigger rule") {
@@ -687,7 +687,7 @@ object ValidationRuleChainSpek : Spek({
                     }
                 )
             }
-            ValidationRuleChain.EXTANION_OVER_FA(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+            ValidationRuleChain.EXTANION_OVER_FA(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo false
         }
 
         it("Should check rule PERSON_MOVING_KODE_FL, should trigger rule") {
@@ -712,7 +712,7 @@ object ValidationRuleChainSpek : Spek({
                 )
             }
 
-            ValidationRuleChain.PERSON_MOVING_KODE_FL(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
+            ValidationRuleChain.PERSON_MOVING_KODE_FL(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo true
         }
 
         it("Should check rule PERSON_MOVING_KODE_FL, should NOT trigger rule") {
@@ -737,7 +737,7 @@ object ValidationRuleChainSpek : Spek({
                 )
             }
 
-            ValidationRuleChain.PERSON_MOVING_KODE_FL(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+            ValidationRuleChain.PERSON_MOVING_KODE_FL(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo false
         }
 
         it("Should check rule PERIOD_FOR_AA_ENDED, should trigger rule") {
@@ -762,7 +762,7 @@ object ValidationRuleChainSpek : Spek({
                 )
             }
 
-            ValidationRuleChain.PERIOD_FOR_AA_ENDED(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
+            ValidationRuleChain.PERIOD_FOR_AA_ENDED(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo true
         }
 
         it("Should check rule PERIOD_FOR_AA_ENDED, should NOT trigger rule") {
@@ -787,7 +787,7 @@ object ValidationRuleChainSpek : Spek({
                 )
             }
 
-            ValidationRuleChain.PERIOD_FOR_AA_ENDED(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+            ValidationRuleChain.PERIOD_FOR_AA_ENDED(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo false
         }
 
         it("Should check rule PERIOD_IS_AF, should trigger rule") {
@@ -812,7 +812,7 @@ object ValidationRuleChainSpek : Spek({
                 )
             }
 
-            ValidationRuleChain.PERIOD_IS_AF(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
+            ValidationRuleChain.PERIOD_IS_AF(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo true
         }
 
         it("Should check rule PERIOD_IS_AF, should NOT trigger rule") {
@@ -837,7 +837,7 @@ object ValidationRuleChainSpek : Spek({
                 )
             }
 
-            ValidationRuleChain.PERIOD_IS_AF(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+            ValidationRuleChain.PERIOD_IS_AF(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo false
         }
 
         it("Should check rule MAX_SICK_LEAVE_PAYOUT, should trigger rule") {
@@ -863,7 +863,7 @@ object ValidationRuleChainSpek : Spek({
                 )
             }
 
-            ValidationRuleChain.MAX_SICK_LEAVE_PAYOUT(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
+            ValidationRuleChain.MAX_SICK_LEAVE_PAYOUT(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo true
         }
 
         it("Should check rule MAX_SICK_LEAVE_PAYOUT, should trigger rule") {
@@ -889,7 +889,7 @@ object ValidationRuleChainSpek : Spek({
                 )
             }
 
-            ValidationRuleChain.MAX_SICK_LEAVE_PAYOUT(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
+            ValidationRuleChain.MAX_SICK_LEAVE_PAYOUT(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo true
         }
 
         it("Should check rule MAX_SICK_LEAVE_PAYOUT, should NOT trigger rule") {
@@ -925,7 +925,7 @@ object ValidationRuleChainSpek : Spek({
                 )
             }
 
-            ValidationRuleChain.MAX_SICK_LEAVE_PAYOUT(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+            ValidationRuleChain.MAX_SICK_LEAVE_PAYOUT(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo false
         }
 
         it("Should check rule MAX_SICK_LEAVE_PAYOUT, should NOT trigger rule") {
@@ -951,7 +951,7 @@ object ValidationRuleChainSpek : Spek({
                 )
             }
 
-            ValidationRuleChain.MAX_SICK_LEAVE_PAYOUT(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+            ValidationRuleChain.MAX_SICK_LEAVE_PAYOUT(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo false
         }
 
         it("Should check rule MAX_SICK_LEAVE_PAYOUT, should NOT trigger rule") {
@@ -976,7 +976,7 @@ object ValidationRuleChainSpek : Spek({
                 )
             }
 
-            ValidationRuleChain.MAX_SICK_LEAVE_PAYOUT(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+            ValidationRuleChain.MAX_SICK_LEAVE_PAYOUT(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo false
         }
 
         it("Should check rule MAX_SICK_LEAVE_PAYOUT, should NOT trigger rule") {
@@ -1000,7 +1000,7 @@ object ValidationRuleChainSpek : Spek({
                 )
             }
 
-            ValidationRuleChain.MAX_SICK_LEAVE_PAYOUT(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+            ValidationRuleChain.MAX_SICK_LEAVE_PAYOUT(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo false
         }
 
         it("Should check rule MAX_SICK_LEAVE_PAYOUT, should NOT trigger rule") {
@@ -1015,7 +1015,7 @@ object ValidationRuleChainSpek : Spek({
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
 
-            ValidationRuleChain.MAX_SICK_LEAVE_PAYOUT(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+            ValidationRuleChain.MAX_SICK_LEAVE_PAYOUT(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo false
         }
 
         it("Should check rule ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING, should trigger rule") {
@@ -1026,7 +1026,7 @@ object ValidationRuleChainSpek : Spek({
                 kodeMelding = "5"
             }
 
-            ValidationRuleChain.ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
+            ValidationRuleChain.ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo true
         }
 
         it("Should check rule ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING, should NOT trigger rule") {
@@ -1037,7 +1037,7 @@ object ValidationRuleChainSpek : Spek({
                 kodeMelding = "0"
             }
 
-            ValidationRuleChain.ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+            ValidationRuleChain.ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo false
         }
 
         it("Should check rule ERROR_FROM_IT_SMHISTORIKK_STATUS_KODEMELDING, should trigger rule") {
@@ -1050,7 +1050,7 @@ object ValidationRuleChainSpek : Spek({
                 }
             }
 
-            ValidationRuleChain.ERROR_FROM_IT_SMHISTORIKK_STATUS_KODEMELDING(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
+            ValidationRuleChain.ERROR_FROM_IT_SMHISTORIKK_STATUS_KODEMELDING(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo true
         }
 
         it("Should check rule ERROR_FROM_IT_SMHISTORIKK_STATUS_KODEMELDING, should NOT trigger rule") {
@@ -1063,7 +1063,7 @@ object ValidationRuleChainSpek : Spek({
                 }
             }
 
-            ValidationRuleChain.ERROR_FROM_IT_SMHISTORIKK_STATUS_KODEMELDING(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+            ValidationRuleChain.ERROR_FROM_IT_SMHISTORIKK_STATUS_KODEMELDING(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo false
         }
 
         it("Should check rule ERROR_FROM_IT_PARALELLYTELSER_STATUS_KODEMELDING, should trigger rule") {
@@ -1076,7 +1076,7 @@ object ValidationRuleChainSpek : Spek({
                 }
             }
 
-            ValidationRuleChain.ERROR_FROM_IT_PARALELLYTELSER_STATUS_KODEMELDING(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
+            ValidationRuleChain.ERROR_FROM_IT_PARALELLYTELSER_STATUS_KODEMELDING(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo true
         }
 
         it("Should check rule ERROR_FROM_IT_PARALELLYTELSER_STATUS_KODEMELDING, should NOT trigger rule") {
@@ -1089,7 +1089,7 @@ object ValidationRuleChainSpek : Spek({
                 }
             }
 
-            ValidationRuleChain.ERROR_FROM_IT_PARALELLYTELSER_STATUS_KODEMELDING(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+            ValidationRuleChain.ERROR_FROM_IT_PARALELLYTELSER_STATUS_KODEMELDING(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo false
         }
 
         it("Should check rule ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING, should trigger rule") {
@@ -1102,7 +1102,7 @@ object ValidationRuleChainSpek : Spek({
                 }
             }
 
-            ValidationRuleChain.ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
+            ValidationRuleChain.ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo true
         }
 
         it("Should check rule ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING, should NOT trigger rule") {
@@ -1115,7 +1115,7 @@ object ValidationRuleChainSpek : Spek({
                 }
             }
 
-            ValidationRuleChain.ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+            ValidationRuleChain.ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo false
         }
 
         it("Should check rule ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING, should trigger rule") {
@@ -1128,7 +1128,7 @@ object ValidationRuleChainSpek : Spek({
                 }
             }
 
-            ValidationRuleChain.ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
+            ValidationRuleChain.ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo true
         }
 
         it("Should check rule ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING, should NOT trigger rule") {
@@ -1141,7 +1141,7 @@ object ValidationRuleChainSpek : Spek({
                 }
             }
 
-            ValidationRuleChain.ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+            ValidationRuleChain.ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo false
         }
 
         it("Should check rule ERROR_FROM_IT_ARBEIDUFORETOM_MANGLER, should NOT trigger rule") {
@@ -1168,7 +1168,7 @@ object ValidationRuleChainSpek : Spek({
                 }
             }
 
-            ValidationRuleChain.ARBEIDUFORETOM_MANGLER(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual true
+            ValidationRuleChain.ARBEIDUFORETOM_MANGLER(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo true
         }
 
         it("Should check rule ERROR_FROM_IT_ARBEIDUFORETOM_MANGLER, should NOT trigger rule") {
@@ -1196,7 +1196,7 @@ object ValidationRuleChainSpek : Spek({
                 }
             }
 
-            ValidationRuleChain.ARBEIDUFORETOM_MANGLER(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+            ValidationRuleChain.ARBEIDUFORETOM_MANGLER(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo false
         }
 
         it("Should check rule ERROR_FROM_IT_ARBEIDUFORETOM_MANGLER, should NOT trigger rule") {
@@ -1216,7 +1216,7 @@ object ValidationRuleChainSpek : Spek({
                 }
             }
 
-            ValidationRuleChain.ARBEIDUFORETOM_MANGLER(ruleData(healthInformation, infotrygdForespResponse)) shouldEqual false
+            ValidationRuleChain.ARBEIDUFORETOM_MANGLER(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo false
         }
     }
 })

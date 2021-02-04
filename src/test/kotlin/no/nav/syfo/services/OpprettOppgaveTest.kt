@@ -11,7 +11,7 @@ import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.receivedSykmelding
 import no.nav.syfo.util.LoggingMeta
-import org.amshove.kluent.shouldEqual
+import org.amshove.kluent.shouldBeEqualTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.util.UUID
@@ -35,7 +35,7 @@ object OpprettOppgaveTest : Spek({
             runBlocking {
                 val oppgave = opprettProduceTask(syfosmreglerClient, receivedSykmelding, validationResults, loggingMeta)
 
-                oppgave.behandlingstype shouldEqual "ae0256"
+                oppgave.behandlingstype shouldBeEqualTo "ae0256"
             }
         }
         it("Behandlingstype er ae0256 hvis sykmelding treffer manuell-regler (forlengelse)") {
@@ -46,7 +46,7 @@ object OpprettOppgaveTest : Spek({
             runBlocking {
                 val oppgave = opprettProduceTask(syfosmreglerClient, receivedSykmelding, validationResults, loggingMeta)
 
-                oppgave.behandlingstype shouldEqual "ae0256"
+                oppgave.behandlingstype shouldBeEqualTo "ae0256"
             }
         }
         it("Behandlingstype er ANY hvis sykmelding ikke treffer manuell-regler") {
@@ -57,7 +57,7 @@ object OpprettOppgaveTest : Spek({
             runBlocking {
                 val oppgave = opprettProduceTask(syfosmreglerClient, receivedSykmelding, validationResults, loggingMeta)
 
-                oppgave.behandlingstype shouldEqual "ANY"
+                oppgave.behandlingstype shouldBeEqualTo "ANY"
             }
         }
     }

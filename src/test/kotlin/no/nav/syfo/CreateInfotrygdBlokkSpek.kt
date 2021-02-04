@@ -8,7 +8,7 @@ import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.syfo.rules.sortedSMInfos
 import no.nav.syfo.services.UpdateInfotrygdService
 import no.nav.syfo.util.LoggingMeta
-import org.amshove.kluent.shouldEqual
+import org.amshove.kluent.shouldBeEqualTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.time.LocalDate
@@ -60,7 +60,7 @@ object CreateInfotrygdBlokkSpek : Spek({
 
             )
 
-            infotrygdBlokk.forsteFravaersDag shouldEqual ifth.healthInformation.aktivitet.periode.sortedFOMDate().first()
+            infotrygdBlokk.forsteFravaersDag shouldBeEqualTo ifth.healthInformation.aktivitet.periode.sortedFOMDate().first()
         }
 
         it("Should set forsteFravaersDag correctly, when oprasjosntype 2 and more than 1 periode") {
@@ -133,10 +133,10 @@ object CreateInfotrygdBlokkSpek : Spek({
 
             )
 
-            infotrygdfirstBlokk.forsteFravaersDag shouldEqual ifth.infotrygdForesp.sMhistorikk.sykmelding
+            infotrygdfirstBlokk.forsteFravaersDag shouldBeEqualTo ifth.infotrygdForesp.sMhistorikk.sykmelding
                 .sortedSMInfos()
                 .last().periode.arbufoerFOM
-            infotrygdlastBlokk.forsteFravaersDag shouldEqual ifth.infotrygdForesp.sMhistorikk.sykmelding
+            infotrygdlastBlokk.forsteFravaersDag shouldBeEqualTo ifth.infotrygdForesp.sMhistorikk.sykmelding
                 .sortedSMInfos()
                 .last().periode.arbufoerFOM
         }
@@ -211,8 +211,8 @@ object CreateInfotrygdBlokkSpek : Spek({
 
             )
 
-            infotrygdfirstBlokk.forsteFravaersDag shouldEqual ifth.healthInformation.aktivitet.periode.sortedFOMDate().first()
-            infotrygdlastBlokk.forsteFravaersDag shouldEqual ifth.healthInformation.aktivitet.periode.sortedFOMDate().first()
+            infotrygdfirstBlokk.forsteFravaersDag shouldBeEqualTo ifth.healthInformation.aktivitet.periode.sortedFOMDate().first()
+            infotrygdlastBlokk.forsteFravaersDag shouldBeEqualTo ifth.healthInformation.aktivitet.periode.sortedFOMDate().first()
         }
     }
 })

@@ -1,6 +1,7 @@
 package no.nav.syfo.services
 
 import com.ctc.wstx.exc.WstxException
+import io.ktor.util.KtorExperimentalAPI
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.syfo.helpers.retry
@@ -20,6 +21,7 @@ import javax.jms.Session
 import javax.jms.TemporaryQueue
 import javax.jms.TextMessage
 
+@KtorExperimentalAPI
 suspend fun fetchInfotrygdForesp(
     receivedSykmelding: ReceivedSykmelding,
     infotrygdSporringProducer: MessageProducer,
@@ -29,7 +31,7 @@ suspend fun fetchInfotrygdForesp(
     retry(
         callName = "it_hent_infotrygdForesp",
         retryIntervals = arrayOf(500L, 1000L, 3000L, 5000L, 10000L),
-        legalExceptions = *arrayOf(IOException::class, WstxException::class, IllegalStateException::class)
+        legalExceptions = arrayOf(IOException::class, WstxException::class, IllegalStateException::class)
     ) {
         val infotrygdForespRequest = createInfotrygdForesp(receivedSykmelding.personNrPasient, healthInformation, finnLegeFnr(receivedSykmelding))
         val temporaryQueue = session.createTemporaryQueue()

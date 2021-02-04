@@ -9,7 +9,7 @@ import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.syfo.services.UpdateInfotrygdService
 import no.nav.syfo.services.sha256hashstring
 import no.nav.syfo.util.LoggingMeta
-import org.amshove.kluent.shouldEqual
+import org.amshove.kluent.shouldBeEqualTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.time.LocalDate
@@ -101,7 +101,7 @@ object Duplikatsjekk : Spek({
             val sha256StringForsteMelding = sha256hashstring(infotrygdBlokkForsteMelding)
             val sha256StringAndreMelding = sha256hashstring(infotrygdBlokkAndreMelding)
 
-            sha256StringForsteMelding shouldEqual sha256StringAndreMelding
+            sha256StringForsteMelding shouldBeEqualTo sha256StringAndreMelding
         }
     }
 })
