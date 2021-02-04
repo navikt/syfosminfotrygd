@@ -1,13 +1,7 @@
 package no.nav.syfo.services
 
 import com.ctc.wstx.exc.WstxException
-import java.io.IOException
-import java.io.StringReader
-import java.lang.IllegalStateException
-import javax.jms.MessageProducer
-import javax.jms.Session
-import javax.jms.TemporaryQueue
-import javax.jms.TextMessage
+import io.ktor.util.KtorExperimentalAPI
 import no.nav.helse.tssSamhandlerData.XMLSamhandlerIDataB910Type
 import no.nav.helse.tssSamhandlerData.XMLTServicerutiner
 import no.nav.helse.tssSamhandlerData.XMLTidOFF1
@@ -17,51 +11,62 @@ import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.toString
 import no.nav.syfo.util.tssSamhandlerdataInputMarshaller
 import no.nav.syfo.util.tssSamhandlerdataUnmarshaller
+import java.io.IOException
+import java.io.StringReader
+import java.lang.IllegalStateException
+import javax.jms.MessageProducer
+import javax.jms.Session
+import javax.jms.TemporaryQueue
+import javax.jms.TextMessage
 
+@KtorExperimentalAPI
 suspend fun fetchTssSamhandlerInfo(
     receivedSykmelding: ReceivedSykmelding,
     tssSamhnadlerInfoProducer: MessageProducer,
     session: Session
 ): XMLTssSamhandlerData =
-        retry(callName = "tss_hent_samhandler_data",
-                retryIntervals = arrayOf(500L, 1000L, 3000L, 5000L),
-                legalExceptions = *arrayOf(IOException::class, WstxException::class, IllegalStateException::class)
-        ) {
-            val tssSamhandlerDatainput = XMLTssSamhandlerData().apply {
-                tssInputData = XMLTssSamhandlerData.TssInputData().apply {
-                    tssServiceRutine = XMLTServicerutiner().apply {
-                        samhandlerIDataB960 = XMLSamhandlerIDataB910Type().apply {
-                            ofFid = XMLTidOFF1().apply {
-                                idOff = receivedSykmelding.personNrLege
-                                kodeIdType = setFnrOrDnr(receivedSykmelding.personNrLege)
-                            }
-                            historikk = "J"
+    retry(
+        callName = "tss_hent_samhandler_data",
+        retryIntervals = arrayOf(500L, 1000L, 3000L, 5000L),
+        legalExceptions = arrayOf(IOException::class, WstxException::class, IllegalStateException::class)
+    ) {
+        val tssSamhandlerDatainput = XMLTssSamhandlerData().apply {
+            tssInputData = XMLTssSamhandlerData.TssInputData().apply {
+                tssServiceRutine = XMLTServicerutiner().apply {
+                    samhandlerIDataB960 = XMLSamhandlerIDataB910Type().apply {
+                        ofFid = XMLTidOFF1().apply {
+                            idOff = receivedSykmelding.personNrLege
+                            kodeIdType = setFnrOrDnr(receivedSykmelding.personNrLege)
                         }
+                        historikk = "J"
                     }
                 }
             }
-
-            val temporaryQueue = session.createTemporaryQueue()
-            try {
-                sendTssSporring(tssSamhnadlerInfoProducer, session, tssSamhandlerDatainput, temporaryQueue)
-                session.createConsumer(temporaryQueue).use { tmpConsumer ->
-                    val consumedMessage = tmpConsumer.receive(20000) as TextMessage
-                    tssSamhandlerdataUnmarshaller.unmarshal(StringReader(consumedMessage.text)) as XMLTssSamhandlerData
-                }
-            } finally {
-                temporaryQueue.delete()
-            }
         }
+
+        val temporaryQueue = session.createTemporaryQueue()
+        try {
+            sendTssSporring(tssSamhnadlerInfoProducer, session, tssSamhandlerDatainput, temporaryQueue)
+            session.createConsumer(temporaryQueue).use { tmpConsumer ->
+                val consumedMessage = tmpConsumer.receive(20000) as TextMessage
+                tssSamhandlerdataUnmarshaller.unmarshal(StringReader(consumedMessage.text)) as XMLTssSamhandlerData
+            }
+        } finally {
+            temporaryQueue.delete()
+        }
+    }
 
 fun sendTssSporring(
     producer: MessageProducer,
     session: Session,
     tssSamhandlerData: XMLTssSamhandlerData,
     temporaryQueue: TemporaryQueue
-) = producer.send(session.createTextMessage().apply {
-    text = tssSamhandlerdataInputMarshaller.toString(tssSamhandlerData)
-    jmsReplyTo = temporaryQueue
-})
+) = producer.send(
+    session.createTextMessage().apply {
+        text = tssSamhandlerdataInputMarshaller.toString(tssSamhandlerData)
+        jmsReplyTo = temporaryQueue
+    }
+)
 
 fun setFnrOrDnr(personNumber: String): String {
     return when (checkPersonNumberIsDnr(personNumber)) {

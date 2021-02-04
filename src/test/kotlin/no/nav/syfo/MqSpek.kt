@@ -1,30 +1,32 @@
 package no.nav.syfo
 
-import java.io.StringReader
-import java.time.LocalDate
-import javax.jms.ConnectionFactory
-import javax.jms.Session
-import javax.jms.TextMessage
-import javax.naming.InitialContext
 import net.logstash.logback.argument.StructuredArguments
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.infotrygd.foresp.StatusType
 import no.nav.helse.infotrygd.foresp.TypeSMinfo
 import no.nav.syfo.util.infotrygdSporringMarshaller
 import no.nav.syfo.util.infotrygdSporringUnmarshaller
-import org.amshove.kluent.shouldEqual
+import org.amshove.kluent.shouldBeEqualTo
 import org.apache.activemq.artemis.core.config.impl.ConfigurationImpl
 import org.apache.activemq.artemis.core.server.ActiveMQServers
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.io.StringReader
+import java.time.LocalDate
+import javax.jms.ConnectionFactory
+import javax.jms.Session
+import javax.jms.TextMessage
+import javax.naming.InitialContext
 
 object MqSpek : Spek({
 
-    val activeMQServer = ActiveMQServers.newActiveMQServer(ConfigurationImpl()
+    val activeMQServer = ActiveMQServers.newActiveMQServer(
+        ConfigurationImpl()
             .setPersistenceEnabled(false)
             .setJournalDirectory("target/data/journal")
             .setSecurityEnabled(false)
-            .addAcceptorConfiguration("invm", "vm://0"))
+            .addAcceptorConfiguration("invm", "vm://0")
+    )
 
     beforeGroup {
         activeMQServer.start()
@@ -48,24 +50,28 @@ object MqSpek : Spek({
                 val consumer = session.createConsumer(infotrygdSporringQueue)
 
                 val infotrygdForesp = InfotrygdForesp().apply {
-                sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
-                    sykmelding.add(TypeSMinfo().apply {
-                        periode = TypeSMinfo.Periode().apply {
-                            arbufoerFOM = LocalDate.now()
-                            arbufoerTOM = LocalDate.now().plusDays(2)
+                    sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
+                        sykmelding.add(
+                            TypeSMinfo().apply {
+                                periode = TypeSMinfo.Periode().apply {
+                                    arbufoerFOM = LocalDate.now()
+                                    arbufoerTOM = LocalDate.now().plusDays(2)
+                                }
+                            }
+                        )
+                        status = StatusType().apply {
+                            kodeMelding = "04"
                         }
-                    })
-                    status = StatusType().apply {
-                        kodeMelding = "04"
                     }
                 }
-            }
 
-            producer.send(session.createTextMessage().apply {
-                text = infotrygdSporringMarshaller.toString(infotrygdForesp)
-                log.info("Sending: {}", StructuredArguments.keyValue("message", text))
-                log.info("Pushed message to queue")
-            })
+                producer.send(
+                    session.createTextMessage().apply {
+                        text = infotrygdSporringMarshaller.toString(infotrygdForesp)
+                        log.info("Sending: {}", StructuredArguments.keyValue("message", text))
+                        log.info("Pushed message to queue")
+                    }
+                )
                 val message = consumer.receiveNoWait()
 
                 val inputMessageText = when (message) {
@@ -74,8 +80,8 @@ object MqSpek : Spek({
                 }
 
                 val infotrygdForespResponse = infotrygdSporringUnmarshaller.unmarshal(StringReader(inputMessageText)) as InfotrygdForesp
-                infotrygdForespResponse.fodselsnummer shouldEqual null
-                }
+                infotrygdForespResponse.fodselsnummer shouldBeEqualTo null
             }
+        }
     }
 })

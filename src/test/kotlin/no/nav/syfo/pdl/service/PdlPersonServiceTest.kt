@@ -4,7 +4,6 @@ import io.ktor.util.KtorExperimentalAPI
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
 import io.mockk.mockk
-import kotlin.test.assertFailsWith
 import kotlinx.coroutines.runBlocking
 import no.nav.syfo.client.OidcToken
 import no.nav.syfo.client.StsOidcClient
@@ -15,9 +14,10 @@ import no.nav.syfo.pdl.client.model.HentGeografiskTilknytning
 import no.nav.syfo.pdl.client.model.HentPerson
 import no.nav.syfo.pdl.client.model.ResponseData
 import no.nav.syfo.util.LoggingMeta
-import org.amshove.kluent.shouldEqual
+import org.amshove.kluent.shouldBeEqualTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import kotlin.test.assertFailsWith
 
 @KtorExperimentalAPI
 object PdlPersonServiceTest : Spek({
@@ -39,13 +39,14 @@ object PdlPersonServiceTest : Spek({
                     hentGeografiskTilknytning = HentGeografiskTilknytning(gtType = "BYDEL", gtKommune = null, gtBydel = "030102", gtLand = null),
                     hentPerson = HentPerson(adressebeskyttelse = listOf(Adressebeskyttelse("FORTROLIG")))
                 ),
-                errors = null)
+                errors = null
+            )
 
             runBlocking {
                 val person = pdlPersonService.getPerson("fnr", loggingMeta)
 
-                person.gt shouldEqual "030102"
-                person.adressebeskyttelse shouldEqual "FORTROLIG"
+                person.gt shouldBeEqualTo "030102"
+                person.adressebeskyttelse shouldBeEqualTo "FORTROLIG"
             }
         }
         it("Skal feile hvis person ikke finnes i PDL") {
@@ -54,7 +55,8 @@ object PdlPersonServiceTest : Spek({
                     hentGeografiskTilknytning = HentGeografiskTilknytning(gtType = "BYDEL", gtKommune = null, gtBydel = "030102", gtLand = null),
                     hentPerson = null
                 ),
-                errors = null)
+                errors = null
+            )
 
             assertFailsWith<RuntimeException> {
                 runBlocking {
@@ -68,12 +70,13 @@ object PdlPersonServiceTest : Spek({
                     hentGeografiskTilknytning = null,
                     hentPerson = HentPerson(emptyList())
                 ),
-                errors = null)
+                errors = null
+            )
 
             runBlocking {
                 val person = pdlPersonService.getPerson("fnr", loggingMeta)
 
-                person.gt shouldEqual null
+                person.gt shouldBeEqualTo null
             }
         }
     }
@@ -82,17 +85,17 @@ object PdlPersonServiceTest : Spek({
         it("Bruker gtKommune hvis type er kommune og gtKommune er satt") {
             val hentGeografiskTilknytning = HentGeografiskTilknytning(gtType = "KOMMUNE", gtKommune = "0301", gtBydel = null, gtLand = null)
 
-            hentGeografiskTilknytning.finnGT() shouldEqual "0301"
+            hentGeografiskTilknytning.finnGT() shouldBeEqualTo "0301"
         }
         it("Bruker gtKommune uavhengig av type hvis kun gtKommune er satt") {
             val hentGeografiskTilknytning = HentGeografiskTilknytning(gtType = "UTLAND", gtKommune = "0301", gtBydel = null, gtLand = null)
 
-            hentGeografiskTilknytning.finnGT() shouldEqual "0301"
+            hentGeografiskTilknytning.finnGT() shouldBeEqualTo "0301"
         }
         it("Returnerer null hvis ingen GT er satt") {
             val hentGeografiskTilknytning = HentGeografiskTilknytning(gtType = "UDEFINERT", gtKommune = null, gtBydel = null, gtLand = null)
 
-            hentGeografiskTilknytning.finnGT() shouldEqual null
+            hentGeografiskTilknytning.finnGT() shouldBeEqualTo null
         }
     }
 })

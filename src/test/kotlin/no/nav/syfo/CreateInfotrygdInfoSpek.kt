@@ -1,8 +1,6 @@
 package no.nav.syfo
 
-import java.io.StringReader
-import java.time.LocalDate
-import java.time.LocalDateTime
+import io.ktor.util.KtorExperimentalAPI
 import no.nav.helse.eiFellesformat.XMLEIFellesformat
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.infotrygd.foresp.TypeSMinfo
@@ -21,11 +19,15 @@ import no.nav.syfo.util.LoggingMeta
 import no.nav.syfo.util.fellesformatMarshaller
 import no.nav.syfo.util.fellesformatUnmarshaller
 import no.nav.syfo.util.xmlObjectWriter
+import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeFalse
-import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.io.StringReader
+import java.time.LocalDate
+import java.time.LocalDateTime
 
+@KtorExperimentalAPI
 object CreateInfotrygdInfoSpek : Spek({
 
     describe("Testing mapping of fellesformat and InfotrygdInfo") {
@@ -48,18 +50,19 @@ object CreateInfotrygdInfoSpek : Spek({
             val itfh = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
 
             val infotrygdFellesformat = updateInfotrygdService.createInfotrygdFellesformat(
-                    fellesFormatString,
-                    itfh,
-                    healthInformation.aktivitet.periode.first(),
-                    "1231234", LocalDate.now(),
-                    "LE",
-                    "1341515",
-                    LoggingMeta("mottakId", "12315", "", ""),
-                    "0435",
-                    LocalDate.now())
+                fellesFormatString,
+                itfh,
+                healthInformation.aktivitet.periode.first(),
+                "1231234", LocalDate.now(),
+                "LE",
+                "1341515",
+                LoggingMeta("mottakId", "12315", "", ""),
+                "0435",
+                LocalDate.now()
+            )
 
-            extractHelseOpplysningerArbeidsuforhet(infotrygdFellesformat).regelSettVersjon shouldEqual
-                    extractHelseOpplysningerArbeidsuforhet(fellesFormat).regelSettVersjon
+            extractHelseOpplysningerArbeidsuforhet(infotrygdFellesformat).regelSettVersjon shouldBeEqualTo
+                extractHelseOpplysningerArbeidsuforhet(fellesFormat).regelSettVersjon
         }
 
         it("Should map strekkode correctly") {
@@ -77,13 +80,14 @@ object CreateInfotrygdInfoSpek : Spek({
 
             val itfh = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
             val infotrygdFellesformat = updateInfotrygdService.createInfotrygdFellesformat(
-                    fellesFormatString, itfh, healthInformation.aktivitet.periode.first(),
-                    "1231234", LocalDate.now(), "LE",
-                    "1341515", LoggingMeta("mottakId", "12315", "", ""),
-                    "0435", LocalDate.now())
+                fellesFormatString, itfh, healthInformation.aktivitet.periode.first(),
+                "1231234", LocalDate.now(), "LE",
+                "1341515", LoggingMeta("mottakId", "12315", "", ""),
+                "0435", LocalDate.now()
+            )
 
-            extractHelseOpplysningerArbeidsuforhet(infotrygdFellesformat).aktivitet.periode.first().periodeTOMDato shouldEqual
-                    extractHelseOpplysningerArbeidsuforhet(fellesFormat).aktivitet.periode.first().periodeTOMDato
+            extractHelseOpplysningerArbeidsuforhet(infotrygdFellesformat).aktivitet.periode.first().periodeTOMDato shouldBeEqualTo
+                extractHelseOpplysningerArbeidsuforhet(fellesFormat).aktivitet.periode.first().periodeTOMDato
         }
 
         it("Should use behandlingsDato instead of kontaktDato") {
@@ -104,8 +108,8 @@ object CreateInfotrygdInfoSpek : Spek({
 
             val infotrygdBlokk = infotrygdFellesformat.get<KontrollSystemBlokk>().infotrygdBlokk
 
-            healthInformation.kontaktMedPasient.behandletDato.toLocalDate() shouldEqual
-                    infotrygdBlokk.first().behandlingsDato
+            healthInformation.kontaktMedPasient.behandletDato.toLocalDate() shouldBeEqualTo
+                infotrygdBlokk.first().behandlingsDato
         }
 
         it("Should use kontaktDato instead of behandlingsDato") {
@@ -126,8 +130,8 @@ object CreateInfotrygdInfoSpek : Spek({
 
             val infotrygdBlokk = infotrygdFellesformat.get<KontrollSystemBlokk>().infotrygdBlokk
 
-            healthInformation.kontaktMedPasient.kontaktDato shouldEqual
-                    infotrygdBlokk.first().behandlingsDato
+            healthInformation.kontaktMedPasient.kontaktDato shouldBeEqualTo
+                infotrygdBlokk.first().behandlingsDato
         }
 
         it("Should use arbeidsKategori to 01 when employers name is set") {
@@ -153,7 +157,7 @@ object CreateInfotrygdInfoSpek : Spek({
 
             val infotrygdBlokk = infotrygdFellesformat.get<KontrollSystemBlokk>().infotrygdBlokk
 
-            "01" shouldEqual infotrygdBlokk.first().arbeidsKategori
+            "01" shouldBeEqualTo infotrygdBlokk.first().arbeidsKategori
         }
 
         it("Should use arbeidsKategori to 030 when employers name is set") {
@@ -173,7 +177,7 @@ object CreateInfotrygdInfoSpek : Spek({
 
             val infotrygdBlokk = infotrygdFellesformat.get<KontrollSystemBlokk>().infotrygdBlokk
 
-            "030" shouldEqual infotrygdBlokk.first().arbeidsKategori
+            "030" shouldBeEqualTo infotrygdBlokk.first().arbeidsKategori
         }
 
         it("Should not contain namespace in InfotrygdBlokk") {
@@ -199,14 +203,14 @@ object CreateInfotrygdInfoSpek : Spek({
                 behandletDato = LocalDateTime.now()
             }
             healthInformation.aktivitet.periode.add(
-                    HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                        periodeFOMDato = LocalDate.now().plusDays(5)
-                        periodeTOMDato = LocalDate.now().plusDays(10)
-                        aktivitetIkkeMulig = HelseOpplysningerArbeidsuforhet.Aktivitet.Periode.AktivitetIkkeMulig().apply {
-                            medisinskeArsaker = ArsakType().apply {
-                            }
+                HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
+                    periodeFOMDato = LocalDate.now().plusDays(5)
+                    periodeTOMDato = LocalDate.now().plusDays(10)
+                    aktivitetIkkeMulig = HelseOpplysningerArbeidsuforhet.Aktivitet.Periode.AktivitetIkkeMulig().apply {
+                        medisinskeArsaker = ArsakType().apply {
                         }
                     }
+                }
 
             )
 
@@ -216,11 +220,13 @@ object CreateInfotrygdInfoSpek : Spek({
             val fellesFormatString = fellesformatMarshaller.toString(fellesFormat)
 
             infotrygdForesp.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
-                sykmelding.add(TypeSMinfo().apply {
-                    periode = TypeSMinfo.Periode().apply {
-                        arbufoerFOM = LocalDate.now()
+                sykmelding.add(
+                    TypeSMinfo().apply {
+                        periode = TypeSMinfo.Periode().apply {
+                            arbufoerFOM = LocalDate.now()
+                        }
                     }
-                })
+                )
             }
 
             val itfh = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
@@ -228,7 +234,7 @@ object CreateInfotrygdInfoSpek : Spek({
 
             val infotrygdBlokk = infotrygdFellesformat.get<KontrollSystemBlokk>().infotrygdBlokk
 
-            infotrygdBlokk.last().arbeidsKategori shouldEqual null
+            infotrygdBlokk.last().arbeidsKategori shouldBeEqualTo null
         }
 
         it("Should set set fields for first infotrygdblokk") {
@@ -238,14 +244,14 @@ object CreateInfotrygdInfoSpek : Spek({
                 behandletDato = LocalDateTime.now()
             }
             healthInformation.aktivitet.periode.add(
-                    HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                        periodeFOMDato = LocalDate.now().plusDays(5)
-                        periodeTOMDato = LocalDate.now().plusDays(10)
-                        aktivitetIkkeMulig = HelseOpplysningerArbeidsuforhet.Aktivitet.Periode.AktivitetIkkeMulig().apply {
-                            medisinskeArsaker = ArsakType().apply {
-                            }
+                HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
+                    periodeFOMDato = LocalDate.now().plusDays(5)
+                    periodeTOMDato = LocalDate.now().plusDays(10)
+                    aktivitetIkkeMulig = HelseOpplysningerArbeidsuforhet.Aktivitet.Periode.AktivitetIkkeMulig().apply {
+                        medisinskeArsaker = ArsakType().apply {
                         }
                     }
+                }
             )
             healthInformation.medisinskVurdering = HelseOpplysningerArbeidsuforhet.MedisinskVurdering().apply {
                 hovedDiagnose = HelseOpplysningerArbeidsuforhet.MedisinskVurdering.HovedDiagnose().apply {
@@ -270,23 +276,23 @@ object CreateInfotrygdInfoSpek : Spek({
 
             val infotrygdBlokk = infotrygdFellesformat.get<KontrollSystemBlokk>().infotrygdBlokk
 
-            infotrygdBlokk.first().fodselsnummer shouldEqual "1231234"
-            infotrygdBlokk.first().tkNummer shouldEqual "0435"
-            infotrygdBlokk.first().forsteFravaersDag shouldEqual LocalDate.now()
-            infotrygdBlokk.first().behandlingsDato shouldEqual LocalDate.now()
-            infotrygdBlokk.first().mottakerKode shouldEqual "LE"
-            infotrygdBlokk.first().hovedDiagnose shouldEqual "Z09"
-            infotrygdBlokk.first().hovedDiagnoseGruppe shouldEqual "3".toBigInteger()
-            infotrygdBlokk.first().hovedDiagnoseTekst shouldEqual "Problem med jus/politi"
-            infotrygdBlokk.first().biDiagnose shouldEqual null
-            infotrygdBlokk.first().biDiagnoseGruppe shouldEqual null
-            infotrygdBlokk.first().biDiagnoseTekst shouldEqual null
-            infotrygdBlokk.first().arbeidsKategori shouldEqual "030"
-            infotrygdBlokk.first().gruppe shouldEqual "96"
-            infotrygdBlokk.first().saksbehandler shouldEqual "Auto"
-            infotrygdBlokk.first().arbeidsufoerTOM shouldEqual LocalDate.now().plusDays(4)
-            infotrygdBlokk.first().isErSvangerskapsrelatert shouldEqual null
-            infotrygdBlokk.first().ufoeregrad shouldEqual "100".toBigInteger()
+            infotrygdBlokk.first().fodselsnummer shouldBeEqualTo "1231234"
+            infotrygdBlokk.first().tkNummer shouldBeEqualTo "0435"
+            infotrygdBlokk.first().forsteFravaersDag shouldBeEqualTo LocalDate.now()
+            infotrygdBlokk.first().behandlingsDato shouldBeEqualTo LocalDate.now()
+            infotrygdBlokk.first().mottakerKode shouldBeEqualTo "LE"
+            infotrygdBlokk.first().hovedDiagnose shouldBeEqualTo "Z09"
+            infotrygdBlokk.first().hovedDiagnoseGruppe shouldBeEqualTo "3".toBigInteger()
+            infotrygdBlokk.first().hovedDiagnoseTekst shouldBeEqualTo "Problem med jus/politi"
+            infotrygdBlokk.first().biDiagnose shouldBeEqualTo null
+            infotrygdBlokk.first().biDiagnoseGruppe shouldBeEqualTo null
+            infotrygdBlokk.first().biDiagnoseTekst shouldBeEqualTo null
+            infotrygdBlokk.first().arbeidsKategori shouldBeEqualTo "030"
+            infotrygdBlokk.first().gruppe shouldBeEqualTo "96"
+            infotrygdBlokk.first().saksbehandler shouldBeEqualTo "Auto"
+            infotrygdBlokk.first().arbeidsufoerTOM shouldBeEqualTo LocalDate.now().plusDays(4)
+            infotrygdBlokk.first().isErSvangerskapsrelatert shouldBeEqualTo null
+            infotrygdBlokk.first().ufoeregrad shouldBeEqualTo "100".toBigInteger()
         }
 
         it("Should set set fields for subsequent infotrygdblokk") {
@@ -296,14 +302,14 @@ object CreateInfotrygdInfoSpek : Spek({
                 behandletDato = LocalDateTime.now()
             }
             healthInformation.aktivitet.periode.add(
-                    HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                        periodeFOMDato = LocalDate.now().plusDays(5)
-                        periodeTOMDato = LocalDate.now().plusDays(10)
-                        aktivitetIkkeMulig = HelseOpplysningerArbeidsuforhet.Aktivitet.Periode.AktivitetIkkeMulig().apply {
-                            medisinskeArsaker = ArsakType().apply {
-                            }
+                HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
+                    periodeFOMDato = LocalDate.now().plusDays(5)
+                    periodeTOMDato = LocalDate.now().plusDays(10)
+                    aktivitetIkkeMulig = HelseOpplysningerArbeidsuforhet.Aktivitet.Periode.AktivitetIkkeMulig().apply {
+                        medisinskeArsaker = ArsakType().apply {
                         }
                     }
+                }
 
             )
             healthInformation.medisinskVurdering = HelseOpplysningerArbeidsuforhet.MedisinskVurdering().apply {
@@ -322,11 +328,13 @@ object CreateInfotrygdInfoSpek : Spek({
             val fellesFormatString = fellesformatMarshaller.toString(fellesFormat)
 
             infotrygdForesp.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
-                sykmelding.add(TypeSMinfo().apply {
-                    periode = TypeSMinfo.Periode().apply {
-                        arbufoerFOM = LocalDate.now()
+                sykmelding.add(
+                    TypeSMinfo().apply {
+                        periode = TypeSMinfo.Periode().apply {
+                            arbufoerFOM = LocalDate.now()
+                        }
                     }
-                })
+                )
             }
 
             val itfh = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
@@ -334,23 +342,23 @@ object CreateInfotrygdInfoSpek : Spek({
 
             val infotrygdBlokk = infotrygdFellesformat.get<KontrollSystemBlokk>().infotrygdBlokk
 
-            infotrygdBlokk[0].fodselsnummer shouldEqual "1231234"
-            infotrygdBlokk[0].tkNummer shouldEqual "0135"
-            infotrygdBlokk[0].forsteFravaersDag shouldEqual LocalDate.now()
-            infotrygdBlokk[0].behandlingsDato shouldEqual null
-            infotrygdBlokk[0].mottakerKode shouldEqual "LE"
-            infotrygdBlokk[0].hovedDiagnose shouldEqual null
-            infotrygdBlokk[0].hovedDiagnoseGruppe shouldEqual null
-            infotrygdBlokk[0].hovedDiagnoseTekst shouldEqual null
-            infotrygdBlokk[0].biDiagnose shouldEqual null
-            infotrygdBlokk[0].biDiagnoseGruppe shouldEqual null
-            infotrygdBlokk[0].biDiagnoseTekst shouldEqual null
-            infotrygdBlokk[0].arbeidsKategori shouldEqual null
-            infotrygdBlokk[0].gruppe shouldEqual null
-            infotrygdBlokk[0].saksbehandler shouldEqual null
-            infotrygdBlokk[0].arbeidsufoerTOM shouldEqual LocalDate.now().plusDays(10)
-            infotrygdBlokk[0].ufoeregrad shouldEqual "100".toBigInteger()
-            infotrygdBlokk[0].operasjonstype shouldEqual "2".toBigInteger()
+            infotrygdBlokk[0].fodselsnummer shouldBeEqualTo "1231234"
+            infotrygdBlokk[0].tkNummer shouldBeEqualTo "0135"
+            infotrygdBlokk[0].forsteFravaersDag shouldBeEqualTo LocalDate.now()
+            infotrygdBlokk[0].behandlingsDato shouldBeEqualTo null
+            infotrygdBlokk[0].mottakerKode shouldBeEqualTo "LE"
+            infotrygdBlokk[0].hovedDiagnose shouldBeEqualTo null
+            infotrygdBlokk[0].hovedDiagnoseGruppe shouldBeEqualTo null
+            infotrygdBlokk[0].hovedDiagnoseTekst shouldBeEqualTo null
+            infotrygdBlokk[0].biDiagnose shouldBeEqualTo null
+            infotrygdBlokk[0].biDiagnoseGruppe shouldBeEqualTo null
+            infotrygdBlokk[0].biDiagnoseTekst shouldBeEqualTo null
+            infotrygdBlokk[0].arbeidsKategori shouldBeEqualTo null
+            infotrygdBlokk[0].gruppe shouldBeEqualTo null
+            infotrygdBlokk[0].saksbehandler shouldBeEqualTo null
+            infotrygdBlokk[0].arbeidsufoerTOM shouldBeEqualTo LocalDate.now().plusDays(10)
+            infotrygdBlokk[0].ufoeregrad shouldBeEqualTo "100".toBigInteger()
+            infotrygdBlokk[0].operasjonstype shouldBeEqualTo "2".toBigInteger()
         }
     }
 })
@@ -360,14 +368,14 @@ fun createDefaultHealthInformation(): HelseOpplysningerArbeidsuforhet =
         regelSettVersjon = "1"
         aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
             periode.add(
-                    HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                        periodeFOMDato = LocalDate.now()
-                        periodeTOMDato = LocalDate.now().plusDays(4)
-                        aktivitetIkkeMulig = HelseOpplysningerArbeidsuforhet.Aktivitet.Periode.AktivitetIkkeMulig().apply {
-                            medisinskeArsaker = ArsakType().apply {
-                            }
+                HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
+                    periodeFOMDato = LocalDate.now()
+                    periodeTOMDato = LocalDate.now().plusDays(4)
+                    aktivitetIkkeMulig = HelseOpplysningerArbeidsuforhet.Aktivitet.Periode.AktivitetIkkeMulig().apply {
+                        medisinskeArsaker = ArsakType().apply {
                         }
                     }
+                }
             )
         }
         pasient = HelseOpplysningerArbeidsuforhet.Pasient().apply {
@@ -393,19 +401,19 @@ fun createDefaultHealthInformation(): HelseOpplysningerArbeidsuforhet =
     }
 
 fun createFellesFormat(healthInformation: HelseOpplysningerArbeidsuforhet): XMLEIFellesformat = XMLEIFellesformat().apply {
-        any.add(
-                XMLMsgHead().apply {
-                    document.add(
-                            XMLDocument().apply {
-                                refDoc = XMLRefDoc().apply {
-                                    content = XMLRefDoc.Content().apply {
-                                        any.add(
-                                                healthInformation
-                                        )
-                                    }
-                                }
-                            }
-                    )
+    any.add(
+        XMLMsgHead().apply {
+            document.add(
+                XMLDocument().apply {
+                    refDoc = XMLRefDoc().apply {
+                        content = XMLRefDoc.Content().apply {
+                            any.add(
+                                healthInformation
+                            )
+                        }
+                    }
                 }
-        )
-    }
+            )
+        }
+    )
+}
