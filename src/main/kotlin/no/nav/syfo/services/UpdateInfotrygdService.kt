@@ -600,10 +600,21 @@ class UpdateInfotrygdService {
     fun skalIkkeOppdatereInfotrygd(
         receivedSykmelding: ReceivedSykmelding,
         validationResult: ValidationResult
-    ): Boolean =
-        validationResult.ruleHits.isNotEmpty() && validationResult.ruleHits.any {
+    ): Boolean {
+
+        val delvisOverlappendeSykmeldingRule = validationResult.ruleHits.isNotEmpty() && validationResult.ruleHits.any {
             (it.ruleName == ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE.name)
-        } && receivedSykmelding.sykmelding.perioder.sortedPeriodeFOMDate().lastOrNull() != null && receivedSykmelding.sykmelding.perioder.sortedPeriodeTOMDate().lastOrNull() != null && (receivedSykmelding.sykmelding.perioder.sortedPeriodeFOMDate().last()..receivedSykmelding.sykmelding.perioder.sortedPeriodeTOMDate().last()).daysBetween() <= 3
+        } && receivedSykmelding.sykmelding.perioder.sortedPeriodeFOMDate().lastOrNull() != null &&
+            receivedSykmelding.sykmelding.perioder.sortedPeriodeTOMDate().lastOrNull() != null &&
+            (receivedSykmelding.sykmelding.perioder.sortedPeriodeFOMDate().last()..receivedSykmelding.sykmelding.perioder.sortedPeriodeTOMDate().last()).daysBetween() <= 3
+
+        val merknadRule = receivedSykmelding.merknader?.any {
+            it.type == "UGYLDIG_TILBAKEDATERING" ||
+                it.type == "TILBAKEDATERING_KREVER_FLERE_OPPLYSNINGER"
+        }?: false
+
+        return delvisOverlappendeSykmeldingRule || merknadRule
+    }
 }
 
 @KtorExperimentalAPI
