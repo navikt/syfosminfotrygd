@@ -602,7 +602,7 @@ class UpdateInfotrygdService {
         validationResult: ValidationResult
     ): Boolean {
 
-        val partiallySickLeaveRule = validationResult.ruleHits.isNotEmpty() && validationResult.ruleHits.any {
+        val delvisOverlappendeSykmeldingRule = validationResult.ruleHits.isNotEmpty() && validationResult.ruleHits.any {
             (it.ruleName == ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE.name)
         } && receivedSykmelding.sykmelding.perioder.sortedPeriodeFOMDate().lastOrNull() != null &&
             receivedSykmelding.sykmelding.perioder.sortedPeriodeTOMDate().lastOrNull() != null &&
@@ -611,10 +611,9 @@ class UpdateInfotrygdService {
         val merknadRule = receivedSykmelding.merknader?.any {
             it.type == "UGYLDIG_TILBAKEDATERING" ||
                 it.type == "TILBAKEDATERING_KREVER_FLERE_OPPLYSNINGER"
-        }
-            ?: false
+        }?: false
 
-        return partiallySickLeaveRule || merknadRule
+        return delvisOverlappendeSykmeldingRule || merknadRule
     }
 }
 
