@@ -1,6 +1,7 @@
 package no.nav.syfo
 
 import io.ktor.util.KtorExperimentalAPI
+import no.nav.syfo.model.Merknad
 import no.nav.syfo.model.RuleInfo
 import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
@@ -116,6 +117,75 @@ object SkalIkkeOppdatereInfotrygdSpek : Spek({
                         )
                     )
                 )
+            )
+
+            updateInfotrygdService.skalIkkeOppdatereInfotrygd(receivedSykmelding, validationResult) shouldBeEqualTo false
+        }
+
+        it("Skal ikke oppdatere infotrygd fordi sykmeldingen har merknad UGYLDIG_TILBAKEDATERING") {
+
+            val validationResult = ValidationResult(
+                status = Status.OK,
+                ruleHits = emptyList()
+            )
+
+            val receivedSykmelding = receivedSykmelding(
+                "1",
+                generateSykmelding(
+                    perioder = listOf(
+                        generatePeriode(
+                            fom = LocalDate.of(2019, 1, 1),
+                            tom = LocalDate.of(2019, 1, 5)
+                        )
+                    )
+                ),
+                merknader = listOf(Merknad(type = "UGYLDIG_TILBAKEDATERING", beskrivelse = "Litt av en beskrivelse"))
+            )
+
+            updateInfotrygdService.skalIkkeOppdatereInfotrygd(receivedSykmelding, validationResult) shouldBeEqualTo true
+        }
+
+        it("Skal ikke oppdatere infotrygd fordi sykmeldingen har merknad TILBAKEDATERING_KREVER_FLERE_OPPLYSNINGER") {
+
+            val validationResult = ValidationResult(
+                status = Status.OK,
+                ruleHits = emptyList()
+            )
+
+            val receivedSykmelding = receivedSykmelding(
+                "1",
+                generateSykmelding(
+                    perioder = listOf(
+                        generatePeriode(
+                            fom = LocalDate.of(2019, 1, 1),
+                            tom = LocalDate.of(2019, 1, 5)
+                        )
+                    )
+                ),
+                merknader = listOf(Merknad(type = "TILBAKEDATERING_KREVER_FLERE_OPPLYSNINGER", beskrivelse = "Litt av en beskrivelse"))
+            )
+
+            updateInfotrygdService.skalIkkeOppdatereInfotrygd(receivedSykmelding, validationResult) shouldBeEqualTo true
+        }
+
+        it("Skal oppdatere infotrygd fordi sykmeldingen har en ukjent merknad") {
+
+            val validationResult = ValidationResult(
+                status = Status.OK,
+                ruleHits = emptyList()
+            )
+
+            val receivedSykmelding = receivedSykmelding(
+                "1",
+                generateSykmelding(
+                    perioder = listOf(
+                        generatePeriode(
+                            fom = LocalDate.of(2019, 1, 1),
+                            tom = LocalDate.of(2019, 1, 5)
+                        )
+                    )
+                ),
+                merknader = listOf(Merknad(type = "Litt av en type", beskrivelse = "Litt av en beskrivelse"))
             )
 
             updateInfotrygdService.skalIkkeOppdatereInfotrygd(receivedSykmelding, validationResult) shouldBeEqualTo false

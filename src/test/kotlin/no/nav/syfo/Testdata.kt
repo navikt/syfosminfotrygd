@@ -19,6 +19,7 @@ import no.nav.syfo.model.MedisinskArsak
 import no.nav.syfo.model.MedisinskArsakType
 import no.nav.syfo.model.MedisinskVurdering
 import no.nav.syfo.model.MeldingTilNAV
+import no.nav.syfo.model.Merknad
 import no.nav.syfo.model.Periode
 import no.nav.syfo.model.Prognose
 import no.nav.syfo.model.ReceivedSykmelding
@@ -29,7 +30,11 @@ import java.time.LocalDateTime
 import java.util.UUID
 import kotlin.random.Random
 
-fun receivedSykmelding(id: String, sykmelding: Sykmelding = generateSykmelding()) = ReceivedSykmelding(
+fun receivedSykmelding(
+    id: String,
+    sykmelding: Sykmelding = generateSykmelding(),
+    merknader: List<Merknad>? = null
+) = ReceivedSykmelding(
     sykmelding = sykmelding,
     personNrPasient = "123124",
     tlfPasient = "12314",
@@ -44,7 +49,7 @@ fun receivedSykmelding(id: String, sykmelding: Sykmelding = generateSykmelding()
     rulesetVersion = "",
     fellesformat = "",
     tssid = "",
-    merknader = null
+    merknader = merknader
 )
 
 fun generateSykmelding(
