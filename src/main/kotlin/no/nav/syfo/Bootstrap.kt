@@ -297,17 +297,30 @@ private suspend fun runKafkaConsumer(
                 msgId = receivedSykmelding.msgId,
                 sykmeldingId = receivedSykmelding.sykmelding.id
             )
-
-            handleMessage(
-                receivedSykmelding, syfosmreglerClient, kafkaproducerCreateTask, kafkaproducervalidationResult,
-                infotrygdOppdateringProducer, infotrygdSporringProducer,
-                session, finnNAVKontorService, sm2013BehandlingsUtfallTopic, norskHelsenettClient,
-                smIkkeOkQueue, loggingMeta, jedis, kafkaproducerreceivedSykmelding,
-                infotrygdRetryTopic, oppgaveTopic, applicationState, tssProducer
-            )
+            when (skalOppdatereInfotrygd(receivedSykmelding)) {
+                true -> {
+                    handleMessage(
+                        receivedSykmelding, syfosmreglerClient, kafkaproducerCreateTask, kafkaproducervalidationResult,
+                        infotrygdOppdateringProducer, infotrygdSporringProducer,
+                        session, finnNAVKontorService, sm2013BehandlingsUtfallTopic, norskHelsenettClient,
+                        smIkkeOkQueue, loggingMeta, jedis, kafkaproducerreceivedSykmelding,
+                        infotrygdRetryTopic, oppgaveTopic, applicationState, tssProducer
+                    )
+                }
+                else -> {
+                    log.info("Skal ikke oppdatere infotrygd ved merknad ${receivedSykmelding.merknader?.joinToString { it.type }} {}", fields(loggingMeta))
+                }
+            }
         }
         delay(100)
     }
+}
+
+fun skalOppdatereInfotrygd(receivedSykmelding: ReceivedSykmelding): Boolean {
+    return receivedSykmelding.merknader?.none {
+        it.type == "UGYLDIG_TILBAKEDATERING" ||
+            it.type == "TILBAKEDATERING_KREVER_FLERE_OPPLYSNINGER"
+    } ?: true
 }
 
 fun getCurrentTime(): OffsetTime {
