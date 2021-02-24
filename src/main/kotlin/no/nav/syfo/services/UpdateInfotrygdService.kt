@@ -545,14 +545,14 @@ class UpdateInfotrygdService {
                 applicationState.ready = false
             }
 
-            val skalIkkeOppdatereInfotrygd = skalIkkeOppdatereInfotrygd(receivedSykmelding, validationResult)
+            val skalIkkeOppdatereInfotrygd = skalIkkeProdusereManuellOppgave(receivedSykmelding, validationResult)
 
             when {
                 duplikatInfotrygdOppdatering -> {
-                    log.warn("Melding market som infotrygd duplikat, ikkje opprett manuelloppgave {}", fields(loggingMeta))
+                    log.warn("Melding er infotrygd duplikat, ikke opprett manuelloppgave {}", fields(loggingMeta))
                 }
                 skalIkkeOppdatereInfotrygd -> {
-                    log.warn("Melding market som unødvendig å oppdatere infotrygd, ikkje opprett manuelloppgave {}", fields(loggingMeta))
+                    log.warn("Trenger ikke å opprett manuell oppgave for {}", fields(loggingMeta))
                 }
                 else -> {
                     opprettOppgave(kafkaProducer, syfosmreglerClient, receivedSykmelding, validationResult, loggingMeta, oppgaveTopic)
@@ -597,7 +597,7 @@ class UpdateInfotrygdService {
                 ruleInfo.ruleName == "ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING"
         }
 
-    fun skalIkkeOppdatereInfotrygd(
+    fun skalIkkeProdusereManuellOppgave(
         receivedSykmelding: ReceivedSykmelding,
         validationResult: ValidationResult
     ): Boolean {
@@ -608,12 +608,7 @@ class UpdateInfotrygdService {
             receivedSykmelding.sykmelding.perioder.sortedPeriodeTOMDate().lastOrNull() != null &&
             (receivedSykmelding.sykmelding.perioder.sortedPeriodeFOMDate().last()..receivedSykmelding.sykmelding.perioder.sortedPeriodeTOMDate().last()).daysBetween() <= 3
 
-        val merknadRule = receivedSykmelding.merknader?.any {
-            it.type == "UGYLDIG_TILBAKEDATERING" ||
-                it.type == "TILBAKEDATERING_KREVER_FLERE_OPPLYSNINGER"
-        }?: false
-
-        return delvisOverlappendeSykmeldingRule || merknadRule
+        return delvisOverlappendeSykmeldingRule
     }
 }
 
