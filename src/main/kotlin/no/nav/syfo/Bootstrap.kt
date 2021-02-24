@@ -309,6 +309,7 @@ private suspend fun runKafkaConsumer(
                 }
                 else -> {
                     log.info("Skal ikke oppdatere infotrygd ved merknad ${receivedSykmelding.merknader?.joinToString { it.type }} {}", fields(loggingMeta))
+                    sendRuleCheckValidationResult(receivedSykmelding, kafkaproducervalidationResult, ValidationResult(Status.OK, emptyList()), sm2013BehandlingsUtfallTopic, loggingMeta)
                 }
             }
         }
