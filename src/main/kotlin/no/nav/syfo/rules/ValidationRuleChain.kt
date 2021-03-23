@@ -67,8 +67,13 @@ enum class ValidationRuleChain(
         { (sykmelding, infotrygdForesp) ->
             infotrygdForesp.sMhistorikk?.sykmelding != null &&
                 infotrygdForesp.sMhistorikk.sykmelding.sortedTOMDate().lastOrNull() != null &&
+                infotrygdForesp.sMhistorikk.sykmelding.sortedFOMDate().firstOrNull() != null &&
+                sykmelding.perioder.sortedPeriodeFOMDate().firstOrNull() != null &&
                 sykmelding.perioder.sortedPeriodeTOMDate().lastOrNull() != null &&
-                sykmelding.perioder.sortedPeriodeTOMDate().last().isBefore(infotrygdForesp.sMhistorikk.sykmelding.sortedTOMDate().last())
+                (
+                    sykmelding.perioder.sortedPeriodeFOMDate().first().isBefore(infotrygdForesp.sMhistorikk.sykmelding.sortedFOMDate().first()) ||
+                        sykmelding.perioder.sortedPeriodeTOMDate().last().isBefore(infotrygdForesp.sMhistorikk.sykmelding.sortedTOMDate().last())
+                    )
         }
     ),
 
