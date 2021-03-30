@@ -320,7 +320,8 @@ private suspend fun runKafkaConsumer(
 fun skalOppdatereInfotrygd(receivedSykmelding: ReceivedSykmelding): Boolean {
     return receivedSykmelding.merknader?.none {
         it.type == "UGYLDIG_TILBAKEDATERING" ||
-            it.type == "TILBAKEDATERING_KREVER_FLERE_OPPLYSNINGER"
+            it.type == "TILBAKEDATERING_KREVER_FLERE_OPPLYSNINGER" ||
+            it.type == "TILBAKEDATERT_PAPIRSYKMELDING"
     } ?: true
 }
 

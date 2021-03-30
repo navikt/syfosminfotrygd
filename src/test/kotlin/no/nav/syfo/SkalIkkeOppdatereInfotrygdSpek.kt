@@ -35,6 +35,10 @@ object SkalIkkeOppdatereInfotrygdSpek : Spek({
             every { sm.merknader } returns listOf(Merknad("TILBAKEDATERING_KREVER_FLERE_OPPLYSNINGER", null))
             skalOppdatereInfotrygd(sm) shouldBeEqualTo false
         }
+        it("Skal ikke oppdatere infotrygd ved merknader TILBAKEDATERT_PAPIRSYKMELDING") {
+            every { sm.merknader } returns listOf(Merknad("TILBAKEDATERT_PAPIRSYKMELDING", null))
+            skalOppdatereInfotrygd(sm) shouldBeEqualTo false
+        }
         it("Skal oppdatere infotrygd ved annen merknader ANNEN_MERKNAD") {
             every { sm.merknader } returns listOf(Merknad("ANNEN_MERKNAD", null))
             skalOppdatereInfotrygd(sm) shouldBeEqualTo true
