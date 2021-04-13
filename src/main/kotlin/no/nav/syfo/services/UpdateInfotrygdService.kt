@@ -629,11 +629,15 @@ suspend fun opprettProduceTask(syfosmreglerClient: SyfosmreglerClient, receivedS
         behandlingstype = "ANY"
         mappeId = 1
         aktivDato = DateTimeFormatter.ISO_DATE.format(LocalDate.now())
-        fristFerdigstillelse = DateTimeFormatter.ISO_DATE.format(finnFristForFerdigstillingAvOppgave(LocalDate.now().plusDays(4)))
+        fristFerdigstillelse = when (behandletAvManuell(syfosmreglerClient, receivedSykmelding, loggingMeta)) {
+            true -> DateTimeFormatter.ISO_DATE.format(LocalDate.now())
+            false -> DateTimeFormatter.ISO_DATE.format(finnFristForFerdigstillingAvOppgave(LocalDate.now().plusDays(4)))
+        }
         prioritet = PrioritetType.NORM
         metadata = mapOf()
     }
     if (behandletAvManuell(syfosmreglerClient, receivedSykmelding, loggingMeta)) {
+        log.info("sykmelding har vært behandlet av syfosmmanuell, {}", fields(loggingMeta))
         oppgave.behandlingstype = "ae0256"
     }
     return oppgave
@@ -643,7 +647,6 @@ suspend fun opprettProduceTask(syfosmreglerClient: SyfosmreglerClient, receivedS
 suspend fun behandletAvManuell(syfosmreglerClient: SyfosmreglerClient, receivedSykmelding: ReceivedSykmelding, loggingMeta: LoggingMeta): Boolean {
     val validationResult = syfosmreglerClient.executeRuleValidation(receivedSykmelding, loggingMeta)
     validationResult.ruleHits.find { it.ruleName == "TILBAKEDATERT_MER_ENN_8_DAGER_FORSTE_SYKMELDING_MED_BEGRUNNELSE" || it.ruleName == "TILBAKEDATERT_MED_BEGRUNNELSE_FORLENGELSE" }?.let {
-        log.info("sykmelding har vært behandlet av syfosmmanuell, {}", fields(loggingMeta))
         return true
     }
     return false
