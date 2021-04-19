@@ -21,6 +21,7 @@ import io.ktor.server.netty.Netty
 import io.ktor.util.KtorExperimentalAPI
 import kotlinx.coroutines.runBlocking
 import no.nav.syfo.NAV_OPPFOLGING_UTLAND_KONTOR_NR
+import no.nav.syfo.util.LoggingMeta
 import org.amshove.kluent.shouldBeEqualTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -29,6 +30,7 @@ import java.util.concurrent.TimeUnit
 
 @KtorExperimentalAPI
 object Norg2ClientTest : Spek({
+    val loggingMeta = LoggingMeta("mottakid", "orgnr", "msgid", "sykmeldingid")
     val httpClient = HttpClient(Apache) {
         install(JsonFeature) {
             serializer = JacksonSerializer {
@@ -65,12 +67,12 @@ object Norg2ClientTest : Spek({
     describe("Norg2Client") {
         it("Returnerer riktig NAV-kontor") {
             runBlocking {
-                norg2Client.getLocalNAVOffice("1411", null) shouldBeEqualTo Enhet("1400")
+                norg2Client.getLocalNAVOffice("1411", null, loggingMeta) shouldBeEqualTo Enhet("1400")
             }
         }
         it("Returnerer NAV Utland hvis vi ikke finner lokalkontor") {
             runBlocking {
-                norg2Client.getLocalNAVOffice("POL", null) shouldBeEqualTo Enhet(NAV_OPPFOLGING_UTLAND_KONTOR_NR)
+                norg2Client.getLocalNAVOffice("POL", null, loggingMeta) shouldBeEqualTo Enhet(NAV_OPPFOLGING_UTLAND_KONTOR_NR)
             }
         }
     }
