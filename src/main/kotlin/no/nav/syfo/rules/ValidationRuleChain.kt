@@ -18,8 +18,8 @@ enum class ValidationRuleChain(
     NUMBER_OF_TREATMENT_DAYS_SET(
         1260,
         Status.MANUAL_PROCESSING,
-        "Hvis behandlingsdager er angitt sendes meldingen til manuell behandling.",
-        "Hvis behandlingsdager er angitt sendes meldingen til manuell behandling.",
+        "Hvis behandlingsdager er angitt sendes sykmeldingen til manuell behandling.",
+        "Hvis behandlingsdager er angitt sendes sykmeldingen til manuell behandling.",
         { (sykmelding, _) ->
             sykmelding.perioder.any { it.behandlingsdager != null }
         }
@@ -29,8 +29,8 @@ enum class ValidationRuleChain(
     GRADERT_REISETILSKUDD_ER_OPPGITT(
         1270,
         Status.MANUAL_PROCESSING,
-        "Hvis sykmeldingen angir reisetilskudd går meldingen til manuell behandling.",
-        "Hvis sykmeldingen angir reisetilskudd går meldingen til manuell behandling.",
+        "Hvis reisetilskudd er angitt sendes sykmeldingen til manuell behandling.",
+        "Hvis reisetilskudd er angitt sendes sykmeldingen til manuell behandling.",
         { (sykmelding, _) ->
             sykmelding.perioder.any { it.gradert?.reisetilskudd ?: false }
         }
@@ -40,8 +40,8 @@ enum class ValidationRuleChain(
     TRAVEL_SUBSIDY_SPECIFIED(
         1270,
         Status.MANUAL_PROCESSING,
-        "Hvis sykmeldingen angir reisetilskudd går meldingen til manuell behandling.",
-        "Hvis sykmeldingen angir reisetilskudd går meldingen til manuell behandling.",
+        "Hvis reisetilskudd er angitt sendes sykmeldingen til manuell behandling.",
+        "Hvis reisetilskudd er angitt sendes sykmeldingen til manuell behandling.",
         { (sykmelding, _) ->
             sykmelding.perioder.any { it.reisetilskudd }
         }
@@ -51,8 +51,8 @@ enum class ValidationRuleChain(
     PATIENT_NOT_IN_IP(
         1501,
         Status.MANUAL_PROCESSING,
-        "Hvis pasienten ikke finnes i infotrygd",
-        "Hvis pasienten ikke finnes i infotrygd",
+        "Pasienten finnes ikke i Infotrygd",
+        "Pasienten finnes ikke i Infotrygd",
         { (_, infotrygdForesp) ->
             infotrygdForesp.pasient?.isFinnes != null && !infotrygdForesp.pasient.isFinnes
         }
@@ -62,8 +62,8 @@ enum class ValidationRuleChain(
     PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE(
         1513,
         Status.MANUAL_PROCESSING,
-        "Hvis delvis sammenfallende sykmeldingsperiode er registrert i Infotrygd",
-        "Hvis delvis sammenfallende sykmeldingsperiode er registrert i Infotrygd",
+        "Delvis sammenfallende sykmeldingsperiode er registrert i Infotrygd",
+        "Delvis sammenfallende sykmeldingsperiode er registrert i Infotrygd",
         { (sykmelding, infotrygdForesp) ->
             infotrygdForesp.sMhistorikk?.sykmelding != null &&
                 infotrygdForesp.sMhistorikk.sykmelding.sortedTOMDate().lastOrNull() != null &&
@@ -77,12 +77,12 @@ enum class ValidationRuleChain(
         }
     ),
 
-    @Description("Hvis sykmeldingen er forlengelse av registrert sykepengehistorikk fra annet kontor så medlingen gå til manuell behandling slik at saksbehandler kan registrere sykepengetilfellet på ny identdato og  send oppgave til Nav forvaltning for registrering av inntektsopplysninger")
+    @Description("Hvis sykmeldingen er forlengelse av registrert sykepengehistorikk fra annet kontor så medlingen gå til manuell behandling slik at saksbehandler kan registrere sykepengetilfellet på ny identdato og send oppgave til Nav forvaltning for registrering av inntektsopplysninger")
     SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_1(
         1515,
         Status.MANUAL_PROCESSING,
-        "Hvis sykmeldingen er forlengelse av registrert sykepengehistorikk fra annet kontor så medlingen gå til manuell behandling slik at saksbehandler kan registrere sykepengetilfellet på ny identdato og  send oppgave til Nav forvaltning for registrering av inntektsopplysninger",
-        "Hvis sykmeldingen er forlengelse av registrert sykepengehistorikk fra annet kontor så medlingen gå til manuell behandling slik at saksbehandler kan registrere sykepengetilfellet på ny identdato og  send oppgave til Nav forvaltning for registrering av inntektsopplysninger",
+        "Sykmeldingen er en forlengelse av registrert sykepengehistorikk fra et annet NAV-kontor. Saksbehandler kan registrere sykepengetilfellet på ny identdato og sende oppgave til NAV Forvaltning for registrering av inntektsopplysninger",
+        "Sykmeldingen er en forlengelse av registrert sykepengehistorikk fra et annet NAV-kontor. Saksbehandler kan registrere sykepengetilfellet på ny identdato og sende oppgave til NAV Forvaltning for registrering av inntektsopplysninger",
         { (sykmelding, infotrygdForesp) ->
             infotrygdForesp.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()?.periode?.arbufoerFOM != null &&
                 sykmelding.perioder.sortedPeriodeFOMDate().lastOrNull() != null &&
@@ -98,12 +98,12 @@ enum class ValidationRuleChain(
         }
     ),
 
-    @Description("Hvis sykmeldingen er forlengelse av registrert sykepengehistorikk fra annet kontor så medlingen gå til manuell behandling slik at  saksbehandler kan registrere sykepengetilfellet på ny identdato og  send oppgave til Nav forvaltning for registrering av inntektsopplysninger")
+    @Description("Hvis sykmeldingen er forlengelse av registrert sykepengehistorikk fra annet kontor så medlingen gå til manuell behandling slik at saksbehandler kan registrere sykepengetilfellet på ny identdato og send oppgave til Nav forvaltning for registrering av inntektsopplysninger")
     SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_2(
         1515,
         Status.MANUAL_PROCESSING,
-        "Hvis sykmeldingen er forlengelse av registrert sykepengehistorikk fra annet kontor så medlingen gå til manuell behandling slik at  saksbehandler kan registrere sykepengetilfellet på ny identdato og  send oppgave til Nav forvaltning for registrering av inntektsopplysninger",
-        "Hvis sykmeldingen er forlengelse av registrert sykepengehistorikk fra annet kontor så medlingen gå til manuell behandling slik at  saksbehandler kan registrere sykepengetilfellet på ny identdato og  send oppgave til Nav forvaltning for registrering av inntektsopplysninger",
+        "Sykmeldingen er en forlengelse av registrert sykepengehistorikk fra et annet NAV-kontor. Saksbehandler kan registrere sykepengetilfellet på ny identdato og sende oppgave til NAV Forvaltning for registrering av inntektsopplysninger",
+        "Sykmeldingen er en forlengelse av registrert sykepengehistorikk fra et annet NAV-kontor. Saksbehandler kan registrere sykepengetilfellet på ny identdato og sende oppgave til NAV Forvaltning for registrering av inntektsopplysninger",
         { (sykmelding, infotrygdForesp) ->
             infotrygdForesp.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull() != null &&
                 !infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode?.friskKode.isNullOrBlank() &&
@@ -116,12 +116,12 @@ enum class ValidationRuleChain(
         }
     ),
 
-    @Description("Hvis sykmeldingen er forlengelse av registrert sykepengehistorikk fra annet kontor så medlingen gå til manuell behandling slik at  saksbehandler kan registrere sykepengetilfellet på ny identdato og send oppgave til Nav forvaltning for registrering av inntektsopplysninger")
+    @Description("Hvis sykmeldingen er forlengelse av registrert sykepengehistorikk fra annet kontor så medlingen gå til manuell behandling slik at saksbehandler kan registrere sykepengetilfellet på ny identdato og send oppgave til Nav forvaltning for registrering av inntektsopplysninger")
     SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_3(
         1515,
         Status.MANUAL_PROCESSING,
-        "Hvis sykmeldingen er forlengelse av registrert sykepengehistorikk fra annet kontor så medlingen gå til manuell behandling slik at  saksbehandler kan registrere sykepengetilfellet på ny identdato og send oppgave til Nav forvaltning for registrering av inntektsopplysninger",
-        "Hvis sykmeldingen er forlengelse av registrert sykepengehistorikk fra annet kontor så medlingen gå til manuell behandling slik at  saksbehandler kan registrere sykepengetilfellet på ny identdato og send oppgave til Nav forvaltning for registrering av inntektsopplysninger",
+        "Sykmeldingen er en forlengelse av registrert sykepengehistorikk fra et annet NAV-kontor. Saksbehandler kan registrere sykepengetilfellet på ny identdato og sende oppgave til NAV Forvaltning for registrering av inntektsopplysninger",
+        "Sykmeldingen er en forlengelse av registrert sykepengehistorikk fra et annet NAV-kontor. Saksbehandler kan registrere sykepengetilfellet på ny identdato og sende oppgave til NAV Forvaltning for registrering av inntektsopplysninger",
         { (sykmelding, infotrygdForesp) ->
             sykmelding.perioder.sortedPeriodeFOMDate().lastOrNull() != null &&
                 infotrygdForesp.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()?.periode?.utbetTOM != null &&
@@ -146,8 +146,8 @@ enum class ValidationRuleChain(
     NEW_CLEAN_BILL_DATE_BEFORE_PAYOUT(
         1517,
         Status.MANUAL_PROCESSING,
-        "Hvis ny friskmeldingsdato er mindre enn utbetalingTOM registrert i Infotrygd",
-        "Hvis ny friskmeldingsdato er mindre enn utbetalingTOM registrert i Infotrygd",
+        "Friskmeldingsdato i sykmeldingen er tidligere enn utbetalingTOM registrert i Infotrygd",
+        "Friskmeldingsdato i sykmeldingen er tidligere enn utbetalingTOM registrert i Infotrygd",
         { (sykmelding, infotrygdForesp) ->
             sykmelding.prognose?.arbeidsforEtterPeriode != null &&
                 sykmelding.prognose?.arbeidsforEtterPeriode ?: false &&
@@ -164,8 +164,8 @@ enum class ValidationRuleChain(
     NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE(
         1518,
         Status.MANUAL_PROCESSING,
-        "Hvis ny friskmeldingsdato er tidligere enn registrert friskmeldingsdato i Infotrygd",
-        "Hvis ny friskmeldingsdato er tidligere enn registrert friskmeldingsdato i Infotrygd",
+        "Friskmeldingsdato i sykmeldingen er tidligere enn registrert friskmeldingsdato i Infotrygd",
+        "Friskmeldingsdato i sykmeldingen er tidligere enn registrert friskmeldingsdato i Infotrygd",
         { (sykmelding, infotrygdForesp) ->
             infotrygdForesp.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()?.periode?.friskmeldtDato != null &&
                 sykmelding.prognose?.arbeidsforEtterPeriode != null &&
@@ -180,8 +180,8 @@ enum class ValidationRuleChain(
     EXTANION_OVER_FA(
         1544,
         Status.MANUAL_PROCESSING,
-        "Hvis forlengelse utover registrert tiltak FA tiltak",
-        "Hvis forlengelse utover registrert tiltak FA tiltak",
+        "Den sykmeldte er friskmeldt til arbeidsformidling (tiltakstype FA), og sykmeldingen er en forlengelse som går forbi tiltaksperioden",
+        "Den sykmeldte er friskmeldt til arbeidsformidling (tiltakstype FA), og sykmeldingen er en forlengelse som går forbi tiltaksperioden",
         { (sykmelding, infotrygdForesp) ->
             infotrygdForesp.sMhistorikk?.sykmelding != null &&
                 sykmelding.perioder.sortedPeriodeFOMDate().lastOrNull() != null &&
@@ -202,8 +202,8 @@ enum class ValidationRuleChain(
     PERSON_MOVING_KODE_FL(
         1546,
         Status.MANUAL_PROCESSING,
-        "Personen har flyttet ( stanskode FL i Infotrygd)",
-        "Personen har flyttet ( stanskode FL i Infotrygd)",
+        "Personen har flyttet (stanskode FL i Infotrygd)",
+        "Personen har flyttet (stanskode FL i Infotrygd)",
         { (_, infotrygdForesp) ->
             infotrygdForesp.sMhistorikk?.sykmelding?.find {
                 it.periode?.arbufoerFOM != null &&
@@ -216,8 +216,8 @@ enum class ValidationRuleChain(
     PERIOD_FOR_AA_ENDED(
         1549,
         Status.MANUAL_PROCESSING,
-        "Hvis perioden er avsluttet (AA)",
-        "Hvis perioden er avsluttet (AA)",
+        "Syketilfellet er avsluttet (stanskode AA)",
+        "Syketilellet er avsluttet (stanskode AA)",
         { (sykmelding, infotrygdForesp) ->
             sykmelding.perioder.any {
                 !infotrygdForesp.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()?.periode?.stans.isNullOrBlank() &&
@@ -232,8 +232,8 @@ enum class ValidationRuleChain(
     PERIOD_IS_AF(
         1550,
         Status.MANUAL_PROCESSING,
-        "Hvis perioden er avsluttet-frisk (AF)",
-        "Hvis perioden er avsluttet-frisk (AF)",
+        "Syketilfellet er avsluttet (stanskode AF - friskmelding)",
+        "Syketilfellet er avsluttet (stanskode AF - friskmelding)",
         { (sykmelding, infotrygdForesp) ->
             sykmelding.perioder.any {
                 !infotrygdForesp.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()?.periode?.stans.isNullOrBlank() &&
@@ -248,8 +248,8 @@ enum class ValidationRuleChain(
     MAX_SICK_LEAVE_PAYOUT(
         1551,
         Status.MANUAL_PROCESSING,
-        "Hvis maks sykepenger er utbetalt",
-        "Hvis maks sykepenger er utbetalt",
+        "Syketilfellet er avsluttet fordi den sykmeldte har nådd maksdato",
+        "Syketilfellet er avsluttet fordi den sykmeldte har nådd maksdato",
         { (sykmelding, infotrygdForesp) ->
             sykmelding.perioder.any {
                 !infotrygdForesp.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()?.periode?.stans.isNullOrBlank() &&
@@ -324,8 +324,8 @@ enum class ValidationRuleChain(
     ARBEIDUFORETOM_MANGLER(
         1591,
         Status.MANUAL_PROCESSING,
-        "Infotrygd returnerte ikke arbufoerTOM dato på sykmeldings historikken, vi kan ikke automatisk oppdatere Infotrygd",
-        "Infotrygd returnerte ikke arbufoerTOM dato på sykmeldings historikken, vi kan ikke automatisk oppdatere Infotrygd",
+        "Fant ikke arbufoerTOM-dato for sykmeldingshistorikken i Infotrygd. Vi kan derfor ikke oppdatere Infotrygd automatisk.",
+        "Fant ikke arbufoerTOM-dato for sykmeldingshistorikken i Infotrygd. Vi kan derfor ikke oppdatere Infotrygd automatisk.",
         { (_, infotrygdForesp) ->
             infotrygdForesp.sMhistorikk?.sykmelding != null &&
                 infotrygdForesp.sMhistorikk.status.kodeMelding != "04" &&
