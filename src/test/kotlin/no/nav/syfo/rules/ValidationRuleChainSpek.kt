@@ -689,7 +689,30 @@ object ValidationRuleChainSpek : Spek({
             ValidationRuleChain.NEW_CLEAN_BILL_DATE_BEFORE_PAYOUT(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo false
         }
 
-        it("Should check rule NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE, should trigger rule") {
+        it("NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE slår ut hvis tom + 1 dag er før registrert friskmeldingsdato") {
+            val healthInformation = generateSykmelding(
+                perioder = listOf(
+                    generatePeriode(
+                        tom = LocalDate.of(2018, 1, 1)
+                    )
+                ),
+                prognose = generatePrognose(arbeidsforEtterPeriode = true)
+            )
+
+            val infotrygdForespResponse = deafaultInfotrygdForesp()
+            infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
+                sykmelding.add(
+                    TypeSMinfo().apply {
+                        periode = TypeSMinfo.Periode().apply {
+                            friskmeldtDato = LocalDate.of(2018, 1, 3)
+                        }
+                    }
+                )
+            }
+            ValidationRuleChain.NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo true
+        }
+
+        it("NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE slår ikke ut hvis tom + 1 dag er lik registrert friskmeldingsdato") {
             val healthInformation = generateSykmelding(
                 perioder = listOf(
                     generatePeriode(
@@ -709,15 +732,15 @@ object ValidationRuleChainSpek : Spek({
                     }
                 )
             }
-            ValidationRuleChain.NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo true
+            ValidationRuleChain.NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo false
         }
 
-        it("Should check rule NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE, should NOT trigger rule") {
+        it("NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE slår ikke ut når tom + 1 dag er etter registrert friskmeldingsdato") {
             val healthInformation = generateSykmelding(
                 perioder = listOf(
                     generatePeriode(
-                        fom = LocalDate.of(2018, 1, 2),
-                        tom = LocalDate.now().plusMonths(3).plusDays(1)
+                        fom = LocalDate.of(2017, 12, 20),
+                        tom = LocalDate.of(2018, 1, 1)
                     )
                 ),
                 prognose = generatePrognose(arbeidsforEtterPeriode = true)
@@ -736,7 +759,7 @@ object ValidationRuleChainSpek : Spek({
             ValidationRuleChain.NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE(ruleData(healthInformation, infotrygdForespResponse)) shouldBeEqualTo false
         }
 
-        it("Should check rule NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE, should NOT trigger rule") {
+        it("NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE slår ikke ut hvis friskmelding mangler i Infotrygd") {
             val healthInformation = generateSykmelding(
                 perioder = listOf(
                     generatePeriode(
