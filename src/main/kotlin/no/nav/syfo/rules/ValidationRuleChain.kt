@@ -172,7 +172,7 @@ enum class ValidationRuleChain(
                 sykmelding.prognose?.arbeidsforEtterPeriode ?: false &&
                 sykmelding.perioder.sortedPeriodeTOMDate().lastOrNull() != null &&
                 infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().lastOrNull()?.periode?.friskmeldtDato != null &&
-                sykmelding.perioder.sortedPeriodeTOMDate().last().isBefore(infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.friskmeldtDato)
+                sykmelding.perioder.sortedPeriodeTOMDate().last().plusDays(1).isBefore(infotrygdForesp.sMhistorikk.sykmelding.sortedSMInfos().last().periode.friskmeldtDato)
         }
     ),
 
