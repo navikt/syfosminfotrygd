@@ -28,7 +28,7 @@ data class Environment(
     val infotrygdSmIkkeOKQueue: String = getEnvVar("MQ_INFOTRYGD_SMIKKEOK_QUEUE"),
     val redishost: String = getEnvVar("REDIS_HOST", "syfosminfotrygd-redis.default.svc.nais.local"),
     val tssQueue: String = getEnvVar("MQ_TSS_SAMHANDLER_SERVICE_QUEUE"),
-    val syfosmreglerUrl: String = getEnvVar("SYFOSMREGLER_URL", "http://syfosmregler"),
+    val syfosmreglerUrl: String = getEnvVar("SYFOSMREGLER_URL", "http://syfosmregler.teamsykmelding"),
     val pdlGraphqlPath: String = getEnvVar("PDL_GRAPHQL_PATH"),
     override val truststore: String? = getEnvVar("NAV_TRUSTSTORE_PATH"),
     override val truststorePassword: String? = getEnvVar("NAV_TRUSTSTORE_PASSWORD"),
