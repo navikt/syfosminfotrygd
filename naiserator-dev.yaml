@@ -2,9 +2,9 @@ apiVersion: "nais.io/v1alpha1"
 kind: "Application"
 metadata:
   name: syfosminfotrygd
-  namespace: default
+  namespace: teamsykmelding
   labels:
-    team: teamsykefravr
+    team: teamsykmelding
 spec:
   image: {{ image }}
   replicas:
@@ -22,7 +22,7 @@ spec:
     path: /is_ready
     initialDelay: 30
     periodSeconds: 5
-    timeout: 5
+    timeout: 1
   prometheus:
     enabled: true
     path: /prometheus
@@ -35,10 +35,15 @@ spec:
       memory: 128Mi
   vault:
     enabled: true
+    paths:
+      - kvPath: serviceuser/data/dev/srvsyfosminfotrygd
+        mountPath: /secrets/serviceuser
+      - kvPath: /kv/preprod/fss/syfosminfotrygd/teamsykmelding
+        mountPath: /var/run/secrets/nais.io/vault
   webproxy: true
+  envFrom:
+    - secret: syfosminfotrygd-redis-password
   env:
-    - name: SECURITY_TOKEN_SERVICE_URL
-      value: https://sts-q1.preprod.local/SecurityTokenServiceProvider/
     - name: INFOTRYGD_SPORRING_QUEUE
       value: QA.Q291.IT00_FORESPORSEL_XML
     - name: INFOTRYGD_OPPDATERING_QUEUE
@@ -53,8 +58,6 @@ spec:
       value: Q1_SYFOSMINFOTRYGD
     - name: KAFKA_BOOTSTRAP_SERVERS_URL
       value: SSL://b27apvl00045.preprod.local:8443,SSL://b27apvl00046.preprod.local:8443,SSL://b27apvl00047.preprod.local:8443
-    - name: HELSEPERSONELL_V1_ENDPOINT_URL
-      value: https://pep-gw-q1.oera-q.local:9443/samhandler/helse/helsepersonell/v1
     - name: MQ_INFOTRYGD_SMIKKEOK_QUEUE
       value: Q414.AS07_SMIKKEOK
     - name: NORG2_V1_ENDPOINT_URL

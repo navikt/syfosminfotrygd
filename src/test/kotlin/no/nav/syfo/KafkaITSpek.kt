@@ -27,7 +27,7 @@ object KafkaITSpek : Spek({
         topicNames = listOf(topic)
     )
 
-    val credentials = VaultCredentials("", "", "", "", "", "")
+    val credentials = VaultServiceUser("", "")
 
     val config = Environment(
         mqHostname = "mqhost", mqPort = getRandomPort(), naiscluster = "",
@@ -37,7 +37,7 @@ object KafkaITSpek : Spek({
         sm2013AutomaticHandlingTopic = "topic1", applicationName = "syfosminfotrygd",
         norskHelsenettEndpointURL = "helseAPi", infotrygdSmIkkeOKQueue = "smikkeok", norg2V1EndpointURL = "/enhet/navkontor",
         clientId = "1313", helsenettproxyId = "12313", aadAccessTokenUrl = "acccess", tssQueue = "tsskø", pdlGraphqlPath = "pdl",
-        truststore = "truststore", truststorePassword = "pwd", cluster = "cluster"
+        truststore = "truststore", truststorePassword = "pwd", cluster = "cluster", redisSecret = ""
 
     )
 
