@@ -102,6 +102,7 @@ const val NAV_OPPFOLGING_UTLAND_KONTOR_NR = "0393"
 @KtorExperimentalAPI
 fun main() {
     val env = Environment()
+    val vaultServiceUser = VaultServiceUser()
     val credentials = objectMapper.readValue<VaultCredentials>(Paths.get("/var/run/secrets/nais.io/vault/credentials.json").toFile())
     val applicationState = ApplicationState()
     val applicationEngine = createApplicationEngine(
@@ -114,7 +115,7 @@ fun main() {
 
     DefaultExports.initialize()
 
-    val kafkaBaseConfig = loadBaseConfig(env, credentials)
+    val kafkaBaseConfig = loadBaseConfig(env, vaultServiceUser)
     kafkaBaseConfig["auto.offset.reset"] = "none"
     val consumerProperties = kafkaBaseConfig.toConsumerConfig("${env.applicationName}-consumer", valueDeserializer = StringDeserializer::class)
     val producerPropertiesCreateTask = kafkaBaseConfig.toProducerConfig(env.applicationName, valueSerializer = KafkaAvroSerializer::class)
@@ -153,7 +154,7 @@ fun main() {
         }
     }
 
-    val oidcClient = StsOidcClient(credentials.serviceuserUsername, credentials.serviceuserPassword)
+    val oidcClient = StsOidcClient(vaultServiceUser.serviceuserUsername, vaultServiceUser.serviceuserPassword, env.securityTokenServiceUrl)
 
     val norskHelsenettClient = NorskHelsenettClient(httpClient, env.norskHelsenettEndpointURL, accessTokenClient, env.helsenettproxyId)
 
@@ -208,14 +209,14 @@ fun launchListeners(
 
     createListener(applicationState) {
         connectionFactory(env).createConnection(credentials.mqUsername, credentials.mqPassword).use { connection ->
-            Jedis(env.redishost, 6379).use { jedis ->
+            Jedis(env.redisHost, 6379).use { jedis ->
                 connection.start()
                 val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
                 val infotrygdOppdateringProducer = session.producerForQueue("queue:///${env.infotrygdOppdateringQueue}?targetClient=1")
                 val infotrygdSporringProducer = session.producerForQueue("queue:///${env.infotrygdSporringQueue}?targetClient=1")
                 val tssProducer = session.producerForQueue("queue:///${env.tssQueue}?targetClient=1")
 
-                jedis.auth(credentials.redisSecret)
+                jedis.auth(env.redisSecret)
 
                 applicationState.ready = true
 
