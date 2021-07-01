@@ -72,3 +72,5 @@ spec:
       value: QA.Q1_415.AS10_SAMHANDLER_SERVICE
     - name: PDL_GRAPHQL_PATH
       value: https://pdl-api.nais.preprod.local/graphql
+    - name: HELSENETT_ENDPOINT_URL
+      value: https://syfohelsenettproxy.nais.preprod.local
