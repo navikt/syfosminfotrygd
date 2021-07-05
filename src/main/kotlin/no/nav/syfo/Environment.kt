@@ -48,8 +48,6 @@ data class VaultServiceUser(
 }
 
 data class VaultCredentials(
-    val mqUsername: String,
-    val mqPassword: String,
     val clientsecret: String
 )
 
