@@ -49,7 +49,8 @@ fun receivedSykmelding(
     rulesetVersion = "",
     fellesformat = "",
     tssid = "",
-    merknader = merknader
+    merknader = merknader,
+    partnerreferanse = ""
 )
 
 fun generateSykmelding(

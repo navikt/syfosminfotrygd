@@ -133,8 +133,8 @@ fun main() {
     MQEnvironment.channel = env.mqChannelName
     MQEnvironment.port = env.mqPort
     MQEnvironment.hostname = env.mqHostname
-    MQEnvironment.userID = credentials.mqUsername
-    MQEnvironment.password = credentials.mqPassword
+    MQEnvironment.userID = vaultServiceUser.serviceuserUsername
+    MQEnvironment.password = vaultServiceUser.serviceuserPassword
     val mqQueueManager = MQQueueManager(env.mqGatewayName)
     val openOptions = MQC.MQOO_INQUIRE + MQC.MQOO_BROWSE + MQC.MQOO_FAIL_IF_QUIESCING + MQC.MQOO_INPUT_SHARED
     val smIkkeOkQueue = mqQueueManager.accessQueue(env.infotrygdSmIkkeOKQueue, openOptions)
@@ -175,7 +175,7 @@ fun main() {
         consumerProperties,
         smIkkeOkQueue,
         kafkaproducerreceivedSykmelding,
-        credentials
+        vaultServiceUser
     )
 }
 
@@ -203,12 +203,12 @@ fun launchListeners(
     consumerProperties: Properties,
     smIkkeOkQueue: MQQueue,
     kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
-    credentials: VaultCredentials
+    vaultServiceUser: VaultServiceUser
 ) {
     val kafkaconsumerRecievedSykmelding = KafkaConsumer<String, String>(consumerProperties)
 
     createListener(applicationState) {
-        connectionFactory(env).createConnection(credentials.mqUsername, credentials.mqPassword).use { connection ->
+        connectionFactory(env).createConnection(vaultServiceUser.serviceuserUsername, vaultServiceUser.serviceuserPassword).use { connection ->
             Jedis(env.redisHost, 6379).use { jedis ->
                 connection.start()
                 val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
