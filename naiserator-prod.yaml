@@ -78,3 +78,5 @@ spec:
       value: https://pdl-api.nais.adeo.no/graphql
     - name: HELSENETT_ENDPOINT_URL
       value: https://syfohelsenettproxy.nais.adeo.no
+    - name: PDL_SCOPE
+      value: api://prod-fss.pdl.pdl-api/.default

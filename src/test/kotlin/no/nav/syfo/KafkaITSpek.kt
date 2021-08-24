@@ -37,8 +37,9 @@ object KafkaITSpek : Spek({
         sm2013AutomaticHandlingTopic = "topic1", applicationName = "syfosminfotrygd",
         norskHelsenettEndpointURL = "helseAPi", infotrygdSmIkkeOKQueue = "smikkeok", norg2V1EndpointURL = "/enhet/navkontor",
         clientId = "1313", helsenettproxyId = "12313", aadAccessTokenUrl = "acccess", tssQueue = "tsskø", pdlGraphqlPath = "pdl",
-        truststore = "truststore", truststorePassword = "pwd", cluster = "cluster", redisSecret = ""
-
+        truststore = "truststore", truststorePassword = "pwd", cluster = "cluster", redisSecret = "",
+        aadAccessTokenV2Url = "aadAccessTokenV2Url", clientIdV2 = "clientIdV2", clientSecretV2 = "clientSecretV2",
+        pdlScope = "pdlScope"
     )
 
     fun Properties.overrideForTest(): Properties = apply {
