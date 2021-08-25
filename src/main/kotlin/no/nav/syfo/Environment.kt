@@ -16,7 +16,6 @@ data class Environment(
     val sm2013BehandlingsUtfallToipic: String = getEnvVar("KAFKA_SM2013_BEHANDLING_TOPIC", "privat-syfo-sm2013-behandlingsUtfall"),
     val sm2013infotrygdRetry: String = getEnvVar("KAFKA_SM2013_INFOTRYGD_RETRY_TOPIC", "privat-syfo-sminfotrygd-retry"),
     val sm2013OpppgaveTopic: String = getEnvVar("KAFKA_SM2013_OPPGAVE_TOPIC", "aapen-syfo-oppgave-produserOppgave"),
-    val securityTokenServiceUrl: String = getEnvVar("SECURITY_TOKEN_SERVICE_URL", "http://security-token-service.default/rest/v1/sts/token"),
     val infotrygdSporringQueue: String = getEnvVar("INFOTRYGD_SPORRING_QUEUE"),
     val infotrygdOppdateringQueue: String = getEnvVar("INFOTRYGD_OPPDATERING_QUEUE"),
     val norg2V1EndpointURL: String = getEnvVar("NORG2_V1_ENDPOINT_URL"),

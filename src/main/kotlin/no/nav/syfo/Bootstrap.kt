@@ -172,8 +172,6 @@ fun main() {
     val httpClient = HttpClient(Apache, config)
     val httpClientWithProxy = HttpClient(Apache, proxyConfig)
 
-    val oidcClient = StsOidcClient(vaultServiceUser.serviceuserUsername, vaultServiceUser.serviceuserPassword, env.securityTokenServiceUrl)
-
     val norskHelsenettClient = NorskHelsenettClient(httpClient, env.norskHelsenettEndpointURL, accessTokenClient, env.helsenettproxyId)
 
     val norg2Client = Norg2Client(httpClient, env.norg2V1EndpointURL)
