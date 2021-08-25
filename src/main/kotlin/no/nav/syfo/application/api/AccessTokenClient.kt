@@ -1,15 +1,7 @@
 package no.nav.syfo.application.api
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.ktor.client.HttpClient
-import io.ktor.client.HttpClientConfig
-import io.ktor.client.engine.apache.Apache
-import io.ktor.client.engine.apache.ApacheEngineConfig
-import io.ktor.client.features.json.JacksonSerializer
-import io.ktor.client.features.json.JsonFeature
 import io.ktor.client.request.accept
 import io.ktor.client.request.forms.FormDataContent
 import io.ktor.client.request.post
@@ -18,13 +10,12 @@ import io.ktor.http.HttpMethod
 import io.ktor.http.Parameters
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import org.apache.http.impl.conn.SystemDefaultRoutePlanner
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.net.ProxySelector
 import java.time.Instant
 
 class AccessTokenClient(
+    private val httpClientWithProxy: HttpClient,
     private val aadAccessTokenUrl: String,
     private val clientId: String,
     private val clientSecret: String
@@ -33,25 +24,6 @@ class AccessTokenClient(
     private val mutex = Mutex()
     @Volatile
     private var tokenMap = HashMap<String, AadAccessToken>()
-
-    private val config: HttpClientConfig<ApacheEngineConfig>.() -> Unit = {
-        install(JsonFeature) {
-            serializer = JacksonSerializer {
-                registerKotlinModule()
-                registerModule(JavaTimeModule())
-                configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-            }
-        }
-    }
-    private val proxyConfig: HttpClientConfig<ApacheEngineConfig>.() -> Unit = {
-        config()
-        engine {
-            customizeClient {
-                setRoutePlanner(SystemDefaultRoutePlanner(ProxySelector.getDefault()))
-            }
-        }
-    }
-    private val httpClientWithProxy = HttpClient(Apache, proxyConfig)
 
     suspend fun hentAccessToken(resource: String): String {
         val omToMinutter = Instant.now().plusSeconds(120L)

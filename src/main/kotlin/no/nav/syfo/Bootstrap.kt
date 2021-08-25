@@ -39,7 +39,6 @@ import no.nav.syfo.application.createApplicationEngine
 import no.nav.syfo.client.AccessTokenClientV2
 import no.nav.syfo.client.Norg2Client
 import no.nav.syfo.client.NorskHelsenettClient
-import no.nav.syfo.client.StsOidcClient
 import no.nav.syfo.client.SyfosmreglerClient
 import no.nav.syfo.kafka.loadBaseConfig
 import no.nav.syfo.kafka.toConsumerConfig
@@ -144,8 +143,6 @@ fun main() {
     val openOptions = MQC.MQOO_INQUIRE + MQC.MQOO_BROWSE + MQC.MQOO_FAIL_IF_QUIESCING + MQC.MQOO_INPUT_SHARED
     val smIkkeOkQueue = mqQueueManager.accessQueue(env.infotrygdSmIkkeOKQueue, openOptions)
 
-    val accessTokenClient = AccessTokenClient(env.aadAccessTokenUrl, env.clientId, credentials.clientsecret)
-
     val config: HttpClientConfig<ApacheEngineConfig>.() -> Unit = {
         install(JsonFeature) {
             serializer = JacksonSerializer {
@@ -171,6 +168,8 @@ fun main() {
 
     val httpClient = HttpClient(Apache, config)
     val httpClientWithProxy = HttpClient(Apache, proxyConfig)
+
+    val accessTokenClient = AccessTokenClient(httpClientWithProxy, env.aadAccessTokenUrl, env.clientId, credentials.clientsecret)
 
     val norskHelsenettClient = NorskHelsenettClient(httpClient, env.norskHelsenettEndpointURL, accessTokenClient, env.helsenettproxyId)
 
