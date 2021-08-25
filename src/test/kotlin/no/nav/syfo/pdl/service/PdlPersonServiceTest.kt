@@ -7,8 +7,6 @@ import io.mockk.mockk
 import io.mockk.mockkClass
 import kotlinx.coroutines.runBlocking
 import no.nav.syfo.client.AccessTokenClientV2
-import no.nav.syfo.client.OidcToken
-import no.nav.syfo.client.StsOidcClient
 import no.nav.syfo.pdl.client.PdlClient
 import no.nav.syfo.pdl.client.model.Adressebeskyttelse
 import no.nav.syfo.pdl.client.model.GetPersonResponse
