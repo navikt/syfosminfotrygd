@@ -78,3 +78,5 @@ spec:
       value: https://pdl-api.nais.preprod.local/graphql
     - name: HELSENETT_ENDPOINT_URL
       value: https://syfohelsenettproxy.nais.preprod.local
+    - name: PDL_SCOPE
+      value: api://dev-fss.pdl.pdl-api/.default
