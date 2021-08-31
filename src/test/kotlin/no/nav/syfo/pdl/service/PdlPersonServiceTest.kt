@@ -4,9 +4,9 @@ import io.ktor.util.KtorExperimentalAPI
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
 import io.mockk.mockk
+import io.mockk.mockkClass
 import kotlinx.coroutines.runBlocking
-import no.nav.syfo.client.OidcToken
-import no.nav.syfo.client.StsOidcClient
+import no.nav.syfo.client.AccessTokenClientV2
 import no.nav.syfo.pdl.client.PdlClient
 import no.nav.syfo.pdl.client.model.Adressebeskyttelse
 import no.nav.syfo.pdl.client.model.GetPersonResponse
@@ -22,14 +22,13 @@ import kotlin.test.assertFailsWith
 @KtorExperimentalAPI
 object PdlPersonServiceTest : Spek({
     val pdlClient = mockk<PdlClient>()
-    val stsOidcClient = mockk<StsOidcClient>()
-    val pdlPersonService = PdlPersonService(pdlClient, stsOidcClient)
+    val accessTokenClient = mockkClass(AccessTokenClientV2::class)
+    val pdlPersonService = PdlPersonService(pdlClient, accessTokenClient, "pdlscope")
 
     val loggingMeta = LoggingMeta("mottakid", "orgnr", "msgid", "sykmeldingid")
 
     beforeEachTest {
         clearAllMocks()
-        coEvery { stsOidcClient.oidcToken() } returns OidcToken("Token", "JWT", 1L)
     }
 
     describe("PdlPersonService") {
@@ -41,6 +40,8 @@ object PdlPersonServiceTest : Spek({
                 ),
                 errors = null
             )
+
+            coEvery { accessTokenClient.getAccessTokenV2(any()) } returns "token"
 
             runBlocking {
                 val person = pdlPersonService.getPerson("fnr", loggingMeta)
@@ -58,6 +59,8 @@ object PdlPersonServiceTest : Spek({
                 errors = null
             )
 
+            coEvery { accessTokenClient.getAccessTokenV2(any()) } returns "token"
+
             assertFailsWith<RuntimeException> {
                 runBlocking {
                     pdlPersonService.getPerson("fnr", loggingMeta)
@@ -72,6 +75,8 @@ object PdlPersonServiceTest : Spek({
                 ),
                 errors = null
             )
+
+            coEvery { accessTokenClient.getAccessTokenV2(any()) } returns "token"
 
             runBlocking {
                 val person = pdlPersonService.getPerson("fnr", loggingMeta)

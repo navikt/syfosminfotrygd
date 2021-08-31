@@ -12,7 +12,9 @@ import com.ibm.mq.MQQueue
 import com.ibm.mq.MQQueueManager
 import io.confluent.kafka.serializers.KafkaAvroSerializer
 import io.ktor.client.HttpClient
+import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.apache.Apache
+import io.ktor.client.engine.apache.ApacheEngineConfig
 import io.ktor.client.features.HttpTimeout
 import io.ktor.client.features.json.JacksonSerializer
 import io.ktor.client.features.json.JsonFeature
@@ -34,9 +36,9 @@ import no.nav.syfo.application.ApplicationServer
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.application.api.AccessTokenClient
 import no.nav.syfo.application.createApplicationEngine
+import no.nav.syfo.client.AccessTokenClientV2
 import no.nav.syfo.client.Norg2Client
 import no.nav.syfo.client.NorskHelsenettClient
-import no.nav.syfo.client.StsOidcClient
 import no.nav.syfo.client.SyfosmreglerClient
 import no.nav.syfo.kafka.loadBaseConfig
 import no.nav.syfo.kafka.toConsumerConfig
@@ -68,6 +70,7 @@ import no.nav.syfo.util.LoggingMeta
 import no.nav.syfo.util.TrackableException
 import no.nav.syfo.util.fellesformatUnmarshaller
 import no.nav.syfo.util.wrapExceptions
+import org.apache.http.impl.conn.SystemDefaultRoutePlanner
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
@@ -77,6 +80,7 @@ import org.slf4j.LoggerFactory
 import redis.clients.jedis.Jedis
 import java.io.StringReader
 import java.io.StringWriter
+import java.net.ProxySelector
 import java.nio.file.Paths
 import java.time.Duration
 import java.time.LocalDate
@@ -139,8 +143,7 @@ fun main() {
     val openOptions = MQC.MQOO_INQUIRE + MQC.MQOO_BROWSE + MQC.MQOO_FAIL_IF_QUIESCING + MQC.MQOO_INPUT_SHARED
     val smIkkeOkQueue = mqQueueManager.accessQueue(env.infotrygdSmIkkeOKQueue, openOptions)
 
-    val accessTokenClient = AccessTokenClient(env.aadAccessTokenUrl, env.clientId, credentials.clientsecret)
-    val httpClient = HttpClient(Apache) {
+    val config: HttpClientConfig<ApacheEngineConfig>.() -> Unit = {
         install(JsonFeature) {
             serializer = JacksonSerializer {
                 registerKotlinModule()
@@ -154,12 +157,26 @@ fun main() {
         }
     }
 
-    val oidcClient = StsOidcClient(vaultServiceUser.serviceuserUsername, vaultServiceUser.serviceuserPassword, env.securityTokenServiceUrl)
+    val proxyConfig: HttpClientConfig<ApacheEngineConfig>.() -> Unit = {
+        config()
+        engine {
+            customizeClient {
+                setRoutePlanner(SystemDefaultRoutePlanner(ProxySelector.getDefault()))
+            }
+        }
+    }
+
+    val httpClient = HttpClient(Apache, config)
+    val httpClientWithProxy = HttpClient(Apache, proxyConfig)
+
+    val accessTokenClient = AccessTokenClient(httpClientWithProxy, env.aadAccessTokenUrl, env.clientId, credentials.clientsecret)
 
     val norskHelsenettClient = NorskHelsenettClient(httpClient, env.norskHelsenettEndpointURL, accessTokenClient, env.helsenettproxyId)
 
     val norg2Client = Norg2Client(httpClient, env.norg2V1EndpointURL)
-    val pdlPersonService = PdlFactory.getPdlService(env, oidcClient, httpClient)
+
+    val accessTokenClientV2 = AccessTokenClientV2(env.aadAccessTokenV2Url, env.clientIdV2, env.clientSecretV2, httpClientWithProxy)
+    val pdlPersonService = PdlFactory.getPdlService(env, httpClient, accessTokenClientV2, env.pdlScope)
     val finnNAVKontorService = FinnNAVKontorService(pdlPersonService, norg2Client)
 
     val syfosmreglerClient = SyfosmreglerClient(env.syfosmreglerUrl, httpClient)

@@ -1,4 +1,4 @@
-package no.nav.syfo.application.api
+package no.nav.syfo.client
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import io.ktor.client.HttpClient
@@ -10,44 +10,49 @@ import io.ktor.http.HttpMethod
 import io.ktor.http.Parameters
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import no.nav.syfo.log
 import java.time.Instant
 
-class AccessTokenClient(
-    private val httpClientWithProxy: HttpClient,
+class AccessTokenClientV2(
     private val aadAccessTokenUrl: String,
     private val clientId: String,
-    private val clientSecret: String
+    private val clientSecret: String,
+    private val httpClient: HttpClient
 ) {
-    private val log: Logger = LoggerFactory.getLogger("azureadtokenclient")
     private val mutex = Mutex()
-    @Volatile
-    private var tokenMap = HashMap<String, AadAccessToken>()
 
-    suspend fun hentAccessToken(resource: String): String {
+    @Volatile
+    private var tokenMap = HashMap<String, AadAccessTokenMedExpiry>()
+
+    suspend fun getAccessTokenV2(resource: String): String {
+        log.debug("Forsøker å hente nytt token fra Azure AD")
         val omToMinutter = Instant.now().plusSeconds(120L)
         return mutex.withLock {
             (
                 tokenMap[resource]
-                    ?.takeUnless { it.expires_on.isBefore(omToMinutter) }
+                    ?.takeUnless { it.expiresOn.isBefore(omToMinutter) }
                     ?: run {
-                        log.info("Henter nytt token fra Azure AD")
-                        val response: AadAccessToken = httpClientWithProxy.post(aadAccessTokenUrl) {
+                        log.debug("Henter nytt token fra Azure AD")
+                        val response: AadAccessTokenV2 = httpClient.post(aadAccessTokenUrl) {
                             accept(ContentType.Application.Json)
                             method = HttpMethod.Post
                             body = FormDataContent(
                                 Parameters.build {
                                     append("client_id", clientId)
-                                    append("resource", resource)
+                                    append("scope", resource)
                                     append("grant_type", "client_credentials")
                                     append("client_secret", clientSecret)
                                 }
                             )
                         }
-                        tokenMap[resource] = response
+                        val tokenMedExpiry = AadAccessTokenMedExpiry(
+                            access_token = response.access_token,
+                            expires_in = response.expires_in,
+                            expiresOn = Instant.now().plusSeconds(response.expires_in.toLong())
+                        )
+                        tokenMap[resource] = tokenMedExpiry
                         log.debug("Har hentet accesstoken")
-                        return@run response
+                        return@run tokenMedExpiry
                     }
                 ).access_token
         }
@@ -55,7 +60,13 @@ class AccessTokenClient(
 }
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class AadAccessToken(
+data class AadAccessTokenV2(
     val access_token: String,
-    val expires_on: Instant
+    val expires_in: Int
+)
+
+data class AadAccessTokenMedExpiry(
+    val access_token: String,
+    val expires_in: Int,
+    val expiresOn: Instant
 )
