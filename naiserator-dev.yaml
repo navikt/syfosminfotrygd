@@ -66,12 +66,6 @@ spec:
       value: Q414.AS07_SMIKKEOK
     - name: NORG2_V1_ENDPOINT_URL
       value: https://norg2.dev.adeo.no/norg2/api/v1
-    - name: AADACCESSTOKEN_URL
-      value: https://login.microsoftonline.com/navq.onmicrosoft.com/oauth2/token
-    - name: CLIENT_ID
-      value: b5f266e7-cf26-4688-abc3-f44d78f5702c
-    - name: HELSENETTPROXY_ID
-      value: c18eba24-f676-47db-9a97-3c66e9304aee
     - name: MQ_TSS_SAMHANDLER_SERVICE_QUEUE
       value: QA.Q1_415.AS10_SAMHANDLER_SERVICE
     - name: PDL_GRAPHQL_PATH

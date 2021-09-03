@@ -24,9 +24,6 @@ data class Environment(
     override val mqGatewayName: String = getEnvVar("MQ_GATEWAY_NAME"),
     override val mqChannelName: String = getEnvVar("MQ_CHANNEL_NAME"),
     val norskHelsenettEndpointURL: String = getEnvVar("HELSENETT_ENDPOINT_URL"),
-    val clientId: String = getEnvVar("CLIENT_ID"),
-    val helsenettproxyId: String = getEnvVar("HELSENETTPROXY_ID"),
-    val aadAccessTokenUrl: String = getEnvVar("AADACCESSTOKEN_URL"),
     val infotrygdSmIkkeOKQueue: String = getEnvVar("MQ_INFOTRYGD_SMIKKEOK_QUEUE"),
     val redisHost: String = getEnvVar("REDIS_HOST", "syfosminfotrygd-redis.teamsykmelding.svc.nais.local"),
     val redisSecret: String = getEnvVar("REDIS_PASSWORD"),
@@ -39,7 +36,8 @@ data class Environment(
     val pdlScope: String = getEnvVar("PDL_SCOPE"),
     override val truststore: String? = getEnvVar("NAV_TRUSTSTORE_PATH"),
     override val truststorePassword: String? = getEnvVar("NAV_TRUSTSTORE_PASSWORD"),
-    override val cluster: String = getEnvVar("NAIS_CLUSTER_NAME")
+    override val cluster: String = getEnvVar("NAIS_CLUSTER_NAME"),
+    val helsenettproxyScope: String = getEnvVar("HELSENETT_SCOPE")
 ) : MqConfig, KafkaConfig
 
 data class VaultServiceUser(
@@ -52,8 +50,7 @@ data class VaultServiceUser(
 
 data class VaultCredentials(
     val mqUsername: String,
-    val mqPassword: String,
-    val clientsecret: String
+    val mqPassword: String
 )
 
 fun getEnvVar(varName: String, defaultValue: String? = null) =
