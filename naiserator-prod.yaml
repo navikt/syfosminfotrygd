@@ -74,3 +74,5 @@ spec:
       value: https://syfohelsenettproxy.nais.adeo.no
     - name: PDL_SCOPE
       value: api://prod-fss.pdl.pdl-api/.default
+    - name: HELSENETT_SCOPE
+      value: api://prod-fss.teamsykmelding.syfohelsenettproxy/.default

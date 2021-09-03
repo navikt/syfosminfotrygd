@@ -74,3 +74,5 @@ spec:
       value: https://syfohelsenettproxy.nais.preprod.local
     - name: PDL_SCOPE
       value: api://dev-fss.pdl.pdl-api/.default
+    - name: HELSENETT_SCOPE
+      value: api://dev-fss.teamsykmelding.syfohelsenettproxy/.default
