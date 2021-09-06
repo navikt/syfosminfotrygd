@@ -8,7 +8,6 @@ import io.ktor.client.request.headers
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode.Companion.NotFound
 import io.ktor.util.KtorExperimentalAPI
-import no.nav.syfo.application.api.AccessTokenClient
 import no.nav.syfo.helpers.retry
 import no.nav.syfo.log
 import java.io.IOException
@@ -17,7 +16,7 @@ import java.io.IOException
 class NorskHelsenettClient(
     private val httpClient: HttpClient,
     private val endpointUrl: String,
-    private val accessTokenClient: AccessTokenClient,
+    private val accessTokenClient: AccessTokenClientV2,
     private val resourceId: String
 ) {
     suspend fun finnBehandler(behandlerFnr: String, msgId: String): Behandler? = retry(
@@ -26,9 +25,9 @@ class NorskHelsenettClient(
     ) {
         log.info("Henter behandler fra syfohelsenettproxy for msgId {}", msgId)
         try {
-            return@retry httpClient.get<Behandler>("$endpointUrl/api/behandler") {
+            return@retry httpClient.get<Behandler>("$endpointUrl/api/v2/behandler") {
                 accept(ContentType.Application.Json)
-                val accessToken = accessTokenClient.hentAccessToken(resourceId)
+                val accessToken = accessTokenClient.getAccessTokenV2(resourceId)
                 headers {
                     append("Authorization", "Bearer $accessToken")
                     append("Nav-CallId", msgId)

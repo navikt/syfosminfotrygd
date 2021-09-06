@@ -34,7 +34,6 @@ import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.helse.tssSamhandlerData.XMLTssSamhandlerData
 import no.nav.syfo.application.ApplicationServer
 import no.nav.syfo.application.ApplicationState
-import no.nav.syfo.application.api.AccessTokenClient
 import no.nav.syfo.application.createApplicationEngine
 import no.nav.syfo.client.AccessTokenClientV2
 import no.nav.syfo.client.Norg2Client
@@ -169,13 +168,10 @@ fun main() {
     val httpClient = HttpClient(Apache, config)
     val httpClientWithProxy = HttpClient(Apache, proxyConfig)
 
-    val accessTokenClient = AccessTokenClient(httpClientWithProxy, env.aadAccessTokenUrl, env.clientId, credentials.clientsecret)
-
-    val norskHelsenettClient = NorskHelsenettClient(httpClient, env.norskHelsenettEndpointURL, accessTokenClient, env.helsenettproxyId)
-
     val norg2Client = Norg2Client(httpClient, env.norg2V1EndpointURL)
 
     val accessTokenClientV2 = AccessTokenClientV2(env.aadAccessTokenV2Url, env.clientIdV2, env.clientSecretV2, httpClientWithProxy)
+    val norskHelsenettClient = NorskHelsenettClient(httpClient, env.norskHelsenettEndpointURL, accessTokenClientV2, env.helsenettproxyScope)
     val pdlPersonService = PdlFactory.getPdlService(env, httpClient, accessTokenClientV2, env.pdlScope)
     val finnNAVKontorService = FinnNAVKontorService(pdlPersonService, norg2Client)
 
