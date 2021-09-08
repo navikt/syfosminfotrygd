@@ -323,7 +323,12 @@ private suspend fun runKafkaConsumer(
                 }
                 else -> {
                     log.info("Skal ikke oppdatere infotrygd ved merknad ${receivedSykmelding.merknader?.joinToString { it.type }} {}", fields(loggingMeta))
-                    sendRuleCheckValidationResult(receivedSykmelding, kafkaproducervalidationResult, ValidationResult(Status.OK, emptyList()), sm2013BehandlingsUtfallTopic, loggingMeta)
+                    val validationResult = if (receivedSykmelding.merknader?.any { it.type == "UNDER_BEHANDLING" } == true) {
+                        ValidationResult(Status.OK, listOf(RuleInfo("UNDER_BEHANDLING", "Sykmeldingen er til manuell behandling", "Sykmeldingen er til manuell behandling", Status.OK)))
+                    } else {
+                        ValidationResult(Status.OK, emptyList())
+                    }
+                    sendRuleCheckValidationResult(receivedSykmelding, kafkaproducervalidationResult, validationResult, sm2013BehandlingsUtfallTopic, loggingMeta)
                 }
             }
         }
@@ -335,7 +340,8 @@ fun skalOppdatereInfotrygd(receivedSykmelding: ReceivedSykmelding): Boolean {
     return receivedSykmelding.merknader?.none {
         it.type == "UGYLDIG_TILBAKEDATERING" ||
             it.type == "TILBAKEDATERING_KREVER_FLERE_OPPLYSNINGER" ||
-            it.type == "TILBAKEDATERT_PAPIRSYKMELDING"
+            it.type == "TILBAKEDATERT_PAPIRSYKMELDING" ||
+            it.type == "UNDER_BEHANDLING"
     } ?: true
 }
 
