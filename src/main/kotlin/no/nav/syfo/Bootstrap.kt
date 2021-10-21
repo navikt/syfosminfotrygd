@@ -322,7 +322,7 @@ private suspend fun runKafkaConsumer(
                     )
                 }
                 else -> {
-                    log.info("Skal ikke oppdatere infotrygd ved merknad ${receivedSykmelding.merknader?.joinToString { it.type }} {}", fields(loggingMeta))
+                    log.info("Oppdaterer ikke infotrygd for sykmelding med merknad eller reisetilskudd", fields(loggingMeta))
                     val validationResult = if (receivedSykmelding.merknader?.any { it.type == "UNDER_BEHANDLING" } == true) {
                         ValidationResult(Status.OK, listOf(RuleInfo("UNDER_BEHANDLING", "Sykmeldingen er til manuell behandling", "Sykmeldingen er til manuell behandling", Status.OK)))
                     } else {
@@ -337,12 +337,20 @@ private suspend fun runKafkaConsumer(
 }
 
 fun skalOppdatereInfotrygd(receivedSykmelding: ReceivedSykmelding): Boolean {
-    return receivedSykmelding.merknader?.none {
+    // Vi skal ikke oppdatere Infotrygd hvis sykmeldingen inneholder en av de angitte merknadene
+    val merknad = receivedSykmelding.merknader?.none {
         it.type == "UGYLDIG_TILBAKEDATERING" ||
             it.type == "TILBAKEDATERING_KREVER_FLERE_OPPLYSNINGER" ||
             it.type == "TILBAKEDATERT_PAPIRSYKMELDING" ||
             it.type == "UNDER_BEHANDLING"
     } ?: true
+
+    // Vi skal ikke oppdatere infotrygd hvis sykmeldingen inneholder reisetilskudd
+    val reisetilskudd = receivedSykmelding.sykmelding.perioder.none {
+        it.reisetilskudd || (it.gradert?.reisetilskudd == true)
+    }
+
+    return merknad && reisetilskudd
 }
 
 fun getCurrentTime(): OffsetTime {
