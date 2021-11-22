@@ -1,11 +1,11 @@
 package no.nav.syfo.services
 
 import io.ktor.util.KtorExperimentalAPI
-import io.mockk.clearAllMocks
+import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
-import no.nav.syfo.client.SyfosmreglerClient
+import no.nav.syfo.client.ManuellClient
 import no.nav.syfo.model.RuleInfo
 import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
@@ -21,54 +21,42 @@ import java.util.UUID
 @KtorExperimentalAPI
 object OpprettOppgaveTest : Spek({
     val loggingMeta = LoggingMeta("", "", "", "")
-    val syfosmreglerClient = mockk<SyfosmreglerClient>()
+    val manuellClient = mockk<ManuellClient>()
 
     beforeEachTest {
-        clearAllMocks()
-        coEvery { syfosmreglerClient.executeRuleValidation(any(), any()) } returns ValidationResult(Status.OK, emptyList())
+        clearMocks(manuellClient)
     }
 
     describe("Oppretter manuelle oppgaver med riktige parametre") {
-        it("Behandlingstype er ae0256 hvis sykmelding treffer manuell-regler") {
+        it("Behandlingstype er ae0256 hvis sykmelding har blitt behandlet av manuell") {
             val validationResults = ValidationResult(Status.MANUAL_PROCESSING, listOf(RuleInfo("TILBAKEDATERT_MER_ENN_8_DAGER_FORSTE_SYKMELDING_MED_BEGRUNNELSE", "message for sender", "message for user", Status.MANUAL_PROCESSING)))
-            coEvery { syfosmreglerClient.executeRuleValidation(any(), any()) } returns validationResults
+            coEvery { manuellClient.behandletAvManuell(any(), any()) } returns true
             val receivedSykmelding = receivedSykmelding(UUID.randomUUID().toString())
 
             runBlocking {
-                val oppgave = opprettProduceTask(syfosmreglerClient, receivedSykmelding, validationResults, loggingMeta)
+                val oppgave = opprettProduceTask(manuellClient, receivedSykmelding, validationResults, loggingMeta)
 
                 oppgave.behandlingstype shouldBeEqualTo "ae0256"
             }
         }
-        it("Behandlingstype er ae0256 hvis sykmelding treffer manuell-regler (forlengelse)") {
-            val validationResults = ValidationResult(Status.MANUAL_PROCESSING, listOf(RuleInfo("TILBAKEDATERT_MED_BEGRUNNELSE_FORLENGELSE", "message for sender", "message for user", Status.MANUAL_PROCESSING)))
-            coEvery { syfosmreglerClient.executeRuleValidation(any(), any()) } returns validationResults
-            val receivedSykmelding = receivedSykmelding(UUID.randomUUID().toString())
-
-            runBlocking {
-                val oppgave = opprettProduceTask(syfosmreglerClient, receivedSykmelding, validationResults, loggingMeta)
-
-                oppgave.behandlingstype shouldBeEqualTo "ae0256"
-            }
-        }
-        it("fristFerdigstillelse er i dag hvis sykmelding treffer manuell-regler") {
+        it("fristFerdigstillelse er i dag hvis sykmelding har blitt behandlet av manuell") {
             val validationResults = ValidationResult(Status.MANUAL_PROCESSING, listOf(RuleInfo("TILBAKEDATERT_MER_ENN_8_DAGER_FORSTE_SYKMELDING_MED_BEGRUNNELSE", "message for sender", "message for user", Status.MANUAL_PROCESSING)))
-            coEvery { syfosmreglerClient.executeRuleValidation(any(), any()) } returns validationResults
+            coEvery { manuellClient.behandletAvManuell(any(), any()) } returns true
             val receivedSykmelding = receivedSykmelding(UUID.randomUUID().toString())
 
             runBlocking {
-                val oppgave = opprettProduceTask(syfosmreglerClient, receivedSykmelding, validationResults, loggingMeta)
+                val oppgave = opprettProduceTask(manuellClient, receivedSykmelding, validationResults, loggingMeta)
 
                 oppgave.fristFerdigstillelse shouldBeEqualTo DateTimeFormatter.ISO_DATE.format(LocalDate.now())
             }
         }
-        it("Behandlingstype er ANY hvis sykmelding ikke treffer manuell-regler") {
+        it("Behandlingstype er ANY hvis sykmelding ikke har blitt behandlet av manuell") {
             val validationResults = ValidationResult(Status.MANUAL_PROCESSING, listOf(RuleInfo("ANNEN_REGEL", "message for sender", "message for user", Status.MANUAL_PROCESSING)))
-            coEvery { syfosmreglerClient.executeRuleValidation(any(), any()) } returns validationResults
+            coEvery { manuellClient.behandletAvManuell(any(), any()) } returns false
             val receivedSykmelding = receivedSykmelding(UUID.randomUUID().toString())
 
             runBlocking {
-                val oppgave = opprettProduceTask(syfosmreglerClient, receivedSykmelding, validationResults, loggingMeta)
+                val oppgave = opprettProduceTask(manuellClient, receivedSykmelding, validationResults, loggingMeta)
 
                 oppgave.behandlingstype shouldBeEqualTo "ANY"
             }

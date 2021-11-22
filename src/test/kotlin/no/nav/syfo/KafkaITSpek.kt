@@ -38,7 +38,7 @@ object KafkaITSpek : Spek({
         helsenettproxyScope = "helsenettproxy", tssQueue = "tsskø", pdlGraphqlPath = "pdl",
         truststore = "truststore", truststorePassword = "pwd", cluster = "cluster", redisSecret = "",
         aadAccessTokenV2Url = "aadAccessTokenV2Url", clientIdV2 = "clientIdV2", clientSecretV2 = "clientSecretV2",
-        pdlScope = "pdlScope"
+        pdlScope = "pdlScope", manuellUrl = "manuellurl", manuellScope = "scope"
     )
 
     fun Properties.overrideForTest(): Properties = apply {

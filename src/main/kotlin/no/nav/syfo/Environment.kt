@@ -28,7 +28,6 @@ data class Environment(
     val redisHost: String = getEnvVar("REDIS_HOST", "syfosminfotrygd-redis.teamsykmelding.svc.nais.local"),
     val redisSecret: String = getEnvVar("REDIS_PASSWORD"),
     val tssQueue: String = getEnvVar("MQ_TSS_SAMHANDLER_SERVICE_QUEUE"),
-    val syfosmreglerUrl: String = getEnvVar("SYFOSMREGLER_URL", "http://syfosmregler"),
     val pdlGraphqlPath: String = getEnvVar("PDL_GRAPHQL_PATH"),
     val aadAccessTokenV2Url: String = getEnvVar("AZURE_OPENID_CONFIG_TOKEN_ENDPOINT"),
     val clientIdV2: String = getEnvVar("AZURE_APP_CLIENT_ID"),
@@ -37,7 +36,9 @@ data class Environment(
     override val truststore: String? = getEnvVar("NAV_TRUSTSTORE_PATH"),
     override val truststorePassword: String? = getEnvVar("NAV_TRUSTSTORE_PASSWORD"),
     override val cluster: String = getEnvVar("NAIS_CLUSTER_NAME"),
-    val helsenettproxyScope: String = getEnvVar("HELSENETT_SCOPE")
+    val helsenettproxyScope: String = getEnvVar("HELSENETT_SCOPE"),
+    val manuellUrl: String = "http://syfosmmanuell-backend",
+    val manuellScope: String = getEnvVar("MANUELL_SCOPE")
 ) : MqConfig, KafkaConfig
 
 data class VaultServiceUser(

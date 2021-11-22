@@ -15,8 +15,8 @@ import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.client.Behandler
 import no.nav.syfo.client.Godkjenning
 import no.nav.syfo.client.Kode
+import no.nav.syfo.client.ManuellClient
 import no.nav.syfo.client.NorskHelsenettClient
-import no.nav.syfo.client.SyfosmreglerClient
 import no.nav.syfo.daysBetween
 import no.nav.syfo.get
 import no.nav.syfo.log
@@ -57,7 +57,7 @@ class UpdateInfotrygdService {
 
     suspend fun updateInfotrygd(
         receivedSykmelding: ReceivedSykmelding,
-        syfosmreglerClient: SyfosmreglerClient,
+        manuellClient: ManuellClient,
         norskHelsenettClient: NorskHelsenettClient,
         validationResult: ValidationResult,
         infotrygdOppdateringProducer: MessageProducer,
@@ -86,7 +86,7 @@ class UpdateInfotrygdService {
             when (validationResult.status) {
                 in arrayOf(Status.MANUAL_PROCESSING) ->
                     produceManualTaskAndSendValidationResults(
-                        kafkaproducerCreateTask, syfosmreglerClient, receivedSykmelding, validationResult,
+                        kafkaproducerCreateTask, manuellClient, receivedSykmelding, validationResult,
                         loggingMeta, oppgaveTopic, sm2013BehandlingsUtfallToipic,
                         kafkaproducervalidationResult,
                         InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
@@ -129,7 +129,7 @@ class UpdateInfotrygdService {
             RULE_HIT_STATUS_COUNTER.labels(validationResultBehandler.status.name).inc()
             log.warn("Behandler er ikke registert i HPR")
             produceManualTaskAndSendValidationResults(
-                kafkaproducerCreateTask, syfosmreglerClient, receivedSykmelding, validationResultBehandler,
+                kafkaproducerCreateTask, manuellClient, receivedSykmelding, validationResultBehandler,
                 loggingMeta, oppgaveTopic, sm2013BehandlingsUtfallToipic, kafkaproducervalidationResult,
                 InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
                 HelsepersonellKategori.LEGE.verdi, jedis, applicationState
@@ -499,7 +499,7 @@ class UpdateInfotrygdService {
 
     private suspend fun produceManualTaskAndSendValidationResults(
         kafkaProducer: KafkaProducer<String, ProduceTask>,
-        syfosmreglerClient: SyfosmreglerClient,
+        manuellClient: ManuellClient,
         receivedSykmelding: ReceivedSykmelding,
         validationResult: ValidationResult,
         loggingMeta: LoggingMeta,
@@ -555,7 +555,7 @@ class UpdateInfotrygdService {
                     log.warn("Trenger ikke å opprett manuell oppgave for {}", fields(loggingMeta))
                 }
                 else -> {
-                    opprettOppgave(kafkaProducer, syfosmreglerClient, receivedSykmelding, validationResult, loggingMeta, oppgaveTopic)
+                    opprettOppgave(kafkaProducer, manuellClient, receivedSykmelding, validationResult, loggingMeta, oppgaveTopic)
                     oppdaterRedis(sha256String, sha256String, jedis, TimeUnit.DAYS.toSeconds(60).toInt(), loggingMeta)
                 }
             }
@@ -567,7 +567,7 @@ class UpdateInfotrygdService {
 
     suspend fun opprettOppgave(
         kafkaProducer: KafkaProducer<String, ProduceTask>,
-        syfosmreglerClient: SyfosmreglerClient,
+        manuellClient: ManuellClient,
         receivedSykmelding: ReceivedSykmelding,
         validationResult: ValidationResult,
         loggingMeta: LoggingMeta,
@@ -577,7 +577,7 @@ class UpdateInfotrygdService {
             kafkaProducer.send(
                 ProducerRecord(
                     oppgaveTopic, receivedSykmelding.sykmelding.id,
-                    opprettProduceTask(syfosmreglerClient, receivedSykmelding, validationResult, loggingMeta)
+                    opprettProduceTask(manuellClient, receivedSykmelding, validationResult, loggingMeta)
                 )
             ).get()
             MANUELLE_OPPGAVER_COUNTER.inc()
@@ -613,7 +613,8 @@ class UpdateInfotrygdService {
 }
 
 @KtorExperimentalAPI
-suspend fun opprettProduceTask(syfosmreglerClient: SyfosmreglerClient, receivedSykmelding: ReceivedSykmelding, validationResult: ValidationResult, loggingMeta: LoggingMeta): ProduceTask {
+suspend fun opprettProduceTask(manuellClient: ManuellClient, receivedSykmelding: ReceivedSykmelding, validationResult: ValidationResult, loggingMeta: LoggingMeta): ProduceTask {
+    val behandletAvManuell = manuellClient.behandletAvManuell(receivedSykmelding.sykmelding.id, loggingMeta)
     val oppgave = ProduceTask().apply {
         messageId = receivedSykmelding.msgId
         aktoerId = receivedSykmelding.sykmelding.pasientAktoerId
@@ -629,27 +630,18 @@ suspend fun opprettProduceTask(syfosmreglerClient: SyfosmreglerClient, receivedS
         behandlingstype = "ANY"
         mappeId = 1
         aktivDato = DateTimeFormatter.ISO_DATE.format(LocalDate.now())
-        fristFerdigstillelse = when (behandletAvManuell(syfosmreglerClient, receivedSykmelding, loggingMeta)) {
+        fristFerdigstillelse = when (behandletAvManuell) {
             true -> DateTimeFormatter.ISO_DATE.format(LocalDate.now())
             false -> DateTimeFormatter.ISO_DATE.format(finnFristForFerdigstillingAvOppgave(LocalDate.now().plusDays(4)))
         }
         prioritet = PrioritetType.NORM
         metadata = mapOf()
     }
-    if (behandletAvManuell(syfosmreglerClient, receivedSykmelding, loggingMeta)) {
+    if (behandletAvManuell) {
         log.info("sykmelding har vært behandlet av syfosmmanuell, {}", fields(loggingMeta))
         oppgave.behandlingstype = "ae0256"
     }
     return oppgave
-}
-
-@KtorExperimentalAPI
-suspend fun behandletAvManuell(syfosmreglerClient: SyfosmreglerClient, receivedSykmelding: ReceivedSykmelding, loggingMeta: LoggingMeta): Boolean {
-    val validationResult = syfosmreglerClient.executeRuleValidation(receivedSykmelding, loggingMeta)
-    validationResult.ruleHits.find { it.ruleName == "TILBAKEDATERT_MER_ENN_8_DAGER_FORSTE_SYKMELDING_MED_BEGRUNNELSE" || it.ruleName == "TILBAKEDATERT_MED_BEGRUNNELSE_FORLENGELSE" }?.let {
-        return true
-    }
-    return false
 }
 
 fun finnFristForFerdigstillingAvOppgave(ferdistilleDato: LocalDate): LocalDate {
