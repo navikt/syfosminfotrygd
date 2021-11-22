@@ -36,9 +36,9 @@ import no.nav.syfo.application.ApplicationServer
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.application.createApplicationEngine
 import no.nav.syfo.client.AccessTokenClientV2
+import no.nav.syfo.client.ManuellClient
 import no.nav.syfo.client.Norg2Client
 import no.nav.syfo.client.NorskHelsenettClient
-import no.nav.syfo.client.SyfosmreglerClient
 import no.nav.syfo.kafka.loadBaseConfig
 import no.nav.syfo.kafka.toConsumerConfig
 import no.nav.syfo.kafka.toProducerConfig
@@ -175,7 +175,7 @@ fun main() {
     val pdlPersonService = PdlFactory.getPdlService(env, httpClient, accessTokenClientV2, env.pdlScope)
     val finnNAVKontorService = FinnNAVKontorService(pdlPersonService, norg2Client)
 
-    val syfosmreglerClient = SyfosmreglerClient(env.syfosmreglerUrl, httpClient)
+    val manuellClient = ManuellClient(httpClient, env.manuellUrl, accessTokenClientV2, env.manuellScope)
 
     launchListeners(
         applicationState,
@@ -184,7 +184,7 @@ fun main() {
         finnNAVKontorService,
         env,
         norskHelsenettClient,
-        syfosmreglerClient,
+        manuellClient,
         consumerProperties,
         smIkkeOkQueue,
         kafkaproducerreceivedSykmelding,
@@ -212,7 +212,7 @@ fun launchListeners(
     finnNAVKontorService: FinnNAVKontorService,
     env: Environment,
     norskHelsenettClient: NorskHelsenettClient,
-    syfosmreglerClient: SyfosmreglerClient,
+    manuellClient: ManuellClient,
     consumerProperties: Properties,
     smIkkeOkQueue: MQQueue,
     kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
@@ -236,7 +236,7 @@ fun launchListeners(
                 blockingApplicationLogic(
                     applicationState, kafkaconsumerRecievedSykmelding, kafkaproducerCreateTask,
                     kafkaproducervalidationResult, infotrygdOppdateringProducer, infotrygdSporringProducer,
-                    session, finnNAVKontorService, env.sm2013BehandlingsUtfallToipic, norskHelsenettClient, syfosmreglerClient,
+                    session, finnNAVKontorService, env.sm2013BehandlingsUtfallToipic, norskHelsenettClient, manuellClient,
                     smIkkeOkQueue, jedis, kafkaproducerreceivedSykmelding, env.sm2013infotrygdRetry,
                     env.sm2013OpppgaveTopic, tssProducer, env
                 )
@@ -259,7 +259,7 @@ suspend fun blockingApplicationLogic(
     finnNAVKontorService: FinnNAVKontorService,
     sm2013BehandlingsUtfallToipic: String,
     norskHelsenettClient: NorskHelsenettClient,
-    syfosmreglerClient: SyfosmreglerClient,
+    manuellClient: ManuellClient,
     smIkkeOkQueue: MQQueue,
     jedis: Jedis,
     kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
@@ -274,7 +274,7 @@ suspend fun blockingApplicationLogic(
             kafkaConsumer.subscribe(
                 listOf(env.sm2013AutomaticHandlingTopic, env.sm2013infotrygdRetry)
             )
-            runKafkaConsumer(kafkaConsumer, kafkaproducerCreateTask, kafkaproducervalidationResult, infotrygdOppdateringProducer, infotrygdSporringProducer, session, finnNAVKontorService, sm2013BehandlingsUtfallToipic, norskHelsenettClient, syfosmreglerClient, smIkkeOkQueue, jedis, kafkaproducerreceivedSykmelding, infotrygdRetryTopic, oppgaveTopic, applicationState, tssProducer)
+            runKafkaConsumer(kafkaConsumer, kafkaproducerCreateTask, kafkaproducervalidationResult, infotrygdOppdateringProducer, infotrygdSporringProducer, session, finnNAVKontorService, sm2013BehandlingsUtfallToipic, norskHelsenettClient, manuellClient, smIkkeOkQueue, jedis, kafkaproducerreceivedSykmelding, infotrygdRetryTopic, oppgaveTopic, applicationState, tssProducer)
             kafkaConsumer.unsubscribe()
             log.info("Stopper KafkaConsumer")
         }
@@ -293,7 +293,7 @@ private suspend fun runKafkaConsumer(
     finnNAVKontorService: FinnNAVKontorService,
     sm2013BehandlingsUtfallTopic: String,
     norskHelsenettClient: NorskHelsenettClient,
-    syfosmreglerClient: SyfosmreglerClient,
+    manuellClient: ManuellClient,
     smIkkeOkQueue: MQQueue,
     jedis: Jedis,
     kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
@@ -314,7 +314,7 @@ private suspend fun runKafkaConsumer(
             when (skalOppdatereInfotrygd(receivedSykmelding)) {
                 true -> {
                     handleMessage(
-                        receivedSykmelding, syfosmreglerClient, kafkaproducerCreateTask, kafkaproducervalidationResult,
+                        receivedSykmelding, manuellClient, kafkaproducerCreateTask, kafkaproducervalidationResult,
                         infotrygdOppdateringProducer, infotrygdSporringProducer,
                         session, finnNAVKontorService, sm2013BehandlingsUtfallTopic, norskHelsenettClient,
                         smIkkeOkQueue, loggingMeta, jedis, kafkaproducerreceivedSykmelding,
@@ -364,7 +364,7 @@ fun shouldRun(now: OffsetTime): Boolean {
 @KtorExperimentalAPI
 suspend fun handleMessage(
     receivedSykmelding: ReceivedSykmelding,
-    syfosmreglerClient: SyfosmreglerClient,
+    manuellClient: ManuellClient,
     kafkaproducerCreateTask: KafkaProducer<String, ProduceTask>,
     kafkaproducervalidationResult: KafkaProducer<String, ValidationResult>,
     infotrygdOppdateringProducer: MessageProducer,
@@ -397,7 +397,7 @@ suspend fun handleMessage(
         if (validationResultForMottattSykmelding.status == Status.MANUAL_PROCESSING) {
             log.info("Mottatt sykmelding kan ikke legges inn i infotrygd automatisk, oppretter oppgave, {}", fields(loggingMeta))
             sendRuleCheckValidationResult(receivedSykmelding, kafkaproducervalidationResult, validationResultForMottattSykmelding, sm2013BehandlingsUtfallToipic, loggingMeta)
-            UpdateInfotrygdService().opprettOppgave(kafkaproducerCreateTask, syfosmreglerClient, receivedSykmelding, validationResultForMottattSykmelding, loggingMeta, oppgaveTopic)
+            UpdateInfotrygdService().opprettOppgave(kafkaproducerCreateTask, manuellClient, receivedSykmelding, validationResultForMottattSykmelding, loggingMeta, oppgaveTopic)
         } else {
             val infotrygdForespResponse = fetchInfotrygdForesp(
                 receivedSykmelding,
@@ -439,7 +439,7 @@ suspend fun handleMessage(
 
             UpdateInfotrygdService().updateInfotrygd(
                 receivedSykmeldingMedTssId,
-                syfosmreglerClient,
+                manuellClient,
                 norskHelsenettClient,
                 validationResult,
                 infotrygdOppdateringProducer,

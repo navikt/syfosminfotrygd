@@ -76,3 +76,5 @@ spec:
       value: api://dev-fss.pdl.pdl-api/.default
     - name: HELSENETT_SCOPE
       value: api://dev-fss.teamsykmelding.syfohelsenettproxy/.default
+    - name: MANUELL_SCOPE
+      value: api://dev-fss.teamsykmelding.syfosmmanuell-backend/.default
