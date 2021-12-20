@@ -49,7 +49,10 @@ fun receivedSykmelding(
     rulesetVersion = "",
     fellesformat = "",
     tssid = "",
-    merknader = merknader
+    merknader = merknader,
+    partnerreferanse = null,
+    legeHprNr = null,
+    legeHelsepersonellkategori = null
 )
 
 fun generateSykmelding(

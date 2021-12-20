@@ -1,6 +1,5 @@
 package no.nav.syfo.pdl.service
 
-import io.ktor.util.KtorExperimentalAPI
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
 import io.mockk.mockk
@@ -19,7 +18,6 @@ import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import kotlin.test.assertFailsWith
 
-@KtorExperimentalAPI
 object PdlPersonServiceTest : Spek({
     val pdlClient = mockk<PdlClient>()
     val accessTokenClient = mockkClass(AccessTokenClientV2::class)

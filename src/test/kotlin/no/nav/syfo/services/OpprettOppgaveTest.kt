@@ -1,6 +1,5 @@
 package no.nav.syfo.services
 
-import io.ktor.util.KtorExperimentalAPI
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.mockk
@@ -18,7 +17,6 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 
-@KtorExperimentalAPI
 object OpprettOppgaveTest : Spek({
     val loggingMeta = LoggingMeta("", "", "", "")
     val manuellClient = mockk<ManuellClient>()

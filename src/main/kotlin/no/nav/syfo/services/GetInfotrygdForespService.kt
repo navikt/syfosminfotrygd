@@ -1,7 +1,6 @@
 package no.nav.syfo.services
 
 import com.ctc.wstx.exc.WstxException
-import io.ktor.util.KtorExperimentalAPI
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.syfo.helpers.retry
@@ -21,7 +20,6 @@ import javax.jms.Session
 import javax.jms.TemporaryQueue
 import javax.jms.TextMessage
 
-@KtorExperimentalAPI
 suspend fun fetchInfotrygdForesp(
     receivedSykmelding: ReceivedSykmelding,
     infotrygdSporringProducer: MessageProducer,

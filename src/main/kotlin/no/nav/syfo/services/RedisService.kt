@@ -6,6 +6,7 @@ import no.nav.syfo.log
 import no.nav.syfo.objectMapper
 import no.nav.syfo.util.LoggingMeta
 import redis.clients.jedis.Jedis
+import redis.clients.jedis.params.SetParams
 import java.security.MessageDigest
 
 fun erIRedis(redisKey: String, jedis: Jedis): Boolean =
@@ -16,7 +17,13 @@ fun erIRedis(redisKey: String, jedis: Jedis): Boolean =
 
 fun oppdaterRedis(redisKey: String, redisValue: String, jedis: Jedis, sekunder: Int, loggingMeta: LoggingMeta): String? {
     log.info("Prøver å oppdaterer redis {}", fields(loggingMeta))
-    return jedis.set(redisKey, redisValue, "nx", "ex", sekunder.toLong())
+    return jedis.set(
+        redisKey, redisValue,
+        SetParams().apply {
+            ex(sekunder.toLong())
+            nx()
+        }
+    )
 }
 
 fun slettRedisKey(redisKey: String, jedis: Jedis, loggingMeta: LoggingMeta): Long? {

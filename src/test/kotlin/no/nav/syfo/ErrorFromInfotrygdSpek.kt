@@ -1,6 +1,5 @@
 package no.nav.syfo
 
-import io.ktor.util.KtorExperimentalAPI
 import no.nav.syfo.model.RuleInfo
 import no.nav.syfo.model.Status
 import no.nav.syfo.rules.ValidationRuleChain
@@ -9,7 +8,6 @@ import org.amshove.kluent.shouldBeEqualTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-@KtorExperimentalAPI
 object ErrorFromInfotrygdSpek : Spek({
     describe("Tester at vi fanger opp der infotrygd gir mye error") {
 

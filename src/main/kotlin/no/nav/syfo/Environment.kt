@@ -24,7 +24,6 @@ data class Environment(
     override val mqGatewayName: String = getEnvVar("MQ_GATEWAY_NAME"),
     override val mqChannelName: String = getEnvVar("MQ_CHANNEL_NAME"),
     val norskHelsenettEndpointURL: String = getEnvVar("HELSENETT_ENDPOINT_URL"),
-    val infotrygdSmIkkeOKQueue: String = getEnvVar("MQ_INFOTRYGD_SMIKKEOK_QUEUE"),
     val redisHost: String = getEnvVar("REDIS_HOST", "syfosminfotrygd-redis.teamsykmelding.svc.nais.local"),
     val redisSecret: String = getEnvVar("REDIS_PASSWORD"),
     val tssQueue: String = getEnvVar("MQ_TSS_SAMHANDLER_SERVICE_QUEUE"),

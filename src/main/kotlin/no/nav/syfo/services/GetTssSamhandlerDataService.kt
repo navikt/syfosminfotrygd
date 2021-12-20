@@ -1,7 +1,6 @@
 package no.nav.syfo.services
 
 import com.ctc.wstx.exc.WstxException
-import io.ktor.util.KtorExperimentalAPI
 import no.nav.helse.tssSamhandlerData.XMLSamhandlerIDataB910Type
 import no.nav.helse.tssSamhandlerData.XMLTServicerutiner
 import no.nav.helse.tssSamhandlerData.XMLTidOFF1
@@ -19,7 +18,6 @@ import javax.jms.Session
 import javax.jms.TemporaryQueue
 import javax.jms.TextMessage
 
-@KtorExperimentalAPI
 suspend fun fetchTssSamhandlerInfo(
     receivedSykmelding: ReceivedSykmelding,
     tssSamhnadlerInfoProducer: MessageProducer,
