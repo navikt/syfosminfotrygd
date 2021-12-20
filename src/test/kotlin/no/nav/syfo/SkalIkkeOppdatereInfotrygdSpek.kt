@@ -1,6 +1,5 @@
 package no.nav.syfo
 
-import io.ktor.util.KtorExperimentalAPI
 import io.mockk.every
 import io.mockk.mockk
 import no.nav.syfo.model.Gradert
@@ -16,7 +15,6 @@ import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.time.LocalDate
 
-@KtorExperimentalAPI
 object SkalIkkeOppdatereInfotrygdSpek : Spek({
     describe("Skal ikke oppdatere infotrygd") {
         val sm = mockk<ReceivedSykmelding>()

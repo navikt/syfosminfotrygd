@@ -7,12 +7,10 @@ import io.ktor.client.request.get
 import io.ktor.client.request.headers
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode.Companion.NotFound
-import io.ktor.util.KtorExperimentalAPI
 import no.nav.syfo.helpers.retry
 import no.nav.syfo.log
 import java.io.IOException
 
-@KtorExperimentalAPI
 class NorskHelsenettClient(
     private val httpClient: HttpClient,
     private val endpointUrl: String,

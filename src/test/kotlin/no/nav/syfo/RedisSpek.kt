@@ -1,6 +1,5 @@
 package no.nav.syfo
 
-import io.ktor.util.KtorExperimentalAPI
 import no.nav.syfo.services.INFOTRYGD
 import no.nav.syfo.services.antallErrorIInfotrygd
 import no.nav.syfo.services.oppdaterAntallErrorIInfotrygd
@@ -14,7 +13,6 @@ import redis.clients.jedis.Jedis
 import redis.embedded.RedisServer
 import java.util.concurrent.TimeUnit
 
-@KtorExperimentalAPI
 object RedisSpek : Spek({
     describe("Testing the redis functions") {
 

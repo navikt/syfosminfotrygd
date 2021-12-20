@@ -18,7 +18,6 @@ import io.ktor.client.engine.apache.ApacheEngineConfig
 import io.ktor.client.features.HttpTimeout
 import io.ktor.client.features.json.JacksonSerializer
 import io.ktor.client.features.json.JsonFeature
-import io.ktor.util.KtorExperimentalAPI
 import io.prometheus.client.hotspot.DefaultExports
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.GlobalScope
@@ -102,7 +101,6 @@ val objectMapper: ObjectMapper = ObjectMapper().apply {
 
 const val NAV_OPPFOLGING_UTLAND_KONTOR_NR = "0393"
 
-@KtorExperimentalAPI
 fun main() {
     val env = Environment()
     val vaultServiceUser = VaultServiceUser()
@@ -204,7 +202,6 @@ fun createListener(applicationState: ApplicationState, action: suspend Coroutine
         }
     }
 
-@KtorExperimentalAPI
 fun launchListeners(
     applicationState: ApplicationState,
     kafkaproducerCreateTask: KafkaProducer<String, ProduceTask>,
@@ -247,7 +244,6 @@ fun launchListeners(
     applicationState.alive = true
 }
 
-@KtorExperimentalAPI
 suspend fun blockingApplicationLogic(
     applicationState: ApplicationState,
     kafkaConsumer: KafkaConsumer<String, String>,
@@ -282,7 +278,6 @@ suspend fun blockingApplicationLogic(
     }
 }
 
-@KtorExperimentalAPI
 private suspend fun runKafkaConsumer(
     kafkaConsumer: KafkaConsumer<String, String>,
     kafkaproducerCreateTask: KafkaProducer<String, ProduceTask>,
@@ -361,7 +356,6 @@ fun shouldRun(now: OffsetTime): Boolean {
     return now.hour in 5..20
 }
 
-@KtorExperimentalAPI
 suspend fun handleMessage(
     receivedSykmelding: ReceivedSykmelding,
     manuellClient: ManuellClient,

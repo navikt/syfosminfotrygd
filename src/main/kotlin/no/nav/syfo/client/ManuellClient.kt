@@ -6,7 +6,6 @@ import io.ktor.client.request.get
 import io.ktor.client.request.headers
 import io.ktor.client.statement.HttpStatement
 import io.ktor.http.HttpStatusCode
-import io.ktor.util.KtorExperimentalAPI
 import no.nav.syfo.helpers.retry
 import no.nav.syfo.log
 import no.nav.syfo.util.LoggingMeta
@@ -17,7 +16,6 @@ class ManuellClient(
     private val accessTokenClient: AccessTokenClientV2,
     private val resourceId: String
 ) {
-    @KtorExperimentalAPI
     suspend fun behandletAvManuell(sykmeldingId: String, loggingMeta: LoggingMeta): Boolean =
         retry("manuell") {
             try {

@@ -1,6 +1,5 @@
 package no.nav.syfo.services
 
-import io.ktor.util.KtorExperimentalAPI
 import kotlinx.coroutines.delay
 import net.logstash.logback.argument.StructuredArguments
 import net.logstash.logback.argument.StructuredArguments.fields
@@ -52,7 +51,6 @@ import kotlin.math.absoluteValue
 
 const val INFOTRYGD = "INFOTRYGD"
 
-@KtorExperimentalAPI
 class UpdateInfotrygdService {
 
     suspend fun updateInfotrygd(
@@ -612,7 +610,6 @@ class UpdateInfotrygdService {
     }
 }
 
-@KtorExperimentalAPI
 suspend fun opprettProduceTask(manuellClient: ManuellClient, receivedSykmelding: ReceivedSykmelding, validationResult: ValidationResult, loggingMeta: LoggingMeta): ProduceTask {
     val behandletAvManuell = manuellClient.behandletAvManuell(receivedSykmelding.sykmelding.id, loggingMeta)
     val oppgave = ProduceTask().apply {

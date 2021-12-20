@@ -1,6 +1,5 @@
 package no.nav.syfo
 
-import io.ktor.util.KtorExperimentalAPI
 import no.nav.syfo.client.Behandler
 import no.nav.syfo.client.Godkjenning
 import no.nav.syfo.client.Kode
@@ -10,7 +9,6 @@ import org.amshove.kluent.shouldBeEqualTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-@KtorExperimentalAPI
 object FinnAktivHelsepersonellAutorisasjonSpek : Spek({
 
     describe("Tester at man finner riktig helsepersonell autorisasjoner verdi") {

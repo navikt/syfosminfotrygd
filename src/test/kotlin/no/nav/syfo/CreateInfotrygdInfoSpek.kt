@@ -1,6 +1,5 @@
 package no.nav.syfo
 
-import io.ktor.util.KtorExperimentalAPI
 import no.nav.helse.eiFellesformat.XMLEIFellesformat
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.infotrygd.foresp.TypeSMinfo
@@ -27,7 +26,6 @@ import java.io.StringReader
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-@KtorExperimentalAPI
 object CreateInfotrygdInfoSpek : Spek({
 
     describe("Testing mapping of fellesformat and InfotrygdInfo") {
