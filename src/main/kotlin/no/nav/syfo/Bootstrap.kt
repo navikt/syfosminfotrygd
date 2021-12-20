@@ -6,10 +6,7 @@ import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-import com.ibm.mq.MQC
 import com.ibm.mq.MQEnvironment
-import com.ibm.mq.MQQueue
-import com.ibm.mq.MQQueueManager
 import io.confluent.kafka.serializers.KafkaAvroSerializer
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
@@ -41,7 +38,6 @@ import no.nav.syfo.client.NorskHelsenettClient
 import no.nav.syfo.kafka.loadBaseConfig
 import no.nav.syfo.kafka.toConsumerConfig
 import no.nav.syfo.kafka.toProducerConfig
-import no.nav.syfo.metrics.MESSAGES_ON_INFOTRYGD_SMIKKEOK_QUEUE_COUNTER
 import no.nav.syfo.metrics.REQUEST_TIME
 import no.nav.syfo.metrics.RULE_HIT_STATUS_COUNTER
 import no.nav.syfo.model.Behandler
@@ -136,9 +132,6 @@ fun main() {
     MQEnvironment.hostname = env.mqHostname
     MQEnvironment.userID = credentials.mqUsername
     MQEnvironment.password = credentials.mqPassword
-    val mqQueueManager = MQQueueManager(env.mqGatewayName)
-    val openOptions = MQC.MQOO_INQUIRE + MQC.MQOO_BROWSE + MQC.MQOO_FAIL_IF_QUIESCING + MQC.MQOO_INPUT_SHARED
-    val smIkkeOkQueue = mqQueueManager.accessQueue(env.infotrygdSmIkkeOKQueue, openOptions)
 
     val config: HttpClientConfig<ApacheEngineConfig>.() -> Unit = {
         install(JsonFeature) {
@@ -184,7 +177,6 @@ fun main() {
         norskHelsenettClient,
         manuellClient,
         consumerProperties,
-        smIkkeOkQueue,
         kafkaproducerreceivedSykmelding,
         credentials
     )
@@ -211,7 +203,6 @@ fun launchListeners(
     norskHelsenettClient: NorskHelsenettClient,
     manuellClient: ManuellClient,
     consumerProperties: Properties,
-    smIkkeOkQueue: MQQueue,
     kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
     credentials: VaultCredentials
 ) {
@@ -234,7 +225,7 @@ fun launchListeners(
                     applicationState, kafkaconsumerRecievedSykmelding, kafkaproducerCreateTask,
                     kafkaproducervalidationResult, infotrygdOppdateringProducer, infotrygdSporringProducer,
                     session, finnNAVKontorService, env.sm2013BehandlingsUtfallToipic, norskHelsenettClient, manuellClient,
-                    smIkkeOkQueue, jedis, kafkaproducerreceivedSykmelding, env.sm2013infotrygdRetry,
+                    jedis, kafkaproducerreceivedSykmelding, env.sm2013infotrygdRetry,
                     env.sm2013OpppgaveTopic, tssProducer, env
                 )
             }
@@ -256,7 +247,6 @@ suspend fun blockingApplicationLogic(
     sm2013BehandlingsUtfallToipic: String,
     norskHelsenettClient: NorskHelsenettClient,
     manuellClient: ManuellClient,
-    smIkkeOkQueue: MQQueue,
     jedis: Jedis,
     kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
     infotrygdRetryTopic: String,
@@ -270,7 +260,7 @@ suspend fun blockingApplicationLogic(
             kafkaConsumer.subscribe(
                 listOf(env.sm2013AutomaticHandlingTopic, env.sm2013infotrygdRetry)
             )
-            runKafkaConsumer(kafkaConsumer, kafkaproducerCreateTask, kafkaproducervalidationResult, infotrygdOppdateringProducer, infotrygdSporringProducer, session, finnNAVKontorService, sm2013BehandlingsUtfallToipic, norskHelsenettClient, manuellClient, smIkkeOkQueue, jedis, kafkaproducerreceivedSykmelding, infotrygdRetryTopic, oppgaveTopic, applicationState, tssProducer)
+            runKafkaConsumer(kafkaConsumer, kafkaproducerCreateTask, kafkaproducervalidationResult, infotrygdOppdateringProducer, infotrygdSporringProducer, session, finnNAVKontorService, sm2013BehandlingsUtfallToipic, norskHelsenettClient, manuellClient, jedis, kafkaproducerreceivedSykmelding, infotrygdRetryTopic, oppgaveTopic, applicationState, tssProducer)
             kafkaConsumer.unsubscribe()
             log.info("Stopper KafkaConsumer")
         }
@@ -289,7 +279,6 @@ private suspend fun runKafkaConsumer(
     sm2013BehandlingsUtfallTopic: String,
     norskHelsenettClient: NorskHelsenettClient,
     manuellClient: ManuellClient,
-    smIkkeOkQueue: MQQueue,
     jedis: Jedis,
     kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
     infotrygdRetryTopic: String,
@@ -312,7 +301,7 @@ private suspend fun runKafkaConsumer(
                         receivedSykmelding, manuellClient, kafkaproducerCreateTask, kafkaproducervalidationResult,
                         infotrygdOppdateringProducer, infotrygdSporringProducer,
                         session, finnNAVKontorService, sm2013BehandlingsUtfallTopic, norskHelsenettClient,
-                        smIkkeOkQueue, loggingMeta, jedis, kafkaproducerreceivedSykmelding,
+                        loggingMeta, jedis, kafkaproducerreceivedSykmelding,
                         infotrygdRetryTopic, oppgaveTopic, applicationState, tssProducer
                     )
                 }
@@ -367,7 +356,6 @@ suspend fun handleMessage(
     finnNAVKontorService: FinnNAVKontorService,
     sm2013BehandlingsUtfallToipic: String,
     norskHelsenettClient: NorskHelsenettClient,
-    smIkkeOkQueue: MQQueue,
     loggingMeta: LoggingMeta,
     jedis: Jedis,
     kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
@@ -378,9 +366,6 @@ suspend fun handleMessage(
 ) {
     wrapExceptions(loggingMeta) {
         log.info("Received a SM2013, {}", fields(loggingMeta))
-
-        val smIkkeOkCurrentDepth = smIkkeOkQueue.currentDepth.toDouble()
-        MESSAGES_ON_INFOTRYGD_SMIKKEOK_QUEUE_COUNTER.set(smIkkeOkCurrentDepth)
 
         val requestLatency = REQUEST_TIME.startTimer()
 
