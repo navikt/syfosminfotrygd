@@ -41,7 +41,6 @@ val embeddedRedisVersion = "0.6"
 val syfoXmlCodegen = "1.35193f7"
 val mockkVersion = "1.12.1"
 val kotlinVersion = "1.6.0"
-val caffeineVersion = "3.0.4"
 
 plugins {
     java
@@ -125,7 +124,6 @@ dependencies {
     implementation ("org.apache.cxf:cxf-rt-ws-security:$cxfVersion")
 
     implementation ("redis.clients:jedis:$jedisVersion")
-    implementation("com.github.ben-manes.caffeine:caffeine:$caffeineVersion")
 
     implementation ("com.migesok:jaxb-java-time-adapters:$jaxbTimeAdaptersVersion")
     implementation ("javax.xml.ws:jaxws-api:$jaxwsApiVersion")

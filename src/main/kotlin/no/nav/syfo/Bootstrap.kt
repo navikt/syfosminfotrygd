@@ -36,8 +36,9 @@ import no.nav.syfo.application.createApplicationEngine
 import no.nav.syfo.application.exception.ServiceUnavailableException
 import no.nav.syfo.client.AccessTokenClientV2
 import no.nav.syfo.client.ManuellClient
-import no.nav.syfo.client.Norg2Client
 import no.nav.syfo.client.NorskHelsenettClient
+import no.nav.syfo.client.norg.Norg2Client
+import no.nav.syfo.client.norg.Norg2RedisService
 import no.nav.syfo.kafka.loadBaseConfig
 import no.nav.syfo.kafka.toConsumerConfig
 import no.nav.syfo.kafka.toProducerConfig
@@ -75,6 +76,8 @@ import org.apache.kafka.common.serialization.StringDeserializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import redis.clients.jedis.Jedis
+import redis.clients.jedis.JedisPool
+import redis.clients.jedis.JedisPoolConfig
 import java.io.StringReader
 import java.io.StringWriter
 import java.net.ProxySelector
@@ -146,7 +149,7 @@ fun main() {
             }
         }
         install(HttpTimeout) {
-            socketTimeoutMillis = 10000
+            socketTimeoutMillis = 5000
         }
         HttpResponseValidator {
             handleResponseException { exception ->
@@ -169,7 +172,11 @@ fun main() {
     val httpClient = HttpClient(Apache, config)
     val httpClientWithProxy = HttpClient(Apache, proxyConfig)
 
-    val norg2Client = Norg2Client(httpClient, env.norg2V1EndpointURL)
+    val jedisPool = JedisPool(JedisPoolConfig(), env.redisHost, env.redisPort)
+    val jedis = jedisPool.resource
+    jedis.auth(env.redisSecret)
+
+    val norg2Client = Norg2Client(httpClient, env.norg2V1EndpointURL, Norg2RedisService(jedis))
 
     val accessTokenClientV2 = AccessTokenClientV2(env.aadAccessTokenV2Url, env.clientIdV2, env.clientSecretV2, httpClientWithProxy)
     val norskHelsenettClient = NorskHelsenettClient(httpClient, env.norskHelsenettEndpointURL, accessTokenClientV2, env.helsenettproxyScope)
@@ -188,7 +195,8 @@ fun main() {
         manuellClient,
         consumerProperties,
         kafkaproducerreceivedSykmelding,
-        credentials
+        credentials,
+        jedis
     )
 }
 
@@ -214,31 +222,28 @@ fun launchListeners(
     manuellClient: ManuellClient,
     consumerProperties: Properties,
     kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
-    credentials: VaultCredentials
+    credentials: VaultCredentials,
+    jedis: Jedis
 ) {
     val kafkaconsumerRecievedSykmelding = KafkaConsumer<String, String>(consumerProperties)
 
     createListener(applicationState) {
         connectionFactory(env).createConnection(credentials.mqUsername, credentials.mqPassword).use { connection ->
-            Jedis(env.redisHost, 6379).use { jedis ->
-                connection.start()
-                val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
-                val infotrygdOppdateringProducer = session.producerForQueue("queue:///${env.infotrygdOppdateringQueue}?targetClient=1")
-                val infotrygdSporringProducer = session.producerForQueue("queue:///${env.infotrygdSporringQueue}?targetClient=1")
-                val tssProducer = session.producerForQueue("queue:///${env.tssQueue}?targetClient=1")
+            connection.start()
+            val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
+            val infotrygdOppdateringProducer = session.producerForQueue("queue:///${env.infotrygdOppdateringQueue}?targetClient=1")
+            val infotrygdSporringProducer = session.producerForQueue("queue:///${env.infotrygdSporringQueue}?targetClient=1")
+            val tssProducer = session.producerForQueue("queue:///${env.tssQueue}?targetClient=1")
 
-                jedis.auth(env.redisSecret)
+            applicationState.ready = true
 
-                applicationState.ready = true
-
-                blockingApplicationLogic(
-                    applicationState, kafkaconsumerRecievedSykmelding, kafkaproducerCreateTask,
-                    kafkaproducervalidationResult, infotrygdOppdateringProducer, infotrygdSporringProducer,
-                    session, finnNAVKontorService, env.sm2013BehandlingsUtfallToipic, norskHelsenettClient, manuellClient,
-                    jedis, kafkaproducerreceivedSykmelding, env.sm2013infotrygdRetry,
-                    env.sm2013OpppgaveTopic, tssProducer, env
-                )
-            }
+            blockingApplicationLogic(
+                applicationState, kafkaconsumerRecievedSykmelding, kafkaproducerCreateTask,
+                kafkaproducervalidationResult, infotrygdOppdateringProducer, infotrygdSporringProducer,
+                session, finnNAVKontorService, env.sm2013BehandlingsUtfallToipic, norskHelsenettClient, manuellClient,
+                jedis, kafkaproducerreceivedSykmelding, env.sm2013infotrygdRetry,
+                env.sm2013OpppgaveTopic, tssProducer, env
+            )
         }
     }
 
