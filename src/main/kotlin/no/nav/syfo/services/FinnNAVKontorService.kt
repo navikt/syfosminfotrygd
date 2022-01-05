@@ -1,6 +1,6 @@
 package no.nav.syfo.services
 
-import no.nav.syfo.client.Norg2Client
+import no.nav.syfo.client.norg.Norg2Client
 import no.nav.syfo.pdl.model.getDiskresjonskode
 import no.nav.syfo.pdl.service.PdlPersonService
 import no.nav.syfo.util.LoggingMeta

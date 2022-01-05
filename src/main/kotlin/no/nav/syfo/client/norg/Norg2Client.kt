@@ -1,7 +1,5 @@
-package no.nav.syfo.client
+package no.nav.syfo.client.norg
 
-import com.github.benmanes.caffeine.cache.Cache
-import com.github.benmanes.caffeine.cache.Caffeine
 import io.ktor.client.HttpClient
 import io.ktor.client.features.ClientRequestException
 import io.ktor.client.request.accept
@@ -15,19 +13,15 @@ import no.nav.syfo.NAV_OPPFOLGING_UTLAND_KONTOR_NR
 import no.nav.syfo.helpers.retry
 import no.nav.syfo.log
 import no.nav.syfo.util.LoggingMeta
-import java.time.Duration
 
 class Norg2Client(
     private val httpClient: HttpClient,
     private val endpointUrl: String,
-    private val cache: Cache<String, Enhet> = Caffeine
-        .newBuilder().expireAfterWrite(Duration.ofDays(30))
-        .maximumSize(500)
-        .build()
+    private val norg2RedisService: Norg2RedisService
 ) {
     suspend fun getLocalNAVOffice(geografiskOmraade: String?, diskresjonskode: String?, loggingMeta: LoggingMeta): Enhet {
         if (diskresjonskode == null && geografiskOmraade != null) {
-            cache.getIfPresent(geografiskOmraade)?.let {
+            norg2RedisService.getEnhet(geografiskOmraade)?.let {
                 log.debug("Traff cache for GT $geografiskOmraade")
                 return it
             }
@@ -42,7 +36,7 @@ class Norg2Client(
                     }
                 }
                 if (diskresjonskode == null && geografiskOmraade != null) {
-                    cache.put(geografiskOmraade, enhet)
+                    norg2RedisService.putEnhet(geografiskOmraade, enhet)
                 }
                 return@retry enhet
             } catch (e: Exception) {
