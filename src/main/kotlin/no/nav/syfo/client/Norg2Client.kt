@@ -28,7 +28,7 @@ class Norg2Client(
     suspend fun getLocalNAVOffice(geografiskOmraade: String?, diskresjonskode: String?, loggingMeta: LoggingMeta): Enhet {
         if (diskresjonskode == null && geografiskOmraade != null) {
             cache.getIfPresent(geografiskOmraade)?.let {
-                log.info("Traff cache for GT $geografiskOmraade")
+                log.debug("Traff cache for GT $geografiskOmraade")
                 return it
             }
         }
