@@ -13,16 +13,16 @@ val infotrygdForespVersion = "2019.07.29-02-53-86b22e73f7843e422ee500b486dac387a
 val fellesformatVersion = "2019.07.30-12-26-5c924ef4f04022bbb850aaf299eb8e4464c1ca6a"
 val ibmMqVersion = "9.1.0.0"
 val javaxActivationVersion = "1.1.1"
-val jacksonVersion = "2.13.0"
+val jacksonVersion = "2.13.1"
 val jaxbApiVersion = "2.4.0-b180830.0359"
 val jaxbVersion = "2.3.0.1"
 val jedisVersion = "3.7.1"
 val kafkaVersion = "2.8.0"
 val kluentVersion = "1.68"
 val ktorVersion = "1.6.7"
-val logbackVersion = "1.2.8"
+val logbackVersion = "1.2.10"
 val logstashEncoderVersion = "7.0.1"
-val prometheusVersion = "0.13.0"
+val prometheusVersion = "0.14.1"
 val spekVersion = "2.0.17"
 val sykmeldingVersion = "2019.07.29-02-53-86b22e73f7843e422ee500b486dac387a582f2d1"
 val cxfVersion = "3.4.5"
@@ -41,6 +41,7 @@ val embeddedRedisVersion = "0.6"
 val syfoXmlCodegen = "1.35193f7"
 val mockkVersion = "1.12.1"
 val kotlinVersion = "1.6.0"
+val caffeineVersion = "3.0.4"
 
 plugins {
     java
@@ -124,6 +125,7 @@ dependencies {
     implementation ("org.apache.cxf:cxf-rt-ws-security:$cxfVersion")
 
     implementation ("redis.clients:jedis:$jedisVersion")
+    implementation("com.github.ben-manes.caffeine:caffeine:$caffeineVersion")
 
     implementation ("com.migesok:jaxb-java-time-adapters:$jaxbTimeAdaptersVersion")
     implementation ("javax.xml.ws:jaxws-api:$jaxwsApiVersion")
