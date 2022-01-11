@@ -22,6 +22,7 @@ import no.nav.syfo.log
 import no.nav.syfo.metrics.MANUELLE_OPPGAVER_COUNTER
 import no.nav.syfo.metrics.RULE_HIT_STATUS_COUNTER
 import no.nav.syfo.model.HelsepersonellKategori
+import no.nav.syfo.model.OpprettOppgaveKafkaMessage
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.model.RuleInfo
 import no.nav.syfo.model.Status
@@ -32,7 +33,6 @@ import no.nav.syfo.rules.sortedPeriodeTOMDate
 import no.nav.syfo.rules.sortedSMInfos
 import no.nav.syfo.sak.avro.PrioritetType
 import no.nav.syfo.sak.avro.ProduceTask
-import no.nav.syfo.sendRuleCheckValidationResult
 import no.nav.syfo.sortedFOMDate
 import no.nav.syfo.unmarshal
 import no.nav.syfo.util.LoggingMeta
@@ -58,9 +58,12 @@ class UpdateInfotrygdService(
     private val kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
     private val infotrygdRetryTopic: String,
     private val oppgaveTopic: String,
-    private val kafkaproducervalidationResult: KafkaProducer<String, ValidationResult>,
-    private val sm2013BehandlingsUtfallTopic: String,
-    private val applicationState: ApplicationState
+    private val applicationState: ApplicationState,
+    private val kafkaAivenProducerReceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
+    private val kafkaAivenProducerOppgave: KafkaProducer<String, OpprettOppgaveKafkaMessage>,
+    private val retryTopic: String,
+    private val produserOppgaveTopic: String,
+    private val behandlingsutfallService: BehandlingsutfallService
 ) {
 
     suspend fun updateInfotrygd(
@@ -72,7 +75,8 @@ class UpdateInfotrygdService(
         session: Session,
         infotrygdForespResponse: InfotrygdForesp,
         healthInformation: HelseOpplysningerArbeidsuforhet,
-        jedis: Jedis
+        jedis: Jedis,
+        source: String
     ) {
         val helsepersonell = if (erEgenmeldt(receivedSykmelding)) {
             Behandler(listOf(Godkjenning(helsepersonellkategori = Kode(aktiv = true, oid = 0, verdi = HelsepersonellKategori.LEGE.verdi), autorisasjon = Kode(aktiv = true, oid = 0, verdi = ""))))
@@ -88,7 +92,7 @@ class UpdateInfotrygdService(
                         receivedSykmelding, validationResult,
                         loggingMeta,
                         InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
-                        helsepersonellKategoriVerdi, jedis
+                        helsepersonellKategoriVerdi, jedis, source
                     )
                 else -> sendInfotrygdOppdateringAndValidationResult(
                     infotrygdOppdateringProducer,
@@ -99,7 +103,8 @@ class UpdateInfotrygdService(
                     helsepersonellKategoriVerdi,
                     navKontorLokalKontor,
                     jedis,
-                    validationResult
+                    validationResult,
+                    source
                 )
             }
 
@@ -126,7 +131,7 @@ class UpdateInfotrygdService(
                 receivedSykmelding, validationResultBehandler,
                 loggingMeta,
                 InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
-                HelsepersonellKategori.LEGE.verdi, jedis
+                HelsepersonellKategori.LEGE.verdi, jedis, source
             )
         }
     }
@@ -143,7 +148,8 @@ class UpdateInfotrygdService(
         behandlerKode: String,
         navKontorNr: String,
         jedis: Jedis,
-        validationResult: ValidationResult
+        validationResult: ValidationResult,
+        source: String
     ) {
         val perioder = itfh.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
         val marshalledFellesformat = receivedSykmelding.fellesformat
@@ -166,24 +172,52 @@ class UpdateInfotrygdService(
         when {
             nyligInfotrygdOppdatering == null -> {
                 delay(10000)
-                try {
-                    kafkaproducerreceivedSykmelding.send(ProducerRecord(infotrygdRetryTopic, receivedSykmelding.sykmelding.id, receivedSykmelding)).get()
-                    log.warn("Melding sendt på retry topic {}", fields(loggingMeta))
-                } catch (ex: Exception) {
-                    log.error("Failed to send sykmelding to retrytopic {}", fields(loggingMeta))
-                    throw ex
+                when (source) {
+                    "on-prem" -> {
+                        try {
+                            kafkaproducerreceivedSykmelding.send(
+                                ProducerRecord(
+                                    infotrygdRetryTopic,
+                                    receivedSykmelding.sykmelding.id,
+                                    receivedSykmelding
+                                )
+                            ).get()
+                            log.warn("Melding sendt på retry topic {}", fields(loggingMeta))
+                        } catch (ex: Exception) {
+                            log.error("Failed to send sykmelding to retrytopic {}", fields(loggingMeta))
+                            throw ex
+                        }
+                    }
+                    "aiven" -> {
+                        try {
+                            kafkaAivenProducerReceivedSykmelding.send(
+                                ProducerRecord(
+                                    retryTopic,
+                                    receivedSykmelding.sykmelding.id,
+                                    receivedSykmelding
+                                )
+                            ).get()
+                            log.warn("Melding sendt på aiven retry topic {}", fields(loggingMeta))
+                        } catch (ex: Exception) {
+                            log.error("Failed to send sykmelding to aiven retrytopic {}", fields(loggingMeta))
+                            throw ex
+                        }
+                    }
+                    else -> {
+                        log.error("Mottok ukjent source: $source")
+                        throw IllegalStateException("Source må være enten on-prem eller aiven")
+                    }
                 }
             }
             else -> {
                 val duplikatInfotrygdOppdatering = oppdaterRedis(sha256String, sha256String, jedis, TimeUnit.DAYS.toSeconds(60).toInt(), loggingMeta)
                 when {
                     duplikatInfotrygdOppdatering == null -> {
-                        sendRuleCheckValidationResult(
+                        behandlingsutfallService.sendRuleCheckValidationResult(
                             receivedSykmelding,
-                            kafkaproducervalidationResult,
                             validationResult,
-                            sm2013BehandlingsUtfallTopic,
-                            loggingMeta
+                            loggingMeta,
+                            source
                         )
                         log.warn("Melding market som infotrygd duplikat oppdaatering {}", fields(loggingMeta))
                     }
@@ -193,12 +227,11 @@ class UpdateInfotrygdService(
                             perioder.drop(1).forEach { periode ->
                                 sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, periode, personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, forsteFravaersDag, 2), loggingMeta)
                             }
-                            sendRuleCheckValidationResult(
+                            behandlingsutfallService.sendRuleCheckValidationResult(
                                 receivedSykmelding,
-                                kafkaproducervalidationResult,
                                 validationResult,
-                                sm2013BehandlingsUtfallTopic,
-                                loggingMeta
+                                loggingMeta,
+                                source
                             )
                         } catch (exception: Exception) {
                             slettRedisKey(sha256String, jedis, loggingMeta)
@@ -450,9 +483,9 @@ class UpdateInfotrygdService(
 
     private fun HelseOpplysningerArbeidsuforhet.Behandler.formatName(): String =
         if (navn.mellomnavn == null) {
-            "${navn.etternavn.toUpperCase()} ${navn.fornavn.toUpperCase()}"
+            "${navn.etternavn.uppercase()} ${navn.fornavn.uppercase()}"
         } else {
-            "${navn.etternavn.toUpperCase()} ${navn.fornavn.toUpperCase()} ${navn.mellomnavn.toUpperCase()}"
+            "${navn.etternavn.uppercase()} ${navn.fornavn.uppercase()} ${navn.mellomnavn.uppercase()}"
         }
 
     private fun sammePeriodeInfotrygd(infotrygdPeriode: TypeSMinfo.Periode, sykemldingsPeriode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode): Boolean {
@@ -493,12 +526,10 @@ class UpdateInfotrygdService(
         loggingMeta: LoggingMeta,
         itfh: InfotrygdForespAndHealthInformation,
         helsepersonellKategoriVerdi: String,
-        jedis: Jedis
+        jedis: Jedis,
+        source: String
     ) {
-        sendRuleCheckValidationResult(
-            receivedSykmelding, kafkaproducervalidationResult,
-            validationResult, sm2013BehandlingsUtfallTopic, loggingMeta
-        )
+        behandlingsutfallService.sendRuleCheckValidationResult(receivedSykmelding, validationResult, loggingMeta, source)
         try {
             val perioder = itfh.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
             val forsteFravaersDag = itfh.healthInformation.aktivitet.periode.sortedFOMDate().first()
@@ -539,7 +570,7 @@ class UpdateInfotrygdService(
                     log.warn("Trenger ikke å opprett manuell oppgave for {}", fields(loggingMeta))
                 }
                 else -> {
-                    opprettOppgave(receivedSykmelding, validationResult, loggingMeta)
+                    opprettOppgave(receivedSykmelding, validationResult, loggingMeta, source)
                     oppdaterRedis(sha256String, sha256String, jedis, TimeUnit.DAYS.toSeconds(60).toInt(), loggingMeta)
                 }
             }
@@ -552,20 +583,44 @@ class UpdateInfotrygdService(
     suspend fun opprettOppgave(
         receivedSykmelding: ReceivedSykmelding,
         validationResult: ValidationResult,
-        loggingMeta: LoggingMeta
+        loggingMeta: LoggingMeta,
+        source: String
     ) {
-        try {
-            kafkaproducerCreateTask.send(
-                ProducerRecord(
-                    oppgaveTopic, receivedSykmelding.sykmelding.id,
-                    opprettProduceTask(receivedSykmelding, validationResult, loggingMeta)
-                )
-            ).get()
-            MANUELLE_OPPGAVER_COUNTER.inc()
-            log.info("Message sendt to topic: {}, {}", oppgaveTopic, fields(loggingMeta))
-        } catch (ex: Exception) {
-            log.error("Error when writing to oppgave kafka topic {}", fields(loggingMeta))
-            throw ex
+        when (source) {
+            "on-prem" -> {
+                try {
+                    kafkaproducerCreateTask.send(
+                        ProducerRecord(
+                            oppgaveTopic, receivedSykmelding.sykmelding.id,
+                            opprettProduceTask(receivedSykmelding, validationResult, loggingMeta)
+                        )
+                    ).get()
+                    MANUELLE_OPPGAVER_COUNTER.inc()
+                    log.info("Message sendt to topic: {}, {}", oppgaveTopic, fields(loggingMeta))
+                } catch (ex: Exception) {
+                    log.error("Error when writing to on-prem oppgave kafka topic {}", fields(loggingMeta))
+                    throw ex
+                }
+            }
+            "aiven" -> {
+                try {
+                    kafkaAivenProducerOppgave.send(
+                        ProducerRecord(
+                            produserOppgaveTopic, receivedSykmelding.sykmelding.id,
+                            opprettOpprettOppgaveKafkaMessage(receivedSykmelding, validationResult, loggingMeta)
+                        )
+                    ).get()
+                    MANUELLE_OPPGAVER_COUNTER.inc()
+                    log.info("Message sendt to topic: {}, {}", produserOppgaveTopic, fields(loggingMeta))
+                } catch (ex: Exception) {
+                    log.error("Error when writing to aiven oppgave kafka topic {}", fields(loggingMeta))
+                    throw ex
+                }
+            }
+            else -> {
+                log.error("Mottok ukjent source: $source")
+                throw IllegalStateException("Source må være enten on-prem eller aiven")
+            }
         }
     }
 
@@ -606,7 +661,12 @@ class UpdateInfotrygdService(
             tema = "SYM"
             behandlingstema = "ANY"
             oppgavetype = "BEH_EL_SYM"
-            behandlingstype = "ANY"
+            behandlingstype = if (behandletAvManuell) {
+                log.info("sykmelding har vært behandlet av syfosmmanuell, {}", fields(loggingMeta))
+                "ae0256"
+            } else {
+                "ANY"
+            }
             mappeId = 1
             aktivDato = DateTimeFormatter.ISO_DATE.format(LocalDate.now())
             fristFerdigstillelse = when (behandletAvManuell) {
@@ -616,10 +676,38 @@ class UpdateInfotrygdService(
             prioritet = PrioritetType.NORM
             metadata = mapOf()
         }
-        if (behandletAvManuell) {
-            log.info("sykmelding har vært behandlet av syfosmmanuell, {}", fields(loggingMeta))
-            oppgave.behandlingstype = "ae0256"
-        }
+        return oppgave
+    }
+
+    suspend fun opprettOpprettOppgaveKafkaMessage(receivedSykmelding: ReceivedSykmelding, validationResult: ValidationResult, loggingMeta: LoggingMeta): OpprettOppgaveKafkaMessage {
+        val behandletAvManuell = manuellClient.behandletAvManuell(receivedSykmelding.sykmelding.id, loggingMeta)
+        val oppgave = OpprettOppgaveKafkaMessage(
+            messageId = receivedSykmelding.msgId,
+            aktoerId = receivedSykmelding.sykmelding.pasientAktoerId,
+            tildeltEnhetsnr = "",
+            opprettetAvEnhetsnr = "9999",
+            behandlesAvApplikasjon = "FS22", // Gosys
+            orgnr = receivedSykmelding.legekontorOrgNr ?: "",
+            beskrivelse = "Manuell behandling av sykmelding grunnet følgende regler: ${validationResult.ruleHits.joinToString(", ") { it.messageForSender }}",
+            temagruppe = "ANY",
+            tema = "SYM",
+            behandlingstema = "ANY",
+            oppgavetype = "BEH_EL_SYM",
+            behandlingstype = if (behandletAvManuell) {
+                log.info("sykmelding har vært behandlet av syfosmmanuell, {}", fields(loggingMeta))
+                "ae0256"
+            } else {
+                "ANY"
+            },
+            mappeId = 1,
+            aktivDato = DateTimeFormatter.ISO_DATE.format(LocalDate.now()),
+            fristFerdigstillelse = when (behandletAvManuell) {
+                true -> DateTimeFormatter.ISO_DATE.format(LocalDate.now())
+                false -> DateTimeFormatter.ISO_DATE.format(finnFristForFerdigstillingAvOppgave(LocalDate.now().plusDays(4)))
+            },
+            prioritet = PrioritetType.NORM,
+            metadata = mapOf()
+        )
         return oppgave
     }
 

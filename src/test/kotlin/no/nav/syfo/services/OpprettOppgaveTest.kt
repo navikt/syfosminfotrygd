@@ -7,6 +7,7 @@ import kotlinx.coroutines.runBlocking
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.client.ManuellClient
 import no.nav.syfo.client.NorskHelsenettClient
+import no.nav.syfo.model.OpprettOppgaveKafkaMessage
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.model.RuleInfo
 import no.nav.syfo.model.Status
@@ -28,7 +29,9 @@ object OpprettOppgaveTest : Spek({
     val norskHelsenettClient = mockk<NorskHelsenettClient>()
     val kafkaproducerCreateTask = mockk<KafkaProducer<String, ProduceTask>>()
     val kafkaproducerreceivedSykmelding = mockk<KafkaProducer<String, ReceivedSykmelding>>()
-    val kafkaproducervalidationResult = mockk<KafkaProducer<String, ValidationResult>>()
+    val kafkaAivenProducerReceivedSykmelding = mockk<KafkaProducer<String, ReceivedSykmelding>>()
+    val kafkaAivenProducerOppgave = mockk<KafkaProducer<String, OpprettOppgaveKafkaMessage>>()
+    val behandlingsutfallService = mockk<BehandlingsutfallService>()
     val updateInfotrygdService = UpdateInfotrygdService(
         manuellClient,
         norskHelsenettClient,
@@ -36,9 +39,12 @@ object OpprettOppgaveTest : Spek({
         kafkaproducerreceivedSykmelding,
         "retry",
         "oppgave",
-        kafkaproducervalidationResult,
-        "behandlingsutfall",
-        ApplicationState(alive = true, ready = true)
+        ApplicationState(alive = true, ready = true),
+        kafkaAivenProducerReceivedSykmelding,
+        kafkaAivenProducerOppgave,
+        "retry",
+        "oppgave",
+        behandlingsutfallService
     )
 
     beforeEachTest {

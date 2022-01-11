@@ -8,10 +8,11 @@ import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.client.ManuellClient
 import no.nav.syfo.client.NorskHelsenettClient
+import no.nav.syfo.model.OpprettOppgaveKafkaMessage
 import no.nav.syfo.model.ReceivedSykmelding
-import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.rules.sortedSMInfos
 import no.nav.syfo.sak.avro.ProduceTask
+import no.nav.syfo.services.BehandlingsutfallService
 import no.nav.syfo.services.UpdateInfotrygdService
 import no.nav.syfo.util.LoggingMeta
 import org.amshove.kluent.shouldBeEqualTo
@@ -26,7 +27,9 @@ object CreateInfotrygdBlokkSpek : Spek({
         val norskHelsenettClient = mockk<NorskHelsenettClient>()
         val kafkaproducerCreateTask = mockk<KafkaProducer<String, ProduceTask>>()
         val kafkaproducerreceivedSykmelding = mockk<KafkaProducer<String, ReceivedSykmelding>>()
-        val kafkaproducervalidationResult = mockk<KafkaProducer<String, ValidationResult>>()
+        val kafkaAivenProducerReceivedSykmelding = mockk<KafkaProducer<String, ReceivedSykmelding>>()
+        val kafkaAivenProducerOppgave = mockk<KafkaProducer<String, OpprettOppgaveKafkaMessage>>()
+        val behandlingsutfallService = mockk<BehandlingsutfallService>()
         val updateInfotrygdService = UpdateInfotrygdService(
             manuellClient,
             norskHelsenettClient,
@@ -34,9 +37,12 @@ object CreateInfotrygdBlokkSpek : Spek({
             kafkaproducerreceivedSykmelding,
             "retry",
             "oppgave",
-            kafkaproducervalidationResult,
-            "behandlingsutfall",
-            ApplicationState(alive = true, ready = true)
+            ApplicationState(alive = true, ready = true),
+            kafkaAivenProducerReceivedSykmelding,
+            kafkaAivenProducerOppgave,
+            "retry",
+            "oppgave",
+            behandlingsutfallService
         )
 
         it("Should set forsteFravaersDag correctly, when oprasjosntype 1") {

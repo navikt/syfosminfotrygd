@@ -38,7 +38,11 @@ data class Environment(
     override val cluster: String = getEnvVar("NAIS_CLUSTER_NAME"),
     val helsenettproxyScope: String = getEnvVar("HELSENETT_SCOPE"),
     val manuellUrl: String = "http://syfosmmanuell-backend",
-    val manuellScope: String = getEnvVar("MANUELL_SCOPE")
+    val manuellScope: String = getEnvVar("MANUELL_SCOPE"),
+    val okSykmeldingTopic: String = "teamsykmelding.ok-sykmelding",
+    val behandlingsUtfallTopic: String = "teamsykmelding.sykmelding-behandlingsutfall",
+    val produserOppgaveTopic: String = "teamsykmelding.oppgave-produser-oppgave",
+    val retryTopic: String = "teamsykmelding.privat-sminfotrygd-retry"
 ) : MqConfig, KafkaConfig
 
 data class VaultServiceUser(
