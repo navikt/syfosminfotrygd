@@ -51,27 +51,28 @@ import kotlin.math.absoluteValue
 
 const val INFOTRYGD = "INFOTRYGD"
 
-class UpdateInfotrygdService {
+class UpdateInfotrygdService(
+    private val manuellClient: ManuellClient,
+    private val norskHelsenettClient: NorskHelsenettClient,
+    private val kafkaproducerCreateTask: KafkaProducer<String, ProduceTask>,
+    private val kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
+    private val infotrygdRetryTopic: String,
+    private val oppgaveTopic: String,
+    private val kafkaproducervalidationResult: KafkaProducer<String, ValidationResult>,
+    private val sm2013BehandlingsUtfallTopic: String,
+    private val applicationState: ApplicationState
+) {
 
     suspend fun updateInfotrygd(
         receivedSykmelding: ReceivedSykmelding,
-        manuellClient: ManuellClient,
-        norskHelsenettClient: NorskHelsenettClient,
         validationResult: ValidationResult,
         infotrygdOppdateringProducer: MessageProducer,
-        kafkaproducerCreateTask: KafkaProducer<String, ProduceTask>,
         navKontorLokalKontor: String,
         loggingMeta: LoggingMeta,
         session: Session,
         infotrygdForespResponse: InfotrygdForesp,
         healthInformation: HelseOpplysningerArbeidsuforhet,
-        jedis: Jedis,
-        kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
-        infotrygdRetryTopic: String,
-        oppgaveTopic: String,
-        kafkaproducervalidationResult: KafkaProducer<String, ValidationResult>,
-        sm2013BehandlingsUtfallToipic: String,
-        applicationState: ApplicationState
+        jedis: Jedis
     ) {
         val helsepersonell = if (erEgenmeldt(receivedSykmelding)) {
             Behandler(listOf(Godkjenning(helsepersonellkategori = Kode(aktiv = true, oid = 0, verdi = HelsepersonellKategori.LEGE.verdi), autorisasjon = Kode(aktiv = true, oid = 0, verdi = ""))))
@@ -84,11 +85,10 @@ class UpdateInfotrygdService {
             when (validationResult.status) {
                 in arrayOf(Status.MANUAL_PROCESSING) ->
                     produceManualTaskAndSendValidationResults(
-                        kafkaproducerCreateTask, manuellClient, receivedSykmelding, validationResult,
-                        loggingMeta, oppgaveTopic, sm2013BehandlingsUtfallToipic,
-                        kafkaproducervalidationResult,
+                        receivedSykmelding, validationResult,
+                        loggingMeta,
                         InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
-                        helsepersonellKategoriVerdi, jedis, applicationState
+                        helsepersonellKategoriVerdi, jedis
                     )
                 else -> sendInfotrygdOppdateringAndValidationResult(
                     infotrygdOppdateringProducer,
@@ -99,10 +99,6 @@ class UpdateInfotrygdService {
                     helsepersonellKategoriVerdi,
                     navKontorLokalKontor,
                     jedis,
-                    kafkaproducerreceivedSykmelding,
-                    infotrygdRetryTopic,
-                    kafkaproducervalidationResult,
-                    sm2013BehandlingsUtfallToipic,
                     validationResult
                 )
             }
@@ -127,10 +123,10 @@ class UpdateInfotrygdService {
             RULE_HIT_STATUS_COUNTER.labels(validationResultBehandler.status.name).inc()
             log.warn("Behandler er ikke registert i HPR")
             produceManualTaskAndSendValidationResults(
-                kafkaproducerCreateTask, manuellClient, receivedSykmelding, validationResultBehandler,
-                loggingMeta, oppgaveTopic, sm2013BehandlingsUtfallToipic, kafkaproducervalidationResult,
+                receivedSykmelding, validationResultBehandler,
+                loggingMeta,
                 InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
-                HelsepersonellKategori.LEGE.verdi, jedis, applicationState
+                HelsepersonellKategori.LEGE.verdi, jedis
             )
         }
     }
@@ -147,10 +143,6 @@ class UpdateInfotrygdService {
         behandlerKode: String,
         navKontorNr: String,
         jedis: Jedis,
-        kafkaproducerreceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
-        infotrygdRetryTopic: String,
-        kafkaproducervalidationResult: KafkaProducer<String, ValidationResult>,
-        sm2013BehandlingsUtfallToipic: String,
         validationResult: ValidationResult
     ) {
         val perioder = itfh.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
@@ -190,7 +182,7 @@ class UpdateInfotrygdService {
                             receivedSykmelding,
                             kafkaproducervalidationResult,
                             validationResult,
-                            sm2013BehandlingsUtfallToipic,
+                            sm2013BehandlingsUtfallTopic,
                             loggingMeta
                         )
                         log.warn("Melding market som infotrygd duplikat oppdaatering {}", fields(loggingMeta))
@@ -205,7 +197,7 @@ class UpdateInfotrygdService {
                                 receivedSykmelding,
                                 kafkaproducervalidationResult,
                                 validationResult,
-                                sm2013BehandlingsUtfallToipic,
+                                sm2013BehandlingsUtfallTopic,
                                 loggingMeta
                             )
                         } catch (exception: Exception) {
@@ -496,22 +488,16 @@ class UpdateInfotrygdService {
     }
 
     private suspend fun produceManualTaskAndSendValidationResults(
-        kafkaProducer: KafkaProducer<String, ProduceTask>,
-        manuellClient: ManuellClient,
         receivedSykmelding: ReceivedSykmelding,
         validationResult: ValidationResult,
         loggingMeta: LoggingMeta,
-        oppgaveTopic: String,
-        sm2013BehandlingsUtfallToipic: String,
-        kafkaproducervalidationResult: KafkaProducer<String, ValidationResult>,
         itfh: InfotrygdForespAndHealthInformation,
         helsepersonellKategoriVerdi: String,
-        jedis: Jedis,
-        applicationState: ApplicationState
+        jedis: Jedis
     ) {
         sendRuleCheckValidationResult(
             receivedSykmelding, kafkaproducervalidationResult,
-            validationResult, sm2013BehandlingsUtfallToipic, loggingMeta
+            validationResult, sm2013BehandlingsUtfallTopic, loggingMeta
         )
         try {
             val perioder = itfh.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
@@ -553,7 +539,7 @@ class UpdateInfotrygdService {
                     log.warn("Trenger ikke å opprett manuell oppgave for {}", fields(loggingMeta))
                 }
                 else -> {
-                    opprettOppgave(kafkaProducer, manuellClient, receivedSykmelding, validationResult, loggingMeta, oppgaveTopic)
+                    opprettOppgave(receivedSykmelding, validationResult, loggingMeta)
                     oppdaterRedis(sha256String, sha256String, jedis, TimeUnit.DAYS.toSeconds(60).toInt(), loggingMeta)
                 }
             }
@@ -564,18 +550,15 @@ class UpdateInfotrygdService {
     }
 
     suspend fun opprettOppgave(
-        kafkaProducer: KafkaProducer<String, ProduceTask>,
-        manuellClient: ManuellClient,
         receivedSykmelding: ReceivedSykmelding,
         validationResult: ValidationResult,
-        loggingMeta: LoggingMeta,
-        oppgaveTopic: String
+        loggingMeta: LoggingMeta
     ) {
         try {
-            kafkaProducer.send(
+            kafkaproducerCreateTask.send(
                 ProducerRecord(
                     oppgaveTopic, receivedSykmelding.sykmelding.id,
-                    opprettProduceTask(manuellClient, receivedSykmelding, validationResult, loggingMeta)
+                    opprettProduceTask(receivedSykmelding, validationResult, loggingMeta)
                 )
             ).get()
             MANUELLE_OPPGAVER_COUNTER.inc()
@@ -608,46 +591,46 @@ class UpdateInfotrygdService {
 
         return delvisOverlappendeSykmeldingRule
     }
-}
 
-suspend fun opprettProduceTask(manuellClient: ManuellClient, receivedSykmelding: ReceivedSykmelding, validationResult: ValidationResult, loggingMeta: LoggingMeta): ProduceTask {
-    val behandletAvManuell = manuellClient.behandletAvManuell(receivedSykmelding.sykmelding.id, loggingMeta)
-    val oppgave = ProduceTask().apply {
-        messageId = receivedSykmelding.msgId
-        aktoerId = receivedSykmelding.sykmelding.pasientAktoerId
-        tildeltEnhetsnr = ""
-        opprettetAvEnhetsnr = "9999"
-        behandlesAvApplikasjon = "FS22" // Gosys
-        orgnr = receivedSykmelding.legekontorOrgNr ?: ""
-        beskrivelse = "Manuell behandling av sykmelding grunnet følgende regler: ${validationResult.ruleHits.joinToString(", ") { it.messageForSender }}"
-        temagruppe = "ANY"
-        tema = "SYM"
-        behandlingstema = "ANY"
-        oppgavetype = "BEH_EL_SYM"
-        behandlingstype = "ANY"
-        mappeId = 1
-        aktivDato = DateTimeFormatter.ISO_DATE.format(LocalDate.now())
-        fristFerdigstillelse = when (behandletAvManuell) {
-            true -> DateTimeFormatter.ISO_DATE.format(LocalDate.now())
-            false -> DateTimeFormatter.ISO_DATE.format(finnFristForFerdigstillingAvOppgave(LocalDate.now().plusDays(4)))
+    suspend fun opprettProduceTask(receivedSykmelding: ReceivedSykmelding, validationResult: ValidationResult, loggingMeta: LoggingMeta): ProduceTask {
+        val behandletAvManuell = manuellClient.behandletAvManuell(receivedSykmelding.sykmelding.id, loggingMeta)
+        val oppgave = ProduceTask().apply {
+            messageId = receivedSykmelding.msgId
+            aktoerId = receivedSykmelding.sykmelding.pasientAktoerId
+            tildeltEnhetsnr = ""
+            opprettetAvEnhetsnr = "9999"
+            behandlesAvApplikasjon = "FS22" // Gosys
+            orgnr = receivedSykmelding.legekontorOrgNr ?: ""
+            beskrivelse = "Manuell behandling av sykmelding grunnet følgende regler: ${validationResult.ruleHits.joinToString(", ") { it.messageForSender }}"
+            temagruppe = "ANY"
+            tema = "SYM"
+            behandlingstema = "ANY"
+            oppgavetype = "BEH_EL_SYM"
+            behandlingstype = "ANY"
+            mappeId = 1
+            aktivDato = DateTimeFormatter.ISO_DATE.format(LocalDate.now())
+            fristFerdigstillelse = when (behandletAvManuell) {
+                true -> DateTimeFormatter.ISO_DATE.format(LocalDate.now())
+                false -> DateTimeFormatter.ISO_DATE.format(finnFristForFerdigstillingAvOppgave(LocalDate.now().plusDays(4)))
+            }
+            prioritet = PrioritetType.NORM
+            metadata = mapOf()
         }
-        prioritet = PrioritetType.NORM
-        metadata = mapOf()
+        if (behandletAvManuell) {
+            log.info("sykmelding har vært behandlet av syfosmmanuell, {}", fields(loggingMeta))
+            oppgave.behandlingstype = "ae0256"
+        }
+        return oppgave
     }
-    if (behandletAvManuell) {
-        log.info("sykmelding har vært behandlet av syfosmmanuell, {}", fields(loggingMeta))
-        oppgave.behandlingstype = "ae0256"
-    }
-    return oppgave
-}
 
-fun finnFristForFerdigstillingAvOppgave(ferdistilleDato: LocalDate): LocalDate {
-    return setToWorkDay(ferdistilleDato)
-}
-
-fun setToWorkDay(ferdistilleDato: LocalDate): LocalDate =
-    when (ferdistilleDato.dayOfWeek) {
-        DayOfWeek.SATURDAY -> ferdistilleDato.plusDays(2)
-        DayOfWeek.SUNDAY -> ferdistilleDato.plusDays(1)
-        else -> ferdistilleDato
+    fun finnFristForFerdigstillingAvOppgave(ferdistilleDato: LocalDate): LocalDate {
+        return setToWorkDay(ferdistilleDato)
     }
+
+    fun setToWorkDay(ferdistilleDato: LocalDate): LocalDate =
+        when (ferdistilleDato.dayOfWeek) {
+            DayOfWeek.SATURDAY -> ferdistilleDato.plusDays(2)
+            DayOfWeek.SUNDAY -> ferdistilleDato.plusDays(1)
+            else -> ferdistilleDato
+        }
+}

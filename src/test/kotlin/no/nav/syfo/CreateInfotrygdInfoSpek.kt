@@ -1,5 +1,6 @@
 package no.nav.syfo
 
+import io.mockk.mockk
 import no.nav.helse.eiFellesformat.XMLEIFellesformat
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.infotrygd.foresp.TypeSMinfo
@@ -11,7 +12,13 @@ import no.nav.helse.sm2013.CV
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.helse.sm2013.Ident
 import no.nav.helse.sm2013.KontrollSystemBlokk
+import no.nav.syfo.application.ApplicationState
+import no.nav.syfo.client.ManuellClient
+import no.nav.syfo.client.NorskHelsenettClient
 import no.nav.syfo.model.HelsepersonellKategori
+import no.nav.syfo.model.ReceivedSykmelding
+import no.nav.syfo.model.ValidationResult
+import no.nav.syfo.sak.avro.ProduceTask
 import no.nav.syfo.services.UpdateInfotrygdService
 import no.nav.syfo.services.createInfotrygdForesp
 import no.nav.syfo.util.LoggingMeta
@@ -20,6 +27,7 @@ import no.nav.syfo.util.fellesformatUnmarshaller
 import no.nav.syfo.util.xmlObjectWriter
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeFalse
+import org.apache.kafka.clients.producer.KafkaProducer
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.io.StringReader
@@ -29,8 +37,22 @@ import java.time.LocalDateTime
 object CreateInfotrygdInfoSpek : Spek({
 
     describe("Testing mapping of fellesformat and InfotrygdInfo") {
-
-        val updateInfotrygdService = UpdateInfotrygdService()
+        val manuellClient = mockk<ManuellClient>()
+        val norskHelsenettClient = mockk<NorskHelsenettClient>()
+        val kafkaproducerCreateTask = mockk<KafkaProducer<String, ProduceTask>>()
+        val kafkaproducerreceivedSykmelding = mockk<KafkaProducer<String, ReceivedSykmelding>>()
+        val kafkaproducervalidationResult = mockk<KafkaProducer<String, ValidationResult>>()
+        val updateInfotrygdService = UpdateInfotrygdService(
+            manuellClient,
+            norskHelsenettClient,
+            kafkaproducerCreateTask,
+            kafkaproducerreceivedSykmelding,
+            "retry",
+            "oppgave",
+            kafkaproducervalidationResult,
+            "behandlingsutfall",
+            ApplicationState(alive = true, ready = true)
+        )
 
         it("Should map regelSettVersjon correctly") {
             val healthInformation = createDefaultHealthInformation()
