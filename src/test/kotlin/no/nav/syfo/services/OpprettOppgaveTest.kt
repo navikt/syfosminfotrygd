@@ -4,13 +4,19 @@ import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
+import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.client.ManuellClient
+import no.nav.syfo.client.NorskHelsenettClient
+import no.nav.syfo.model.OpprettOppgaveKafkaMessage
+import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.model.RuleInfo
 import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.receivedSykmelding
+import no.nav.syfo.sak.avro.ProduceTask
 import no.nav.syfo.util.LoggingMeta
 import org.amshove.kluent.shouldBeEqualTo
+import org.apache.kafka.clients.producer.KafkaProducer
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.time.LocalDate
@@ -20,6 +26,26 @@ import java.util.UUID
 object OpprettOppgaveTest : Spek({
     val loggingMeta = LoggingMeta("", "", "", "")
     val manuellClient = mockk<ManuellClient>()
+    val norskHelsenettClient = mockk<NorskHelsenettClient>()
+    val kafkaproducerCreateTask = mockk<KafkaProducer<String, ProduceTask>>()
+    val kafkaproducerreceivedSykmelding = mockk<KafkaProducer<String, ReceivedSykmelding>>()
+    val kafkaAivenProducerReceivedSykmelding = mockk<KafkaProducer<String, ReceivedSykmelding>>()
+    val kafkaAivenProducerOppgave = mockk<KafkaProducer<String, OpprettOppgaveKafkaMessage>>()
+    val behandlingsutfallService = mockk<BehandlingsutfallService>()
+    val updateInfotrygdService = UpdateInfotrygdService(
+        manuellClient,
+        norskHelsenettClient,
+        kafkaproducerCreateTask,
+        kafkaproducerreceivedSykmelding,
+        "retry",
+        "oppgave",
+        ApplicationState(alive = true, ready = true),
+        kafkaAivenProducerReceivedSykmelding,
+        kafkaAivenProducerOppgave,
+        "retry",
+        "oppgave",
+        behandlingsutfallService
+    )
 
     beforeEachTest {
         clearMocks(manuellClient)
@@ -32,7 +58,7 @@ object OpprettOppgaveTest : Spek({
             val receivedSykmelding = receivedSykmelding(UUID.randomUUID().toString())
 
             runBlocking {
-                val oppgave = opprettProduceTask(manuellClient, receivedSykmelding, validationResults, loggingMeta)
+                val oppgave = updateInfotrygdService.opprettProduceTask(receivedSykmelding, validationResults, loggingMeta)
 
                 oppgave.behandlingstype shouldBeEqualTo "ae0256"
             }
@@ -43,7 +69,7 @@ object OpprettOppgaveTest : Spek({
             val receivedSykmelding = receivedSykmelding(UUID.randomUUID().toString())
 
             runBlocking {
-                val oppgave = opprettProduceTask(manuellClient, receivedSykmelding, validationResults, loggingMeta)
+                val oppgave = updateInfotrygdService.opprettProduceTask(receivedSykmelding, validationResults, loggingMeta)
 
                 oppgave.fristFerdigstillelse shouldBeEqualTo DateTimeFormatter.ISO_DATE.format(LocalDate.now())
             }
@@ -54,7 +80,7 @@ object OpprettOppgaveTest : Spek({
             val receivedSykmelding = receivedSykmelding(UUID.randomUUID().toString())
 
             runBlocking {
-                val oppgave = opprettProduceTask(manuellClient, receivedSykmelding, validationResults, loggingMeta)
+                val oppgave = updateInfotrygdService.opprettProduceTask(receivedSykmelding, validationResults, loggingMeta)
 
                 oppgave.behandlingstype shouldBeEqualTo "ANY"
             }
