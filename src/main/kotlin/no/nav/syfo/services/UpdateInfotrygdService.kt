@@ -705,7 +705,7 @@ class UpdateInfotrygdService(
                 true -> DateTimeFormatter.ISO_DATE.format(LocalDate.now())
                 false -> DateTimeFormatter.ISO_DATE.format(finnFristForFerdigstillingAvOppgave(LocalDate.now().plusDays(4)))
             },
-            prioritet = PrioritetType.NORM,
+            prioritet = no.nav.syfo.model.PrioritetType.NORM,
             metadata = mapOf()
         )
         return oppgave
