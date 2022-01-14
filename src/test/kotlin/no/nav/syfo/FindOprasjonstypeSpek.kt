@@ -10,7 +10,6 @@ import no.nav.syfo.client.ManuellClient
 import no.nav.syfo.client.NorskHelsenettClient
 import no.nav.syfo.model.OpprettOppgaveKafkaMessage
 import no.nav.syfo.model.ReceivedSykmelding
-import no.nav.syfo.sak.avro.ProduceTask
 import no.nav.syfo.services.BehandlingsutfallService
 import no.nav.syfo.services.UpdateInfotrygdService
 import no.nav.syfo.util.LoggingMeta
@@ -23,18 +22,12 @@ import java.time.LocalDate
 object FindOprasjonstypeSpek : Spek({
     val manuellClient = mockk<ManuellClient>()
     val norskHelsenettClient = mockk<NorskHelsenettClient>()
-    val kafkaproducerCreateTask = mockk<KafkaProducer<String, ProduceTask>>()
-    val kafkaproducerreceivedSykmelding = mockk<KafkaProducer<String, ReceivedSykmelding>>()
     val kafkaAivenProducerReceivedSykmelding = mockk<KafkaProducer<String, ReceivedSykmelding>>()
     val kafkaAivenProducerOppgave = mockk<KafkaProducer<String, OpprettOppgaveKafkaMessage>>()
     val behandlingsutfallService = mockk<BehandlingsutfallService>()
     val updateInfotrygdService = UpdateInfotrygdService(
         manuellClient,
         norskHelsenettClient,
-        kafkaproducerCreateTask,
-        kafkaproducerreceivedSykmelding,
-        "retry",
-        "oppgave",
         ApplicationState(alive = true, ready = true),
         kafkaAivenProducerReceivedSykmelding,
         kafkaAivenProducerOppgave,
