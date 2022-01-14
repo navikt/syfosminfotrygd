@@ -31,8 +31,6 @@ import no.nav.syfo.rules.ValidationRuleChain
 import no.nav.syfo.rules.sortedPeriodeFOMDate
 import no.nav.syfo.rules.sortedPeriodeTOMDate
 import no.nav.syfo.rules.sortedSMInfos
-import no.nav.syfo.sak.avro.PrioritetType
-import no.nav.syfo.sak.avro.ProduceTask
 import no.nav.syfo.sortedFOMDate
 import no.nav.syfo.unmarshal
 import no.nav.syfo.util.LoggingMeta
@@ -588,38 +586,6 @@ class UpdateInfotrygdService(
             (receivedSykmelding.sykmelding.perioder.sortedPeriodeFOMDate().last()..receivedSykmelding.sykmelding.perioder.sortedPeriodeTOMDate().last()).daysBetween() <= 3
 
         return delvisOverlappendeSykmeldingRule
-    }
-
-    suspend fun opprettProduceTask(receivedSykmelding: ReceivedSykmelding, validationResult: ValidationResult, loggingMeta: LoggingMeta): ProduceTask {
-        val behandletAvManuell = manuellClient.behandletAvManuell(receivedSykmelding.sykmelding.id, loggingMeta)
-        val oppgave = ProduceTask().apply {
-            messageId = receivedSykmelding.msgId
-            aktoerId = receivedSykmelding.sykmelding.pasientAktoerId
-            tildeltEnhetsnr = ""
-            opprettetAvEnhetsnr = "9999"
-            behandlesAvApplikasjon = "FS22" // Gosys
-            orgnr = receivedSykmelding.legekontorOrgNr ?: ""
-            beskrivelse = "Manuell behandling av sykmelding grunnet følgende regler: ${validationResult.ruleHits.joinToString(", ") { it.messageForSender }}"
-            temagruppe = "ANY"
-            tema = "SYM"
-            behandlingstema = "ANY"
-            oppgavetype = "BEH_EL_SYM"
-            behandlingstype = if (behandletAvManuell) {
-                log.info("sykmelding har vært behandlet av syfosmmanuell, {}", fields(loggingMeta))
-                "ae0256"
-            } else {
-                "ANY"
-            }
-            mappeId = 1
-            aktivDato = DateTimeFormatter.ISO_DATE.format(LocalDate.now())
-            fristFerdigstillelse = when (behandletAvManuell) {
-                true -> DateTimeFormatter.ISO_DATE.format(LocalDate.now())
-                false -> DateTimeFormatter.ISO_DATE.format(finnFristForFerdigstillingAvOppgave(LocalDate.now().plusDays(4)))
-            }
-            prioritet = PrioritetType.NORM
-            metadata = mapOf()
-        }
-        return oppgave
     }
 
     suspend fun opprettOpprettOppgaveKafkaMessage(receivedSykmelding: ReceivedSykmelding, validationResult: ValidationResult, loggingMeta: LoggingMeta): OpprettOppgaveKafkaMessage {

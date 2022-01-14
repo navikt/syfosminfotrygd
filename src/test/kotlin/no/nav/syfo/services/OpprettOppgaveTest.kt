@@ -51,7 +51,7 @@ object OpprettOppgaveTest : Spek({
             val receivedSykmelding = receivedSykmelding(UUID.randomUUID().toString())
 
             runBlocking {
-                val oppgave = updateInfotrygdService.opprettProduceTask(receivedSykmelding, validationResults, loggingMeta)
+                val oppgave = updateInfotrygdService.opprettOpprettOppgaveKafkaMessage(receivedSykmelding, validationResults, loggingMeta)
 
                 oppgave.behandlingstype shouldBeEqualTo "ae0256"
             }
@@ -62,7 +62,7 @@ object OpprettOppgaveTest : Spek({
             val receivedSykmelding = receivedSykmelding(UUID.randomUUID().toString())
 
             runBlocking {
-                val oppgave = updateInfotrygdService.opprettProduceTask(receivedSykmelding, validationResults, loggingMeta)
+                val oppgave = updateInfotrygdService.opprettOpprettOppgaveKafkaMessage(receivedSykmelding, validationResults, loggingMeta)
 
                 oppgave.fristFerdigstillelse shouldBeEqualTo DateTimeFormatter.ISO_DATE.format(LocalDate.now())
             }
@@ -73,7 +73,7 @@ object OpprettOppgaveTest : Spek({
             val receivedSykmelding = receivedSykmelding(UUID.randomUUID().toString())
 
             runBlocking {
-                val oppgave = updateInfotrygdService.opprettProduceTask(receivedSykmelding, validationResults, loggingMeta)
+                val oppgave = updateInfotrygdService.opprettOpprettOppgaveKafkaMessage(receivedSykmelding, validationResults, loggingMeta)
 
                 oppgave.behandlingstype shouldBeEqualTo "ANY"
             }
