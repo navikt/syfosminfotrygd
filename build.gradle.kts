@@ -6,8 +6,6 @@ group = "no.nav.syfo"
 version = "1.0.0"
 
 val artemisVersion = "2.17.0"
-val confluentVersion = "6.2.2"
-val syfooppgaveSchemasVersion = "c8be932543e7356a34690ce7979d494c5d8516d8"
 val coroutinesVersion = "1.5.1"
 val infotrygdForespVersion = "2019.07.29-02-53-86b22e73f7843e422ee500b486dac387a582f2d1"
 val fellesformatVersion = "2019.07.30-12-26-5c924ef4f04022bbb850aaf299eb8e4464c1ca6a"
@@ -91,7 +89,6 @@ dependencies {
     implementation ("com.ibm.mq:com.ibm.mq.allclient:$ibmMqVersion")
 
     implementation ("org.apache.kafka:kafka_2.12:$kafkaVersion")
-    implementation ("io.confluent:kafka-avro-serializer:$confluentVersion")
 
     implementation ("com.fasterxml.jackson.module:jackson-module-jaxb-annotations:$jacksonVersion")
     implementation ("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
@@ -101,7 +98,6 @@ dependencies {
     implementation ("no.nav.helse.xml:sm2013:$sykmeldingVersion")
     implementation ("no.nav.helse.xml:xmlfellesformat:$fellesformatVersion")
     implementation ("no.nav.helse.xml:kontrollsystemblokk:$kontrollsystemblokk")
-    implementation ("no.nav.syfo.schemas:syfosmoppgave-avro:$syfooppgaveSchemasVersion")
     implementation ("no.nav.helse.xml:infotrygd-foresp:$infotrygdForespVersion")
     implementation ("no.nav.helse.xml:kith-hodemelding:$kithHodemeldingVersion")
     implementation ("no.nav.helse.xml:tssSamhandlerData:$syfoXmlCodegen")

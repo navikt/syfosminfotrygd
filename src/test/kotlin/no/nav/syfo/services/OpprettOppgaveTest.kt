@@ -13,7 +13,6 @@ import no.nav.syfo.model.RuleInfo
 import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.receivedSykmelding
-import no.nav.syfo.sak.avro.ProduceTask
 import no.nav.syfo.util.LoggingMeta
 import org.amshove.kluent.shouldBeEqualTo
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -27,18 +26,12 @@ object OpprettOppgaveTest : Spek({
     val loggingMeta = LoggingMeta("", "", "", "")
     val manuellClient = mockk<ManuellClient>()
     val norskHelsenettClient = mockk<NorskHelsenettClient>()
-    val kafkaproducerCreateTask = mockk<KafkaProducer<String, ProduceTask>>()
-    val kafkaproducerreceivedSykmelding = mockk<KafkaProducer<String, ReceivedSykmelding>>()
     val kafkaAivenProducerReceivedSykmelding = mockk<KafkaProducer<String, ReceivedSykmelding>>()
     val kafkaAivenProducerOppgave = mockk<KafkaProducer<String, OpprettOppgaveKafkaMessage>>()
     val behandlingsutfallService = mockk<BehandlingsutfallService>()
     val updateInfotrygdService = UpdateInfotrygdService(
         manuellClient,
         norskHelsenettClient,
-        kafkaproducerCreateTask,
-        kafkaproducerreceivedSykmelding,
-        "retry",
-        "oppgave",
         ApplicationState(alive = true, ready = true),
         kafkaAivenProducerReceivedSykmelding,
         kafkaAivenProducerOppgave,
@@ -58,7 +51,7 @@ object OpprettOppgaveTest : Spek({
             val receivedSykmelding = receivedSykmelding(UUID.randomUUID().toString())
 
             runBlocking {
-                val oppgave = updateInfotrygdService.opprettProduceTask(receivedSykmelding, validationResults, loggingMeta)
+                val oppgave = updateInfotrygdService.opprettOpprettOppgaveKafkaMessage(receivedSykmelding, validationResults, loggingMeta)
 
                 oppgave.behandlingstype shouldBeEqualTo "ae0256"
             }
@@ -69,7 +62,7 @@ object OpprettOppgaveTest : Spek({
             val receivedSykmelding = receivedSykmelding(UUID.randomUUID().toString())
 
             runBlocking {
-                val oppgave = updateInfotrygdService.opprettProduceTask(receivedSykmelding, validationResults, loggingMeta)
+                val oppgave = updateInfotrygdService.opprettOpprettOppgaveKafkaMessage(receivedSykmelding, validationResults, loggingMeta)
 
                 oppgave.fristFerdigstillelse shouldBeEqualTo DateTimeFormatter.ISO_DATE.format(LocalDate.now())
             }
@@ -80,7 +73,7 @@ object OpprettOppgaveTest : Spek({
             val receivedSykmelding = receivedSykmelding(UUID.randomUUID().toString())
 
             runBlocking {
-                val oppgave = updateInfotrygdService.opprettProduceTask(receivedSykmelding, validationResults, loggingMeta)
+                val oppgave = updateInfotrygdService.opprettOpprettOppgaveKafkaMessage(receivedSykmelding, validationResults, loggingMeta)
 
                 oppgave.behandlingstype shouldBeEqualTo "ANY"
             }

@@ -13,7 +13,6 @@ import no.nav.syfo.model.RuleInfo
 import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.rules.ValidationRuleChain
-import no.nav.syfo.sak.avro.ProduceTask
 import no.nav.syfo.services.BehandlingsutfallService
 import no.nav.syfo.services.UpdateInfotrygdService
 import org.amshove.kluent.shouldBeEqualTo
@@ -89,18 +88,12 @@ object SkalIkkeOppdatereInfotrygdSpek : Spek({
     describe("Testing av metoden skalIkkeOppdatereInfotrygd") {
         val manuellClient = mockk<ManuellClient>()
         val norskHelsenettClient = mockk<NorskHelsenettClient>()
-        val kafkaproducerCreateTask = mockk<KafkaProducer<String, ProduceTask>>()
-        val kafkaproducerreceivedSykmelding = mockk<KafkaProducer<String, ReceivedSykmelding>>()
         val kafkaAivenProducerReceivedSykmelding = mockk<KafkaProducer<String, ReceivedSykmelding>>()
         val kafkaAivenProducerOppgave = mockk<KafkaProducer<String, OpprettOppgaveKafkaMessage>>()
         val behandlingsutfallService = mockk<BehandlingsutfallService>()
         val updateInfotrygdService = UpdateInfotrygdService(
             manuellClient,
             norskHelsenettClient,
-            kafkaproducerCreateTask,
-            kafkaproducerreceivedSykmelding,
-            "retry",
-            "oppgave",
             ApplicationState(alive = true, ready = true),
             kafkaAivenProducerReceivedSykmelding,
             kafkaAivenProducerOppgave,
