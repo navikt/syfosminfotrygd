@@ -27,7 +27,6 @@ import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.model.RuleInfo
 import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
-import no.nav.syfo.rules.ValidationRuleChain
 import no.nav.syfo.rules.sortedPeriodeFOMDate
 import no.nav.syfo.rules.sortedPeriodeTOMDate
 import no.nav.syfo.rules.sortedSMInfos
@@ -580,7 +579,7 @@ class UpdateInfotrygdService(
     ): Boolean {
 
         val delvisOverlappendeSykmeldingRule = validationResult.ruleHits.isNotEmpty() && validationResult.ruleHits.any {
-            (it.ruleName == ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE.name)
+            (it.ruleName == "PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE")
         } && receivedSykmelding.sykmelding.perioder.sortedPeriodeFOMDate().lastOrNull() != null &&
             receivedSykmelding.sykmelding.perioder.sortedPeriodeTOMDate().lastOrNull() != null &&
             (receivedSykmelding.sykmelding.perioder.sortedPeriodeFOMDate().last()..receivedSykmelding.sykmelding.perioder.sortedPeriodeTOMDate().last()).daysBetween() <= 3
