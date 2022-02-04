@@ -3,21 +3,23 @@ package no.nav.syfo.rules
 import no.nav.syfo.model.RuleMetadata
 import no.nav.syfo.model.Status
 
-enum class TssRuleChain(
-    override val ruleId: Int?,
-    override val status: Status,
-    override val messageForUser: String,
-    override val messageForSender: String,
-    override val predicate: (RuleData<RuleMetadata>) -> Boolean
-) : Rule<RuleData<RuleMetadata>> {
-    @Description("Behandlers TSS-ident er ikke funnet automatisk av systemet")
-    TSS_IDENT_MANGLER(
-        9999,
-        Status.MANUAL_PROCESSING,
-        "Behandlers TSS-ident er ikke funnet automatisk av systemet",
-        "Behandlers TSS-ident er ikke funnet automatisk av systemet",
-        { (_, metadata) ->
-            metadata.tssid.isNullOrBlank()
-        }
-    ),
+class TssRuleChain(
+    private val metadata: RuleMetadata
+) : RuleChain {
+    // "Behandlers TSS-ident er ikke funnet automatisk av systemet
+    override val rules: List<Rule<*>> = listOf(
+        Rule(
+            name = "TSS_IDENT_MANGLER",
+            ruleId = 9999,
+            status = Status.MANUAL_PROCESSING,
+            messageForUser = "Behandlers TSS-ident er ikke funnet automatisk av systemet",
+            messageForSender = "Behandlers TSS-ident er ikke funnet automatisk av systemet",
+            input = object {
+                val tssId = metadata.tssid
+            },
+            predicate = { input ->
+                input.tssId.isNullOrBlank()
+            }
+        )
+    )
 }

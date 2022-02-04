@@ -104,7 +104,6 @@ dependencies {
 
     implementation ("no.nav.helse:syfosm-common-models:$smCommonVersion")
     implementation ("no.nav.helse:syfosm-common-ws:$smCommonVersion")
-    implementation ("no.nav.helse:syfosm-common-rules:$smCommonVersion")
     implementation ("no.nav.helse:syfosm-common-mq:$smCommonVersion") {
         exclude(group = "com.ibm.mq", module = "com.ibm.mq.allclient")
     }

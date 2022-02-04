@@ -12,7 +12,6 @@ import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.model.RuleInfo
 import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
-import no.nav.syfo.rules.ValidationRuleChain
 import no.nav.syfo.services.BehandlingsutfallService
 import no.nav.syfo.services.UpdateInfotrygdService
 import org.amshove.kluent.shouldBeEqualTo
@@ -107,9 +106,9 @@ object SkalIkkeOppdatereInfotrygdSpek : Spek({
                 status = Status.MANUAL_PROCESSING,
                 ruleHits = listOf(
                     RuleInfo(
-                        ruleName = ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE.name,
-                        messageForUser = "",
-                        messageForSender = "",
+                        ruleName = "PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE",
+                        messageForUser = "messageForSender",
+                        messageForSender = "messageForUser",
                         ruleStatus = Status.MANUAL_PROCESSING
                     ),
                     RuleInfo(
@@ -142,15 +141,15 @@ object SkalIkkeOppdatereInfotrygdSpek : Spek({
                 status = Status.MANUAL_PROCESSING,
                 ruleHits = listOf(
                     RuleInfo(
-                        ruleName = ValidationRuleChain.PERIOD_IS_AF.name,
-                        messageForUser = "",
-                        messageForSender = "",
+                        ruleName = "PERIOD_IS_AF",
+                        messageForUser = "messageForSender",
+                        messageForSender = "messageForUser",
                         ruleStatus = Status.MANUAL_PROCESSING
                     ),
                     RuleInfo(
-                        ruleName = ValidationRuleChain.TRAVEL_SUBSIDY_SPECIFIED.name,
-                        messageForUser = "",
-                        messageForSender = "",
+                        ruleName = "TRAVEL_SUBSIDY_SPECIFIED",
+                        messageForUser = "messageForSender",
+                        messageForSender = "messageForUser",
                         ruleStatus = Status.MANUAL_PROCESSING
                     )
                 )
@@ -177,15 +176,15 @@ object SkalIkkeOppdatereInfotrygdSpek : Spek({
                 status = Status.MANUAL_PROCESSING,
                 ruleHits = listOf(
                     RuleInfo(
-                        ruleName = ValidationRuleChain.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE.name,
-                        messageForUser = "",
-                        messageForSender = "",
+                        ruleName = "PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE",
+                        messageForUser = "messageForSender",
+                        messageForSender = "messageForUser",
                         ruleStatus = Status.MANUAL_PROCESSING
                     ),
                     RuleInfo(
-                        ruleName = ValidationRuleChain.TRAVEL_SUBSIDY_SPECIFIED.name,
-                        messageForUser = "",
-                        messageForSender = "",
+                        ruleName = "TRAVEL_SUBSIDY_SPECIFIED",
+                        messageForUser = "messageForSender",
+                        messageForSender = "messageForUser",
                         ruleStatus = Status.MANUAL_PROCESSING
                     )
                 )

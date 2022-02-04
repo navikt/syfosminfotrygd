@@ -13,7 +13,7 @@ val RULE_HIT_STATUS_COUNTER: Counter = Counter.Builder()
     .register()
 
 val REQUEST_TIME: Summary = Summary.build()
-    .namespace(METRICS_NS)
+    .namespace(NAMESPACE)
     .name("request_time_ms")
     .help("Request time in milliseconds.").register()
 
