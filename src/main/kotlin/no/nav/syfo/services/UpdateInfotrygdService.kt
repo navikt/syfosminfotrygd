@@ -332,9 +332,18 @@ class UpdateInfotrygdService(
             (
                 (
                     periode.periodeFOMDato.isAfter(typeSMinfo.periode.arbufoerTOM) &&
-                        (typeSMinfo.periode.arbufoerTOM..periode.periodeFOMDato).daysBetween() <= 1
+                        (
+                            (typeSMinfo.periode.arbufoerTOM..periode.periodeFOMDato).daysBetween() <= 1 ||
+                                oppholdSkyldesHelg(arbufoerTOM = typeSMinfo.periode.arbufoerTOM, periodeFOMDato = periode.periodeFOMDato)
+                            )
                     )
                 )
+
+    private fun oppholdSkyldesHelg(arbufoerTOM: LocalDate, periodeFOMDato: LocalDate): Boolean {
+        return (arbufoerTOM..periodeFOMDato).daysBetween() <= 3 &&
+            arbufoerTOM.dayOfWeek == DayOfWeek.FRIDAY &&
+            periodeFOMDato.dayOfWeek == DayOfWeek.MONDAY
+    }
 
     private fun endringSykmelding(
         periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode,

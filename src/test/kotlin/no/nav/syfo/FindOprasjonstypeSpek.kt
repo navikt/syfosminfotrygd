@@ -139,6 +139,74 @@ object FindOprasjonstypeSpek : Spek({
             ) shouldBeEqualTo 2
         }
 
+        it("Når opphold kun skyldes helg skal operasjonstype være 2") {
+            val healthInformation = HelseOpplysningerArbeidsuforhet().apply {
+                aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
+                    periode.add(
+                        HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
+                            periodeFOMDato = LocalDate.of(2022, 2, 14) // mandag
+                            periodeTOMDato = LocalDate.of(2022, 2, 20)
+                        }
+                    )
+                }
+            }
+
+            val infotrygdForesp = InfotrygdForesp().apply {
+                sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
+                    sykmelding.add(
+                        TypeSMinfo().apply {
+                            periode = TypeSMinfo.Periode().apply {
+                                arbufoerFOM = LocalDate.of(2022, 2, 1)
+                                arbufoerTOM = LocalDate.of(2022, 2, 11) // fredag
+                            }
+                        }
+                    )
+                    status = StatusType().apply {
+                        kodeMelding = "00"
+                    }
+                }
+            }
+
+            updateInfotrygdService.findOperasjonstype(
+                healthInformation.aktivitet.periode.first(),
+                InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "")
+            ) shouldBeEqualTo 2
+        }
+
+        it("To dagers opphold som ikke skyldes helg skal gi operasjonstype være 1") {
+            val healthInformation = HelseOpplysningerArbeidsuforhet().apply {
+                aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
+                    periode.add(
+                        HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
+                            periodeFOMDato = LocalDate.of(2022, 2, 17) // torsdag
+                            periodeTOMDato = LocalDate.of(2022, 2, 20)
+                        }
+                    )
+                }
+            }
+
+            val infotrygdForesp = InfotrygdForesp().apply {
+                sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
+                    sykmelding.add(
+                        TypeSMinfo().apply {
+                            periode = TypeSMinfo.Periode().apply {
+                                arbufoerFOM = LocalDate.of(2022, 2, 1)
+                                arbufoerTOM = LocalDate.of(2022, 2, 14) // mandag
+                            }
+                        }
+                    )
+                    status = StatusType().apply {
+                        kodeMelding = "00"
+                    }
+                }
+            }
+
+            updateInfotrygdService.findOperasjonstype(
+                healthInformation.aktivitet.periode.first(),
+                InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "")
+            ) shouldBeEqualTo 1
+        }
+
         it("Should set oprasjonstype to 3") {
             val healthInformation = HelseOpplysningerArbeidsuforhet().apply {
                 aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
