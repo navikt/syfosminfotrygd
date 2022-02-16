@@ -340,9 +340,16 @@ class UpdateInfotrygdService(
                 )
 
     private fun oppholdSkyldesHelg(arbufoerTOM: LocalDate, periodeFOMDato: LocalDate): Boolean {
-        return (arbufoerTOM..periodeFOMDato).daysBetween() <= 3 &&
-            arbufoerTOM.dayOfWeek == DayOfWeek.FRIDAY &&
-            periodeFOMDato.dayOfWeek == DayOfWeek.MONDAY
+        return (
+            (arbufoerTOM..periodeFOMDato).daysBetween() <= 3 &&
+                arbufoerTOM.dayOfWeek == DayOfWeek.FRIDAY &&
+                periodeFOMDato.dayOfWeek == DayOfWeek.MONDAY
+            ) ||
+            (
+                (arbufoerTOM..periodeFOMDato).daysBetween() <= 2 &&
+                    (arbufoerTOM.dayOfWeek == DayOfWeek.FRIDAY || arbufoerTOM.dayOfWeek == DayOfWeek.SATURDAY) &&
+                    (periodeFOMDato.dayOfWeek == DayOfWeek.SUNDAY || periodeFOMDato.dayOfWeek == DayOfWeek.MONDAY)
+                )
     }
 
     private fun endringSykmelding(
