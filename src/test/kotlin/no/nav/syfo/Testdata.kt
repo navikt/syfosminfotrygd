@@ -52,7 +52,8 @@ fun receivedSykmelding(
     merknader = merknader,
     partnerreferanse = null,
     legeHprNr = null,
-    legeHelsepersonellkategori = null
+    legeHelsepersonellkategori = null,
+    vedlegg = null
 )
 
 fun generateSykmelding(
