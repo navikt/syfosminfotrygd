@@ -2,7 +2,7 @@ package no.nav.syfo.rules
 
 import com.fasterxml.jackson.module.kotlin.convertValue
 import no.nav.syfo.model.Status
-import no.nav.syfo.sm.Diagnosekoder.objectMapper
+import no.nav.syfo.objectMapper
 
 class Rule<RuleInput>(
     val name: String,
