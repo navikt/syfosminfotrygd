@@ -110,7 +110,6 @@ dependencies {
     implementation ("no.nav.helse:syfosm-common-kafka:$smCommonVersion")
     implementation ("no.nav.helse:syfosm-common-networking:$smCommonVersion")
     implementation ("no.nav.helse:syfosm-common-rest-sts:$smCommonVersion")
-    implementation ("no.nav.helse:syfosm-common-diagnosis-codes:$smCommonVersion")
 
     implementation ("org.apache.commons:commons-text:$commonsTextVersion")
     implementation ("org.apache.cxf:cxf-rt-frontend-jaxws:$cxfVersion")
