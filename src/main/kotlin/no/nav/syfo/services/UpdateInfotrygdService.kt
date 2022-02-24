@@ -20,6 +20,7 @@ import no.nav.syfo.daysBetween
 import no.nav.syfo.get
 import no.nav.syfo.log
 import no.nav.syfo.metrics.MANUELLE_OPPGAVER_COUNTER
+import no.nav.syfo.metrics.RULE_HIT_COUNTER
 import no.nav.syfo.metrics.RULE_HIT_STATUS_COUNTER
 import no.nav.syfo.model.HelsepersonellKategori
 import no.nav.syfo.model.OpprettOppgaveKafkaMessage
@@ -117,6 +118,7 @@ class UpdateInfotrygdService(
                 )
             )
             RULE_HIT_STATUS_COUNTER.labels(validationResultBehandler.status.name).inc()
+            RULE_HIT_COUNTER.labels(validationResultBehandler.ruleHits.first().ruleName).inc()
             log.warn("Behandler er ikke registert i HPR")
             produceManualTaskAndSendValidationResults(
                 receivedSykmelding, validationResultBehandler,
