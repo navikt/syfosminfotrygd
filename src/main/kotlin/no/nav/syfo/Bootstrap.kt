@@ -43,6 +43,7 @@ import no.nav.syfo.kafka.aiven.KafkaUtils
 import no.nav.syfo.kafka.toConsumerConfig
 import no.nav.syfo.kafka.toProducerConfig
 import no.nav.syfo.metrics.REQUEST_TIME
+import no.nav.syfo.metrics.RULE_HIT_COUNTER
 import no.nav.syfo.metrics.RULE_HIT_STATUS_COUNTER
 import no.nav.syfo.model.Behandler
 import no.nav.syfo.model.OpprettOppgaveKafkaMessage
@@ -511,6 +512,7 @@ fun validerMottattSykmelding(helseOpplysningerArbeidsuforhet: HelseOpplysningerA
     return if (helseOpplysningerArbeidsuforhet.medisinskVurdering.hovedDiagnose == null) {
         RULE_HIT_STATUS_COUNTER.labels("MANUAL_PROCESSING").inc()
         log.warn("Sykmelding mangler hoveddiagnose")
+        RULE_HIT_COUNTER.labels("HOVEDDIAGNOSE_MANGLER").inc()
         ValidationResult(
             Status.MANUAL_PROCESSING,
             listOf(
@@ -549,11 +551,20 @@ fun ruleCheck(
         ).executeRules(),
     ).flatten().filter { it.result }
 
+    logRuleResultMetrics(results)
+
     log.info("Rules hit {}, $loggingMeta", results.map { ruleResult -> ruleResult.rule.name }, fields(loggingMeta))
 
     val validationResult = validationResult(results)
     RULE_HIT_STATUS_COUNTER.labels(validationResult.status.name).inc()
     return validationResult
+}
+
+private fun logRuleResultMetrics(result: List<RuleResult<*>>) {
+    result
+        .forEach {
+            RULE_HIT_COUNTER.labels(it.rule.name).inc()
+        }
 }
 
 fun Marshaller.toString(input: Any): String = StringWriter().use {
