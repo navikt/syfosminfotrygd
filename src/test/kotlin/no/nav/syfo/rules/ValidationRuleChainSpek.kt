@@ -1,5 +1,6 @@
 package no.nav.syfo.rules
 
+import io.kotest.core.spec.style.FunSpec
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.infotrygd.foresp.StatusType
 import no.nav.helse.infotrygd.foresp.TypeSMinfo
@@ -8,11 +9,9 @@ import no.nav.syfo.generatePrognose
 import no.nav.syfo.generateSykmelding
 import no.nav.syfo.model.Gradert
 import org.amshove.kluent.shouldBeEqualTo
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 import java.time.LocalDate
 
-object ValidationRuleChainSpek : Spek({
+class ValidationRuleChainSpek : FunSpec({
 
     fun deafaultInfotrygdForesp() = InfotrygdForesp().apply {
         hovedStatus = StatusType().apply {
@@ -20,8 +19,8 @@ object ValidationRuleChainSpek : Spek({
         }
     }
 
-    describe("Testing infotrygd rules and checking the rule outcomes") {
-        it("Should check rule GRADERT_REISETILSKUDD_ER_OPPGITT, should trigger rule") {
+    context("Testing infotrygd rules and checking the rule outcomes") {
+        test("Should check rule GRADERT_REISETILSKUDD_ER_OPPGITT, should trigger rule") {
             val healthInformation = generateSykmelding(
                 perioder = listOf(
                     generatePeriode(
@@ -43,7 +42,7 @@ object ValidationRuleChainSpek : Spek({
             ).getRuleByName("GRADERT_REISETILSKUDD_ER_OPPGITT").executeRule().result shouldBeEqualTo true
         }
 
-        it("Should check rule GRADUAL_SYKMELDING_COMBINED_WITH_TRAVEL, should NOT trigger rule") {
+        test("Should check rule GRADUAL_SYKMELDING_COMBINED_WITH_TRAVEL, should NOT trigger rule") {
             val healthInformation = generateSykmelding(
                 perioder = listOf(
                     generatePeriode(
@@ -65,7 +64,7 @@ object ValidationRuleChainSpek : Spek({
             ).getRuleByName("GRADERT_REISETILSKUDD_ER_OPPGITT").executeRule().result shouldBeEqualTo false
         }
 
-        it("Should check rule NUMBER_OF_TREATMENT_DAYS_SET, should trigger rule") {
+        test("Should check rule NUMBER_OF_TREATMENT_DAYS_SET, should trigger rule") {
 
             val healthInformation = generateSykmelding(
                 perioder = listOf(
@@ -85,7 +84,7 @@ object ValidationRuleChainSpek : Spek({
             ).getRuleByName("NUMBER_OF_TREATMENT_DAYS_SET").executeRule().result shouldBeEqualTo true
         }
 
-        it("Should check rule NUMBER_OF_TREATMENT_DAYS_SET, should NOT trigger rule") {
+        test("Should check rule NUMBER_OF_TREATMENT_DAYS_SET, should NOT trigger rule") {
             val healthInformation = generateSykmelding()
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
@@ -96,7 +95,7 @@ object ValidationRuleChainSpek : Spek({
             ).getRuleByName("NUMBER_OF_TREATMENT_DAYS_SET").executeRule().result shouldBeEqualTo false
         }
 
-        it("Should check rule GRADERT_TRAVEL_SUBSIDY_SPECIFIED, should trigger rule") {
+        test("Should check rule GRADERT_TRAVEL_SUBSIDY_SPECIFIED, should trigger rule") {
             val healthInformation = generateSykmelding(
                 perioder = listOf(
                     generatePeriode(
@@ -118,7 +117,7 @@ object ValidationRuleChainSpek : Spek({
             ).getRuleByName("GRADERT_REISETILSKUDD_ER_OPPGITT").executeRule().result shouldBeEqualTo true
         }
 
-        it("Should check rule GRADERT_TRAVEL_SUBSIDY_SPECIFIED, should NOT trigger rule") {
+        test("Should check rule GRADERT_TRAVEL_SUBSIDY_SPECIFIED, should NOT trigger rule") {
             val healthInformation = generateSykmelding(
                 perioder = listOf(
                     generatePeriode(
@@ -140,7 +139,7 @@ object ValidationRuleChainSpek : Spek({
             ).getRuleByName("GRADERT_REISETILSKUDD_ER_OPPGITT").executeRule().result shouldBeEqualTo false
         }
 
-        it("Should check rule TRAVEL_SUBSIDY_SPECIFIED, should trigger rule") {
+        test("Should check rule TRAVEL_SUBSIDY_SPECIFIED, should trigger rule") {
             val healthInformation = generateSykmelding(
                 perioder = listOf(
                     generatePeriode(
@@ -157,7 +156,7 @@ object ValidationRuleChainSpek : Spek({
                 .executeRule().result shouldBeEqualTo true
         }
 
-        it("Should check rule GRADERT_TRAVEL_SUBSIDY_SPECIFIED, should NOT trigger rule") {
+        test("Should check rule GRADERT_TRAVEL_SUBSIDY_SPECIFIED, should NOT trigger rule") {
             val healthInformation = generateSykmelding(
                 perioder = listOf(
                     generatePeriode(
@@ -174,7 +173,7 @@ object ValidationRuleChainSpek : Spek({
                 .executeRule().result shouldBeEqualTo false
         }
 
-        it("Should check rule PATIENT_NOT_IN_IP, should trigger rule") {
+        test("Should check rule PATIENT_NOT_IN_IP, should trigger rule") {
             val healthInformation = generateSykmelding()
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.pasient = InfotrygdForesp.Pasient().apply {
@@ -185,7 +184,7 @@ object ValidationRuleChainSpek : Spek({
                 .executeRule().result shouldBeEqualTo true
         }
 
-        it("Should check rule PATIENT_NOT_IN_IP, should NOT trigger rule") {
+        test("Should check rule PATIENT_NOT_IN_IP, should NOT trigger rule") {
             val healthInformation = generateSykmelding()
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.pasient = InfotrygdForesp.Pasient().apply {
@@ -196,7 +195,7 @@ object ValidationRuleChainSpek : Spek({
                 .executeRule().result shouldBeEqualTo false
         }
 
-        it("Should check rule PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE, should trigger rule when fom < infotrygdFom") {
+        test("Should check rule PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE, should trigger rule when fom < infotrygdFom") {
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
                 sykmelding.add(
@@ -225,7 +224,7 @@ object ValidationRuleChainSpek : Spek({
                 .executeRule().result shouldBeEqualTo true
         }
 
-        it("Should check rule PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE, should not trigger rule when FOM > infotrygds FOM && TOM > infotrygds TOM") {
+        test("Should check rule PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE, should not trigger rule when FOM > infotrygds FOM && TOM > infotrygds TOM") {
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
                 sykmelding.add(
@@ -254,7 +253,7 @@ object ValidationRuleChainSpek : Spek({
                 .executeRule().result shouldBeEqualTo false
         }
 
-        it("Should check rule PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE, should not trigger rule when FOM > infotrygds FOM && TOM = infotrygds TOM") {
+        test("Should check rule PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE, should not trigger rule when FOM > infotrygds FOM && TOM = infotrygds TOM") {
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
                 sykmelding.add(
@@ -283,7 +282,7 @@ object ValidationRuleChainSpek : Spek({
                 .executeRule().result shouldBeEqualTo false
         }
 
-        it("Should check rule PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE, should not trigger rule when FOM = infotrygds FOM && TOM > infotrygds TOM") {
+        test("Should check rule PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE, should not trigger rule when FOM = infotrygds FOM && TOM > infotrygds TOM") {
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
                 sykmelding.add(
@@ -312,7 +311,7 @@ object ValidationRuleChainSpek : Spek({
                 .executeRule().result shouldBeEqualTo false
         }
 
-        it("Should check rule PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE, should not trigger rule when FOM = infotrygds FOM && TOM = infotrygds TOM") {
+        test("Should check rule PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE, should not trigger rule when FOM = infotrygds FOM && TOM = infotrygds TOM") {
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
                 sykmelding.add(
@@ -341,7 +340,7 @@ object ValidationRuleChainSpek : Spek({
                 .executeRule().result shouldBeEqualTo false
         }
 
-        it("Should check rule PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE, should trigger rule") {
+        test("Should check rule PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE, should trigger rule") {
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
@@ -371,7 +370,7 @@ object ValidationRuleChainSpek : Spek({
                 .executeRule().result shouldBeEqualTo true
         }
 
-        it("Should check rule PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE, should not trigger rule") {
+        test("Should check rule PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE, should not trigger rule") {
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
 
@@ -391,7 +390,7 @@ object ValidationRuleChainSpek : Spek({
                 .executeRule().result shouldBeEqualTo false
         }
 
-        it("Should check rule PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE, should NOT trigger rule, when same periode") {
+        test("Should check rule PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE, should NOT trigger rule, when same periode") {
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
@@ -421,7 +420,7 @@ object ValidationRuleChainSpek : Spek({
                 .executeRule().result shouldBeEqualTo false
         }
 
-        it("Should check rule PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE, should NOT trigger rule, when same periode") {
+        test("Should check rule PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE, should NOT trigger rule, when same periode") {
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
@@ -451,7 +450,7 @@ object ValidationRuleChainSpek : Spek({
                 .executeRule().result shouldBeEqualTo false
         }
 
-        it("Should check rule PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE, should NOT trigger rule") {
+        test("Should check rule PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE, should NOT trigger rule") {
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
@@ -481,7 +480,7 @@ object ValidationRuleChainSpek : Spek({
                 .executeRule().result shouldBeEqualTo false
         }
 
-        it("should not get null") {
+        test("should not get null") {
             val sm = listOf(
                 TypeSMinfo().apply {
                     periode = TypeSMinfo.Periode().apply {
@@ -516,7 +515,7 @@ object ValidationRuleChainSpek : Spek({
                 .executeRule().result shouldBeEqualTo false
         }
 
-        it("should check rule PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE, should not get null pointer") {
+        test("should check rule PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE, should not get null pointer") {
             val infotrygdForespResponse = deafaultInfotrygdForesp()
             infotrygdForespResponse.sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
                 sykmelding.add(
@@ -544,7 +543,7 @@ object ValidationRuleChainSpek : Spek({
                 .executeRule().result shouldBeEqualTo false
         }
 
-        it("Should check rule SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_1, should trigger rule") {
+        test("Should check rule SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_1, should trigger rule") {
             val healthInformation = generateSykmelding(
                 perioder = listOf(
                     generatePeriode(
@@ -574,7 +573,7 @@ object ValidationRuleChainSpek : Spek({
             ).getRuleByName("SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_1").executeRule().result shouldBeEqualTo true
         }
 
-        it("Should check rule SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_1, should NOT trigger rule") {
+        test("Should check rule SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_1, should NOT trigger rule") {
             val healthInformation = generateSykmelding(
                 perioder = listOf(
                     generatePeriode(
@@ -604,7 +603,7 @@ object ValidationRuleChainSpek : Spek({
             ).getRuleByName("SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_1").executeRule().result shouldBeEqualTo false
         }
 
-        it("Should check rule SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_2, should trigger rule") {
+        test("Should check rule SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_2, should trigger rule") {
             val healthInformation = generateSykmelding(
                 perioder = listOf(
                     generatePeriode(
@@ -633,7 +632,7 @@ object ValidationRuleChainSpek : Spek({
             ).getRuleByName("SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_2").executeRule().result shouldBeEqualTo true
         }
 
-        it("Should check rule SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_2, should NOT trigger rule") {
+        test("Should check rule SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_2, should NOT trigger rule") {
             val healthInformation = generateSykmelding(
                 perioder = listOf(
                     generatePeriode(
@@ -662,7 +661,7 @@ object ValidationRuleChainSpek : Spek({
             ).getRuleByName("SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_2").executeRule().result shouldBeEqualTo false
         }
 
-        it("Should check rule SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_3, should trigger rule") {
+        test("Should check rule SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_3, should trigger rule") {
             val healthInformation = generateSykmelding(
                 perioder = listOf(
                     generatePeriode(
@@ -691,7 +690,7 @@ object ValidationRuleChainSpek : Spek({
             ).getRuleByName("SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_3").executeRule().result shouldBeEqualTo true
         }
 
-        it("Should check rule SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_3, should NOT trigger rule") {
+        test("Should check rule SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_3, should NOT trigger rule") {
             val healthInformation = generateSykmelding(
                 perioder = listOf(
                     generatePeriode(
@@ -720,7 +719,7 @@ object ValidationRuleChainSpek : Spek({
             ).getRuleByName("SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_3").executeRule().result shouldBeEqualTo false
         }
 
-        it("Should check rule NEW_CLEAN_BILL_DATE_BEFORE_PAYOUT, should trigger rule") {
+        test("Should check rule NEW_CLEAN_BILL_DATE_BEFORE_PAYOUT, should trigger rule") {
             val healthInformation = generateSykmelding(
                 perioder = listOf(
                     generatePeriode(
@@ -748,7 +747,7 @@ object ValidationRuleChainSpek : Spek({
             ).getRuleByName("NEW_CLEAN_BILL_DATE_BEFORE_PAYOUT").executeRule().result shouldBeEqualTo true
         }
 
-        it("Should check rule NEW_CLEAN_BILL_DATE_BEFORE_PAYOUT, should NOT trigger rule") {
+        test("Should check rule NEW_CLEAN_BILL_DATE_BEFORE_PAYOUT, should NOT trigger rule") {
             val healthInformation = generateSykmelding(
                 perioder = listOf(
                     generatePeriode(
@@ -776,7 +775,7 @@ object ValidationRuleChainSpek : Spek({
             ).getRuleByName("NEW_CLEAN_BILL_DATE_BEFORE_PAYOUT").executeRule().result shouldBeEqualTo false
         }
 
-        it("NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE slår ut hvis tom + 1 dag er før registrert friskmeldingsdato") {
+        test("NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE slår ut hvis tom + 1 dag er før registrert friskmeldingsdato") {
             val healthInformation = generateSykmelding(
                 perioder = listOf(
                     generatePeriode(
@@ -803,7 +802,7 @@ object ValidationRuleChainSpek : Spek({
                 .executeRule().result shouldBeEqualTo true
         }
 
-        it("NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE slår ikke ut hvis tom + 1 dag er lik registrert friskmeldingsdato") {
+        test("NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE slår ikke ut hvis tom + 1 dag er lik registrert friskmeldingsdato") {
             val healthInformation = generateSykmelding(
                 perioder = listOf(
                     generatePeriode(
@@ -830,7 +829,7 @@ object ValidationRuleChainSpek : Spek({
                 .executeRule().result shouldBeEqualTo false
         }
 
-        it("NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE slår ikke ut når tom + 1 dag er etter registrert friskmeldingsdato") {
+        test("NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE slår ikke ut når tom + 1 dag er etter registrert friskmeldingsdato") {
             val healthInformation = generateSykmelding(
                 perioder = listOf(
                     generatePeriode(
@@ -858,7 +857,7 @@ object ValidationRuleChainSpek : Spek({
                 .executeRule().result shouldBeEqualTo false
         }
 
-        it("NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE slår ikke ut hvis friskmelding mangler i Infotrygd") {
+        test("NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE slår ikke ut hvis friskmelding mangler i Infotrygd") {
             val healthInformation = generateSykmelding(
                 perioder = listOf(
                     generatePeriode(
@@ -883,7 +882,7 @@ object ValidationRuleChainSpek : Spek({
                 .executeRule().result shouldBeEqualTo false
         }
 
-        it("Should check rule EXTANION_OVER_FA, should trigger rule") {
+        test("Should check rule EXTANION_OVER_FA, should trigger rule") {
             val healthInformation = generateSykmelding(
                 perioder = listOf(
                     generatePeriode(
@@ -913,7 +912,7 @@ object ValidationRuleChainSpek : Spek({
                 .executeRule().result shouldBeEqualTo true
         }
 
-        it("Should check rule EXTANION_OVER_FA, should NOT trigger rule") {
+        test("Should check rule EXTANION_OVER_FA, should NOT trigger rule") {
             val healthInformation = generateSykmelding(
                 perioder = listOf(
                     generatePeriode(
@@ -943,7 +942,7 @@ object ValidationRuleChainSpek : Spek({
                 .executeRule().result shouldBeEqualTo false
         }
 
-        it("Should check rule PERSON_MOVING_KODE_FL, should trigger rule") {
+        test("Should check rule PERSON_MOVING_KODE_FL, should trigger rule") {
             val healthInformation = generateSykmelding()
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
@@ -969,7 +968,7 @@ object ValidationRuleChainSpek : Spek({
                 .executeRule().result shouldBeEqualTo true
         }
 
-        it("Should check rule PERSON_MOVING_KODE_FL, should NOT trigger rule") {
+        test("Should check rule PERSON_MOVING_KODE_FL, should NOT trigger rule") {
             val healthInformation = generateSykmelding()
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
@@ -995,7 +994,7 @@ object ValidationRuleChainSpek : Spek({
                 .executeRule().result shouldBeEqualTo false
         }
 
-        it("Should check rule PERIOD_FOR_AA_ENDED, should trigger rule") {
+        test("Should check rule PERIOD_FOR_AA_ENDED, should trigger rule") {
             val healthInformation = generateSykmelding(
                 perioder = listOf(
                     generatePeriode(
@@ -1021,7 +1020,7 @@ object ValidationRuleChainSpek : Spek({
                 .executeRule().result shouldBeEqualTo true
         }
 
-        it("Should check rule PERIOD_FOR_AA_ENDED, should NOT trigger rule") {
+        test("Should check rule PERIOD_FOR_AA_ENDED, should NOT trigger rule") {
             val healthInformation = generateSykmelding(
                 perioder = listOf(
                     generatePeriode(
@@ -1047,7 +1046,7 @@ object ValidationRuleChainSpek : Spek({
                 .executeRule().result shouldBeEqualTo false
         }
 
-        it("Should check rule PERIOD_IS_AF, should trigger rule") {
+        test("Should check rule PERIOD_IS_AF, should trigger rule") {
             val healthInformation = generateSykmelding(
                 perioder = listOf(
                     generatePeriode(
@@ -1073,7 +1072,7 @@ object ValidationRuleChainSpek : Spek({
                 .executeRule().result shouldBeEqualTo true
         }
 
-        it("Should check rule PERIOD_IS_AF, should NOT trigger rule") {
+        test("Should check rule PERIOD_IS_AF, should NOT trigger rule") {
             val healthInformation = generateSykmelding(
                 perioder = listOf(
                     generatePeriode(
@@ -1099,7 +1098,7 @@ object ValidationRuleChainSpek : Spek({
                 .executeRule().result shouldBeEqualTo false
         }
 
-        it("Should check rule MAX_SICK_LEAVE_PAYOUT, should trigger rule") {
+        test("Should check rule MAX_SICK_LEAVE_PAYOUT, should trigger rule") {
 
             val healthInformation = generateSykmelding(
                 perioder = listOf(
@@ -1126,7 +1125,7 @@ object ValidationRuleChainSpek : Spek({
                 .executeRule().result shouldBeEqualTo true
         }
 
-        it("Should check rule MAX_SICK_LEAVE_PAYOUT, should trigger rule") {
+        test("Should check rule MAX_SICK_LEAVE_PAYOUT, should trigger rule") {
 
             val healthInformation = generateSykmelding(
                 perioder = listOf(
@@ -1153,7 +1152,7 @@ object ValidationRuleChainSpek : Spek({
                 .executeRule().result shouldBeEqualTo true
         }
 
-        it("Should check rule MAX_SICK_LEAVE_PAYOUT, should NOT trigger rule") {
+        test("Should check rule MAX_SICK_LEAVE_PAYOUT, should NOT trigger rule") {
 
             val healthInformation = generateSykmelding(
                 perioder = listOf(
@@ -1190,7 +1189,7 @@ object ValidationRuleChainSpek : Spek({
                 .executeRule().result shouldBeEqualTo false
         }
 
-        it("Should check rule MAX_SICK_LEAVE_PAYOUT, should NOT trigger rule") {
+        test("Should check rule MAX_SICK_LEAVE_PAYOUT, should NOT trigger rule") {
 
             val healthInformation = generateSykmelding(
                 perioder = listOf(
@@ -1217,7 +1216,7 @@ object ValidationRuleChainSpek : Spek({
                 .executeRule().result shouldBeEqualTo false
         }
 
-        it("Should check rule MAX_SICK_LEAVE_PAYOUT, should NOT trigger rule") {
+        test("Should check rule MAX_SICK_LEAVE_PAYOUT, should NOT trigger rule") {
             val healthInformation = generateSykmelding(
                 perioder = listOf(
                     generatePeriode(
@@ -1243,7 +1242,7 @@ object ValidationRuleChainSpek : Spek({
                 .executeRule().result shouldBeEqualTo false
         }
 
-        it("Should check rule MAX_SICK_LEAVE_PAYOUT, should NOT trigger rule") {
+        test("Should check rule MAX_SICK_LEAVE_PAYOUT, should NOT trigger rule") {
             val healthInformation = generateSykmelding(
                 perioder = listOf(
                     generatePeriode(
@@ -1268,7 +1267,7 @@ object ValidationRuleChainSpek : Spek({
                 .executeRule().result shouldBeEqualTo false
         }
 
-        it("Should check rule MAX_SICK_LEAVE_PAYOUT, should NOT trigger rule") {
+        test("Should check rule MAX_SICK_LEAVE_PAYOUT, should NOT trigger rule") {
             val healthInformation = generateSykmelding(
                 perioder = listOf(
                     generatePeriode(
@@ -1284,7 +1283,7 @@ object ValidationRuleChainSpek : Spek({
                 .executeRule().result shouldBeEqualTo false
         }
 
-        it("Should check rule ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING, should trigger rule") {
+        test("Should check rule ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING, should trigger rule") {
             val healthInformation = generateSykmelding()
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
@@ -1298,7 +1297,7 @@ object ValidationRuleChainSpek : Spek({
             ).getRuleByName("ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING").executeRule().result shouldBeEqualTo true
         }
 
-        it("Should check rule ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING, should NOT trigger rule") {
+        test("Should check rule ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING, should NOT trigger rule") {
             val healthInformation = generateSykmelding()
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
@@ -1312,7 +1311,7 @@ object ValidationRuleChainSpek : Spek({
             ).getRuleByName("ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING").executeRule().result shouldBeEqualTo false
         }
 
-        it("Should check rule ERROR_FROM_IT_SMHISTORIKK_STATUS_KODEMELDING, should trigger rule") {
+        test("Should check rule ERROR_FROM_IT_SMHISTORIKK_STATUS_KODEMELDING, should trigger rule") {
             val healthInformation = generateSykmelding()
             val infotrygdForespResponse = deafaultInfotrygdForesp()
 
@@ -1328,7 +1327,7 @@ object ValidationRuleChainSpek : Spek({
             ).getRuleByName("ERROR_FROM_IT_SMHISTORIKK_STATUS_KODEMELDING").executeRule().result shouldBeEqualTo true
         }
 
-        it("Should check rule ERROR_FROM_IT_SMHISTORIKK_STATUS_KODEMELDING, should NOT trigger rule") {
+        test("Should check rule ERROR_FROM_IT_SMHISTORIKK_STATUS_KODEMELDING, should NOT trigger rule") {
             val healthInformation = generateSykmelding()
             val infotrygdForespResponse = deafaultInfotrygdForesp()
 
@@ -1344,7 +1343,7 @@ object ValidationRuleChainSpek : Spek({
             ).getRuleByName("ERROR_FROM_IT_SMHISTORIKK_STATUS_KODEMELDING").executeRule().result shouldBeEqualTo false
         }
 
-        it("Should check rule ERROR_FROM_IT_PARALELLYTELSER_STATUS_KODEMELDING, should trigger rule") {
+        test("Should check rule ERROR_FROM_IT_PARALELLYTELSER_STATUS_KODEMELDING, should trigger rule") {
             val healthInformation = generateSykmelding()
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
@@ -1361,7 +1360,7 @@ object ValidationRuleChainSpek : Spek({
                 .executeRule().result shouldBeEqualTo true
         }
 
-        it("Should check rule ERROR_FROM_IT_PARALELLYTELSER_STATUS_KODEMELDING, should NOT trigger rule") {
+        test("Should check rule ERROR_FROM_IT_PARALELLYTELSER_STATUS_KODEMELDING, should NOT trigger rule") {
             val healthInformation = generateSykmelding()
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
@@ -1378,7 +1377,7 @@ object ValidationRuleChainSpek : Spek({
                 .executeRule().result shouldBeEqualTo false
         }
 
-        it("Should check rule ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING, should trigger rule") {
+        test("Should check rule ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING, should trigger rule") {
             val healthInformation = generateSykmelding()
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
@@ -1395,7 +1394,7 @@ object ValidationRuleChainSpek : Spek({
                 .executeRule().result shouldBeEqualTo true
         }
 
-        it("Should check rule ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING, should NOT trigger rule") {
+        test("Should check rule ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING, should NOT trigger rule") {
             val healthInformation = generateSykmelding()
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
@@ -1412,7 +1411,7 @@ object ValidationRuleChainSpek : Spek({
                 .executeRule().result shouldBeEqualTo false
         }
 
-        it("Should check rule ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING, should trigger rule") {
+        test("Should check rule ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING, should trigger rule") {
             val healthInformation = generateSykmelding()
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
@@ -1428,7 +1427,7 @@ object ValidationRuleChainSpek : Spek({
             ).getRuleByName("ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING").executeRule().result shouldBeEqualTo true
         }
 
-        it("Should check rule ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING, should NOT trigger rule") {
+        test("Should check rule ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING, should NOT trigger rule") {
             val healthInformation = generateSykmelding()
 
             val infotrygdForespResponse = deafaultInfotrygdForesp()
@@ -1445,7 +1444,7 @@ object ValidationRuleChainSpek : Spek({
                 .executeRule().result shouldBeEqualTo false
         }
 
-        it("Should check rule ERROR_FROM_IT_ARBEIDUFORETOM_MANGLER, should NOT trigger rule") {
+        test("Should check rule ERROR_FROM_IT_ARBEIDUFORETOM_MANGLER, should NOT trigger rule") {
             val healthInformation = generateSykmelding(
                 perioder = listOf(
                     generatePeriode(
@@ -1473,7 +1472,7 @@ object ValidationRuleChainSpek : Spek({
                 .executeRule().result shouldBeEqualTo true
         }
 
-        it("Should check rule ERROR_FROM_IT_ARBEIDUFORETOM_MANGLER, should NOT trigger rule") {
+        test("Should check rule ERROR_FROM_IT_ARBEIDUFORETOM_MANGLER, should NOT trigger rule") {
             val healthInformation = generateSykmelding(
                 perioder = listOf(
                     generatePeriode(
@@ -1502,7 +1501,7 @@ object ValidationRuleChainSpek : Spek({
                 .executeRule().result shouldBeEqualTo false
         }
 
-        it("Should check rule ERROR_FROM_IT_ARBEIDUFORETOM_MANGLER, should NOT trigger rule") {
+        test("Should check rule ERROR_FROM_IT_ARBEIDUFORETOM_MANGLER, should NOT trigger rule") {
             val healthInformation = generateSykmelding(
                 perioder = listOf(
                     generatePeriode(

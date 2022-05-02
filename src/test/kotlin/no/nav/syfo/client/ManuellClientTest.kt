@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import io.kotest.core.spec.style.FunSpec
 import io.ktor.application.call
 import io.ktor.application.install
 import io.ktor.client.HttpClient
@@ -20,17 +21,14 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.mockk.coEvery
 import io.mockk.mockk
-import kotlinx.coroutines.runBlocking
 import no.nav.syfo.util.LoggingMeta
 import org.amshove.kluent.shouldBeEqualTo
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 import java.net.ServerSocket
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertFailsWith
 
-class ManuellClientTest : Spek({
+class ManuellClientTest : FunSpec({
     val loggingMeta = LoggingMeta("mottakid", "orgnr", "msgid", "sykmeldingid")
     val sykmeldingErBehandlet = UUID.randomUUID().toString()
     val sykmeldingErIkkeBehandlet = UUID.randomUUID().toString()
@@ -67,30 +65,24 @@ class ManuellClientTest : Spek({
 
     val manuellClient = ManuellClient(httpClient, "$mockHttpServerUrl/manuell", accessTokenClient, "resource")
 
-    beforeEachTest {
+    beforeTest {
         coEvery { accessTokenClient.getAccessTokenV2(any()) } returns "token"
     }
 
-    afterGroup {
+    afterSpec {
         mockServer.stop(TimeUnit.SECONDS.toMillis(1), TimeUnit.SECONDS.toMillis(1))
     }
 
-    describe("ManuellClient") {
-        it("Returnerer true hvis sykmeldingId er behandlet av manuell") {
-            runBlocking {
-                manuellClient.behandletAvManuell(sykmeldingErBehandlet, loggingMeta) shouldBeEqualTo true
-            }
+    context("ManuellClient") {
+        test("Returnerer true hvis sykmeldingId er behandlet av manuell") {
+            manuellClient.behandletAvManuell(sykmeldingErBehandlet, loggingMeta) shouldBeEqualTo true
         }
-        it("Returnerer false hvis sykmeldingId ikke er behandlet av manuell") {
-            runBlocking {
-                manuellClient.behandletAvManuell(sykmeldingErIkkeBehandlet, loggingMeta) shouldBeEqualTo false
-            }
+        test("Returnerer false hvis sykmeldingId ikke er behandlet av manuell") {
+            manuellClient.behandletAvManuell(sykmeldingErIkkeBehandlet, loggingMeta) shouldBeEqualTo false
         }
-        it("Feiler hvis kall mot manuell ikke gir OK eller NotFound") {
-            runBlocking {
-                assertFailsWith<RuntimeException> {
-                    manuellClient.behandletAvManuell(sykmeldingFeiler, loggingMeta)
-                }
+        test("Feiler hvis kall mot manuell ikke gir OK eller NotFound") {
+            assertFailsWith<RuntimeException> {
+                manuellClient.behandletAvManuell(sykmeldingFeiler, loggingMeta)
             }
         }
     }

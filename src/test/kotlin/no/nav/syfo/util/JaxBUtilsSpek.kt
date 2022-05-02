@@ -1,16 +1,15 @@
 package no.nav.syfo.util
 
+import io.kotest.core.spec.style.FunSpec
 import no.nav.helse.eiFellesformat.XMLEIFellesformat
 import no.nav.syfo.getFileAsString
 import org.amshove.kluent.shouldBeTrue
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 import java.io.StringReader
 
-object JaxBUtilsSpek : Spek({
+class JaxBUtilsSpek : FunSpec({
 
-    describe("JaxBUtilsSpek") {
-        it("Escaper krokodiller i verdier") {
+    context("JaxBUtilsSpek") {
+        test("Escaper krokodiller i verdier") {
             val stringInput = getFileAsString("src/test/resources/sykemeldingMedSpesialtegn.xml")
             val fellesformat = fellesformatUnmarshaller
                 .unmarshal(StringReader(stringInput)) as XMLEIFellesformat

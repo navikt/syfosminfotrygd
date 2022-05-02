@@ -1,9 +1,9 @@
 package no.nav.syfo.services
 
+import io.kotest.core.spec.style.FunSpec
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.mockk
-import kotlinx.coroutines.runBlocking
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.client.ManuellClient
 import no.nav.syfo.client.NorskHelsenettClient
@@ -16,13 +16,11 @@ import no.nav.syfo.receivedSykmelding
 import no.nav.syfo.util.LoggingMeta
 import org.amshove.kluent.shouldBeEqualTo
 import org.apache.kafka.clients.producer.KafkaProducer
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 
-object OpprettOppgaveTest : Spek({
+class OpprettOppgaveTest : FunSpec({
     val loggingMeta = LoggingMeta("", "", "", "")
     val manuellClient = mockk<ManuellClient>()
     val norskHelsenettClient = mockk<NorskHelsenettClient>()
@@ -40,43 +38,37 @@ object OpprettOppgaveTest : Spek({
         behandlingsutfallService
     )
 
-    beforeEachTest {
+    beforeTest {
         clearMocks(manuellClient)
     }
 
-    describe("Oppretter manuelle oppgaver med riktige parametre") {
-        it("Behandlingstype er ae0256 hvis sykmelding har blitt behandlet av manuell") {
+    context("Oppretter manuelle oppgaver med riktige parametre") {
+        test("Behandlingstype er ae0256 hvis sykmelding har blitt behandlet av manuell") {
             val validationResults = ValidationResult(Status.MANUAL_PROCESSING, listOf(RuleInfo("TILBAKEDATERT_MER_ENN_8_DAGER_FORSTE_SYKMELDING_MED_BEGRUNNELSE", "message for sender", "message for user", Status.MANUAL_PROCESSING)))
             coEvery { manuellClient.behandletAvManuell(any(), any()) } returns true
             val receivedSykmelding = receivedSykmelding(UUID.randomUUID().toString())
 
-            runBlocking {
-                val oppgave = updateInfotrygdService.opprettOpprettOppgaveKafkaMessage(receivedSykmelding, validationResults, loggingMeta)
+            val oppgave = updateInfotrygdService.opprettOpprettOppgaveKafkaMessage(receivedSykmelding, validationResults, loggingMeta)
 
-                oppgave.behandlingstype shouldBeEqualTo "ae0256"
-            }
+            oppgave.behandlingstype shouldBeEqualTo "ae0256"
         }
-        it("fristFerdigstillelse er i dag hvis sykmelding har blitt behandlet av manuell") {
+        test("fristFerdigstillelse er i dag hvis sykmelding har blitt behandlet av manuell") {
             val validationResults = ValidationResult(Status.MANUAL_PROCESSING, listOf(RuleInfo("TILBAKEDATERT_MER_ENN_8_DAGER_FORSTE_SYKMELDING_MED_BEGRUNNELSE", "message for sender", "message for user", Status.MANUAL_PROCESSING)))
             coEvery { manuellClient.behandletAvManuell(any(), any()) } returns true
             val receivedSykmelding = receivedSykmelding(UUID.randomUUID().toString())
 
-            runBlocking {
-                val oppgave = updateInfotrygdService.opprettOpprettOppgaveKafkaMessage(receivedSykmelding, validationResults, loggingMeta)
+            val oppgave = updateInfotrygdService.opprettOpprettOppgaveKafkaMessage(receivedSykmelding, validationResults, loggingMeta)
 
-                oppgave.fristFerdigstillelse shouldBeEqualTo DateTimeFormatter.ISO_DATE.format(LocalDate.now())
-            }
+            oppgave.fristFerdigstillelse shouldBeEqualTo DateTimeFormatter.ISO_DATE.format(LocalDate.now())
         }
-        it("Behandlingstype er ANY hvis sykmelding ikke har blitt behandlet av manuell") {
+        test("Behandlingstype er ANY hvis sykmelding ikke har blitt behandlet av manuell") {
             val validationResults = ValidationResult(Status.MANUAL_PROCESSING, listOf(RuleInfo("ANNEN_REGEL", "message for sender", "message for user", Status.MANUAL_PROCESSING)))
             coEvery { manuellClient.behandletAvManuell(any(), any()) } returns false
             val receivedSykmelding = receivedSykmelding(UUID.randomUUID().toString())
 
-            runBlocking {
-                val oppgave = updateInfotrygdService.opprettOpprettOppgaveKafkaMessage(receivedSykmelding, validationResults, loggingMeta)
+            val oppgave = updateInfotrygdService.opprettOpprettOppgaveKafkaMessage(receivedSykmelding, validationResults, loggingMeta)
 
-                oppgave.behandlingstype shouldBeEqualTo "ANY"
-            }
+            oppgave.behandlingstype shouldBeEqualTo "ANY"
         }
     }
 })

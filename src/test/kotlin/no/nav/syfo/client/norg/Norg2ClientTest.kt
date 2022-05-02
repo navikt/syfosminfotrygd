@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import io.kotest.core.spec.style.FunSpec
 import io.ktor.application.call
 import io.ktor.application.install
 import io.ktor.client.HttpClient
@@ -22,16 +23,13 @@ import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import kotlinx.coroutines.runBlocking
 import no.nav.syfo.NAV_OPPFOLGING_UTLAND_KONTOR_NR
 import no.nav.syfo.util.LoggingMeta
 import org.amshove.kluent.shouldBeEqualTo
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 import java.net.ServerSocket
 import java.util.concurrent.TimeUnit
 
-object Norg2ClientTest : Spek({
+class Norg2ClientTest : FunSpec({
     val loggingMeta = LoggingMeta("mottakid", "orgnr", "msgid", "sykmeldingid")
     val norg2RedisService = mockk<Norg2RedisService>(relaxed = true)
     val httpClient = HttpClient(Apache) {
@@ -63,39 +61,31 @@ object Norg2ClientTest : Spek({
 
     val norg2Client = Norg2Client(httpClient, "$mockHttpServerUrl/norg2", norg2RedisService)
 
-    beforeEachTest {
+    beforeTest {
         clearMocks(norg2RedisService)
         coEvery { norg2RedisService.getEnhet(any()) } returns null
     }
 
-    afterGroup {
+    afterSpec {
         mockServer.stop(TimeUnit.SECONDS.toMillis(1), TimeUnit.SECONDS.toMillis(1))
     }
 
-    describe("Norg2Client") {
-        it("Returnerer riktig NAV-kontor") {
-            runBlocking {
-                norg2Client.getLocalNAVOffice("1411", null, loggingMeta) shouldBeEqualTo Enhet("1400")
-            }
+    context("Norg2Client") {
+        test("Returnerer riktig NAV-kontor") {
+            norg2Client.getLocalNAVOffice("1411", null, loggingMeta) shouldBeEqualTo Enhet("1400")
         }
-        it("Returnerer NAV Utland hvis vi ikke finner lokalkontor") {
-            runBlocking {
-                norg2Client.getLocalNAVOffice("POL", null, loggingMeta) shouldBeEqualTo Enhet(NAV_OPPFOLGING_UTLAND_KONTOR_NR)
-            }
+        test("Returnerer NAV Utland hvis vi ikke finner lokalkontor") {
+            norg2Client.getLocalNAVOffice("POL", null, loggingMeta) shouldBeEqualTo Enhet(NAV_OPPFOLGING_UTLAND_KONTOR_NR)
         }
-        it("Oppdaterer redis") {
-            runBlocking {
-                norg2Client.getLocalNAVOffice("1411", null, loggingMeta) shouldBeEqualTo Enhet("1400")
+        test("Oppdaterer redis") {
+            norg2Client.getLocalNAVOffice("1411", null, loggingMeta) shouldBeEqualTo Enhet("1400")
 
-                coVerify(exactly = 1) { norg2RedisService.putEnhet("1411", Enhet("1400")) }
-            }
+            coVerify(exactly = 1) { norg2RedisService.putEnhet("1411", Enhet("1400")) }
         }
-        it("Oppdaterer ikke redis ved diskresjonskode") {
-            runBlocking {
-                norg2Client.getLocalNAVOffice("1411", "SPSF", loggingMeta) shouldBeEqualTo Enhet("1400")
+        test("Oppdaterer ikke redis ved diskresjonskode") {
+            norg2Client.getLocalNAVOffice("1411", "SPSF", loggingMeta) shouldBeEqualTo Enhet("1400")
 
-                coVerify(exactly = 0) { norg2RedisService.putEnhet(any(), any()) }
-            }
+            coVerify(exactly = 0) { norg2RedisService.putEnhet(any(), any()) }
         }
     }
 })

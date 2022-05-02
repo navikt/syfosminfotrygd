@@ -1,5 +1,6 @@
 package no.nav.syfo
 
+import io.kotest.core.spec.style.FunSpec
 import io.mockk.mockk
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.infotrygd.foresp.StatusType
@@ -16,12 +17,10 @@ import no.nav.syfo.services.UpdateInfotrygdService
 import no.nav.syfo.util.LoggingMeta
 import org.amshove.kluent.shouldBeEqualTo
 import org.apache.kafka.clients.producer.KafkaProducer
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 import java.time.LocalDate
 
-object CreateInfotrygdBlokkSpek : Spek({
-    describe("Testing the creating of infotrygdblokk") {
+class CreateInfotrygdBlokkSpek : FunSpec({
+    context("Testing the creating of infotrygdblokk") {
         val manuellClient = mockk<ManuellClient>()
         val norskHelsenettClient = mockk<NorskHelsenettClient>()
         val kafkaAivenProducerReceivedSykmelding = mockk<KafkaProducer<String, ReceivedSykmelding>>()
@@ -38,7 +37,7 @@ object CreateInfotrygdBlokkSpek : Spek({
             behandlingsutfallService
         )
 
-        it("Should set forsteFravaersDag correctly, when oprasjosntype 1") {
+        test("Should set forsteFravaersDag correctly, when oprasjosntype 1") {
 
             val healthInformation = HelseOpplysningerArbeidsuforhet().apply {
                 aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
@@ -82,7 +81,7 @@ object CreateInfotrygdBlokkSpek : Spek({
             infotrygdBlokk.forsteFravaersDag shouldBeEqualTo ifth.healthInformation.aktivitet.periode.sortedFOMDate().first()
         }
 
-        it("Should set forsteFravaersDag correctly, when oprasjosntype 2 and more than 1 periode") {
+        test("Should set forsteFravaersDag correctly, when oprasjosntype 2 and more than 1 periode") {
 
             val healthInformation = HelseOpplysningerArbeidsuforhet().apply {
                 aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
@@ -160,7 +159,7 @@ object CreateInfotrygdBlokkSpek : Spek({
                 .last().periode.arbufoerFOM
         }
 
-        it("Should set forsteFravaersDag correctly, when oprasjosntype 1 and more than 1 periode") {
+        test("Should set forsteFravaersDag correctly, when oprasjosntype 1 and more than 1 periode") {
 
             val healthInformation = HelseOpplysningerArbeidsuforhet().apply {
                 aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
