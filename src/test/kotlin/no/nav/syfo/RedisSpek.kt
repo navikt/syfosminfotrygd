@@ -2,150 +2,77 @@ package no.nav.syfo
 
 import io.kotest.core.spec.style.FunSpec
 import no.nav.syfo.services.INFOTRYGD
-import no.nav.syfo.services.antallErrorIInfotrygd
-import no.nav.syfo.services.oppdaterAntallErrorIInfotrygd
-import no.nav.syfo.services.oppdaterRedis
-import no.nav.syfo.services.slettRedisKey
+import no.nav.syfo.services.RedisService
 import no.nav.syfo.util.LoggingMeta
 import org.amshove.kluent.shouldBeEqualTo
-import redis.clients.jedis.Jedis
-import redis.embedded.RedisServer
+import org.testcontainers.containers.BindMode
+import org.testcontainers.containers.GenericContainer
+import redis.clients.jedis.JedisPool
+import redis.clients.jedis.JedisPoolConfig
 import java.util.concurrent.TimeUnit
 
 class RedisSpek : FunSpec({
+    val loggingMeta = LoggingMeta(
+        mottakId = "1313",
+        orgNr = "0",
+        msgId = "0",
+        sykmeldingId = "0"
+    )
+
+    val redisContainer: GenericContainer<Nothing> = GenericContainer("navikt/secure-redis:5.0.3-alpine-2")
+    redisContainer.withExposedPorts(6379)
+    redisContainer.withEnv("REDIS_PASSWORD", "secret")
+    redisContainer.withClasspathResourceMapping(
+        "redis.env",
+        "/var/run/secrets/nais.io/vault/redis.env",
+        BindMode.READ_ONLY
+    )
+
+    redisContainer.start()
+    val jedisPool = JedisPool(JedisPoolConfig(), redisContainer.host, redisContainer.getMappedPort(6379))
+    val redisService = RedisService(jedisPool, "secret")
+
+    beforeTest {
+        val jedis = jedisPool.resource
+        jedis.auth("secret")
+        jedis.flushAll()
+    }
+
+    afterSpec {
+        redisContainer.stop()
+    }
+
     context("Testing the redis functions") {
-
         test("Should set errorFromInfotrygd count to 2") {
-            val redisServer = RedisServer(6379)
+            redisService.oppdaterAntallErrorIInfotrygd(INFOTRYGD, "1", TimeUnit.MINUTES.toSeconds(5).toInt(), loggingMeta)
+            redisService.oppdaterAntallErrorIInfotrygd(INFOTRYGD, "1", TimeUnit.MINUTES.toSeconds(5).toInt(), loggingMeta)
 
-            redisServer.start()
-
-            Jedis("localhost", 6379).use { jedis ->
-                jedis.connect()
-
-                val loggingMeta = LoggingMeta(
-                    mottakId = "1313",
-                    orgNr = "0",
-                    msgId = "0",
-                    sykmeldingId = "0"
-                )
-
-                oppdaterAntallErrorIInfotrygd(INFOTRYGD, "1", jedis, TimeUnit.MINUTES.toSeconds(5).toInt(), loggingMeta)
-                oppdaterAntallErrorIInfotrygd(INFOTRYGD, "1", jedis, TimeUnit.MINUTES.toSeconds(5).toInt(), loggingMeta)
-                antallErrorIInfotrygd(INFOTRYGD, jedis, loggingMeta) shouldBeEqualTo 2
-            }
-            redisServer.stop()
+            redisService.antallErrorIInfotrygd(INFOTRYGD, loggingMeta) shouldBeEqualTo 2
         }
 
         test("Should set errorFromInfotrygd count to 1") {
-            val redisServer = RedisServer(6379)
+            redisService.oppdaterAntallErrorIInfotrygd(INFOTRYGD, "1", TimeUnit.MINUTES.toSeconds(5).toInt(), loggingMeta)
 
-            redisServer.start()
-
-            Jedis("localhost", 6379).use { jedis ->
-                jedis.connect()
-
-                val loggingMeta = LoggingMeta(
-                    mottakId = "1313",
-                    orgNr = "0",
-                    msgId = "0",
-                    sykmeldingId = "0"
-                )
-
-                oppdaterAntallErrorIInfotrygd(INFOTRYGD, "1", jedis, TimeUnit.MINUTES.toSeconds(5).toInt(), loggingMeta)
-                antallErrorIInfotrygd(INFOTRYGD, jedis, loggingMeta) shouldBeEqualTo 1
-            }
-            redisServer.stop()
-        }
-    }
-
-    context("Testing the redis duplicate") {
-
-        test("Should return OK") {
-            val redisServer = RedisServer(6379)
-
-            redisServer.start()
-
-            Jedis("localhost", 6379).use { jedis ->
-                jedis.connect()
-
-                val loggingMeta = LoggingMeta(
-                    mottakId = "1313",
-                    orgNr = "0",
-                    msgId = "0",
-                    sykmeldingId = "0"
-                )
-
-                val oppdaterRedis = oppdaterRedis(INFOTRYGD, "1", jedis, TimeUnit.MINUTES.toSeconds(5).toInt(), loggingMeta)
-                oppdaterRedis shouldBeEqualTo "OK"
-            }
-            redisServer.stop()
+            redisService.antallErrorIInfotrygd(INFOTRYGD, loggingMeta) shouldBeEqualTo 1
         }
 
-        test("Should return OK") {
-            val redisServer = RedisServer(6379)
+        test("Oppdatering returnerer OK når key ikke finnes") {
+            val oppdaterRedis = redisService.oppdaterRedis(INFOTRYGD, "1", TimeUnit.MINUTES.toSeconds(5).toInt(), loggingMeta)
 
-            redisServer.start()
-
-            Jedis("localhost", 6379).use { jedis ->
-                jedis.connect()
-
-                val loggingMeta = LoggingMeta(
-                    mottakId = "1313",
-                    orgNr = "0",
-                    msgId = "0",
-                    sykmeldingId = "0"
-                )
-
-                oppdaterRedis(INFOTRYGD, "1", jedis, TimeUnit.MINUTES.toSeconds(5).toInt(), loggingMeta)
-                val oppdaterRedisFAIL = oppdaterRedis(INFOTRYGD, "1", jedis, TimeUnit.MINUTES.toSeconds(5).toInt(), loggingMeta)
-                oppdaterRedisFAIL shouldBeEqualTo null
-            }
-            redisServer.stop()
+            oppdaterRedis shouldBeEqualTo "OK"
         }
 
-        test("Should return set redis expire") {
-            val redisServer = RedisServer(6379)
+        test("Oppdatering returnerer null når key finnes fra før") {
+            redisService.oppdaterRedis(INFOTRYGD, "1", TimeUnit.MINUTES.toSeconds(5).toInt(), loggingMeta)
+            val oppdaterRedisFAIL = redisService.oppdaterRedis(INFOTRYGD, "1", TimeUnit.MINUTES.toSeconds(5).toInt(), loggingMeta)
 
-            redisServer.start()
-
-            Jedis("localhost", 6379).use { jedis ->
-                jedis.connect()
-
-                val loggingMeta = LoggingMeta(
-                    mottakId = "1313",
-                    orgNr = "0",
-                    msgId = "0",
-                    sykmeldingId = "0"
-                )
-
-                oppdaterRedis(INFOTRYGD, "1", jedis, TimeUnit.MINUTES.toSeconds(5).toInt(), loggingMeta)
-                val oppdaterRedisFAIL = oppdaterRedis(INFOTRYGD, "1", jedis, TimeUnit.MINUTES.toSeconds(5).toInt(), loggingMeta)
-                oppdaterRedisFAIL shouldBeEqualTo null
-            }
-            redisServer.stop()
+            oppdaterRedisFAIL shouldBeEqualTo null
         }
 
         test("Should delete 1 key") {
-            val redisServer = RedisServer(6379)
-
-            redisServer.start()
-
-            Jedis("localhost", 6379).use { jedis ->
-                jedis.connect()
-
-                val loggingMeta = LoggingMeta(
-                    mottakId = "1313",
-                    orgNr = "0",
-                    msgId = "0",
-                    sykmeldingId = "0"
-                )
-
-                oppdaterRedis(INFOTRYGD, "1", jedis, TimeUnit.MINUTES.toSeconds(10).toInt(), loggingMeta)
-                val antallSlette = slettRedisKey(INFOTRYGD, jedis, loggingMeta)
-                antallSlette shouldBeEqualTo 1L
-            }
-            redisServer.stop()
+            redisService.oppdaterRedis(INFOTRYGD, "1", TimeUnit.MINUTES.toSeconds(10).toInt(), loggingMeta)
+            val antallSlettede = redisService.slettRedisKey(INFOTRYGD, loggingMeta)
+            antallSlettede shouldBeEqualTo 1L
         }
     }
 })

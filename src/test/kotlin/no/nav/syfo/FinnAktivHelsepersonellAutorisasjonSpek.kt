@@ -12,6 +12,7 @@ import no.nav.syfo.model.HelsepersonellKategori
 import no.nav.syfo.model.OpprettOppgaveKafkaMessage
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.services.BehandlingsutfallService
+import no.nav.syfo.services.RedisService
 import no.nav.syfo.services.UpdateInfotrygdService
 import org.amshove.kluent.shouldBeEqualTo
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -24,6 +25,7 @@ class FinnAktivHelsepersonellAutorisasjonSpek : FunSpec({
         val kafkaAivenProducerReceivedSykmelding = mockk<KafkaProducer<String, ReceivedSykmelding>>()
         val kafkaAivenProducerOppgave = mockk<KafkaProducer<String, OpprettOppgaveKafkaMessage>>()
         val behandlingsutfallService = mockk<BehandlingsutfallService>()
+        val redisService = mockk<RedisService>()
         val updateInfotrygdService = UpdateInfotrygdService(
             manuellClient,
             norskHelsenettClient,
@@ -32,7 +34,8 @@ class FinnAktivHelsepersonellAutorisasjonSpek : FunSpec({
             kafkaAivenProducerOppgave,
             "retry",
             "oppgave",
-            behandlingsutfallService
+            behandlingsutfallService,
+            redisService
         )
         test("Sjekker at man velger Lege verdien dersom fleire helsepersonell autorisasjoner") {
 

@@ -37,7 +37,6 @@ import no.nav.syfo.util.LoggingMeta
 import no.nav.syfo.util.xmlObjectWriter
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
-import redis.clients.jedis.Jedis
 import redis.clients.jedis.exceptions.JedisConnectionException
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -57,7 +56,8 @@ class UpdateInfotrygdService(
     private val kafkaAivenProducerOppgave: KafkaProducer<String, OpprettOppgaveKafkaMessage>,
     private val retryTopic: String,
     private val produserOppgaveTopic: String,
-    private val behandlingsutfallService: BehandlingsutfallService
+    private val behandlingsutfallService: BehandlingsutfallService,
+    private val redisService: RedisService
 ) {
 
     suspend fun updateInfotrygd(
@@ -68,8 +68,7 @@ class UpdateInfotrygdService(
         loggingMeta: LoggingMeta,
         session: Session,
         infotrygdForespResponse: InfotrygdForesp,
-        healthInformation: HelseOpplysningerArbeidsuforhet,
-        jedis: Jedis
+        healthInformation: HelseOpplysningerArbeidsuforhet
     ) {
         val helsepersonell = if (erEgenmeldt(receivedSykmelding)) {
             Behandler(listOf(Godkjenning(helsepersonellkategori = Kode(aktiv = true, oid = 0, verdi = HelsepersonellKategori.LEGE.verdi), autorisasjon = Kode(aktiv = true, oid = 0, verdi = ""))))
@@ -85,7 +84,7 @@ class UpdateInfotrygdService(
                         receivedSykmelding, validationResult,
                         loggingMeta,
                         InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
-                        helsepersonellKategoriVerdi, jedis
+                        helsepersonellKategoriVerdi
                     )
                 else -> sendInfotrygdOppdateringAndValidationResult(
                     infotrygdOppdateringProducer,
@@ -95,7 +94,6 @@ class UpdateInfotrygdService(
                     receivedSykmelding,
                     helsepersonellKategoriVerdi,
                     navKontorLokalKontor,
-                    jedis,
                     validationResult
                 )
             }
@@ -124,7 +122,7 @@ class UpdateInfotrygdService(
                 receivedSykmelding, validationResultBehandler,
                 loggingMeta,
                 InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
-                HelsepersonellKategori.LEGE.verdi, jedis
+                HelsepersonellKategori.LEGE.verdi
             )
         }
     }
@@ -140,7 +138,6 @@ class UpdateInfotrygdService(
         receivedSykmelding: ReceivedSykmelding,
         behandlerKode: String,
         navKontorNr: String,
-        jedis: Jedis,
         validationResult: ValidationResult
     ) {
         val perioder = itfh.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
@@ -159,7 +156,7 @@ class UpdateInfotrygdService(
         )
 
         delay(100)
-        val nyligInfotrygdOppdatering = oppdaterRedis(personNrPasient, personNrPasient, jedis, 4, loggingMeta)
+        val nyligInfotrygdOppdatering = redisService.oppdaterRedis(personNrPasient, personNrPasient, 4, loggingMeta)
 
         when {
             nyligInfotrygdOppdatering == null -> {
@@ -179,7 +176,7 @@ class UpdateInfotrygdService(
                 }
             }
             else -> {
-                val duplikatInfotrygdOppdatering = oppdaterRedis(sha256String, sha256String, jedis, TimeUnit.DAYS.toSeconds(60).toInt(), loggingMeta)
+                val duplikatInfotrygdOppdatering = redisService.oppdaterRedis(sha256String, sha256String, TimeUnit.DAYS.toSeconds(60).toInt(), loggingMeta)
                 when {
                     duplikatInfotrygdOppdatering == null -> {
                         behandlingsutfallService.sendRuleCheckValidationResult(
@@ -201,7 +198,7 @@ class UpdateInfotrygdService(
                                 loggingMeta
                             )
                         } catch (exception: Exception) {
-                            slettRedisKey(sha256String, jedis, loggingMeta)
+                            redisService.slettRedisKey(sha256String, loggingMeta)
                             log.error("Feilet i infotrygd oppdaternings biten, kaster exception", exception)
                             throw exception
                         }
@@ -508,8 +505,7 @@ class UpdateInfotrygdService(
         validationResult: ValidationResult,
         loggingMeta: LoggingMeta,
         itfh: InfotrygdForespAndHealthInformation,
-        helsepersonellKategoriVerdi: String,
-        jedis: Jedis
+        helsepersonellKategoriVerdi: String
     ) {
         behandlingsutfallService.sendRuleCheckValidationResult(receivedSykmelding, validationResult, loggingMeta)
         try {
@@ -529,13 +525,13 @@ class UpdateInfotrygdService(
                 )
             )
 
-            val duplikatInfotrygdOppdatering = erIRedis(sha256String, jedis)
+            val duplikatInfotrygdOppdatering = redisService.erIRedis(sha256String)
 
             if (errorFromInfotrygd(validationResult.ruleHits)) {
-                oppdaterAntallErrorIInfotrygd(INFOTRYGD, "1", jedis, TimeUnit.MINUTES.toSeconds(1).toInt(), loggingMeta)
+                redisService.oppdaterAntallErrorIInfotrygd(INFOTRYGD, "1", TimeUnit.MINUTES.toSeconds(1).toInt(), loggingMeta)
             }
 
-            val antallErrorFraInfotrygd = antallErrorIInfotrygd(INFOTRYGD, jedis, loggingMeta)
+            val antallErrorFraInfotrygd = redisService.antallErrorIInfotrygd(INFOTRYGD, loggingMeta)
 
             if (antallErrorFraInfotrygd > 50) {
                 log.error("Setter applicationState.ready til false")
@@ -553,7 +549,7 @@ class UpdateInfotrygdService(
                 }
                 else -> {
                     opprettOppgave(receivedSykmelding, validationResult, loggingMeta)
-                    oppdaterRedis(sha256String, sha256String, jedis, TimeUnit.DAYS.toSeconds(60).toInt(), loggingMeta)
+                    redisService.oppdaterRedis(sha256String, sha256String, TimeUnit.DAYS.toSeconds(60).toInt(), loggingMeta)
                 }
             }
         } catch (connectionException: JedisConnectionException) {

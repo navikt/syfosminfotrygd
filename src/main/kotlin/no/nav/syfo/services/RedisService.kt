@@ -6,41 +6,101 @@ import no.nav.syfo.log
 import no.nav.syfo.objectMapper
 import no.nav.syfo.util.LoggingMeta
 import redis.clients.jedis.Jedis
+import redis.clients.jedis.JedisPool
 import redis.clients.jedis.params.SetParams
 import java.security.MessageDigest
 
-fun erIRedis(redisKey: String, jedis: Jedis): Boolean =
-    when (jedis.get(redisKey)) {
-        null -> false
-        else -> true
-    }
-
-fun oppdaterRedis(redisKey: String, redisValue: String, jedis: Jedis, sekunder: Int, loggingMeta: LoggingMeta): String? {
-    log.info("Prøver å oppdaterer redis {}", fields(loggingMeta))
-    return jedis.set(
-        redisKey, redisValue,
-        SetParams().apply {
-            ex(sekunder.toLong())
-            nx()
+class RedisService(
+    private val jedisPool: JedisPool,
+    private val redisSecret: String
+) {
+    fun erIRedis(redisKey: String): Boolean {
+        var jedis: Jedis? = null
+        return try {
+            jedis = jedisPool.resource
+            jedis.auth(redisSecret)
+            when (jedis.get(redisKey)) {
+                null -> false
+                else -> true
+            }
+        } catch (e: Exception) {
+            log.error("Noe gikk galt ved sjekk mot redis", e.message)
+            throw e
+        } finally {
+            jedis?.close()
         }
-    )
-}
-
-fun slettRedisKey(redisKey: String, jedis: Jedis, loggingMeta: LoggingMeta): Long? {
-    log.info("Prøver å slette redis key for {}", fields(loggingMeta))
-    return jedis.del(redisKey)
-}
-
-fun oppdaterAntallErrorIInfotrygd(redisKey: String, redisValue: String, jedis: Jedis, sekunder: Int, loggingMeta: LoggingMeta) {
-    when (jedis.get(redisKey)) {
-        null -> oppdaterRedis(redisKey, redisValue, jedis, sekunder, loggingMeta)
-        else -> jedis.incr(redisKey)
     }
-}
 
-fun antallErrorIInfotrygd(redisKey: String, jedis: Jedis, loggingMeta: LoggingMeta): Int {
-    log.info("Henter ut antall infotrygd error i redis {}", fields(loggingMeta))
-    return jedis.get(redisKey)?.toInt() ?: 0
+    fun oppdaterRedis(redisKey: String, redisValue: String, sekunder: Int, loggingMeta: LoggingMeta): String? {
+        log.info("Prøver å oppdaterer redis {}", fields(loggingMeta))
+        var jedis: Jedis? = null
+        try {
+            jedis = jedisPool.resource
+            jedis.auth(redisSecret)
+            return jedis.set(
+                redisKey,
+                redisValue,
+                SetParams().apply {
+                    ex(sekunder.toLong())
+                    nx()
+                }
+            )
+        } catch (e: Exception) {
+            log.error("Noe gikk galt ved oppdatering av redis {}", e.message)
+            throw e
+        } finally {
+            jedis?.close()
+        }
+    }
+
+    fun slettRedisKey(redisKey: String, loggingMeta: LoggingMeta): Long {
+        log.info("Prøver å slette redis key for {}", fields(loggingMeta))
+        var jedis: Jedis? = null
+        try {
+            jedis = jedisPool.resource
+            jedis.auth(redisSecret)
+            return jedis.del(redisKey)
+        } catch (e: Exception) {
+            log.error("Noe gikk galt ved sletting av key i redis", e.message)
+            throw e
+        } finally {
+            jedis?.close()
+        }
+    }
+
+    fun oppdaterAntallErrorIInfotrygd(redisKey: String, redisValue: String, sekunder: Int, loggingMeta: LoggingMeta) {
+        when (erIRedis(redisKey)) {
+            false -> oppdaterRedis(redisKey, redisValue, sekunder, loggingMeta)
+            true -> {
+                var jedis: Jedis? = null
+                try {
+                    jedis = jedisPool.resource
+                    jedis.auth(redisSecret)
+                    jedis.incr(redisKey)
+                } catch (e: Exception) {
+                    log.error("Noe gikk galt ved oppdatering av antall infotrygdfeil i redis", e.message)
+                    throw e
+                } finally {
+                    jedis?.close()
+                }
+            }
+        }
+    }
+
+    fun antallErrorIInfotrygd(redisKey: String, loggingMeta: LoggingMeta): Int {
+        log.info("Henter ut antall infotrygd error i redis {}", fields(loggingMeta))
+        var jedis: Jedis? = null
+        try {
+            jedis = jedisPool.resource
+            jedis.auth(redisSecret)
+            return jedis.get(redisKey)?.toInt() ?: 0
+        } catch (e: Exception) {
+            log.error("Noe gikk galt ved henting av antall infotrygdfeil fra redis", e.message)
+            throw e
+        } finally {
+            jedis?.close()
+        }
+    }
 }
 
 fun sha256hashstring(infotrygdblokk: KontrollsystemBlokkType.InfotrygdBlokk): String =

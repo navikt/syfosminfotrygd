@@ -13,6 +13,7 @@ import no.nav.syfo.model.OpprettOppgaveKafkaMessage
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.rules.sortedSMInfos
 import no.nav.syfo.services.BehandlingsutfallService
+import no.nav.syfo.services.RedisService
 import no.nav.syfo.services.UpdateInfotrygdService
 import no.nav.syfo.util.LoggingMeta
 import org.amshove.kluent.shouldBeEqualTo
@@ -26,6 +27,7 @@ class CreateInfotrygdBlokkSpek : FunSpec({
         val kafkaAivenProducerReceivedSykmelding = mockk<KafkaProducer<String, ReceivedSykmelding>>()
         val kafkaAivenProducerOppgave = mockk<KafkaProducer<String, OpprettOppgaveKafkaMessage>>()
         val behandlingsutfallService = mockk<BehandlingsutfallService>()
+        val redisService = mockk<RedisService>()
         val updateInfotrygdService = UpdateInfotrygdService(
             manuellClient,
             norskHelsenettClient,
@@ -34,7 +36,8 @@ class CreateInfotrygdBlokkSpek : FunSpec({
             kafkaAivenProducerOppgave,
             "retry",
             "oppgave",
-            behandlingsutfallService
+            behandlingsutfallService,
+            redisService
         )
 
         test("Should set forsteFravaersDag correctly, when oprasjosntype 1") {

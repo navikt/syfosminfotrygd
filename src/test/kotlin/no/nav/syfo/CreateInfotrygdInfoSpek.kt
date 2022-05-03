@@ -20,6 +20,7 @@ import no.nav.syfo.model.HelsepersonellKategori
 import no.nav.syfo.model.OpprettOppgaveKafkaMessage
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.services.BehandlingsutfallService
+import no.nav.syfo.services.RedisService
 import no.nav.syfo.services.UpdateInfotrygdService
 import no.nav.syfo.services.createInfotrygdForesp
 import no.nav.syfo.util.LoggingMeta
@@ -41,6 +42,7 @@ class CreateInfotrygdInfoSpek : FunSpec({
         val kafkaAivenProducerReceivedSykmelding = mockk<KafkaProducer<String, ReceivedSykmelding>>()
         val kafkaAivenProducerOppgave = mockk<KafkaProducer<String, OpprettOppgaveKafkaMessage>>()
         val behandlingsutfallService = mockk<BehandlingsutfallService>()
+        val redisService = mockk<RedisService>()
         val updateInfotrygdService = UpdateInfotrygdService(
             manuellClient,
             norskHelsenettClient,
@@ -49,7 +51,8 @@ class CreateInfotrygdInfoSpek : FunSpec({
             kafkaAivenProducerOppgave,
             "retry",
             "oppgave",
-            behandlingsutfallService
+            behandlingsutfallService,
+            redisService
         )
 
         test("Should map regelSettVersjon correctly") {
