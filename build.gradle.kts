@@ -25,9 +25,7 @@ val logstashEncoderVersion = "7.1.1"
 val prometheusVersion = "0.15.0"
 val kotestVersion = "5.2.3"
 val sykmeldingVersion = "2019.07.29-02-53-86b22e73f7843e422ee500b486dac387a582f2d1"
-val cxfVersion = "3.4.5"
 val jaxwsApiVersion = "2.3.1"
-val commonsTextVersion = "1.9"
 val jaxbBasicAntVersion = "1.11.1"
 val javaxAnnotationApiVersion = "1.3.2"
 val jaxwsToolsVersion = "2.3.1"
@@ -114,12 +112,6 @@ dependencies {
     }
     implementation ("no.nav.helse:syfosm-common-kafka:$smCommonVersion")
     implementation ("no.nav.helse:syfosm-common-networking:$smCommonVersion")
-
-    implementation ("org.apache.commons:commons-text:$commonsTextVersion")
-    implementation ("org.apache.cxf:cxf-rt-frontend-jaxws:$cxfVersion")
-    implementation ("org.apache.cxf:cxf-rt-features-logging:$cxfVersion")
-    implementation ("org.apache.cxf:cxf-rt-transports-http:$cxfVersion")
-    implementation ("org.apache.cxf:cxf-rt-ws-security:$cxfVersion")
 
     implementation ("redis.clients:jedis:$jedisVersion")
 
