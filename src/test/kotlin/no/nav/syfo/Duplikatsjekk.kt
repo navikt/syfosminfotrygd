@@ -13,6 +13,7 @@ import no.nav.syfo.client.NorskHelsenettClient
 import no.nav.syfo.model.OpprettOppgaveKafkaMessage
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.services.BehandlingsutfallService
+import no.nav.syfo.services.RedisService
 import no.nav.syfo.services.UpdateInfotrygdService
 import no.nav.syfo.services.sha256hashstring
 import no.nav.syfo.util.LoggingMeta
@@ -27,6 +28,7 @@ class Duplikatsjekk : FunSpec({
     val kafkaAivenProducerReceivedSykmelding = mockk<KafkaProducer<String, ReceivedSykmelding>>()
     val kafkaAivenProducerOppgave = mockk<KafkaProducer<String, OpprettOppgaveKafkaMessage>>()
     val behandlingsutfallService = mockk<BehandlingsutfallService>()
+    val redisService = mockk<RedisService>()
     val updateInfotrygdService = UpdateInfotrygdService(
         manuellClient,
         norskHelsenettClient,
@@ -35,7 +37,8 @@ class Duplikatsjekk : FunSpec({
         kafkaAivenProducerOppgave,
         "retry",
         "oppgave",
-        behandlingsutfallService
+        behandlingsutfallService,
+        redisService
     )
 
     context("Tester duplikat hånderingen med redis") {

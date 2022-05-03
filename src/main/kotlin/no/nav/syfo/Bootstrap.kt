@@ -62,6 +62,7 @@ import no.nav.syfo.rules.ValidationRuleChain
 import no.nav.syfo.rules.sortedSMInfos
 import no.nav.syfo.services.BehandlingsutfallService
 import no.nav.syfo.services.FinnNAVKontorService
+import no.nav.syfo.services.RedisService
 import no.nav.syfo.services.UpdateInfotrygdService
 import no.nav.syfo.services.fetchInfotrygdForesp
 import no.nav.syfo.services.fetchTssSamhandlerInfo
@@ -77,7 +78,6 @@ import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import redis.clients.jedis.Jedis
 import redis.clients.jedis.JedisPool
 import redis.clients.jedis.JedisPoolConfig
 import java.io.StringReader
@@ -188,10 +188,9 @@ fun main() {
     val httpClientWithProxy = HttpClient(Apache, proxyConfig)
 
     val jedisPool = JedisPool(JedisPoolConfig(), env.redisHost, env.redisPort)
-    val jedis = jedisPool.resource
-    jedis.auth(env.redisSecret)
+    val redisService = RedisService(jedisPool, env.redisSecret)
 
-    val norg2Client = Norg2Client(httpClientWithRetry, env.norg2V1EndpointURL, Norg2RedisService(jedis))
+    val norg2Client = Norg2Client(httpClientWithRetry, env.norg2V1EndpointURL, Norg2RedisService(jedisPool, env.redisSecret))
 
     val accessTokenClientV2 =
         AccessTokenClientV2(env.aadAccessTokenV2Url, env.clientIdV2, env.clientSecretV2, httpClientWithProxy)
@@ -214,7 +213,8 @@ fun main() {
         kafkaAivenProducerOppgave = kafkaAivenProducerOppgave,
         retryTopic = env.retryTopic,
         produserOppgaveTopic = env.produserOppgaveTopic,
-        behandlingsutfallService = behandlingsutfallService
+        behandlingsutfallService = behandlingsutfallService,
+        redisService = redisService
     )
 
     launchListeners(
@@ -223,7 +223,6 @@ fun main() {
         env,
         updateInfotrygdService,
         credentials,
-        jedis,
         kafkaAivenConsumerReceivedSykmelding,
         behandlingsutfallService
     )
@@ -249,7 +248,6 @@ fun launchListeners(
     env: Environment,
     updateInfotrygdService: UpdateInfotrygdService,
     credentials: VaultCredentials,
-    jedis: Jedis,
     kafkaAivenConsumerReceivedSykmelding: KafkaConsumer<String, String>,
     behandlingsutfallService: BehandlingsutfallService
 ) {
@@ -268,7 +266,7 @@ fun launchListeners(
             blockingApplicationLogic(
                 applicationState, infotrygdOppdateringProducer, infotrygdSporringProducer,
                 session, finnNAVKontorService, updateInfotrygdService,
-                jedis, tssProducer, env, kafkaAivenConsumerReceivedSykmelding, behandlingsutfallService
+                tssProducer, env, kafkaAivenConsumerReceivedSykmelding, behandlingsutfallService
             )
         }
     }
@@ -283,7 +281,6 @@ suspend fun blockingApplicationLogic(
     session: Session,
     finnNAVKontorService: FinnNAVKontorService,
     updateInfotrygdService: UpdateInfotrygdService,
-    jedis: Jedis,
     tssProducer: MessageProducer,
     env: Environment,
     kafkaAivenConsumerReceivedSykmelding: KafkaConsumer<String, String>,
@@ -301,7 +298,6 @@ suspend fun blockingApplicationLogic(
                 session,
                 finnNAVKontorService,
                 updateInfotrygdService,
-                jedis,
                 applicationState,
                 tssProducer,
                 kafkaAivenConsumerReceivedSykmelding,
@@ -320,7 +316,6 @@ private suspend fun runKafkaConsumer(
     session: Session,
     finnNAVKontorService: FinnNAVKontorService,
     updateInfotrygdService: UpdateInfotrygdService,
-    jedis: Jedis,
     applicationState: ApplicationState,
     tssProducer: MessageProducer,
     kafkaAivenConsumerReceivedSykmelding: KafkaConsumer<String, String>,
@@ -343,7 +338,7 @@ private suspend fun runKafkaConsumer(
                             receivedSykmelding, updateInfotrygdService,
                             infotrygdOppdateringProducer, infotrygdSporringProducer,
                             session, finnNAVKontorService,
-                            loggingMeta, jedis, tssProducer, behandlingsutfallService
+                            loggingMeta, tssProducer, behandlingsutfallService
                         )
                     }
                     else -> {
@@ -412,7 +407,6 @@ suspend fun handleMessage(
     session: Session,
     finnNAVKontorService: FinnNAVKontorService,
     loggingMeta: LoggingMeta,
-    jedis: Jedis,
     tssProducer: MessageProducer,
     behandlingsutfallService: BehandlingsutfallService
 ) {
@@ -491,8 +485,7 @@ suspend fun handleMessage(
                 loggingMeta,
                 session,
                 infotrygdForespResponse,
-                healthInformation,
-                jedis
+                healthInformation
             )
         }
         val currentRequestLatency = requestLatency.observeDuration()

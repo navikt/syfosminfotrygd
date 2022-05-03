@@ -27,6 +27,7 @@ class OpprettOppgaveTest : FunSpec({
     val kafkaAivenProducerReceivedSykmelding = mockk<KafkaProducer<String, ReceivedSykmelding>>()
     val kafkaAivenProducerOppgave = mockk<KafkaProducer<String, OpprettOppgaveKafkaMessage>>()
     val behandlingsutfallService = mockk<BehandlingsutfallService>()
+    val redisService = mockk<RedisService>()
     val updateInfotrygdService = UpdateInfotrygdService(
         manuellClient,
         norskHelsenettClient,
@@ -35,7 +36,8 @@ class OpprettOppgaveTest : FunSpec({
         kafkaAivenProducerOppgave,
         "retry",
         "oppgave",
-        behandlingsutfallService
+        behandlingsutfallService,
+        redisService
     )
 
     beforeTest {

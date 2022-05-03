@@ -14,6 +14,7 @@ import no.nav.syfo.model.RuleInfo
 import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.services.BehandlingsutfallService
+import no.nav.syfo.services.RedisService
 import no.nav.syfo.services.UpdateInfotrygdService
 import org.amshove.kluent.shouldBeEqualTo
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -89,6 +90,7 @@ class SkalIkkeOppdatereInfotrygdSpek : FunSpec({
         val kafkaAivenProducerReceivedSykmelding = mockk<KafkaProducer<String, ReceivedSykmelding>>()
         val kafkaAivenProducerOppgave = mockk<KafkaProducer<String, OpprettOppgaveKafkaMessage>>()
         val behandlingsutfallService = mockk<BehandlingsutfallService>()
+        val redisService = mockk<RedisService>()
         val updateInfotrygdService = UpdateInfotrygdService(
             manuellClient,
             norskHelsenettClient,
@@ -97,7 +99,8 @@ class SkalIkkeOppdatereInfotrygdSpek : FunSpec({
             kafkaAivenProducerOppgave,
             "retry",
             "oppgave",
-            behandlingsutfallService
+            behandlingsutfallService,
+            redisService
         )
 
         test("Skal ikkje oppdatere infotrygd, pga lik eller under 3 dager i sykmeldings peridene totalt") {

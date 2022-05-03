@@ -16,7 +16,7 @@ val jacksonPatchVersion = "2.13.2.2"
 val jacksonBomVersion = "2.13.2.20220328"
 val jaxbApiVersion = "2.4.0-b180830.0359"
 val jaxbVersion = "2.3.0.1"
-val jedisVersion = "3.7.1"
+val jedisVersion = "4.2.2"
 val kafkaVersion = "3.1.0"
 val kluentVersion = "1.68"
 val ktorVersion = "2.0.0"
@@ -35,7 +35,7 @@ val smCommonVersion = "1.c55f4d2"
 val kontrollsystemblokk = "2019.07.29-02-53-86b22e73f7843e422ee500b486dac387a582f2d1"
 val javaxJaxwsApiVersion = "2.2.1"
 val jaxbTimeAdaptersVersion = "1.1.3"
-val embeddedRedisVersion = "0.6"
+val testcontainersVersion = "1.17.1"
 val syfoXmlCodegen = "1.35193f7"
 val mockkVersion = "1.12.3"
 val kotlinVersion = "1.6.20"
@@ -134,7 +134,7 @@ dependencies {
     }
     testImplementation ("org.apache.activemq:artemis-server:$artemisVersion")
     testImplementation ("org.apache.activemq:artemis-jms-client:$artemisVersion")
-    testImplementation ("com.github.kstyrc:embedded-redis:$embeddedRedisVersion")
+    testImplementation ("org.testcontainers:testcontainers:$testcontainersVersion")
     testImplementation ("io.mockk:mockk:$mockkVersion")
 }
 
