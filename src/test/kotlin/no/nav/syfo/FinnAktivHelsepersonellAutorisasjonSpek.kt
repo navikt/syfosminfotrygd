@@ -1,5 +1,6 @@
 package no.nav.syfo
 
+import io.kotest.core.spec.style.FunSpec
 import io.mockk.mockk
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.client.Behandler
@@ -14,12 +15,10 @@ import no.nav.syfo.services.BehandlingsutfallService
 import no.nav.syfo.services.UpdateInfotrygdService
 import org.amshove.kluent.shouldBeEqualTo
 import org.apache.kafka.clients.producer.KafkaProducer
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 
-object FinnAktivHelsepersonellAutorisasjonSpek : Spek({
+class FinnAktivHelsepersonellAutorisasjonSpek : FunSpec({
 
-    describe("Tester at man finner riktig helsepersonell autorisasjoner verdi") {
+    context("Tester at man finner riktig helsepersonell autorisasjoner verdi") {
         val manuellClient = mockk<ManuellClient>()
         val norskHelsenettClient = mockk<NorskHelsenettClient>()
         val kafkaAivenProducerReceivedSykmelding = mockk<KafkaProducer<String, ReceivedSykmelding>>()
@@ -35,7 +34,7 @@ object FinnAktivHelsepersonellAutorisasjonSpek : Spek({
             "oppgave",
             behandlingsutfallService
         )
-        it("Sjekker at man velger Lege verdien dersom fleire helsepersonell autorisasjoner") {
+        test("Sjekker at man velger Lege verdien dersom fleire helsepersonell autorisasjoner") {
 
             val helsepersonelPerson = Behandler(
                 listOf(
@@ -70,7 +69,7 @@ object FinnAktivHelsepersonellAutorisasjonSpek : Spek({
             updateInfotrygdService.finnAktivHelsepersonellAutorisasjons(helsepersonelPerson) shouldBeEqualTo HelsepersonellKategori.LEGE.verdi
         }
 
-        it("Sjekker at man velger Kiropraktor verdien dersom dei andre helsepersonell autorisasjoner er inaktiv") {
+        test("Sjekker at man velger Kiropraktor verdien dersom dei andre helsepersonell autorisasjoner er inaktiv") {
 
             val helsepersonelPerson = Behandler(
                 listOf(
@@ -105,7 +104,7 @@ object FinnAktivHelsepersonellAutorisasjonSpek : Spek({
             updateInfotrygdService.finnAktivHelsepersonellAutorisasjons(helsepersonelPerson) shouldBeEqualTo HelsepersonellKategori.KIROPRAKTOR.verdi
         }
 
-        it("Sjekker at man velger tomt verdi dersom ingen er aktive helsepersonellkategori verdier") {
+        test("Sjekker at man velger tomt verdi dersom ingen er aktive helsepersonellkategori verdier") {
 
             val helsepersonelPerson = Behandler(
                 listOf(
@@ -140,7 +139,7 @@ object FinnAktivHelsepersonellAutorisasjonSpek : Spek({
             updateInfotrygdService.finnAktivHelsepersonellAutorisasjons(helsepersonelPerson) shouldBeEqualTo ""
         }
 
-        it("Sjekker at man velger tomt verdi dersom det er ingen godkjenninger") {
+        test("Sjekker at man velger tomt verdi dersom det er ingen godkjenninger") {
 
             val helsepersonelPerson = Behandler(emptyList())
 

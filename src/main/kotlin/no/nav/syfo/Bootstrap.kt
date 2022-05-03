@@ -11,11 +11,12 @@ import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.apache.Apache
 import io.ktor.client.engine.apache.ApacheEngineConfig
-import io.ktor.client.features.HttpResponseValidator
-import io.ktor.client.features.HttpTimeout
-import io.ktor.client.features.json.JacksonSerializer
-import io.ktor.client.features.json.JsonFeature
+import io.ktor.client.plugins.HttpRequestRetry
+import io.ktor.client.plugins.HttpResponseValidator
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.network.sockets.SocketTimeoutException
+import io.ktor.serialization.jackson.jackson
 import io.prometheus.client.hotspot.DefaultExports
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -142,8 +143,8 @@ fun main() {
     MQEnvironment.password = credentials.mqPassword
 
     val config: HttpClientConfig<ApacheEngineConfig>.() -> Unit = {
-        install(JsonFeature) {
-            serializer = JacksonSerializer {
+        install(ContentNegotiation) {
+            jackson {
                 registerKotlinModule()
                 registerModule(JavaTimeModule())
                 configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
@@ -154,9 +155,20 @@ fun main() {
             socketTimeoutMillis = 5000
         }
         HttpResponseValidator {
-            handleResponseException { exception ->
+            handleResponseExceptionWithRequest { exception, _ ->
                 when (exception) {
                     is SocketTimeoutException -> throw ServiceUnavailableException(exception.message)
+                }
+            }
+        }
+    }
+
+    val retryConfig: HttpClientConfig<ApacheEngineConfig>.() -> Unit = {
+        config().apply {
+            install(HttpRequestRetry) {
+                maxRetries = 3
+                delayMillis { retry ->
+                    retry * 500L
                 }
             }
         }
@@ -172,22 +184,23 @@ fun main() {
     }
 
     val httpClient = HttpClient(Apache, config)
+    val httpClientWithRetry = HttpClient(Apache, retryConfig)
     val httpClientWithProxy = HttpClient(Apache, proxyConfig)
 
     val jedisPool = JedisPool(JedisPoolConfig(), env.redisHost, env.redisPort)
     val jedis = jedisPool.resource
     jedis.auth(env.redisSecret)
 
-    val norg2Client = Norg2Client(httpClient, env.norg2V1EndpointURL, Norg2RedisService(jedis))
+    val norg2Client = Norg2Client(httpClientWithRetry, env.norg2V1EndpointURL, Norg2RedisService(jedis))
 
     val accessTokenClientV2 =
         AccessTokenClientV2(env.aadAccessTokenV2Url, env.clientIdV2, env.clientSecretV2, httpClientWithProxy)
     val norskHelsenettClient =
-        NorskHelsenettClient(httpClient, env.norskHelsenettEndpointURL, accessTokenClientV2, env.helsenettproxyScope)
+        NorskHelsenettClient(httpClientWithRetry, env.norskHelsenettEndpointURL, accessTokenClientV2, env.helsenettproxyScope)
     val pdlPersonService = PdlFactory.getPdlService(env, httpClient, accessTokenClientV2, env.pdlScope)
     val finnNAVKontorService = FinnNAVKontorService(pdlPersonService, norg2Client)
 
-    val manuellClient = ManuellClient(httpClient, env.manuellUrl, accessTokenClientV2, env.manuellScope)
+    val manuellClient = ManuellClient(httpClientWithRetry, env.manuellUrl, accessTokenClientV2, env.manuellScope)
     val behandlingsutfallService = BehandlingsutfallService(
         kafkaAivenProducerBehandlingsutfall = kafkaAivenProducerBehandlingsutfall,
         behandlingsUtfallTopic = env.behandlingsUtfallTopic

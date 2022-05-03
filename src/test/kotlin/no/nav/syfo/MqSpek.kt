@@ -1,5 +1,6 @@
 package no.nav.syfo
 
+import io.kotest.core.spec.style.FunSpec
 import net.logstash.logback.argument.StructuredArguments
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.infotrygd.foresp.StatusType
@@ -9,8 +10,6 @@ import no.nav.syfo.util.infotrygdSporringUnmarshaller
 import org.amshove.kluent.shouldBeEqualTo
 import org.apache.activemq.artemis.core.config.impl.ConfigurationImpl
 import org.apache.activemq.artemis.core.server.ActiveMQServers
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 import java.io.StringReader
 import java.time.LocalDate
 import javax.jms.ConnectionFactory
@@ -18,7 +17,7 @@ import javax.jms.Session
 import javax.jms.TextMessage
 import javax.naming.InitialContext
 
-object MqSpek : Spek({
+class MqSpek : FunSpec({
 
     val activeMQServer = ActiveMQServers.newActiveMQServer(
         ConfigurationImpl()
@@ -28,16 +27,16 @@ object MqSpek : Spek({
             .addAcceptorConfiguration("invm", "vm://0")
     )
 
-    beforeGroup {
+    beforeSpec {
         activeMQServer.start()
     }
 
-    afterGroup {
+    afterSpec {
         activeMQServer.stop()
     }
 
-    describe("Push a message on a queue") {
-        it("Can read the messages from the tmp mq queue") {
+    context("Push a message on a queue") {
+        test("Can read the messages from the tmp mq queue") {
             val initialContext = InitialContext()
             val connectionFactory = initialContext.lookup("ConnectionFactory") as ConnectionFactory
             connectionFactory.createConnection().use { connection ->

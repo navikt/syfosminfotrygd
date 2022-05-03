@@ -1,5 +1,6 @@
 package no.nav.syfo.pdl.service
 
+import io.kotest.core.spec.style.FunSpec
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
 import io.mockk.mockk
@@ -14,23 +15,21 @@ import no.nav.syfo.pdl.client.model.HentPerson
 import no.nav.syfo.pdl.client.model.ResponseData
 import no.nav.syfo.util.LoggingMeta
 import org.amshove.kluent.shouldBeEqualTo
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 import kotlin.test.assertFailsWith
 
-object PdlPersonServiceTest : Spek({
+class PdlPersonServiceTest : FunSpec({
     val pdlClient = mockk<PdlClient>()
     val accessTokenClient = mockkClass(AccessTokenClientV2::class)
     val pdlPersonService = PdlPersonService(pdlClient, accessTokenClient, "pdlscope")
 
     val loggingMeta = LoggingMeta("mottakid", "orgnr", "msgid", "sykmeldingid")
 
-    beforeEachTest {
+    beforeTest {
         clearAllMocks()
     }
 
-    describe("PdlPersonService") {
-        it("Henter GT og adressebeskyttelse fra PDL") {
+    context("PdlPersonService") {
+        test("Henter GT og adressebeskyttelse fra PDL") {
             coEvery { pdlClient.getPerson(any(), any()) } returns GetPersonResponse(
                 ResponseData(
                     hentGeografiskTilknytning = HentGeografiskTilknytning(gtType = "BYDEL", gtKommune = null, gtBydel = "030102", gtLand = null),
@@ -41,14 +40,12 @@ object PdlPersonServiceTest : Spek({
 
             coEvery { accessTokenClient.getAccessTokenV2(any()) } returns "token"
 
-            runBlocking {
-                val person = pdlPersonService.getPerson("fnr", loggingMeta)
+            val person = pdlPersonService.getPerson("fnr", loggingMeta)
 
-                person.gt shouldBeEqualTo "030102"
-                person.adressebeskyttelse shouldBeEqualTo "FORTROLIG"
-            }
+            person.gt shouldBeEqualTo "030102"
+            person.adressebeskyttelse shouldBeEqualTo "FORTROLIG"
         }
-        it("Skal feile hvis person ikke finnes i PDL") {
+        test("Skal feile hvis person ikke finnes i PDL") {
             coEvery { pdlClient.getPerson(any(), any()) } returns GetPersonResponse(
                 ResponseData(
                     hentGeografiskTilknytning = HentGeografiskTilknytning(gtType = "BYDEL", gtKommune = null, gtBydel = "030102", gtLand = null),
@@ -65,7 +62,7 @@ object PdlPersonServiceTest : Spek({
                 }
             }
         }
-        it("Setter GT=null hvis geografiskTilknytning for person ikke finnes i PDL") {
+        test("Setter GT=null hvis geografiskTilknytning for person ikke finnes i PDL") {
             coEvery { pdlClient.getPerson(any(), any()) } returns GetPersonResponse(
                 ResponseData(
                     hentGeografiskTilknytning = null,
@@ -76,26 +73,24 @@ object PdlPersonServiceTest : Spek({
 
             coEvery { accessTokenClient.getAccessTokenV2(any()) } returns "token"
 
-            runBlocking {
-                val person = pdlPersonService.getPerson("fnr", loggingMeta)
+            val person = pdlPersonService.getPerson("fnr", loggingMeta)
 
-                person.gt shouldBeEqualTo null
-            }
+            person.gt shouldBeEqualTo null
         }
     }
 
-    describe("Finn GT fra PDL-respons") {
-        it("Bruker gtKommune hvis type er kommune og gtKommune er satt") {
+    context("Finn GT fra PDL-respons") {
+        test("Bruker gtKommune hvis type er kommune og gtKommune er satt") {
             val hentGeografiskTilknytning = HentGeografiskTilknytning(gtType = "KOMMUNE", gtKommune = "0301", gtBydel = null, gtLand = null)
 
             hentGeografiskTilknytning.finnGT() shouldBeEqualTo "0301"
         }
-        it("Bruker gtKommune uavhengig av type hvis kun gtKommune er satt") {
+        test("Bruker gtKommune uavhengig av type hvis kun gtKommune er satt") {
             val hentGeografiskTilknytning = HentGeografiskTilknytning(gtType = "UTLAND", gtKommune = "0301", gtBydel = null, gtLand = null)
 
             hentGeografiskTilknytning.finnGT() shouldBeEqualTo "0301"
         }
-        it("Returnerer null hvis ingen GT er satt") {
+        test("Returnerer null hvis ingen GT er satt") {
             val hentGeografiskTilknytning = HentGeografiskTilknytning(gtType = "UDEFINERT", gtKommune = null, gtBydel = null, gtLand = null)
 
             hentGeografiskTilknytning.finnGT() shouldBeEqualTo null

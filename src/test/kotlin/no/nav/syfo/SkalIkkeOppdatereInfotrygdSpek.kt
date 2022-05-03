@@ -1,5 +1,6 @@
 package no.nav.syfo
 
+import io.kotest.core.spec.style.FunSpec
 import io.mockk.every
 import io.mockk.mockk
 import no.nav.syfo.application.ApplicationState
@@ -16,50 +17,48 @@ import no.nav.syfo.services.BehandlingsutfallService
 import no.nav.syfo.services.UpdateInfotrygdService
 import org.amshove.kluent.shouldBeEqualTo
 import org.apache.kafka.clients.producer.KafkaProducer
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 import java.time.LocalDate
 
-object SkalIkkeOppdatereInfotrygdSpek : Spek({
-    describe("Skal ikke oppdatere infotrygd") {
+class SkalIkkeOppdatereInfotrygdSpek : FunSpec({
+    context("Skal ikke oppdatere infotrygd") {
         val sm = mockk<ReceivedSykmelding>()
-        it("Skal oppdater infotrygd ved ingen merknader") {
+        test("Skal oppdater infotrygd ved ingen merknader") {
             every { sm.merknader } returns emptyList()
             every { sm.sykmelding.perioder } returns emptyList()
             skalOppdatereInfotrygd(sm) shouldBeEqualTo true
         }
-        it("Skal oppdater infotrygd ved ingen merknader") {
+        test("Skal oppdater infotrygd ved ingen merknader") {
             every { sm.merknader } returns null
             every { sm.sykmelding.perioder } returns emptyList()
             skalOppdatereInfotrygd(sm) shouldBeEqualTo true
         }
-        it("Skal ikke oppdatere infotrygd ved merknader UGYLDIG_TILBAKEDATERING") {
+        test("Skal ikke oppdatere infotrygd ved merknader UGYLDIG_TILBAKEDATERING") {
             every { sm.merknader } returns listOf(Merknad("UGYLDIG_TILBAKEDATERING", null))
             every { sm.sykmelding.perioder } returns emptyList()
             skalOppdatereInfotrygd(sm) shouldBeEqualTo false
         }
-        it("Skal ikke oppdatere infotrygd ved merknader TILBAKEDATERING_KREVER_FLERE_OPPLYSNINGER") {
+        test("Skal ikke oppdatere infotrygd ved merknader TILBAKEDATERING_KREVER_FLERE_OPPLYSNINGER") {
             every { sm.merknader } returns listOf(Merknad("TILBAKEDATERING_KREVER_FLERE_OPPLYSNINGER", null))
             every { sm.sykmelding.perioder } returns emptyList()
             skalOppdatereInfotrygd(sm) shouldBeEqualTo false
         }
-        it("Skal ikke oppdatere infotrygd ved merknader TILBAKEDATERT_PAPIRSYKMELDING") {
+        test("Skal ikke oppdatere infotrygd ved merknader TILBAKEDATERT_PAPIRSYKMELDING") {
             every { sm.merknader } returns listOf(Merknad("TILBAKEDATERT_PAPIRSYKMELDING", null))
             every { sm.sykmelding.perioder } returns emptyList()
             skalOppdatereInfotrygd(sm) shouldBeEqualTo false
         }
-        it("Skal ikke oppdatere infotrygd ved merknader UNDER_BEHANDLING") {
+        test("Skal ikke oppdatere infotrygd ved merknader UNDER_BEHANDLING") {
             every { sm.merknader } returns listOf(Merknad("UNDER_BEHANDLING", null))
             every { sm.sykmelding.perioder } returns emptyList()
             skalOppdatereInfotrygd(sm) shouldBeEqualTo false
         }
-        it("Skal oppdatere infotrygd ved annen merknader ANNEN_MERKNAD") {
+        test("Skal oppdatere infotrygd ved annen merknader ANNEN_MERKNAD") {
             every { sm.merknader } returns listOf(Merknad("ANNEN_MERKNAD", null))
             every { sm.sykmelding.perioder } returns emptyList()
             skalOppdatereInfotrygd(sm) shouldBeEqualTo true
         }
 
-        it("Skal ikke oppdatere infotrygd hvis sykmeldingen inneholder reisetilskudd") {
+        test("Skal ikke oppdatere infotrygd hvis sykmeldingen inneholder reisetilskudd") {
             every { sm.merknader } returns emptyList()
             every { sm.sykmelding } returns generateSykmelding(
                 perioder = listOf(
@@ -71,7 +70,7 @@ object SkalIkkeOppdatereInfotrygdSpek : Spek({
             skalOppdatereInfotrygd(sm) shouldBeEqualTo false
         }
 
-        it("Skal ikke oppdatere infotrygd hvis sykmeldingen inneholder gradert sykmelding med reisetilskudd") {
+        test("Skal ikke oppdatere infotrygd hvis sykmeldingen inneholder gradert sykmelding med reisetilskudd") {
             every { sm.merknader } returns emptyList()
             every { sm.sykmelding } returns generateSykmelding(
                 perioder = listOf(
@@ -84,7 +83,7 @@ object SkalIkkeOppdatereInfotrygdSpek : Spek({
             skalOppdatereInfotrygd(sm) shouldBeEqualTo false
         }
     }
-    describe("Testing av metoden skalIkkeOppdatereInfotrygd") {
+    context("Testing av metoden skalIkkeOppdatereInfotrygd") {
         val manuellClient = mockk<ManuellClient>()
         val norskHelsenettClient = mockk<NorskHelsenettClient>()
         val kafkaAivenProducerReceivedSykmelding = mockk<KafkaProducer<String, ReceivedSykmelding>>()
@@ -101,7 +100,7 @@ object SkalIkkeOppdatereInfotrygdSpek : Spek({
             behandlingsutfallService
         )
 
-        it("Skal ikkje oppdatere infotrygd, pga lik eller under 3 dager i sykmeldings peridene totalt") {
+        test("Skal ikkje oppdatere infotrygd, pga lik eller under 3 dager i sykmeldings peridene totalt") {
             val validationResult = ValidationResult(
                 status = Status.MANUAL_PROCESSING,
                 ruleHits = listOf(
@@ -135,7 +134,7 @@ object SkalIkkeOppdatereInfotrygdSpek : Spek({
             updateInfotrygdService.skalIkkeProdusereManuellOppgave(receivedSykmelding, validationResult) shouldBeEqualTo true
         }
 
-        it("Skal oppdatere infotrygd, pga større enn 3 dager i sykmeldings peridene totalt") {
+        test("Skal oppdatere infotrygd, pga større enn 3 dager i sykmeldings peridene totalt") {
 
             val validationResult = ValidationResult(
                 status = Status.MANUAL_PROCESSING,
@@ -170,7 +169,7 @@ object SkalIkkeOppdatereInfotrygdSpek : Spek({
             updateInfotrygdService.skalIkkeProdusereManuellOppgave(receivedSykmelding, validationResult) shouldBeEqualTo false
         }
 
-        it("Skal oppdatere infotrygd, pga større enn 3 dager i sykmeldings peridene totalt") {
+        test("Skal oppdatere infotrygd, pga større enn 3 dager i sykmeldings peridene totalt") {
 
             val validationResult = ValidationResult(
                 status = Status.MANUAL_PROCESSING,

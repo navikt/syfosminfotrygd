@@ -1,5 +1,6 @@
 package no.nav.syfo
 
+import io.kotest.core.spec.style.FunSpec
 import io.mockk.mockk
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.infotrygd.foresp.StatusType
@@ -17,11 +18,9 @@ import no.nav.syfo.services.sha256hashstring
 import no.nav.syfo.util.LoggingMeta
 import org.amshove.kluent.shouldBeEqualTo
 import org.apache.kafka.clients.producer.KafkaProducer
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 import java.time.LocalDate
 
-object Duplikatsjekk : Spek({
+class Duplikatsjekk : FunSpec({
 
     val manuellClient = mockk<ManuellClient>()
     val norskHelsenettClient = mockk<NorskHelsenettClient>()
@@ -39,8 +38,8 @@ object Duplikatsjekk : Spek({
         behandlingsutfallService
     )
 
-    describe("Tester duplikat hånderingen med redis") {
-        it("Skal plukke meldingen som duplikat") {
+    context("Tester duplikat hånderingen med redis") {
+        test("Skal plukke meldingen som duplikat") {
             val healthInformationForstemelding = HelseOpplysningerArbeidsuforhet().apply {
                 aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
                     periode.add(

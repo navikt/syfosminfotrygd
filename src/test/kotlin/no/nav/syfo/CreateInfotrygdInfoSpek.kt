@@ -1,5 +1,6 @@
 package no.nav.syfo
 
+import io.kotest.core.spec.style.FunSpec
 import io.mockk.mockk
 import no.nav.helse.eiFellesformat.XMLEIFellesformat
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
@@ -28,15 +29,13 @@ import no.nav.syfo.util.xmlObjectWriter
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeFalse
 import org.apache.kafka.clients.producer.KafkaProducer
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 import java.io.StringReader
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-object CreateInfotrygdInfoSpek : Spek({
+class CreateInfotrygdInfoSpek : FunSpec({
 
-    describe("Testing mapping of fellesformat and InfotrygdInfo") {
+    context("Testing mapping of fellesformat and InfotrygdInfo") {
         val manuellClient = mockk<ManuellClient>()
         val norskHelsenettClient = mockk<NorskHelsenettClient>()
         val kafkaAivenProducerReceivedSykmelding = mockk<KafkaProducer<String, ReceivedSykmelding>>()
@@ -53,7 +52,7 @@ object CreateInfotrygdInfoSpek : Spek({
             behandlingsutfallService
         )
 
-        it("Should map regelSettVersjon correctly") {
+        test("Should map regelSettVersjon correctly") {
             val healthInformation = createDefaultHealthInformation()
 
             healthInformation.kontaktMedPasient = HelseOpplysningerArbeidsuforhet.KontaktMedPasient().apply {
@@ -84,7 +83,7 @@ object CreateInfotrygdInfoSpek : Spek({
                 extractHelseOpplysningerArbeidsuforhet(fellesFormat).regelSettVersjon
         }
 
-        it("Should map strekkode correctly") {
+        test("Should map strekkode correctly") {
             val healthInformation = createDefaultHealthInformation()
 
             healthInformation.kontaktMedPasient = HelseOpplysningerArbeidsuforhet.KontaktMedPasient().apply {
@@ -109,7 +108,7 @@ object CreateInfotrygdInfoSpek : Spek({
                 extractHelseOpplysningerArbeidsuforhet(fellesFormat).aktivitet.periode.first().periodeTOMDato
         }
 
-        it("Should use behandlingsDato instead of kontaktDato") {
+        test("Should use behandlingsDato instead of kontaktDato") {
             val healthInformation = createDefaultHealthInformation()
 
             healthInformation.kontaktMedPasient = HelseOpplysningerArbeidsuforhet.KontaktMedPasient().apply {
@@ -131,7 +130,7 @@ object CreateInfotrygdInfoSpek : Spek({
                 infotrygdBlokk.first().behandlingsDato
         }
 
-        it("Should use kontaktDato instead of behandlingsDato") {
+        test("Should use kontaktDato instead of behandlingsDato") {
             val healthInformation = createDefaultHealthInformation()
 
             healthInformation.kontaktMedPasient = HelseOpplysningerArbeidsuforhet.KontaktMedPasient().apply {
@@ -153,7 +152,7 @@ object CreateInfotrygdInfoSpek : Spek({
                 infotrygdBlokk.first().behandlingsDato
         }
 
-        it("Should use arbeidsKategori to 01 when employers name is set") {
+        test("Should use arbeidsKategori to 01 when employers name is set") {
 
             val healthInformation = createDefaultHealthInformation()
 
@@ -179,7 +178,7 @@ object CreateInfotrygdInfoSpek : Spek({
             "01" shouldBeEqualTo infotrygdBlokk.first().arbeidsKategori
         }
 
-        it("Should use arbeidsKategori to 030 when employers name is set") {
+        test("Should use arbeidsKategori to 030 when employers name is set") {
             val healthInformation = createDefaultHealthInformation()
             healthInformation.kontaktMedPasient = HelseOpplysningerArbeidsuforhet.KontaktMedPasient().apply {
                 kontaktDato = LocalDate.now()
@@ -199,7 +198,7 @@ object CreateInfotrygdInfoSpek : Spek({
             "030" shouldBeEqualTo infotrygdBlokk.first().arbeidsKategori
         }
 
-        it("Should not contain namespace in InfotrygdBlokk") {
+        test("Should not contain namespace in InfotrygdBlokk") {
             val stringInput = getFileAsString("src/test/resources/sykemelding2013Regelsettversjon2.xml")
             val fellesformat = fellesformatUnmarshaller.unmarshal(StringReader(stringInput)) as XMLEIFellesformat
 
@@ -215,7 +214,7 @@ object CreateInfotrygdInfoSpek : Spek({
             println(xmlObjectWriter.writeValueAsString(infotrygdFellesformat))
         }
 
-        it("Should NOT set arbeidsKategori") {
+        test("Should NOT set arbeidsKategori") {
             val healthInformation = createDefaultHealthInformation()
             healthInformation.kontaktMedPasient = HelseOpplysningerArbeidsuforhet.KontaktMedPasient().apply {
                 kontaktDato = LocalDate.now()
@@ -256,7 +255,7 @@ object CreateInfotrygdInfoSpek : Spek({
             infotrygdBlokk.last().arbeidsKategori shouldBeEqualTo null
         }
 
-        it("Should set set fields for first infotrygdblokk") {
+        test("Should set set fields for first infotrygdblokk") {
             val healthInformation = createDefaultHealthInformation()
             healthInformation.kontaktMedPasient = HelseOpplysningerArbeidsuforhet.KontaktMedPasient().apply {
                 kontaktDato = LocalDate.now()
@@ -314,7 +313,7 @@ object CreateInfotrygdInfoSpek : Spek({
             infotrygdBlokk.first().ufoeregrad shouldBeEqualTo "100".toBigInteger()
         }
 
-        it("Should set set fields for subsequent infotrygdblokk") {
+        test("Should set set fields for subsequent infotrygdblokk") {
             val healthInformation = createDefaultHealthInformation()
             healthInformation.kontaktMedPasient = HelseOpplysningerArbeidsuforhet.KontaktMedPasient().apply {
                 kontaktDato = LocalDate.now()

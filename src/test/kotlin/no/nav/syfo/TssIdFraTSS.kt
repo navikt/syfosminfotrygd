@@ -1,5 +1,6 @@
 package no.nav.syfo
 
+import io.kotest.core.spec.style.FunSpec
 import no.nav.helse.tssSamhandlerData.XMLSamhAvdPraType
 import no.nav.helse.tssSamhandlerData.XMLSamhandlerIDataB910Type
 import no.nav.helse.tssSamhandlerData.XMLSamhandlerType
@@ -14,12 +15,10 @@ import no.nav.helse.tssSamhandlerData.XMLTypeSamhAvd
 import no.nav.helse.tssSamhandlerData.XMLTypeSamhandler
 import no.nav.syfo.services.setFnrOrDnr
 import org.amshove.kluent.shouldBeEqualTo
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 
-object TssIdFraTSS : Spek({
-    describe("Testing av håndtering av data objeketer fra tss") {
-        it("Should find tssid for avdnr 01") {
+class TssIdFraTSS : FunSpec({
+    context("Testing av håndtering av data objeketer fra tss") {
+        test("Should find tssid for avdnr 01") {
             val tssSamhandlerInfoResponse = XMLTssSamhandlerData()
             tssSamhandlerInfoResponse.tssInputData = XMLTssSamhandlerData.TssInputData().apply {
                 tssServiceRutine = XMLTServicerutiner().apply {
@@ -92,12 +91,12 @@ object TssIdFraTSS : Spek({
 
             finnTssIdFraTSSRespons(tssSamhandlerInfoResponse) shouldBeEqualTo "80000007415"
         }
-        it("Should set kodeIdType to FNR") {
+        test("Should set kodeIdType to FNR") {
             val kodeIdType = setFnrOrDnr("04030350265")
             kodeIdType shouldBeEqualTo "FNR"
         }
 
-        it("Should set kodeIdType to DNR") {
+        test("Should set kodeIdType to DNR") {
             val kodeIdType = setFnrOrDnr("41019111197")
             kodeIdType shouldBeEqualTo "DNR"
         }

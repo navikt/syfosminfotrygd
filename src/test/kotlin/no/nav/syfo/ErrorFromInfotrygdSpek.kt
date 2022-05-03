@@ -1,5 +1,6 @@
 package no.nav.syfo
 
+import io.kotest.core.spec.style.FunSpec
 import io.mockk.mockk
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.client.ManuellClient
@@ -12,10 +13,8 @@ import no.nav.syfo.services.BehandlingsutfallService
 import no.nav.syfo.services.UpdateInfotrygdService
 import org.amshove.kluent.shouldBeEqualTo
 import org.apache.kafka.clients.producer.KafkaProducer
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 
-object ErrorFromInfotrygdSpek : Spek({
+class ErrorFromInfotrygdSpek : FunSpec({
     val manuellClient = mockk<ManuellClient>()
     val norskHelsenettClient = mockk<NorskHelsenettClient>()
     val kafkaAivenProducerReceivedSykmelding = mockk<KafkaProducer<String, ReceivedSykmelding>>()
@@ -32,8 +31,8 @@ object ErrorFromInfotrygdSpek : Spek({
         behandlingsutfallService
     )
 
-    describe("Tester at vi fanger opp der infotrygd gir mye error") {
-        it("Should set errorFromInfotrygd to true") {
+    context("Tester at vi fanger opp der infotrygd gir mye error") {
+        test("Should set errorFromInfotrygd to true") {
             val rules = listOf(
                 RuleInfo(
                     ruleName = "ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING",
@@ -52,7 +51,7 @@ object ErrorFromInfotrygdSpek : Spek({
             updateInfotrygdService.errorFromInfotrygd(rules) shouldBeEqualTo true
         }
 
-        it("Should set errorFromInfotrygd to false") {
+        test("Should set errorFromInfotrygd to false") {
             val rules = listOf(
                 RuleInfo(
                     ruleName = "TRAVEL_SUBSIDY_SPECIFIED",
@@ -71,7 +70,7 @@ object ErrorFromInfotrygdSpek : Spek({
             updateInfotrygdService.errorFromInfotrygd(rules) shouldBeEqualTo false
         }
 
-        it("Should set errorFromInfotrygd to true") {
+        test("Should set errorFromInfotrygd to true") {
             val rules = listOf(
                 RuleInfo(
                     ruleName = "TRAVEL_SUBSIDY_SPECIFIED",

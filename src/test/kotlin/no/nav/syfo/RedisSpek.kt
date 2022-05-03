@@ -1,5 +1,6 @@
 package no.nav.syfo
 
+import io.kotest.core.spec.style.FunSpec
 import no.nav.syfo.services.INFOTRYGD
 import no.nav.syfo.services.antallErrorIInfotrygd
 import no.nav.syfo.services.oppdaterAntallErrorIInfotrygd
@@ -7,16 +8,14 @@ import no.nav.syfo.services.oppdaterRedis
 import no.nav.syfo.services.slettRedisKey
 import no.nav.syfo.util.LoggingMeta
 import org.amshove.kluent.shouldBeEqualTo
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 import redis.clients.jedis.Jedis
 import redis.embedded.RedisServer
 import java.util.concurrent.TimeUnit
 
-object RedisSpek : Spek({
-    describe("Testing the redis functions") {
+class RedisSpek : FunSpec({
+    context("Testing the redis functions") {
 
-        it("Should set errorFromInfotrygd count to 2") {
+        test("Should set errorFromInfotrygd count to 2") {
             val redisServer = RedisServer(6379)
 
             redisServer.start()
@@ -38,7 +37,7 @@ object RedisSpek : Spek({
             redisServer.stop()
         }
 
-        it("Should set errorFromInfotrygd count to 1") {
+        test("Should set errorFromInfotrygd count to 1") {
             val redisServer = RedisServer(6379)
 
             redisServer.start()
@@ -60,9 +59,9 @@ object RedisSpek : Spek({
         }
     }
 
-    describe("Testing the redis duplicate") {
+    context("Testing the redis duplicate") {
 
-        it("Should return OK") {
+        test("Should return OK") {
             val redisServer = RedisServer(6379)
 
             redisServer.start()
@@ -83,7 +82,7 @@ object RedisSpek : Spek({
             redisServer.stop()
         }
 
-        it("Should return OK") {
+        test("Should return OK") {
             val redisServer = RedisServer(6379)
 
             redisServer.start()
@@ -105,7 +104,7 @@ object RedisSpek : Spek({
             redisServer.stop()
         }
 
-        it("Should return set redis expire") {
+        test("Should return set redis expire") {
             val redisServer = RedisServer(6379)
 
             redisServer.start()
@@ -127,7 +126,7 @@ object RedisSpek : Spek({
             redisServer.stop()
         }
 
-        it("Should delete 1 key") {
+        test("Should delete 1 key") {
             val redisServer = RedisServer(6379)
 
             redisServer.start()

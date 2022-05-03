@@ -1,5 +1,6 @@
 package no.nav.syfo
 
+import io.kotest.core.spec.style.FunSpec
 import io.mockk.mockk
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.infotrygd.foresp.StatusType
@@ -15,11 +16,9 @@ import no.nav.syfo.services.UpdateInfotrygdService
 import no.nav.syfo.util.LoggingMeta
 import org.amshove.kluent.shouldBeEqualTo
 import org.apache.kafka.clients.producer.KafkaProducer
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 import java.time.LocalDate
 
-object FindOprasjonstypeSpek : Spek({
+class FindOprasjonstypeSpek : FunSpec({
     val manuellClient = mockk<ManuellClient>()
     val norskHelsenettClient = mockk<NorskHelsenettClient>()
     val kafkaAivenProducerReceivedSykmelding = mockk<KafkaProducer<String, ReceivedSykmelding>>()
@@ -36,8 +35,8 @@ object FindOprasjonstypeSpek : Spek({
         behandlingsutfallService
     )
 
-    describe("Test the method FindOprasjonstypeSpek") {
-        it("Should set oprasjonstype to 1, when kodemelding is 04 ") {
+    context("Test the method FindOprasjonstypeSpek") {
+        test("Should set oprasjonstype to 1, when kodemelding is 04 ") {
             val healthInformation = HelseOpplysningerArbeidsuforhet().apply {
                 aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
                     periode.add(
@@ -71,7 +70,7 @@ object FindOprasjonstypeSpek : Spek({
             ) shouldBeEqualTo 1
         }
 
-        it("Should set oprasjonstype to 2") {
+        test("Should set oprasjonstype to 2") {
             val healthInformation = HelseOpplysningerArbeidsuforhet().apply {
                 aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
                     periode.add(
@@ -105,7 +104,7 @@ object FindOprasjonstypeSpek : Spek({
             ) shouldBeEqualTo 2
         }
 
-        it("Should set oprasjonstype to 2") {
+        test("Should set oprasjonstype to 2") {
             val healthInformation = HelseOpplysningerArbeidsuforhet().apply {
                 aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
                     periode.add(
@@ -139,7 +138,7 @@ object FindOprasjonstypeSpek : Spek({
             ) shouldBeEqualTo 2
         }
 
-        it("Når opphold kun skyldes helg skal operasjonstype være 2") {
+        test("Når opphold kun skyldes helg skal operasjonstype være 2") {
             val healthInformation = HelseOpplysningerArbeidsuforhet().apply {
                 aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
                     periode.add(
@@ -173,7 +172,7 @@ object FindOprasjonstypeSpek : Spek({
             ) shouldBeEqualTo 2
         }
 
-        it("Når opphold kun skyldes lørdag skal operasjonstype være 2") {
+        test("Når opphold kun skyldes lørdag skal operasjonstype være 2") {
             val healthInformation = HelseOpplysningerArbeidsuforhet().apply {
                 aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
                     periode.add(
@@ -207,7 +206,7 @@ object FindOprasjonstypeSpek : Spek({
             ) shouldBeEqualTo 2
         }
 
-        it("Når opphold kun skyldes søndag skal operasjonstype være 2") {
+        test("Når opphold kun skyldes søndag skal operasjonstype være 2") {
             val healthInformation = HelseOpplysningerArbeidsuforhet().apply {
                 aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
                     periode.add(
@@ -241,7 +240,7 @@ object FindOprasjonstypeSpek : Spek({
             ) shouldBeEqualTo 2
         }
 
-        it("To dagers opphold som ikke skyldes helg skal gi operasjonstype være 1") {
+        test("To dagers opphold som ikke skyldes helg skal gi operasjonstype være 1") {
             val healthInformation = HelseOpplysningerArbeidsuforhet().apply {
                 aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
                     periode.add(
@@ -275,7 +274,7 @@ object FindOprasjonstypeSpek : Spek({
             ) shouldBeEqualTo 1
         }
 
-        it("Should set oprasjonstype to 3") {
+        test("Should set oprasjonstype to 3") {
             val healthInformation = HelseOpplysningerArbeidsuforhet().apply {
                 aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
                     periode.add(
@@ -309,7 +308,7 @@ object FindOprasjonstypeSpek : Spek({
             ) shouldBeEqualTo 3
         }
 
-        it("Should set oprasjonstype to 3") {
+        test("Should set oprasjonstype to 3") {
             val healthInformation = HelseOpplysningerArbeidsuforhet().apply {
                 aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
                     periode.add(
@@ -343,7 +342,7 @@ object FindOprasjonstypeSpek : Spek({
             ) shouldBeEqualTo 3
         }
 
-        it("Should set oprasjonstype to 3") {
+        test("Should set oprasjonstype to 3") {
             val healthInformation = HelseOpplysningerArbeidsuforhet().apply {
                 aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
                     periode.add(
@@ -381,7 +380,7 @@ object FindOprasjonstypeSpek : Spek({
             ) shouldBeEqualTo 3
         }
 
-        it("Should set oprasjonstype to 3") {
+        test("Should set oprasjonstype to 3") {
             val healthInformation = HelseOpplysningerArbeidsuforhet().apply {
                 aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
                     periode.add(
@@ -415,7 +414,7 @@ object FindOprasjonstypeSpek : Spek({
             ) shouldBeEqualTo 3
         }
 
-        it("Should set oprasjonstype to 3") {
+        test("Should set oprasjonstype to 3") {
             val healthInformation = HelseOpplysningerArbeidsuforhet().apply {
                 aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
                     periode.add(
@@ -460,7 +459,7 @@ object FindOprasjonstypeSpek : Spek({
             ) shouldBeEqualTo 3
         }
 
-        it("Should set oprasjonstype to 2") {
+        test("Should set oprasjonstype to 2") {
             val healthInformation = HelseOpplysningerArbeidsuforhet().apply {
                 aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
                     periode.add(
@@ -494,7 +493,7 @@ object FindOprasjonstypeSpek : Spek({
             ) shouldBeEqualTo 2
         }
 
-        it("Should set oprasjonstype to 1") {
+        test("Should set oprasjonstype to 1") {
             val healthInformation = HelseOpplysningerArbeidsuforhet().apply {
                 aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
                     periode.add(
@@ -528,7 +527,7 @@ object FindOprasjonstypeSpek : Spek({
             ) shouldBeEqualTo 1
         }
 
-        it("Should set oprasjonstype to 1") {
+        test("Should set oprasjonstype to 1") {
             val healthInformation = HelseOpplysningerArbeidsuforhet().apply {
                 aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
                     periode.add(
@@ -562,7 +561,7 @@ object FindOprasjonstypeSpek : Spek({
             ) shouldBeEqualTo 1
         }
 
-        it("Should set oprasjonstype to 1") {
+        test("Should set oprasjonstype to 1") {
             val healthInformation = HelseOpplysningerArbeidsuforhet().apply {
                 aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
                     periode.add(
@@ -596,7 +595,7 @@ object FindOprasjonstypeSpek : Spek({
             ) shouldBeEqualTo 1
         }
 
-        it("Should set oprasjonstype to 1") {
+        test("Should set oprasjonstype to 1") {
             val healthInformation = HelseOpplysningerArbeidsuforhet().apply {
                 aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
                     periode.add(
