@@ -1,13 +1,14 @@
 package no.nav.syfo.client
 
 import io.ktor.client.HttpClient
-import io.ktor.client.features.ClientRequestException
+import io.ktor.client.call.body
 import io.ktor.client.request.accept
 import io.ktor.client.request.get
 import io.ktor.client.request.headers
+import io.ktor.client.statement.HttpResponse
 import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.HttpStatusCode.Companion.NotFound
-import no.nav.syfo.helpers.retry
 import no.nav.syfo.log
 import java.io.IOException
 
@@ -17,27 +18,28 @@ class NorskHelsenettClient(
     private val accessTokenClient: AccessTokenClientV2,
     private val resourceId: String
 ) {
-    suspend fun finnBehandler(behandlerFnr: String, msgId: String): Behandler? = retry(
-        callName = "finnbehandler",
-        retryIntervals = arrayOf(500L, 1000L, 3000L)
-    ) {
+    suspend fun finnBehandler(behandlerFnr: String, msgId: String): Behandler? {
         log.info("Henter behandler fra syfohelsenettproxy for msgId {}", msgId)
-        try {
-            return@retry httpClient.get<Behandler>("$endpointUrl/api/v2/behandler") {
-                accept(ContentType.Application.Json)
-                val accessToken = accessTokenClient.getAccessTokenV2(resourceId)
-                headers {
-                    append("Authorization", "Bearer $accessToken")
-                    append("Nav-CallId", msgId)
-                    append("behandlerFnr", behandlerFnr)
-                }
+        val httpResponse: HttpResponse = httpClient.get("$endpointUrl/api/v2/behandler") {
+            accept(ContentType.Application.Json)
+            val accessToken = accessTokenClient.getAccessTokenV2(resourceId)
+            headers {
+                append("Authorization", "Bearer $accessToken")
+                append("Nav-CallId", msgId)
+                append("behandlerFnr", behandlerFnr)
             }
-        } catch (e: Exception) {
-            if (e is ClientRequestException && e.response.status == NotFound) {
+        }
+        return when (httpResponse.status) {
+            HttpStatusCode.OK -> {
+                httpResponse.body<Behandler>()
+            }
+
+            NotFound -> {
                 log.error("BehandlerFnr mangler i request for msgId {}", msgId)
                 null
-            } else {
-                log.error("Syfohelsenettproxy svarte med feilmelding for msgId {}: {}", msgId, e.message)
+            }
+            else -> {
+                log.error("Syfohelsenettproxy svarte med feilmelding for msgId {}: {}", msgId, httpResponse.status)
                 throw IOException("Syfohelsenettproxy svarte med feilmelding for $msgId")
             }
         }
