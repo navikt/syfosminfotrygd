@@ -1,6 +1,9 @@
 package no.nav.syfo
 
 import no.nav.syfo.mq.MqConfig
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
+import java.nio.file.Paths
 
 data class Environment(
     val applicationPort: Int = getEnvVar("APPLICATION_PORT", "8080").toInt(),
@@ -32,10 +35,12 @@ data class Environment(
     val retryTopic: String = "teamsykmelding.privat-sminfotrygd-retry"
 ) : MqConfig
 
-data class VaultCredentials(
-    val mqUsername: String,
-    val mqPassword: String
+data class VaultServiceUser(
+    val serviceuserUsername: String = getFileAsString("/secrets/serviceuser/username"),
+    val serviceuserPassword: String = getFileAsString("/secrets/serviceuser/password")
 )
 
 fun getEnvVar(varName: String, defaultValue: String? = null) =
     System.getenv(varName) ?: defaultValue ?: throw RuntimeException("Missing required variable \"$varName\"")
+
+fun getFileAsString(filePath: String) = String(Files.readAllBytes(Paths.get(filePath)), StandardCharsets.UTF_8)

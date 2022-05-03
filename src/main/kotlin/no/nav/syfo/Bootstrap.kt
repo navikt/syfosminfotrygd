@@ -83,7 +83,6 @@ import redis.clients.jedis.JedisPoolConfig
 import java.io.StringReader
 import java.io.StringWriter
 import java.net.ProxySelector
-import java.nio.file.Paths
 import java.time.Duration
 import java.time.LocalDate
 import java.time.OffsetTime
@@ -107,8 +106,7 @@ const val NAV_OPPFOLGING_UTLAND_KONTOR_NR = "0393"
 @DelicateCoroutinesApi
 fun main() {
     val env = Environment()
-    val credentials =
-        objectMapper.readValue<VaultCredentials>(Paths.get("/var/run/secrets/nais.io/vault/credentials.json").toFile())
+    val vaultServiceUser = VaultServiceUser()
     val applicationState = ApplicationState()
     val applicationEngine = createApplicationEngine(
         env,
@@ -139,8 +137,8 @@ fun main() {
     MQEnvironment.channel = env.mqChannelName
     MQEnvironment.port = env.mqPort
     MQEnvironment.hostname = env.mqHostname
-    MQEnvironment.userID = credentials.mqUsername
-    MQEnvironment.password = credentials.mqPassword
+    MQEnvironment.userID = vaultServiceUser.serviceuserUsername
+    MQEnvironment.password = vaultServiceUser.serviceuserPassword
 
     val config: HttpClientConfig<ApacheEngineConfig>.() -> Unit = {
         install(ContentNegotiation) {
@@ -222,7 +220,7 @@ fun main() {
         finnNAVKontorService,
         env,
         updateInfotrygdService,
-        credentials,
+        vaultServiceUser,
         kafkaAivenConsumerReceivedSykmelding,
         behandlingsutfallService
     )
@@ -247,12 +245,12 @@ fun launchListeners(
     finnNAVKontorService: FinnNAVKontorService,
     env: Environment,
     updateInfotrygdService: UpdateInfotrygdService,
-    credentials: VaultCredentials,
+    vaultServiceUser: VaultServiceUser,
     kafkaAivenConsumerReceivedSykmelding: KafkaConsumer<String, String>,
     behandlingsutfallService: BehandlingsutfallService
 ) {
     createListener(applicationState) {
-        connectionFactory(env).createConnection(credentials.mqUsername, credentials.mqPassword).use { connection ->
+        connectionFactory(env).createConnection(vaultServiceUser.serviceuserUsername, vaultServiceUser.serviceuserPassword).use { connection ->
             connection.start()
             val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
             val infotrygdOppdateringProducer =
