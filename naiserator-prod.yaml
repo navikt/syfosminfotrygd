@@ -55,7 +55,7 @@ spec:
     - name: INFOTRYGD_OPPDATERING_QUEUE
       value: QA.P278.IT00_SMOPPDATERING
     - name: MQ_HOST_NAME
-      value: a01apvl270.adeo.no
+      value: mpls03.adeo.no
     - name: MQ_PORT
       value: '1414'
     - name: MQ_GATEWAY_NAME
