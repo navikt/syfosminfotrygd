@@ -9,7 +9,7 @@ val artemisVersion = "2.21.0"
 val coroutinesVersion = "1.6.1"
 val infotrygdForespVersion = "2019.07.29-02-53-86b22e73f7843e422ee500b486dac387a582f2d1"
 val fellesformatVersion = "2019.07.30-12-26-5c924ef4f04022bbb850aaf299eb8e4464c1ca6a"
-val ibmMqVersion = "9.1.0.3"
+val ibmMqVersion = "9.2.5.0"
 val javaxActivationVersion = "1.1.1"
 val jacksonVersion = "2.13.2"
 val jacksonPatchVersion = "2.13.2.2"
@@ -107,9 +107,7 @@ dependencies {
     implementation ("no.nav.helse.xml:tssSamhandlerData:$syfoXmlCodegen")
 
     implementation ("no.nav.helse:syfosm-common-models:$smCommonVersion")
-    implementation ("no.nav.helse:syfosm-common-mq:$smCommonVersion") {
-        exclude(group = "com.ibm.mq", module = "com.ibm.mq.allclient")
-    }
+    implementation ("no.nav.helse:syfosm-common-mq:$smCommonVersion")
     implementation ("no.nav.helse:syfosm-common-kafka:$smCommonVersion")
     implementation ("no.nav.helse:syfosm-common-networking:$smCommonVersion")
 

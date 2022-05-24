@@ -55,11 +55,11 @@ spec:
     - name: INFOTRYGD_OPPDATERING_QUEUE
       value: QA.Q291.IT00_SMOPPDATERING
     - name: MQ_HOST_NAME
-      value: b27apvl173.preprod.local
+      value: b27apvl221.preprod.local
     - name: MQ_PORT
       value: '1413'
     - name: MQ_GATEWAY_NAME
-      value: MQ1LSC03
+      value: MQLS03
     - name: MQ_CHANNEL_NAME
       value: Q1_SYFOSMINFOTRYGD
     - name: NORG2_V1_ENDPOINT_URL
