@@ -114,7 +114,6 @@ fun main() {
     )
 
     val applicationServer = ApplicationServer(applicationEngine)
-    applicationServer.start()
 
     DefaultExports.initialize()
 
@@ -224,6 +223,8 @@ fun main() {
         kafkaAivenConsumerReceivedSykmelding,
         behandlingsutfallService
     )
+
+    applicationServer.start()
 }
 
 @DelicateCoroutinesApi
@@ -258,8 +259,6 @@ fun launchListeners(
             val infotrygdSporringProducer =
                 session.producerForQueue("queue:///${env.infotrygdSporringQueue}?targetClient=1")
             val tssProducer = session.producerForQueue("queue:///${env.tssQueue}?targetClient=1")
-
-            applicationState.ready = true
 
             blockingApplicationLogic(
                 applicationState, infotrygdOppdateringProducer, infotrygdSporringProducer,

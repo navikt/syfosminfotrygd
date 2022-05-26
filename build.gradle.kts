@@ -11,19 +11,17 @@ val infotrygdForespVersion = "2019.07.29-02-53-86b22e73f7843e422ee500b486dac387a
 val fellesformatVersion = "2019.07.30-12-26-5c924ef4f04022bbb850aaf299eb8e4464c1ca6a"
 val ibmMqVersion = "9.2.5.0"
 val javaxActivationVersion = "1.1.1"
-val jacksonVersion = "2.13.2"
-val jacksonPatchVersion = "2.13.2.2"
-val jacksonBomVersion = "2.13.2.20220328"
+val jacksonVersion = "2.13.3"
 val jaxbApiVersion = "2.4.0-b180830.0359"
 val jaxbVersion = "2.3.0.1"
-val jedisVersion = "4.2.2"
+val jedisVersion = "4.2.3"
 val kafkaVersion = "3.1.0"
 val kluentVersion = "1.68"
-val ktorVersion = "2.0.0"
+val ktorVersion = "2.0.1"
 val logbackVersion = "1.2.11"
 val logstashEncoderVersion = "7.1.1"
 val prometheusVersion = "0.15.0"
-val kotestVersion = "5.2.3"
+val kotestVersion = "5.3.0"
 val sykmeldingVersion = "2019.07.29-02-53-86b22e73f7843e422ee500b486dac387a582f2d1"
 val jaxwsApiVersion = "2.3.1"
 val jaxbBasicAntVersion = "1.11.1"
@@ -37,12 +35,12 @@ val javaxJaxwsApiVersion = "2.2.1"
 val jaxbTimeAdaptersVersion = "1.1.3"
 val testcontainersVersion = "1.17.1"
 val syfoXmlCodegen = "1.35193f7"
-val mockkVersion = "1.12.3"
-val kotlinVersion = "1.6.20"
+val mockkVersion = "1.12.4"
+val kotlinVersion = "1.6.21"
 
 plugins {
     java
-    kotlin("jvm") version "1.6.20"
+    kotlin("jvm") version "1.6.21"
     id("org.jmailen.kotlinter") version "3.10.0"
     id("com.diffplug.spotless") version "6.5.0"
     id("com.github.johnrengelman.shadow") version "7.1.2"
@@ -96,8 +94,6 @@ dependencies {
     implementation ("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
     implementation ("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:$jacksonVersion")
     implementation ("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion")
-    implementation ("com.fasterxml.jackson:jackson-bom:$jacksonBomVersion")
-    implementation ("com.fasterxml.jackson.core:jackson-databind:$jacksonPatchVersion")
 
     implementation ("no.nav.helse.xml:sm2013:$sykmeldingVersion")
     implementation ("no.nav.helse.xml:xmlfellesformat:$fellesformatVersion")
