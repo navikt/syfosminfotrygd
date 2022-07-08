@@ -37,18 +37,23 @@ spec:
     application:
       enabled: true
       tenant: trygdeetaten.no
+  accessPolicy:
+    outbound:
+      rules:
+        - application: syfosminfotrygd-redis
+      external:
+        - host: pdl-api.dev-fss-pub.nais.io
+        - host: norg2.dev-fss-pub.nais.io
+        - host: syfohelsenettproxy.dev-fss-pub
+        - host: syfosmmanuell-backend.dev-fss-pub.nais.io
   kafka:
     pool: nav-dev
   vault:
-    enabled: true
-    paths:
-      - kvPath: serviceuser/data/dev/srvsyfosminfotrygd
-        mountPath: /secrets/serviceuser
-      - kvPath: /kv/preprod/fss/syfosminfotrygd/teamsykmelding
-        mountPath: /var/run/secrets/nais.io/vault
-  webproxy: true
+    enabled: false
+  webproxy: false
   envFrom:
     - secret: syfosminfotrygd-redis-password
+    - secret: syfosminfotrygd-secrets
   env:
     - name: INFOTRYGD_SPORRING_QUEUE
       value: QA.Q291.IT00_FORESPORSEL_XML
@@ -63,16 +68,18 @@ spec:
     - name: MQ_CHANNEL_NAME
       value: Q1_SYFOSMINFOTRYGD
     - name: NORG2_V1_ENDPOINT_URL
-      value: https://norg2.dev.adeo.no/norg2/api/v1
+      value: https://norg2.dev-fss-pub.nais.io/norg2/api/v1
     - name: MQ_TSS_SAMHANDLER_SERVICE_QUEUE
       value: QA.Q1_415.AS10_SAMHANDLER_SERVICE
     - name: PDL_GRAPHQL_PATH
-      value: https://pdl-api.nais.preprod.local/graphql
+      value: https://pdl-api.dev-fss-pub.nais.io/graphql
     - name: HELSENETT_ENDPOINT_URL
-      value: https://syfohelsenettproxy.nais.preprod.local
+      value: https://syfohelsenettproxy.dev-fss-pub.nais.io
     - name: PDL_SCOPE
       value: api://dev-fss.pdl.pdl-api/.default
     - name: HELSENETT_SCOPE
       value: api://dev-fss.teamsykmelding.syfohelsenettproxy/.default
     - name: MANUELL_SCOPE
       value: api://dev-fss.teamsykmelding.syfosmmanuell-backend/.default
+    - name: MANUELL_URL
+      value: https://syfosmmanuell-backend.dev-fss-pub.nais.io

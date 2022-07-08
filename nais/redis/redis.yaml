@@ -24,6 +24,11 @@ spec:
   service:
     port: 6379
     protocol: redis
+  accessPolicy:
+    inbound:
+      rules:
+        - application: syfosminfotrygd
+        - application: syfosminfotrygd-redisexporter
   envFrom:
     - secret: syfosminfotrygd-redis-password
 
@@ -52,6 +57,10 @@ spec:
       memory: 100Mi
   liveness:
     path: /health
+  accessPolicy:
+    outbound:
+      rules:
+        - application: syfosminfotrygd-redis
   env:
     - name: REDIS_ADDR
       value: syfosminfotrygd-redis:6379
