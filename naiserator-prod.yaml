@@ -40,15 +40,11 @@ spec:
   kafka:
     pool: nav-prod
   vault:
-    enabled: true
-    paths:
-      - kvPath: serviceuser/data/prod/srvsyfosminfotrygd
-        mountPath: /secrets/serviceuser
-      - kvPath: /kv/prod/fss/syfosminfotrygd/teamsykmelding
-        mountPath: /var/run/secrets/nais.io/vault
-  webproxy: true
+    enabled: false
+  webproxy: false
   envFrom:
     - secret: syfosminfotrygd-redis-password
+    - secret: syfosminfotrygd-secrets
   env:
     - name: INFOTRYGD_SPORRING_QUEUE
       value: QA.P278.IT00_FORESPORSEL_XML
@@ -63,16 +59,18 @@ spec:
     - name: MQ_CHANNEL_NAME
       value: P_SYFOSMINFOTRYGD
     - name: NORG2_V1_ENDPOINT_URL
-      value: https://norg2.nais.adeo.no/norg2/api/v1
+      value: https://norg2.prod-fss-pub.nais.io/norg2/api/v1
     - name: MQ_TSS_SAMHANDLER_SERVICE_QUEUE
       value: QA.P415.AS10_SAMHANDLER_SERVICE
     - name: PDL_GRAPHQL_PATH
-      value: https://pdl-api.nais.adeo.no/graphql
+      value: https://pdl-api.prod-fss-pub.nais.io/graphql
     - name: HELSENETT_ENDPOINT_URL
-      value: https://syfohelsenettproxy.nais.adeo.no
+      value: https://syfohelsenettproxy.prod-fss-pub.nais.io
     - name: PDL_SCOPE
       value: api://prod-fss.pdl.pdl-api/.default
     - name: HELSENETT_SCOPE
       value: api://prod-fss.teamsykmelding.syfohelsenettproxy/.default
     - name: MANUELL_SCOPE
       value: api://prod-fss.teamsykmelding.syfosmmanuell-backend/.default
+    - name: MANUELL_URL
+      value: https://syfosmmanuell-backend.prod-fss-pub.nais.io

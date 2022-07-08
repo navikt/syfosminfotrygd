@@ -71,7 +71,6 @@ import no.nav.syfo.util.LoggingMeta
 import no.nav.syfo.util.TrackableException
 import no.nav.syfo.util.fellesformatUnmarshaller
 import no.nav.syfo.util.wrapExceptions
-import org.apache.http.impl.conn.SystemDefaultRoutePlanner
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -82,7 +81,6 @@ import redis.clients.jedis.JedisPool
 import redis.clients.jedis.JedisPoolConfig
 import java.io.StringReader
 import java.io.StringWriter
-import java.net.ProxySelector
 import java.time.Duration
 import java.time.LocalDate
 import java.time.OffsetTime
@@ -171,18 +169,8 @@ fun main() {
         }
     }
 
-    val proxyConfig: HttpClientConfig<ApacheEngineConfig>.() -> Unit = {
-        config()
-        engine {
-            customizeClient {
-                setRoutePlanner(SystemDefaultRoutePlanner(ProxySelector.getDefault()))
-            }
-        }
-    }
-
     val httpClient = HttpClient(Apache, config)
     val httpClientWithRetry = HttpClient(Apache, retryConfig)
-    val httpClientWithProxy = HttpClient(Apache, proxyConfig)
 
     val jedisPool = JedisPool(JedisPoolConfig(), env.redisHost, env.redisPort)
     val redisService = RedisService(jedisPool, env.redisSecret)
@@ -190,7 +178,7 @@ fun main() {
     val norg2Client = Norg2Client(httpClientWithRetry, env.norg2V1EndpointURL, Norg2RedisService(jedisPool, env.redisSecret))
 
     val accessTokenClientV2 =
-        AccessTokenClientV2(env.aadAccessTokenV2Url, env.clientIdV2, env.clientSecretV2, httpClientWithProxy)
+        AccessTokenClientV2(env.aadAccessTokenV2Url, env.clientIdV2, env.clientSecretV2, httpClient)
     val norskHelsenettClient =
         NorskHelsenettClient(httpClientWithRetry, env.norskHelsenettEndpointURL, accessTokenClientV2, env.helsenettproxyScope)
     val pdlPersonService = PdlFactory.getPdlService(env, httpClient, accessTokenClientV2, env.pdlScope)
