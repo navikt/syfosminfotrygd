@@ -37,6 +37,10 @@ spec:
     application:
       enabled: true
       tenant: trygdeetaten.no
+  accessPolicy:
+    outbound:
+      rules:
+        - application: syfosminfotrygd-redis
   kafka:
     pool: nav-dev
   vault:
