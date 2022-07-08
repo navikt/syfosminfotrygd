@@ -75,6 +75,7 @@ class UpdateInfotrygdService(
         } else {
             norskHelsenettClient.finnBehandler(receivedSykmelding.personNrLege, receivedSykmelding.msgId)
         }
+        log.info("Fant behandler")
 
         if (helsepersonell != null) {
             val helsepersonellKategoriVerdi = finnAktivHelsepersonellAutorisasjons(helsepersonell)
