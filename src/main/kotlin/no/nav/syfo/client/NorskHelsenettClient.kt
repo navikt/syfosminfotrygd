@@ -22,7 +22,7 @@ class NorskHelsenettClient(
         log.info("Henter behandler fra syfohelsenettproxy for msgId {}", msgId)
         val httpResponse: HttpResponse = httpClient.get("$endpointUrl/api/v2/behandler") {
             accept(ContentType.Application.Json)
-            val accessToken = accessTokenClient.getAccessTokenV2(resourceId).also { log.info("hentet token") }
+            val accessToken = accessTokenClient.getAccessTokenV2(resourceId)
             headers {
                 append("Authorization", "Bearer $accessToken")
                 append("Nav-CallId", msgId)
