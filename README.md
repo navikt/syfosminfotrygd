@@ -8,7 +8,7 @@ to persisting them in infotrygd
 * Kotlin
 * Ktor
 * Gradle
-* Spek
+* Kotest
 * Kafka
 * Mq
 * Vault
@@ -19,7 +19,7 @@ to persisting them in infotrygd
 
 ## Getting started
 ### Getting github-package-registry packages NAV-IT
-Some packages used in this repo is uploaded to the Github Package Registry which requires authentication. It can, for example, be solved like this in Gradle:
+Some packages used in this repo is uploaded to the GitHub Package Registry which requires authentication. It can, for example, be solved like this in Gradle:
 ```
 val githubUser: String by project
 val githubPassword: String by project
@@ -73,3 +73,14 @@ Deploying redis can be done with the following command:
 ### Deploy redis to prod:
 Deploying redis can be done with the following command:
 `kubectl apply --context prod-fss --namespace default -f redis.yaml`
+
+### Upgrading the gradle wrapper
+Find the newest version of gradle here: https://gradle.org/releases/ Then run this command:
+
+```./gradlew wrapper --gradle-version $gradleVersjon```
+
+### Inquiries
+Questions related to the code or the project can be asked as issues here on GitHub
+
+### For NAV employees
+We are available at the Slack channel #team-sykmelding
