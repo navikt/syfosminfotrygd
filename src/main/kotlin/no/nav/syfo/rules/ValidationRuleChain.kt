@@ -171,10 +171,10 @@ class ValidationRuleChain(
                 input.sykmeldingPerioder.sortedPeriodeFOMDate().lastOrNull() != null &&
                     input.infotrygdSykmelding?.sortedSMInfos()
                     ?.lastOrNull()?.periode?.utbetTOM != null &&
-                    !input.infotrygdSykmelding?.sortedSMInfos()
-                        ?.lastOrNull()?.periode?.friskKode.isNullOrBlank() &&
-                    !input.infotrygdSykmelding?.sortedSMInfos()
-                        ?.lastOrNull()?.periode?.hovedDiagnosekode.isNullOrBlank() &&
+                    !input.infotrygdSykmelding.sortedSMInfos()
+                        .lastOrNull()?.periode?.friskKode.isNullOrBlank() &&
+                    !input.infotrygdSykmelding.sortedSMInfos()
+                        .lastOrNull()?.periode?.hovedDiagnosekode.isNullOrBlank() &&
                     input.infotrygdSykmelding.sortedSMInfos().last().periode.utbetTOM.isBefore(
                         input.sykmeldingPerioder.sortedPeriodeFOMDate().last()
                     ) &&
@@ -325,7 +325,7 @@ class ValidationRuleChain(
             messageForUser = "Syketilfellet er avsluttet (stanskode AF - friskmelding)",
             messageForSender = "Syketilfellet er avsluttet (stanskode AF - friskmelding)",
             input = object {},
-            predicate = { input ->
+            predicate = { _ ->
                 sykmelding.perioder.any {
                     !infotrygdForesp.sMhistorikk?.sykmelding?.sortedSMInfos()
                         ?.lastOrNull()?.periode?.stans.isNullOrBlank() &&
@@ -477,5 +477,3 @@ fun List<TypeSMinfo.Historikk>.sortedSMinfoHistorikk(): List<TypeSMinfo.Historik
     sortedBy { it.endringsDato }
 
 fun Periode.range(): ClosedRange<LocalDate> = fom.rangeTo(tom)
-
-fun TypeSMinfo.Periode.range(): ClosedRange<LocalDate> = arbufoerFOM.rangeTo(arbufoerTOM)

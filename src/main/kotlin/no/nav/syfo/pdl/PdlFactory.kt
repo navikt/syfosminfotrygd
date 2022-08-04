@@ -20,7 +20,7 @@ class PdlFactory private constructor() {
             return PdlClient(
                 httpClient,
                 environment.pdlGraphqlPath,
-                PdlClient::class.java.getResource("/graphql/getPerson.graphql").readText()
+                PdlClient::class.java.getResource("/graphql/getPerson.graphql")!!.readText()
             )
         }
     }

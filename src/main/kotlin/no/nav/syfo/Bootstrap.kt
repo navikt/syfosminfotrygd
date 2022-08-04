@@ -147,7 +147,7 @@ fun main() {
             }
         }
         install(HttpTimeout) {
-            socketTimeoutMillis = 5000
+            socketTimeoutMillis = 6000
         }
         HttpResponseValidator {
             handleResponseExceptionWithRequest { exception, _ ->
