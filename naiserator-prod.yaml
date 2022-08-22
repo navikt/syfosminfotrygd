@@ -80,6 +80,6 @@ spec:
     - name: HELSENETT_SCOPE
       value: api://prod-fss.teamsykmelding.syfohelsenettproxy/.default
     - name: MANUELL_SCOPE
-      value: api://prod-fss.teamsykmelding.syfosmmanuell-backend/.default
+      value: api://prod-gcp.teamsykmelding.syfosmmanuell-backend/.default
     - name: MANUELL_URL
-      value: https://syfosmmanuell-backend.prod-fss-pub.nais.io
+      value: https://syfosmmanuell-backend.intern.nav.no
