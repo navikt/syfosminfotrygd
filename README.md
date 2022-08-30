@@ -42,6 +42,8 @@ githubPassword=[token]
 ```
 
 Replace `[token]` with a personal access token with scope `read:packages`.
+See githubs guide [creating-a-personal-access-token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token) on
+how to create a personal access token.
 
 Alternatively, the variables can be configured via environment variables:
 
@@ -68,11 +70,11 @@ Creating a docker image should be as simple as `docker build -t syfosminfotrygd 
 
 ### Deploy redis to dev:
 Deploying redis can be done with the following command:
-`kubectl apply --context dev-fss --namespace default -f redis.yaml`
+`kubectl apply --context dev-gcp --namespace teamsykmelding -f redis.yaml`
 
 ### Deploy redis to prod:
 Deploying redis can be done with the following command:
-`kubectl apply --context prod-fss --namespace default -f redis.yaml`
+`kubectl apply --context prod-gcp --namespace teamsykmelding -f redis.yaml`
 
 ### Upgrading the gradle wrapper
 Find the newest version of gradle here: https://gradle.org/releases/ Then run this command:
