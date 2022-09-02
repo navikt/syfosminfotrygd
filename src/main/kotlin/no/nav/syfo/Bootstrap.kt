@@ -53,6 +53,7 @@ import no.nav.syfo.model.RuleInfo
 import no.nav.syfo.model.RuleMetadata
 import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
+import no.nav.syfo.mq.MqTlsUtils
 import no.nav.syfo.mq.connectionFactory
 import no.nav.syfo.mq.producerForQueue
 import no.nav.syfo.pdl.PdlFactory
@@ -105,6 +106,7 @@ const val NAV_OPPFOLGING_UTLAND_KONTOR_NR = "0393"
 fun main() {
     val env = Environment()
     val vaultServiceUser = VaultServiceUser()
+    MqTlsUtils.getMqTlsConfig().forEach { key, value -> System.setProperty(key as String, value as String) }
     val applicationState = ApplicationState()
     val applicationEngine = createApplicationEngine(
         env,
