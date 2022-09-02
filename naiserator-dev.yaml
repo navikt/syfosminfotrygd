@@ -54,6 +54,10 @@ spec:
   envFrom:
     - secret: syfosminfotrygd-redis-password
     - secret: syfosminfotrygd-secrets
+    - secret: syfosminfotrygd-keystore-pwd
+  filesFrom:
+    - mountPath: /var/run/keystore
+      secret: syfosminfotrygd-keystore
   env:
     - name: INFOTRYGD_SPORRING_QUEUE
       value: QA.Q291.IT00_FORESPORSEL_XML
@@ -83,3 +87,5 @@ spec:
       value: api://dev-gcp.teamsykmelding.syfosmmanuell-backend/.default
     - name: MANUELL_URL
       value: https://syfosmmanuell-backend.dev.intern.nav.no
+    - name: MQ_KEYSTORE_PATH
+      value: /var/run/keystore/syfosminfotrygd-keystore.jks
