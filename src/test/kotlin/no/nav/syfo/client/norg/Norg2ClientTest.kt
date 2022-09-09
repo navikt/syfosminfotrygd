@@ -6,7 +6,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.kotest.core.spec.style.FunSpec
 import io.ktor.client.HttpClient
-import io.ktor.client.engine.apache.Apache
+import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.HttpRequestRetry
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.http.HttpStatusCode
@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit
 class Norg2ClientTest : FunSpec({
     val loggingMeta = LoggingMeta("mottakid", "orgnr", "msgid", "sykmeldingid")
     val norg2RedisService = mockk<Norg2RedisService>(relaxed = true)
-    val httpClient = HttpClient(Apache) {
+    val httpClient = HttpClient(CIO) {
         install(ContentNegotiation) {
             jackson {
                 registerKotlinModule()

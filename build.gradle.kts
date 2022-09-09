@@ -11,14 +11,14 @@ val infotrygdForespVersion = "2019.07.29-02-53-86b22e73f7843e422ee500b486dac387a
 val fellesformatVersion = "2019.07.30-12-26-5c924ef4f04022bbb850aaf299eb8e4464c1ca6a"
 val ibmMqVersion = "9.2.5.0"
 val javaxActivationVersion = "1.1.1"
-val jacksonVersion = "2.13.3"
+val jacksonVersion = "2.13.4"
 val jaxbApiVersion = "2.4.0-b180830.0359"
 val jaxbVersion = "2.3.0.1"
 val jedisVersion = "4.2.3"
 val kafkaVersion = "3.2.1"
 val kluentVersion = "1.68"
-val ktorVersion = "2.1.0"
-val logbackVersion = "1.2.11"
+val ktorVersion = "2.1.1"
+val logbackVersion = "1.4.0"
 val logstashEncoderVersion = "7.2"
 val prometheusVersion = "0.16.0"
 val kotestVersion = "5.4.2"
@@ -78,7 +78,7 @@ dependencies {
     implementation ("io.ktor:ktor-server-core:$ktorVersion")
     implementation ("io.ktor:ktor-server-netty:$ktorVersion")
     implementation ("io.ktor:ktor-client-core:$ktorVersion")
-    implementation ("io.ktor:ktor-client-apache:$ktorVersion")
+    implementation ("io.ktor:ktor-client-cio:$ktorVersion")
     implementation ("io.ktor:ktor-client-content-negotiation:$ktorVersion")
     implementation ("io.ktor:ktor-serialization-jackson:$ktorVersion")
 

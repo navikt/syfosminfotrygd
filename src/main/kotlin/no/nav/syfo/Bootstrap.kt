@@ -9,8 +9,8 @@ import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.ibm.mq.MQEnvironment
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
-import io.ktor.client.engine.apache.Apache
-import io.ktor.client.engine.apache.ApacheEngineConfig
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.engine.cio.CIOEngineConfig
 import io.ktor.client.plugins.HttpRequestRetry
 import io.ktor.client.plugins.HttpResponseValidator
 import io.ktor.client.plugins.HttpTimeout
@@ -139,7 +139,7 @@ fun main() {
     MQEnvironment.userID = vaultServiceUser.serviceuserUsername
     MQEnvironment.password = vaultServiceUser.serviceuserPassword
 
-    val config: HttpClientConfig<ApacheEngineConfig>.() -> Unit = {
+    val config: HttpClientConfig<CIOEngineConfig>.() -> Unit = {
         install(ContentNegotiation) {
             jackson {
                 registerKotlinModule()
@@ -158,35 +158,29 @@ fun main() {
                 }
             }
         }
-    }
-
-    val retryConfig: HttpClientConfig<ApacheEngineConfig>.() -> Unit = {
-        config().apply {
-            install(HttpRequestRetry) {
-                maxRetries = 3
-                delayMillis { retry ->
-                    retry * 500L
-                }
+        install(HttpRequestRetry) {
+            maxRetries = 3
+            delayMillis { retry ->
+                retry * 500L
             }
         }
     }
 
-    val httpClient = HttpClient(Apache, config)
-    val httpClientWithRetry = HttpClient(Apache, retryConfig)
+    val httpClient = HttpClient(CIO, config)
 
     val jedisPool = JedisPool(JedisPoolConfig(), env.redisHost, env.redisPort)
     val redisService = RedisService(jedisPool, env.redisSecret)
 
-    val norg2Client = Norg2Client(httpClientWithRetry, env.norg2V1EndpointURL, Norg2RedisService(jedisPool, env.redisSecret))
+    val norg2Client = Norg2Client(httpClient, env.norg2V1EndpointURL, Norg2RedisService(jedisPool, env.redisSecret))
 
     val accessTokenClientV2 =
         AccessTokenClientV2(env.aadAccessTokenV2Url, env.clientIdV2, env.clientSecretV2, httpClient)
     val norskHelsenettClient =
-        NorskHelsenettClient(httpClientWithRetry, env.norskHelsenettEndpointURL, accessTokenClientV2, env.helsenettproxyScope)
+        NorskHelsenettClient(httpClient, env.norskHelsenettEndpointURL, accessTokenClientV2, env.helsenettproxyScope)
     val pdlPersonService = PdlFactory.getPdlService(env, httpClient, accessTokenClientV2, env.pdlScope)
     val finnNAVKontorService = FinnNAVKontorService(pdlPersonService, norg2Client)
 
-    val manuellClient = ManuellClient(httpClientWithRetry, env.manuellUrl, accessTokenClientV2, env.manuellScope)
+    val manuellClient = ManuellClient(httpClient, env.manuellUrl, accessTokenClientV2, env.manuellScope)
     val behandlingsutfallService = BehandlingsutfallService(
         kafkaAivenProducerBehandlingsutfall = kafkaAivenProducerBehandlingsutfall,
         behandlingsUtfallTopic = env.behandlingsUtfallTopic
@@ -330,7 +324,7 @@ private suspend fun runKafkaConsumer(
                     }
                     else -> {
                         log.info(
-                            "Oppdaterer ikke infotrygd for sykmelding med merknad eller reisetilskudd",
+                            "Oppdaterer ikke infotrygd for sykmelding med merknad eller reisetilskudd, {}",
                             fields(loggingMeta)
                         )
                         val validationResult =

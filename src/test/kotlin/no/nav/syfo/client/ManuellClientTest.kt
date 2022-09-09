@@ -6,7 +6,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.kotest.core.spec.style.FunSpec
 import io.ktor.client.HttpClient
-import io.ktor.client.engine.apache.Apache
+import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.HttpRequestRetry
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.http.HttpStatusCode
@@ -33,7 +33,7 @@ class ManuellClientTest : FunSpec({
     val sykmeldingErIkkeBehandlet = UUID.randomUUID().toString()
     val sykmeldingFeiler = UUID.randomUUID().toString()
     val accessTokenClient = mockk<AccessTokenClientV2>()
-    val httpClient = HttpClient(Apache) {
+    val httpClient = HttpClient(CIO) {
         install(ContentNegotiation) {
             jackson {
                 registerKotlinModule()
