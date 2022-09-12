@@ -105,7 +105,7 @@ const val NAV_OPPFOLGING_UTLAND_KONTOR_NR = "0393"
 @DelicateCoroutinesApi
 fun main() {
     val env = Environment()
-    val vaultServiceUser = VaultServiceUser()
+    val serviceUser = ServiceUser()
     MqTlsUtils.getMqTlsConfig().forEach { key, value -> System.setProperty(key as String, value as String) }
     val applicationState = ApplicationState()
     val applicationEngine = createApplicationEngine(
@@ -136,8 +136,8 @@ fun main() {
     MQEnvironment.channel = env.mqChannelName
     MQEnvironment.port = env.mqPort
     MQEnvironment.hostname = env.mqHostname
-    MQEnvironment.userID = vaultServiceUser.serviceuserUsername
-    MQEnvironment.password = vaultServiceUser.serviceuserPassword
+    MQEnvironment.userID = serviceUser.serviceuserUsername
+    MQEnvironment.password = serviceUser.serviceuserPassword
 
     val config: HttpClientConfig<CIOEngineConfig>.() -> Unit = {
         install(ContentNegotiation) {
@@ -203,7 +203,7 @@ fun main() {
         finnNAVKontorService,
         env,
         updateInfotrygdService,
-        vaultServiceUser,
+        serviceUser,
         kafkaAivenConsumerReceivedSykmelding,
         behandlingsutfallService
     )
@@ -230,12 +230,12 @@ fun launchListeners(
     finnNAVKontorService: FinnNAVKontorService,
     env: Environment,
     updateInfotrygdService: UpdateInfotrygdService,
-    vaultServiceUser: VaultServiceUser,
+    serviceUser: ServiceUser,
     kafkaAivenConsumerReceivedSykmelding: KafkaConsumer<String, String>,
     behandlingsutfallService: BehandlingsutfallService
 ) {
     createListener(applicationState) {
-        connectionFactory(env).createConnection(vaultServiceUser.serviceuserUsername, vaultServiceUser.serviceuserPassword).use { connection ->
+        connectionFactory(env).createConnection(serviceUser.serviceuserUsername, serviceUser.serviceuserPassword).use { connection ->
             connection.start()
             val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
             val infotrygdOppdateringProducer =

@@ -4,6 +4,32 @@
 Application for handling rules used for infotrygd and later on persisting them in infotrygd or create a manuall task
 to persisting them in infotrygd
 
+
+## FlowChart
+This the high level flow of the application
+```mermaid
+  graph LR;
+     
+      A[\teamsykmelding.ok-sykmelding/] --- syfosminfotrygd;
+      B[\teamsykmelding.privat-sminfotrygd-retry/] --- syfosminfotrygd; 
+      syfosminfotrygd --- redis; 
+      syfosminfotrygd --- C[\teamsykmelding.sykmelding-behandlingsutfall/];
+      syfosminfotrygd --- syfohelsenettproxy;
+      syfosminfotrygd --- NORG2;
+      syfosminfotrygd --- PDL;
+      syfosminfotrygd --- syfosmmanuell-backend;
+      syfosminfotrygd --- azure-ad;
+      syfosminfotrygd ---  id2([INFOTRYGD_OPPDATERING_QUEUE]);
+      id2([INFOTRYGD_OPPDATERING_QUEUE]) --- Infotrygd;
+      syfosminfotrygd --- id3([INFOTRYGD_SPORRING_QUEUE]);
+      id3([INFOTRYGD_SPORRING_QUEUE]) --- Infotrygd;
+      
+      syfosminfotrygd --- id4([MQ_TSS_SAMHANDLER_SERVICE_QUEUE]);
+      
+
+   
+```
+
 ## Technologies used
 * Kotlin
 * Ktor
@@ -11,7 +37,6 @@ to persisting them in infotrygd
 * Kotest
 * Kafka
 * Mq
-* Vault
 
 #### Requirements
 

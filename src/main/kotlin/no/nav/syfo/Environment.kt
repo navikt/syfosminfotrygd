@@ -32,7 +32,7 @@ data class Environment(
     val retryTopic: String = "teamsykmelding.privat-sminfotrygd-retry"
 ) : MqConfig
 
-data class VaultServiceUser(
+data class ServiceUser(
     val serviceuserUsername: String = getEnvVar("SERVICEUSER_USERNAME"),
     val serviceuserPassword: String = getEnvVar("SERVICEUSER_PASSWORD")
 )
