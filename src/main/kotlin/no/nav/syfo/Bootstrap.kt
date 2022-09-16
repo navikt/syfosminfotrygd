@@ -29,6 +29,7 @@ import no.nav.helse.eiFellesformat.XMLEIFellesformat
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.infotrygd.foresp.TypeSMinfo
 import no.nav.helse.msgHead.XMLMsgHead
+import no.nav.helse.sm2013.CV
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.helse.tssSamhandlerData.XMLTssSamhandlerData
 import no.nav.syfo.application.ApplicationServer
@@ -244,21 +245,22 @@ fun launchListeners(
     behandlingsutfallService: BehandlingsutfallService
 ) {
     createListener(applicationState) {
-        connectionFactory(env).createConnection(serviceUser.serviceuserUsername, serviceUser.serviceuserPassword).use { connection ->
-            connection.start()
-            val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
-            val infotrygdOppdateringProducer =
-                session.producerForQueue("queue:///${env.infotrygdOppdateringQueue}?targetClient=1")
-            val infotrygdSporringProducer =
-                session.producerForQueue("queue:///${env.infotrygdSporringQueue}?targetClient=1")
-            val tssProducer = session.producerForQueue("queue:///${env.tssQueue}?targetClient=1")
+        connectionFactory(env).createConnection(serviceUser.serviceuserUsername, serviceUser.serviceuserPassword)
+            .use { connection ->
+                connection.start()
+                val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
+                val infotrygdOppdateringProducer =
+                    session.producerForQueue("queue:///${env.infotrygdOppdateringQueue}?targetClient=1")
+                val infotrygdSporringProducer =
+                    session.producerForQueue("queue:///${env.infotrygdSporringQueue}?targetClient=1")
+                val tssProducer = session.producerForQueue("queue:///${env.tssQueue}?targetClient=1")
 
-            blockingApplicationLogic(
-                applicationState, infotrygdOppdateringProducer, infotrygdSporringProducer,
-                session, finnNAVKontorService, updateInfotrygdService,
-                tssProducer, env, kafkaAivenConsumerReceivedSykmelding, behandlingsutfallService
-            )
-        }
+                blockingApplicationLogic(
+                    applicationState, infotrygdOppdateringProducer, infotrygdSporringProducer,
+                    session, finnNAVKontorService, updateInfotrygdService,
+                    tssProducer, env, kafkaAivenConsumerReceivedSykmelding, behandlingsutfallService
+                )
+            }
     }
 
     applicationState.alive = true
@@ -331,6 +333,7 @@ private suspend fun runKafkaConsumer(
                             loggingMeta, tssProducer, behandlingsutfallService
                         )
                     }
+
                     else -> {
                         log.info(
                             "Oppdaterer ikke infotrygd for sykmelding med merknad eller reisetilskudd, {}",
@@ -407,7 +410,10 @@ suspend fun handleMessage(
 
         val fellesformat =
             fellesformatUnmarshaller.unmarshal(StringReader(receivedSykmelding.fellesformat)) as XMLEIFellesformat
-        val healthInformation = extractHelseOpplysningerArbeidsuforhet(fellesformat)
+
+        val healthInformation = setHovedDiagnoseToA99IfhovedDiagnoseIsNullAndAnnenFraversArsakIsSet(
+            extractHelseOpplysningerArbeidsuforhet(fellesformat)
+        )
 
         val validationResultForMottattSykmelding = validerMottattSykmelding(healthInformation)
         if (validationResultForMottattSykmelding.status == Status.MANUAL_PROCESSING) {
@@ -522,6 +528,28 @@ fun validerMottattSykmelding(helseOpplysningerArbeidsuforhet: HelseOpplysningerA
         )
     } else {
         ValidationResult(Status.OK, emptyList())
+    }
+}
+
+fun setHovedDiagnoseToA99IfhovedDiagnoseIsNullAndAnnenFraversArsakIsSet(
+    helseOpplysningerArbeidsuforhet: HelseOpplysningerArbeidsuforhet
+): HelseOpplysningerArbeidsuforhet {
+    if (helseOpplysningerArbeidsuforhet.medisinskVurdering.hovedDiagnose == null &&
+        helseOpplysningerArbeidsuforhet.medisinskVurdering.annenFraversArsak != null
+    ) {
+
+        helseOpplysningerArbeidsuforhet.medisinskVurdering.hovedDiagnose =
+            HelseOpplysningerArbeidsuforhet.MedisinskVurdering.HovedDiagnose().apply {
+                diagnosekode = CV().apply {
+                    dn = "Helseproblem/sykdom IKA"
+                    s = "2.16.578.1.12.4.1.1.7170"
+                    v = "A99"
+                }
+            }
+
+        return helseOpplysningerArbeidsuforhet
+    } else {
+        return helseOpplysningerArbeidsuforhet
     }
 }
 
