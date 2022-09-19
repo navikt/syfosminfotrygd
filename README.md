@@ -41,6 +41,7 @@ This the high level flow of the application
 #### Requirements
 
 * JDK 17
+* Docker
 
 ## Getting started
 ### Getting github-package-registry packages NAV-IT
