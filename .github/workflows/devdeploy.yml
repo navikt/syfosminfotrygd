@@ -21,6 +21,8 @@ jobs:
           snyk test
           --org=teamsykmelding
           --severity-threshold=high
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
   build:
     name: Checkout code and create docker tag
