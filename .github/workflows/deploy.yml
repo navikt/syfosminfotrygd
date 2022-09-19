@@ -35,7 +35,7 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           command: test
-          args: --org=teamsykmelding --severity-threshold=high
+          args: --org=teamsykmelding -- --severity-threshold=high
   build:
     name: Checkout code and create docker tag
     runs-on: ubuntu-latest
