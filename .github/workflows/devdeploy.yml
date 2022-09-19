@@ -16,14 +16,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@master
       - name: Run Snyk to check for vulnerabilities
-        uses: snyk/actions/gradle-jdk16@master
+        uses: snyk/actions/gradle-jdk17@master
         env:
           ORG_GRADLE_PROJECT_githubUser: x-access-token
           ORG_GRADLE_PROJECT_githubPassword: ${{ secrets.GITHUB_TOKEN }}
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           command: test
-          args: --org=teamsykmelding
+          args: --org=teamsykmelding --severity-threshold=high
   build:
     name: Checkout code and create docker tag
     runs-on: ubuntu-latest
