@@ -92,6 +92,7 @@ import javax.jms.MessageProducer
 import javax.jms.Session
 import javax.xml.bind.Marshaller
 import javax.xml.stream.XMLInputFactory
+import no.nav.syfo.metrics.ANNEN_FRAVERS_ARSKAK_CHANGE_TO_A99_COUNTER
 
 val log: Logger = LoggerFactory.getLogger("no.nav.syfo.sminfotrygd")
 val objectMapper: ObjectMapper = ObjectMapper().apply {
@@ -371,9 +372,9 @@ fun skalOppdatereInfotrygd(receivedSykmelding: ReceivedSykmelding): Boolean {
     // Vi skal ikke oppdatere Infotrygd hvis sykmeldingen inneholder en av de angitte merknadene
     val merknad = receivedSykmelding.merknader?.none {
         it.type == "UGYLDIG_TILBAKEDATERING" ||
-            it.type == "TILBAKEDATERING_KREVER_FLERE_OPPLYSNINGER" ||
-            it.type == "TILBAKEDATERT_PAPIRSYKMELDING" ||
-            it.type == "UNDER_BEHANDLING"
+                it.type == "TILBAKEDATERING_KREVER_FLERE_OPPLYSNINGER" ||
+                it.type == "TILBAKEDATERT_PAPIRSYKMELDING" ||
+                it.type == "UNDER_BEHANDLING"
     } ?: true
 
     // Vi skal ikke oppdatere infotrygd hvis sykmeldingen inneholder reisetilskudd
@@ -546,7 +547,7 @@ fun setHovedDiagnoseToA99IfhovedDiagnoseIsNullAndAnnenFraversArsakIsSet(
                     v = "A99"
                 }
             }
-
+        ANNEN_FRAVERS_ARSKAK_CHANGE_TO_A99_COUNTER.inc()
         return helseOpplysningerArbeidsuforhet
     } else {
         return helseOpplysningerArbeidsuforhet
