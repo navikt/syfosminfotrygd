@@ -53,7 +53,8 @@ fun receivedSykmelding(
     partnerreferanse = null,
     legeHprNr = null,
     legeHelsepersonellkategori = null,
-    vedlegg = null
+    vedlegg = null,
+    utenlandskSykmelding = null
 )
 
 fun generateSykmelding(
