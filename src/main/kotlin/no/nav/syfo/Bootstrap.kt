@@ -9,8 +9,8 @@ import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.ibm.mq.MQEnvironment
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
-import io.ktor.client.engine.cio.CIO
-import io.ktor.client.engine.cio.CIOEngineConfig
+import io.ktor.client.engine.apache.Apache
+import io.ktor.client.engine.apache.ApacheEngineConfig
 import io.ktor.client.plugins.HttpRequestRetry
 import io.ktor.client.plugins.HttpResponseValidator
 import io.ktor.client.plugins.HttpTimeout
@@ -44,6 +44,7 @@ import no.nav.syfo.client.norg.Norg2RedisService
 import no.nav.syfo.kafka.aiven.KafkaUtils
 import no.nav.syfo.kafka.toConsumerConfig
 import no.nav.syfo.kafka.toProducerConfig
+import no.nav.syfo.metrics.ANNEN_FRAVERS_ARSKAK_CHANGE_TO_A99_COUNTER
 import no.nav.syfo.metrics.REQUEST_TIME
 import no.nav.syfo.metrics.RULE_HIT_COUNTER
 import no.nav.syfo.metrics.RULE_HIT_STATUS_COUNTER
@@ -92,7 +93,6 @@ import javax.jms.MessageProducer
 import javax.jms.Session
 import javax.xml.bind.Marshaller
 import javax.xml.stream.XMLInputFactory
-import no.nav.syfo.metrics.ANNEN_FRAVERS_ARSKAK_CHANGE_TO_A99_COUNTER
 
 val log: Logger = LoggerFactory.getLogger("no.nav.syfo.sminfotrygd")
 val objectMapper: ObjectMapper = ObjectMapper().apply {
@@ -141,7 +141,7 @@ fun main() {
     MQEnvironment.userID = serviceUser.serviceuserUsername
     MQEnvironment.password = serviceUser.serviceuserPassword
 
-    val config: HttpClientConfig<CIOEngineConfig>.() -> Unit = {
+    val config: HttpClientConfig<ApacheEngineConfig>.() -> Unit = {
         install(ContentNegotiation) {
             jackson {
                 registerKotlinModule()
@@ -177,7 +177,7 @@ fun main() {
         }
     }
 
-    val httpClient = HttpClient(CIO, config)
+    val httpClient = HttpClient(Apache, config)
 
     val jedisPool = JedisPool(JedisPoolConfig(), env.redisHost, env.redisPort)
     val redisService = RedisService(jedisPool, env.redisSecret)
@@ -372,9 +372,9 @@ fun skalOppdatereInfotrygd(receivedSykmelding: ReceivedSykmelding): Boolean {
     // Vi skal ikke oppdatere Infotrygd hvis sykmeldingen inneholder en av de angitte merknadene
     val merknad = receivedSykmelding.merknader?.none {
         it.type == "UGYLDIG_TILBAKEDATERING" ||
-                it.type == "TILBAKEDATERING_KREVER_FLERE_OPPLYSNINGER" ||
-                it.type == "TILBAKEDATERT_PAPIRSYKMELDING" ||
-                it.type == "UNDER_BEHANDLING"
+            it.type == "TILBAKEDATERING_KREVER_FLERE_OPPLYSNINGER" ||
+            it.type == "TILBAKEDATERT_PAPIRSYKMELDING" ||
+            it.type == "UNDER_BEHANDLING"
     } ?: true
 
     // Vi skal ikke oppdatere infotrygd hvis sykmeldingen inneholder reisetilskudd
