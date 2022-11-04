@@ -70,7 +70,7 @@ class UpdateInfotrygdService(
         infotrygdForespResponse: InfotrygdForesp,
         healthInformation: HelseOpplysningerArbeidsuforhet
     ) {
-        val helsepersonell = if (erEgenmeldt(receivedSykmelding)) {
+        val helsepersonell = if (erEgenmeldt(receivedSykmelding) || receivedSykmelding.utenlandskSykmelding != null) {
             Behandler(listOf(Godkjenning(helsepersonellkategori = Kode(aktiv = true, oid = 0, verdi = HelsepersonellKategori.LEGE.verdi), autorisasjon = Kode(aktiv = true, oid = 0, verdi = ""))))
         } else {
             norskHelsenettClient.finnBehandler(receivedSykmelding.personNrLege, receivedSykmelding.msgId)

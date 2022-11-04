@@ -80,6 +80,9 @@ fun finnLegeFnr(receivedSykmelding: ReceivedSykmelding): String {
         // Testfamilien Aremark stepper inn som lege for egenmeldte sykmeldinger
         log.info("Setter Aremark som lege for egenmeldt sykmelding med id {}", receivedSykmelding.sykmelding.id)
         "10108000398"
+    } else if (receivedSykmelding.utenlandskSykmelding != null) {
+        log.info("Setter standardverdi for behandler for utenlandsk sykmelding med id ${receivedSykmelding.sykmelding.id}")
+        "LU ${receivedSykmelding.utenlandskSykmelding!!.land}"
     } else {
         receivedSykmelding.personNrLege
     }
