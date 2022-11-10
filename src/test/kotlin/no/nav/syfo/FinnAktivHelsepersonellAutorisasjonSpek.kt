@@ -6,7 +6,6 @@ import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.client.Behandler
 import no.nav.syfo.client.Godkjenning
 import no.nav.syfo.client.Kode
-import no.nav.syfo.client.ManuellClient
 import no.nav.syfo.client.NorskHelsenettClient
 import no.nav.syfo.model.HelsepersonellKategori
 import no.nav.syfo.model.OpprettOppgaveKafkaMessage
@@ -20,14 +19,12 @@ import org.apache.kafka.clients.producer.KafkaProducer
 class FinnAktivHelsepersonellAutorisasjonSpek : FunSpec({
 
     context("Tester at man finner riktig helsepersonell autorisasjoner verdi") {
-        val manuellClient = mockk<ManuellClient>()
         val norskHelsenettClient = mockk<NorskHelsenettClient>()
         val kafkaAivenProducerReceivedSykmelding = mockk<KafkaProducer<String, ReceivedSykmelding>>()
         val kafkaAivenProducerOppgave = mockk<KafkaProducer<String, OpprettOppgaveKafkaMessage>>()
         val behandlingsutfallService = mockk<BehandlingsutfallService>()
         val redisService = mockk<RedisService>()
         val updateInfotrygdService = UpdateInfotrygdService(
-            manuellClient,
             norskHelsenettClient,
             ApplicationState(alive = true, ready = true),
             kafkaAivenProducerReceivedSykmelding,

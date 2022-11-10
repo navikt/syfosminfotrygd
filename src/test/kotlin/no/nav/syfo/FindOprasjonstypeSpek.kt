@@ -7,7 +7,6 @@ import no.nav.helse.infotrygd.foresp.StatusType
 import no.nav.helse.infotrygd.foresp.TypeSMinfo
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.syfo.application.ApplicationState
-import no.nav.syfo.client.ManuellClient
 import no.nav.syfo.client.NorskHelsenettClient
 import no.nav.syfo.model.OpprettOppgaveKafkaMessage
 import no.nav.syfo.model.ReceivedSykmelding
@@ -20,14 +19,12 @@ import org.apache.kafka.clients.producer.KafkaProducer
 import java.time.LocalDate
 
 class FindOprasjonstypeSpek : FunSpec({
-    val manuellClient = mockk<ManuellClient>()
     val norskHelsenettClient = mockk<NorskHelsenettClient>()
     val kafkaAivenProducerReceivedSykmelding = mockk<KafkaProducer<String, ReceivedSykmelding>>()
     val kafkaAivenProducerOppgave = mockk<KafkaProducer<String, OpprettOppgaveKafkaMessage>>()
     val behandlingsutfallService = mockk<BehandlingsutfallService>()
     val redisService = mockk<RedisService>()
     val updateInfotrygdService = UpdateInfotrygdService(
-        manuellClient,
         norskHelsenettClient,
         ApplicationState(alive = true, ready = true),
         kafkaAivenProducerReceivedSykmelding,

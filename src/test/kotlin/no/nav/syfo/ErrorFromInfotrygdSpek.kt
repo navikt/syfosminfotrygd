@@ -3,7 +3,6 @@ package no.nav.syfo
 import io.kotest.core.spec.style.FunSpec
 import io.mockk.mockk
 import no.nav.syfo.application.ApplicationState
-import no.nav.syfo.client.ManuellClient
 import no.nav.syfo.client.NorskHelsenettClient
 import no.nav.syfo.model.OpprettOppgaveKafkaMessage
 import no.nav.syfo.model.ReceivedSykmelding
@@ -16,14 +15,12 @@ import org.amshove.kluent.shouldBeEqualTo
 import org.apache.kafka.clients.producer.KafkaProducer
 
 class ErrorFromInfotrygdSpek : FunSpec({
-    val manuellClient = mockk<ManuellClient>()
     val norskHelsenettClient = mockk<NorskHelsenettClient>()
     val kafkaAivenProducerReceivedSykmelding = mockk<KafkaProducer<String, ReceivedSykmelding>>()
     val kafkaAivenProducerOppgave = mockk<KafkaProducer<String, OpprettOppgaveKafkaMessage>>()
     val behandlingsutfallService = mockk<BehandlingsutfallService>()
     val redisService = mockk<RedisService>()
     val updateInfotrygdService = UpdateInfotrygdService(
-        manuellClient,
         norskHelsenettClient,
         ApplicationState(alive = true, ready = true),
         kafkaAivenProducerReceivedSykmelding,

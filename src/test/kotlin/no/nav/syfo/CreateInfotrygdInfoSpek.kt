@@ -14,7 +14,6 @@ import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.helse.sm2013.Ident
 import no.nav.helse.sm2013.KontrollSystemBlokk
 import no.nav.syfo.application.ApplicationState
-import no.nav.syfo.client.ManuellClient
 import no.nav.syfo.client.NorskHelsenettClient
 import no.nav.syfo.model.HelsepersonellKategori
 import no.nav.syfo.model.OpprettOppgaveKafkaMessage
@@ -37,14 +36,12 @@ import java.time.LocalDateTime
 class CreateInfotrygdInfoSpek : FunSpec({
 
     context("Testing mapping of fellesformat and InfotrygdInfo") {
-        val manuellClient = mockk<ManuellClient>()
         val norskHelsenettClient = mockk<NorskHelsenettClient>()
         val kafkaAivenProducerReceivedSykmelding = mockk<KafkaProducer<String, ReceivedSykmelding>>()
         val kafkaAivenProducerOppgave = mockk<KafkaProducer<String, OpprettOppgaveKafkaMessage>>()
         val behandlingsutfallService = mockk<BehandlingsutfallService>()
         val redisService = mockk<RedisService>()
         val updateInfotrygdService = UpdateInfotrygdService(
-            manuellClient,
             norskHelsenettClient,
             ApplicationState(alive = true, ready = true),
             kafkaAivenProducerReceivedSykmelding,
@@ -79,7 +76,8 @@ class CreateInfotrygdInfoSpek : FunSpec({
                 "1341515",
                 LoggingMeta("mottakId", "12315", "", ""),
                 "0435",
-                LocalDate.now()
+                LocalDate.now(),
+                false
             )
 
             extractHelseOpplysningerArbeidsuforhet(infotrygdFellesformat).regelSettVersjon shouldBeEqualTo
@@ -104,7 +102,7 @@ class CreateInfotrygdInfoSpek : FunSpec({
                 fellesFormatString, itfh, healthInformation.aktivitet.periode.first(),
                 "1231234", LocalDate.now(), "LE",
                 "1341515", LoggingMeta("mottakId", "12315", "", ""),
-                "0435", LocalDate.now()
+                "0435", LocalDate.now(), false
             )
 
             extractHelseOpplysningerArbeidsuforhet(infotrygdFellesformat).aktivitet.periode.first().periodeTOMDato shouldBeEqualTo
@@ -125,7 +123,7 @@ class CreateInfotrygdInfoSpek : FunSpec({
             val fellesFormatString = fellesformatMarshaller.toString(fellesFormat)
 
             val itfh = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
-            val infotrygdFellesformat = updateInfotrygdService.createInfotrygdFellesformat(fellesFormatString, itfh, healthInformation.aktivitet.periode.first(), "1231234", LocalDate.now(), "LE", "1341515", LoggingMeta("mottakId", "12315", "", ""), "0435", LocalDate.now())
+            val infotrygdFellesformat = updateInfotrygdService.createInfotrygdFellesformat(fellesFormatString, itfh, healthInformation.aktivitet.periode.first(), "1231234", LocalDate.now(), "LE", "1341515", LoggingMeta("mottakId", "12315", "", ""), "0435", LocalDate.now(), false)
 
             val infotrygdBlokk = infotrygdFellesformat.get<KontrollSystemBlokk>().infotrygdBlokk
 
@@ -147,7 +145,7 @@ class CreateInfotrygdInfoSpek : FunSpec({
             val fellesFormatString = fellesformatMarshaller.toString(fellesFormat)
 
             val itfh = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
-            val infotrygdFellesformat = updateInfotrygdService.createInfotrygdFellesformat(fellesFormatString, itfh, healthInformation.aktivitet.periode.first(), "1231234", LocalDate.now(), "LE", "1341515", LoggingMeta("mottakId", "12315", "", ""), "0435", LocalDate.now())
+            val infotrygdFellesformat = updateInfotrygdService.createInfotrygdFellesformat(fellesFormatString, itfh, healthInformation.aktivitet.periode.first(), "1231234", LocalDate.now(), "LE", "1341515", LoggingMeta("mottakId", "12315", "", ""), "0435", LocalDate.now(), false)
 
             val infotrygdBlokk = infotrygdFellesformat.get<KontrollSystemBlokk>().infotrygdBlokk
 
@@ -174,7 +172,7 @@ class CreateInfotrygdInfoSpek : FunSpec({
             val fellesFormatString = fellesformatMarshaller.toString(fellesFormat)
 
             val itfh = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
-            val infotrygdFellesformat = updateInfotrygdService.createInfotrygdFellesformat(fellesFormatString, itfh, healthInformation.aktivitet.periode.first(), "1231234", LocalDate.now(), HelsepersonellKategori.LEGE.verdi, "1341515", LoggingMeta("mottakId", "12315", "", ""), "0435", LocalDate.now())
+            val infotrygdFellesformat = updateInfotrygdService.createInfotrygdFellesformat(fellesFormatString, itfh, healthInformation.aktivitet.periode.first(), "1231234", LocalDate.now(), HelsepersonellKategori.LEGE.verdi, "1341515", LoggingMeta("mottakId", "12315", "", ""), "0435", LocalDate.now(), false)
 
             val infotrygdBlokk = infotrygdFellesformat.get<KontrollSystemBlokk>().infotrygdBlokk
 
@@ -194,7 +192,7 @@ class CreateInfotrygdInfoSpek : FunSpec({
             val fellesFormatString = fellesformatMarshaller.toString(fellesFormat)
 
             val itfh = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
-            val infotrygdFellesformat = updateInfotrygdService.createInfotrygdFellesformat(fellesFormatString, itfh, healthInformation.aktivitet.periode.first(), "1231234", LocalDate.now(), HelsepersonellKategori.LEGE.verdi, "1341515", LoggingMeta("mottakId", "12315", "", ""), "0435", LocalDate.now())
+            val infotrygdFellesformat = updateInfotrygdService.createInfotrygdFellesformat(fellesFormatString, itfh, healthInformation.aktivitet.periode.first(), "1231234", LocalDate.now(), HelsepersonellKategori.LEGE.verdi, "1341515", LoggingMeta("mottakId", "12315", "", ""), "0435", LocalDate.now(), false)
 
             val infotrygdBlokk = infotrygdFellesformat.get<KontrollSystemBlokk>().infotrygdBlokk
 
@@ -211,7 +209,7 @@ class CreateInfotrygdInfoSpek : FunSpec({
             val fellesFormatString = fellesformatMarshaller.toString(fellesformat)
 
             val itfh = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
-            val infotrygdFellesformat = updateInfotrygdService.createInfotrygdFellesformat(fellesFormatString, itfh, healthInformation.aktivitet.periode.first(), "1231234", LocalDate.now(), HelsepersonellKategori.LEGE.verdi, "1341515", LoggingMeta("mottakId", "12315", "", ""), "0435", LocalDate.now())
+            val infotrygdFellesformat = updateInfotrygdService.createInfotrygdFellesformat(fellesFormatString, itfh, healthInformation.aktivitet.periode.first(), "1231234", LocalDate.now(), HelsepersonellKategori.LEGE.verdi, "1341515", LoggingMeta("mottakId", "12315", "", ""), "0435", LocalDate.now(), false)
 
             xmlObjectWriter.writeValueAsString(infotrygdFellesformat).contains(":InfotrygdBlokk").shouldBeFalse()
             println(xmlObjectWriter.writeValueAsString(infotrygdFellesformat))
@@ -251,7 +249,7 @@ class CreateInfotrygdInfoSpek : FunSpec({
             }
 
             val itfh = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
-            val infotrygdFellesformat = updateInfotrygdService.createInfotrygdFellesformat(fellesFormatString, itfh, healthInformation.aktivitet.periode[1], "1231234", LocalDate.now(), HelsepersonellKategori.LEGE.verdi, "1341515", LoggingMeta("mottakId", "12315", "", ""), "0435", LocalDate.now(), 2)
+            val infotrygdFellesformat = updateInfotrygdService.createInfotrygdFellesformat(fellesFormatString, itfh, healthInformation.aktivitet.periode[1], "1231234", LocalDate.now(), HelsepersonellKategori.LEGE.verdi, "1341515", LoggingMeta("mottakId", "12315", "", ""), "0435", LocalDate.now(), false, 2)
 
             val infotrygdBlokk = infotrygdFellesformat.get<KontrollSystemBlokk>().infotrygdBlokk
 
@@ -293,7 +291,7 @@ class CreateInfotrygdInfoSpek : FunSpec({
             val fellesFormatString = fellesformatMarshaller.toString(fellesFormat)
 
             val itfh = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
-            val infotrygdFellesformat = updateInfotrygdService.createInfotrygdFellesformat(fellesFormatString, itfh, healthInformation.aktivitet.periode.first(), "1231234", LocalDate.now(), HelsepersonellKategori.LEGE.verdi, "1341515", LoggingMeta("mottakId", "12315", "", ""), "0435", LocalDate.now())
+            val infotrygdFellesformat = updateInfotrygdService.createInfotrygdFellesformat(fellesFormatString, itfh, healthInformation.aktivitet.periode.first(), "1231234", LocalDate.now(), HelsepersonellKategori.LEGE.verdi, "1341515", LoggingMeta("mottakId", "12315", "", ""), "0435", LocalDate.now(), false)
 
             val infotrygdBlokk = infotrygdFellesformat.get<KontrollSystemBlokk>().infotrygdBlokk
 
@@ -359,7 +357,7 @@ class CreateInfotrygdInfoSpek : FunSpec({
             }
 
             val itfh = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
-            val infotrygdFellesformat = updateInfotrygdService.createInfotrygdFellesformat(fellesFormatString, itfh, healthInformation.aktivitet.periode[1], "1231234", LocalDate.now(), HelsepersonellKategori.LEGE.verdi, "1341515", LoggingMeta("mottakId", "12315", "", ""), "0135", LocalDate.now(), 2)
+            val infotrygdFellesformat = updateInfotrygdService.createInfotrygdFellesformat(fellesFormatString, itfh, healthInformation.aktivitet.periode[1], "1231234", LocalDate.now(), HelsepersonellKategori.LEGE.verdi, "1341515", LoggingMeta("mottakId", "12315", "", ""), "0135", LocalDate.now(), false, 2)
 
             val infotrygdBlokk = infotrygdFellesformat.get<KontrollSystemBlokk>().infotrygdBlokk
 

@@ -14,7 +14,6 @@ import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.client.Behandler
 import no.nav.syfo.client.Godkjenning
 import no.nav.syfo.client.Kode
-import no.nav.syfo.client.ManuellClient
 import no.nav.syfo.client.NorskHelsenettClient
 import no.nav.syfo.daysBetween
 import no.nav.syfo.get
@@ -49,7 +48,6 @@ import kotlin.math.absoluteValue
 const val INFOTRYGD = "INFOTRYGD"
 
 class UpdateInfotrygdService(
-    private val manuellClient: ManuellClient,
     private val norskHelsenettClient: NorskHelsenettClient,
     private val applicationState: ApplicationState,
     private val kafkaAivenProducerReceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
@@ -68,7 +66,8 @@ class UpdateInfotrygdService(
         loggingMeta: LoggingMeta,
         session: Session,
         infotrygdForespResponse: InfotrygdForesp,
-        healthInformation: HelseOpplysningerArbeidsuforhet
+        healthInformation: HelseOpplysningerArbeidsuforhet,
+        behandletAvManuell: Boolean
     ) {
         val helsepersonell = if (erEgenmeldt(receivedSykmelding)) {
             Behandler(listOf(Godkjenning(helsepersonellkategori = Kode(aktiv = true, oid = 0, verdi = HelsepersonellKategori.LEGE.verdi), autorisasjon = Kode(aktiv = true, oid = 0, verdi = ""))))
@@ -84,7 +83,8 @@ class UpdateInfotrygdService(
                         receivedSykmelding, validationResult,
                         loggingMeta,
                         InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
-                        helsepersonellKategoriVerdi
+                        helsepersonellKategoriVerdi,
+                        behandletAvManuell
                     )
                 else -> sendInfotrygdOppdateringAndValidationResult(
                     infotrygdOppdateringProducer,
@@ -94,7 +94,8 @@ class UpdateInfotrygdService(
                     receivedSykmelding,
                     helsepersonellKategoriVerdi,
                     navKontorLokalKontor,
-                    validationResult
+                    validationResult,
+                    behandletAvManuell
                 )
             }
 
@@ -122,7 +123,8 @@ class UpdateInfotrygdService(
                 receivedSykmelding, validationResultBehandler,
                 loggingMeta,
                 InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
-                HelsepersonellKategori.LEGE.verdi
+                HelsepersonellKategori.LEGE.verdi,
+                behandletAvManuell
             )
         }
     }
@@ -138,7 +140,8 @@ class UpdateInfotrygdService(
         receivedSykmelding: ReceivedSykmelding,
         behandlerKode: String,
         navKontorNr: String,
-        validationResult: ValidationResult
+        validationResult: ValidationResult,
+        behandletAvManuell: Boolean
     ) {
         val perioder = itfh.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
         val marshalledFellesformat = receivedSykmelding.fellesformat
@@ -151,7 +154,8 @@ class UpdateInfotrygdService(
         val sha256String = sha256hashstring(
             createInfotrygdBlokk(
                 itfh, perioder.first(), personNrPasient, LocalDate.of(2019, 1, 1),
-                behandlerKode, tssid, loggingMeta, navKontorNr, findarbeidsKategori(itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver), forsteFravaersDag
+                behandlerKode, tssid, loggingMeta, navKontorNr, findarbeidsKategori(itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver),
+                forsteFravaersDag, behandletAvManuell
             )
         )
 
@@ -188,9 +192,44 @@ class UpdateInfotrygdService(
                     }
                     else ->
                         try {
-                            sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, perioder.first(), personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, forsteFravaersDag), loggingMeta)
+                            sendInfotrygdOppdateringMq(
+                                producer,
+                                session,
+                                createInfotrygdFellesformat(
+                                    marshalledFellesformat = marshalledFellesformat,
+                                    itfh = itfh,
+                                    periode = perioder.first(),
+                                    personNrPasient = personNrPasient,
+                                    signaturDato = signaturDato,
+                                    helsepersonellKategoriVerdi = behandlerKode,
+                                    tssid = tssid,
+                                    loggingMeta = loggingMeta,
+                                    navKontorNr = navKontorNr,
+                                    identDato = forsteFravaersDag,
+                                    behandletAvManuell = behandletAvManuell
+                                ),
+                                loggingMeta
+                            )
                             perioder.drop(1).forEach { periode ->
-                                sendInfotrygdOppdateringMq(producer, session, createInfotrygdFellesformat(marshalledFellesformat, itfh, periode, personNrPasient, signaturDato, behandlerKode, tssid, loggingMeta, navKontorNr, forsteFravaersDag, 2), loggingMeta)
+                                sendInfotrygdOppdateringMq(
+                                    producer,
+                                    session,
+                                    createInfotrygdFellesformat(
+                                        marshalledFellesformat = marshalledFellesformat,
+                                        itfh = itfh,
+                                        periode = periode,
+                                        personNrPasient = personNrPasient,
+                                        signaturDato = signaturDato,
+                                        helsepersonellKategoriVerdi = behandlerKode,
+                                        tssid = tssid,
+                                        loggingMeta = loggingMeta,
+                                        navKontorNr = navKontorNr,
+                                        identDato = forsteFravaersDag,
+                                        behandletAvManuell = behandletAvManuell,
+                                        operasjonstypeKode = 2
+                                    ),
+                                    loggingMeta
+                                )
                             }
                             behandlingsutfallService.sendRuleCheckValidationResult(
                                 receivedSykmelding,
@@ -218,6 +257,7 @@ class UpdateInfotrygdService(
         navKontorNr: String,
         navnArbeidsgiver: String?,
         identDato: LocalDate,
+        behandletAvManuell: Boolean,
         operasjonstypeKode: Int = findOperasjonstype(periode, itfh, loggingMeta)
     ) = KontrollsystemBlokkType.InfotrygdBlokk().apply {
         fodselsnummer = personNrPasient
@@ -249,7 +289,12 @@ class UpdateInfotrygdService(
         }
 
         if (operasjonstype == 1.toBigInteger()) {
-            behandlingsDato = findbBehandlingsDato(itfh, signaturDato)
+            behandlingsDato = if (behandletAvManuell) {
+                log.info("Bruker første fom som behandlingsdato for manuelt behandlet sykmelding {}", fields(loggingMeta))
+                periode.periodeFOMDato
+            } else {
+                findBehandlingsDato(itfh, signaturDato)
+            }
 
             arbeidsKategori = findarbeidsKategori(navnArbeidsgiver)
             gruppe = "96"
@@ -388,6 +433,7 @@ class UpdateInfotrygdService(
         loggingMeta: LoggingMeta,
         navKontorNr: String,
         identDato: LocalDate,
+        behandletAvManuell: Boolean,
         operasjonstypeKode: Int = findOperasjonstype(periode, itfh, loggingMeta)
     ) = unmarshal<XMLEIFellesformat>(marshalledFellesformat).apply {
         any.add(
@@ -404,6 +450,7 @@ class UpdateInfotrygdService(
                         navKontorNr,
                         itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver,
                         identDato,
+                        behandletAvManuell,
                         operasjonstypeKode
                     )
                 )
@@ -411,7 +458,7 @@ class UpdateInfotrygdService(
         )
     }
 
-    private fun findbBehandlingsDato(itfh: InfotrygdForespAndHealthInformation, signaturDato: LocalDate): LocalDate {
+    private fun findBehandlingsDato(itfh: InfotrygdForespAndHealthInformation, signaturDato: LocalDate): LocalDate {
         return if (itfh.healthInformation.kontaktMedPasient?.kontaktDato != null &&
             itfh.healthInformation.kontaktMedPasient?.behandletDato != null
         ) {
@@ -500,12 +547,13 @@ class UpdateInfotrygdService(
         }
     }
 
-    private suspend fun produceManualTaskAndSendValidationResults(
+    private fun produceManualTaskAndSendValidationResults(
         receivedSykmelding: ReceivedSykmelding,
         validationResult: ValidationResult,
         loggingMeta: LoggingMeta,
         itfh: InfotrygdForespAndHealthInformation,
-        helsepersonellKategoriVerdi: String
+        helsepersonellKategoriVerdi: String,
+        behandletAvManuell: Boolean
     ) {
         behandlingsutfallService.sendRuleCheckValidationResult(receivedSykmelding, validationResult, loggingMeta)
         try {
@@ -521,7 +569,7 @@ class UpdateInfotrygdService(
                     itfh, perioder.first(), receivedSykmelding.personNrPasient, LocalDate.of(2019, 1, 1),
                     helsepersonellKategoriVerdi, tssid, loggingMeta, "",
                     findarbeidsKategori(itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver),
-                    forsteFravaersDag, 1
+                    forsteFravaersDag, behandletAvManuell, 1
                 )
             )
 
@@ -548,7 +596,7 @@ class UpdateInfotrygdService(
                     log.warn("Trenger ikke å opprett manuell oppgave for {}", fields(loggingMeta))
                 }
                 else -> {
-                    opprettOppgave(receivedSykmelding, validationResult, loggingMeta)
+                    opprettOppgave(receivedSykmelding, validationResult, behandletAvManuell, loggingMeta)
                     redisService.oppdaterRedis(sha256String, sha256String, TimeUnit.DAYS.toSeconds(60).toInt(), loggingMeta)
                 }
             }
@@ -558,16 +606,17 @@ class UpdateInfotrygdService(
         }
     }
 
-    suspend fun opprettOppgave(
+    fun opprettOppgave(
         receivedSykmelding: ReceivedSykmelding,
         validationResult: ValidationResult,
+        behandletAvManuell: Boolean,
         loggingMeta: LoggingMeta
     ) {
         try {
             kafkaAivenProducerOppgave.send(
                 ProducerRecord(
                     produserOppgaveTopic, receivedSykmelding.sykmelding.id,
-                    opprettOpprettOppgaveKafkaMessage(receivedSykmelding, validationResult, loggingMeta)
+                    opprettOpprettOppgaveKafkaMessage(receivedSykmelding, validationResult, behandletAvManuell, loggingMeta)
                 )
             ).get()
             MANUELLE_OPPGAVER_COUNTER.inc()
@@ -601,8 +650,7 @@ class UpdateInfotrygdService(
         return delvisOverlappendeSykmeldingRule
     }
 
-    suspend fun opprettOpprettOppgaveKafkaMessage(receivedSykmelding: ReceivedSykmelding, validationResult: ValidationResult, loggingMeta: LoggingMeta): OpprettOppgaveKafkaMessage {
-        val behandletAvManuell = manuellClient.behandletAvManuell(receivedSykmelding.sykmelding.id, loggingMeta)
+    fun opprettOpprettOppgaveKafkaMessage(receivedSykmelding: ReceivedSykmelding, validationResult: ValidationResult, behandletAvManuell: Boolean, loggingMeta: LoggingMeta): OpprettOppgaveKafkaMessage {
         val oppgave = OpprettOppgaveKafkaMessage(
             messageId = receivedSykmelding.msgId,
             aktoerId = receivedSykmelding.sykmelding.pasientAktoerId,

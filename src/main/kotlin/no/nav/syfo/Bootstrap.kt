@@ -198,7 +198,6 @@ fun main() {
     )
 
     val updateInfotrygdService = UpdateInfotrygdService(
-        manuellClient = manuellClient,
         norskHelsenettClient = norskHelsenettClient,
         applicationState = applicationState,
         kafkaAivenProducerReceivedSykmelding = kafkaAivenProducerReceivedSykmelding,
@@ -216,7 +215,8 @@ fun main() {
         updateInfotrygdService,
         serviceUser,
         kafkaAivenConsumerReceivedSykmelding,
-        behandlingsutfallService
+        behandlingsutfallService,
+        manuellClient
     )
 
     applicationServer.start()
@@ -243,7 +243,8 @@ fun launchListeners(
     updateInfotrygdService: UpdateInfotrygdService,
     serviceUser: ServiceUser,
     kafkaAivenConsumerReceivedSykmelding: KafkaConsumer<String, String>,
-    behandlingsutfallService: BehandlingsutfallService
+    behandlingsutfallService: BehandlingsutfallService,
+    manuellClient: ManuellClient
 ) {
     createListener(applicationState) {
         connectionFactory(env).createConnection(serviceUser.serviceuserUsername, serviceUser.serviceuserPassword)
@@ -259,7 +260,7 @@ fun launchListeners(
                 blockingApplicationLogic(
                     applicationState, infotrygdOppdateringProducer, infotrygdSporringProducer,
                     session, finnNAVKontorService, updateInfotrygdService,
-                    tssProducer, env, kafkaAivenConsumerReceivedSykmelding, behandlingsutfallService
+                    tssProducer, env, kafkaAivenConsumerReceivedSykmelding, behandlingsutfallService, manuellClient
                 )
             }
     }
@@ -277,7 +278,8 @@ suspend fun blockingApplicationLogic(
     tssProducer: MessageProducer,
     env: Environment,
     kafkaAivenConsumerReceivedSykmelding: KafkaConsumer<String, String>,
-    behandlingsutfallService: BehandlingsutfallService
+    behandlingsutfallService: BehandlingsutfallService,
+    manuellClient: ManuellClient
 ) {
     while (applicationState.ready) {
         if (shouldRun(getCurrentTime())) {
@@ -294,7 +296,8 @@ suspend fun blockingApplicationLogic(
                 applicationState,
                 tssProducer,
                 kafkaAivenConsumerReceivedSykmelding,
-                behandlingsutfallService
+                behandlingsutfallService,
+                manuellClient
             )
             kafkaAivenConsumerReceivedSykmelding.unsubscribe()
             log.info("Stopper KafkaConsumer aiven")
@@ -312,7 +315,8 @@ private suspend fun runKafkaConsumer(
     applicationState: ApplicationState,
     tssProducer: MessageProducer,
     kafkaAivenConsumerReceivedSykmelding: KafkaConsumer<String, String>,
-    behandlingsutfallService: BehandlingsutfallService
+    behandlingsutfallService: BehandlingsutfallService,
+    manuellClient: ManuellClient
 ) {
     while (applicationState.ready && shouldRun(getCurrentTime())) {
         kafkaAivenConsumerReceivedSykmelding.poll(Duration.ofMillis(0)).mapNotNull { it.value() }
@@ -331,7 +335,7 @@ private suspend fun runKafkaConsumer(
                             receivedSykmelding, updateInfotrygdService,
                             infotrygdOppdateringProducer, infotrygdSporringProducer,
                             session, finnNAVKontorService,
-                            loggingMeta, tssProducer, behandlingsutfallService
+                            loggingMeta, tssProducer, behandlingsutfallService, manuellClient
                         )
                     }
 
@@ -402,7 +406,8 @@ suspend fun handleMessage(
     finnNAVKontorService: FinnNAVKontorService,
     loggingMeta: LoggingMeta,
     tssProducer: MessageProducer,
-    behandlingsutfallService: BehandlingsutfallService
+    behandlingsutfallService: BehandlingsutfallService,
+    manuellClient: ManuellClient
 ) {
     wrapExceptions(loggingMeta) {
         log.info("Received a SM2013, {}", fields(loggingMeta))
@@ -415,6 +420,7 @@ suspend fun handleMessage(
         val healthInformation = setHovedDiagnoseToA99IfhovedDiagnoseIsNullAndAnnenFraversArsakIsSet(
             extractHelseOpplysningerArbeidsuforhet(fellesformat)
         )
+        val behandletAvManuell = manuellClient.behandletAvManuell(receivedSykmelding.sykmelding.id, loggingMeta)
 
         val validationResultForMottattSykmelding = validerMottattSykmelding(healthInformation)
         if (validationResultForMottattSykmelding.status == Status.MANUAL_PROCESSING) {
@@ -427,7 +433,7 @@ suspend fun handleMessage(
                 validationResultForMottattSykmelding,
                 loggingMeta
             )
-            updateInfotrygdService.opprettOppgave(receivedSykmelding, validationResultForMottattSykmelding, loggingMeta)
+            updateInfotrygdService.opprettOppgave(receivedSykmelding, validationResultForMottattSykmelding, behandletAvManuell, loggingMeta)
         } else {
             val infotrygdForespResponse = fetchInfotrygdForesp(
                 receivedSykmelding,
@@ -482,7 +488,8 @@ suspend fun handleMessage(
                 loggingMeta,
                 session,
                 infotrygdForespResponse,
-                healthInformation
+                healthInformation,
+                behandletAvManuell
             )
         }
         val currentRequestLatency = requestLatency.observeDuration()

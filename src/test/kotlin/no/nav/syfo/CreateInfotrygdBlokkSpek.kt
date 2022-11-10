@@ -7,7 +7,6 @@ import no.nav.helse.infotrygd.foresp.StatusType
 import no.nav.helse.infotrygd.foresp.TypeSMinfo
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.syfo.application.ApplicationState
-import no.nav.syfo.client.ManuellClient
 import no.nav.syfo.client.NorskHelsenettClient
 import no.nav.syfo.model.OpprettOppgaveKafkaMessage
 import no.nav.syfo.model.ReceivedSykmelding
@@ -22,14 +21,12 @@ import java.time.LocalDate
 
 class CreateInfotrygdBlokkSpek : FunSpec({
     context("Testing the creating of infotrygdblokk") {
-        val manuellClient = mockk<ManuellClient>()
         val norskHelsenettClient = mockk<NorskHelsenettClient>()
         val kafkaAivenProducerReceivedSykmelding = mockk<KafkaProducer<String, ReceivedSykmelding>>()
         val kafkaAivenProducerOppgave = mockk<KafkaProducer<String, OpprettOppgaveKafkaMessage>>()
         val behandlingsutfallService = mockk<BehandlingsutfallService>()
         val redisService = mockk<RedisService>()
         val updateInfotrygdService = UpdateInfotrygdService(
-            manuellClient,
             norskHelsenettClient,
             ApplicationState(alive = true, ready = true),
             kafkaAivenProducerReceivedSykmelding,
@@ -77,6 +74,7 @@ class CreateInfotrygdBlokkSpek : FunSpec({
                 "1234",
                 "NAV IKT",
                 forsteFravaersDag,
+                false,
                 1
 
             )
@@ -135,6 +133,7 @@ class CreateInfotrygdBlokkSpek : FunSpec({
                 "1234",
                 "NAV IKT",
                 forsteFravaersDag,
+                false,
                 2
 
             )
@@ -150,6 +149,7 @@ class CreateInfotrygdBlokkSpek : FunSpec({
                 "1234",
                 "NAV IKT",
                 forsteFravaersDag,
+                false,
                 2
 
             )
@@ -213,6 +213,7 @@ class CreateInfotrygdBlokkSpek : FunSpec({
                 "1234",
                 "NAV IKT",
                 forsteFravaersDag,
+                false,
                 1
 
             )
@@ -228,12 +229,54 @@ class CreateInfotrygdBlokkSpek : FunSpec({
                 "1234",
                 "NAV IKT",
                 forsteFravaersDag,
+                false,
                 2
 
             )
 
             infotrygdfirstBlokk.forsteFravaersDag shouldBeEqualTo ifth.healthInformation.aktivitet.periode.sortedFOMDate().first()
             infotrygdlastBlokk.forsteFravaersDag shouldBeEqualTo ifth.healthInformation.aktivitet.periode.sortedFOMDate().first()
+        }
+
+        test("behandlingsDato skal være første fom hvis sykmelding har vært innom manuell") {
+            val healthInformation = HelseOpplysningerArbeidsuforhet().apply {
+                aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
+                    periode.add(
+                        HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
+                            periodeFOMDato = LocalDate.of(2019, 1, 1)
+                            periodeTOMDato = LocalDate.of(2019, 1, 2)
+                        }
+                    )
+                }
+            }
+            val infotrygdForesp = InfotrygdForesp().apply {
+                sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
+                    status = StatusType().apply {
+                        kodeMelding = "04"
+                    }
+                }
+            }
+            val ifth = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
+            val perioder = ifth.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
+            val forsteFravaersDag = updateInfotrygdService.finnForsteFravaersDag(ifth, perioder.first(), LoggingMeta("mottakId", "12315", "", ""))
+
+            val infotrygdBlokk = updateInfotrygdService.createInfotrygdBlokk(
+                ifth,
+                healthInformation.aktivitet.periode.last(),
+                "2134",
+                LocalDate.now(),
+                "LE",
+                "12345",
+                LoggingMeta("mottakId", "12315", "", ""),
+                "1234",
+                "NAV IKT",
+                forsteFravaersDag,
+                true,
+                1
+
+            )
+
+            infotrygdBlokk.behandlingsDato shouldBeEqualTo LocalDate.of(2019, 1, 1)
         }
     }
 })

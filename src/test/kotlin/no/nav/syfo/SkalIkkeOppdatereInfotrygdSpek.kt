@@ -4,7 +4,6 @@ import io.kotest.core.spec.style.FunSpec
 import io.mockk.every
 import io.mockk.mockk
 import no.nav.syfo.application.ApplicationState
-import no.nav.syfo.client.ManuellClient
 import no.nav.syfo.client.NorskHelsenettClient
 import no.nav.syfo.model.Gradert
 import no.nav.syfo.model.Merknad
@@ -85,14 +84,12 @@ class SkalIkkeOppdatereInfotrygdSpek : FunSpec({
         }
     }
     context("Testing av metoden skalIkkeOppdatereInfotrygd") {
-        val manuellClient = mockk<ManuellClient>()
         val norskHelsenettClient = mockk<NorskHelsenettClient>()
         val kafkaAivenProducerReceivedSykmelding = mockk<KafkaProducer<String, ReceivedSykmelding>>()
         val kafkaAivenProducerOppgave = mockk<KafkaProducer<String, OpprettOppgaveKafkaMessage>>()
         val behandlingsutfallService = mockk<BehandlingsutfallService>()
         val redisService = mockk<RedisService>()
         val updateInfotrygdService = UpdateInfotrygdService(
-            manuellClient,
             norskHelsenettClient,
             ApplicationState(alive = true, ready = true),
             kafkaAivenProducerReceivedSykmelding,
