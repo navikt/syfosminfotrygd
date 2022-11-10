@@ -1,8 +1,7 @@
-package no.nav.syfo
+package no.nav.syfo.services
 
 import io.kotest.core.spec.style.FunSpec
-import no.nav.syfo.services.INFOTRYGD
-import no.nav.syfo.services.RedisService
+import no.nav.syfo.services.updateinfotrygd.INFOTRYGD
 import no.nav.syfo.util.LoggingMeta
 import org.amshove.kluent.shouldBeEqualTo
 import org.testcontainers.containers.BindMode
