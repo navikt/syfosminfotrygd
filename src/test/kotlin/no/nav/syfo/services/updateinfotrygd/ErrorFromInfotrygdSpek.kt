@@ -1,36 +1,11 @@
-package no.nav.syfo
+package no.nav.syfo.services.updateinfotrygd
 
 import io.kotest.core.spec.style.FunSpec
-import io.mockk.mockk
-import no.nav.syfo.application.ApplicationState
-import no.nav.syfo.client.NorskHelsenettClient
-import no.nav.syfo.model.OpprettOppgaveKafkaMessage
-import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.model.RuleInfo
 import no.nav.syfo.model.Status
-import no.nav.syfo.services.BehandlingsutfallService
-import no.nav.syfo.services.RedisService
-import no.nav.syfo.services.UpdateInfotrygdService
 import org.amshove.kluent.shouldBeEqualTo
-import org.apache.kafka.clients.producer.KafkaProducer
 
 class ErrorFromInfotrygdSpek : FunSpec({
-    val norskHelsenettClient = mockk<NorskHelsenettClient>()
-    val kafkaAivenProducerReceivedSykmelding = mockk<KafkaProducer<String, ReceivedSykmelding>>()
-    val kafkaAivenProducerOppgave = mockk<KafkaProducer<String, OpprettOppgaveKafkaMessage>>()
-    val behandlingsutfallService = mockk<BehandlingsutfallService>()
-    val redisService = mockk<RedisService>()
-    val updateInfotrygdService = UpdateInfotrygdService(
-        norskHelsenettClient,
-        ApplicationState(alive = true, ready = true),
-        kafkaAivenProducerReceivedSykmelding,
-        kafkaAivenProducerOppgave,
-        "retry",
-        "oppgave",
-        behandlingsutfallService,
-        redisService
-    )
-
     context("Tester at vi fanger opp der infotrygd gir mye error") {
         test("Should set errorFromInfotrygd to true") {
             val rules = listOf(
@@ -48,7 +23,7 @@ class ErrorFromInfotrygdSpek : FunSpec({
                 )
             )
 
-            updateInfotrygdService.errorFromInfotrygd(rules) shouldBeEqualTo true
+            errorFromInfotrygd(rules) shouldBeEqualTo true
         }
 
         test("Should set errorFromInfotrygd to false") {
@@ -67,7 +42,7 @@ class ErrorFromInfotrygdSpek : FunSpec({
                 )
             )
 
-            updateInfotrygdService.errorFromInfotrygd(rules) shouldBeEqualTo false
+            errorFromInfotrygd(rules) shouldBeEqualTo false
         }
 
         test("Should set errorFromInfotrygd to true") {
@@ -86,7 +61,7 @@ class ErrorFromInfotrygdSpek : FunSpec({
                 )
             )
 
-            updateInfotrygdService.errorFromInfotrygd(rules) shouldBeEqualTo true
+            errorFromInfotrygd(rules) shouldBeEqualTo true
         }
     }
 })

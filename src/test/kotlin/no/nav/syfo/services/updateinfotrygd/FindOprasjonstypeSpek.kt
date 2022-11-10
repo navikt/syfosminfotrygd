@@ -1,41 +1,17 @@
-package no.nav.syfo
+package no.nav.syfo.services.updateinfotrygd
 
 import io.kotest.core.spec.style.FunSpec
-import io.mockk.mockk
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.infotrygd.foresp.StatusType
 import no.nav.helse.infotrygd.foresp.TypeSMinfo
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
-import no.nav.syfo.application.ApplicationState
-import no.nav.syfo.client.NorskHelsenettClient
-import no.nav.syfo.model.OpprettOppgaveKafkaMessage
-import no.nav.syfo.model.ReceivedSykmelding
-import no.nav.syfo.services.BehandlingsutfallService
-import no.nav.syfo.services.RedisService
-import no.nav.syfo.services.UpdateInfotrygdService
+import no.nav.syfo.InfotrygdForespAndHealthInformation
 import no.nav.syfo.util.LoggingMeta
 import org.amshove.kluent.shouldBeEqualTo
-import org.apache.kafka.clients.producer.KafkaProducer
 import java.time.LocalDate
 
 class FindOprasjonstypeSpek : FunSpec({
-    val norskHelsenettClient = mockk<NorskHelsenettClient>()
-    val kafkaAivenProducerReceivedSykmelding = mockk<KafkaProducer<String, ReceivedSykmelding>>()
-    val kafkaAivenProducerOppgave = mockk<KafkaProducer<String, OpprettOppgaveKafkaMessage>>()
-    val behandlingsutfallService = mockk<BehandlingsutfallService>()
-    val redisService = mockk<RedisService>()
-    val updateInfotrygdService = UpdateInfotrygdService(
-        norskHelsenettClient,
-        ApplicationState(alive = true, ready = true),
-        kafkaAivenProducerReceivedSykmelding,
-        kafkaAivenProducerOppgave,
-        "retry",
-        "oppgave",
-        behandlingsutfallService,
-        redisService
-    )
-
-    context("Test the method FindOprasjonstypeSpek") {
+    context("Test the method findOperasjonstype") {
         test("Should set oprasjonstype to 1, when kodemelding is 04 ") {
             val healthInformation = HelseOpplysningerArbeidsuforhet().apply {
                 aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
@@ -64,7 +40,7 @@ class FindOprasjonstypeSpek : FunSpec({
                 }
             }
 
-            updateInfotrygdService.findOperasjonstype(
+            findOperasjonstype(
                 healthInformation.aktivitet.periode.first(),
                 InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "")
             ) shouldBeEqualTo 1
@@ -98,7 +74,7 @@ class FindOprasjonstypeSpek : FunSpec({
                 }
             }
 
-            updateInfotrygdService.findOperasjonstype(
+            findOperasjonstype(
                 healthInformation.aktivitet.periode.first(),
                 InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "")
             ) shouldBeEqualTo 2
@@ -132,7 +108,7 @@ class FindOprasjonstypeSpek : FunSpec({
                 }
             }
 
-            updateInfotrygdService.findOperasjonstype(
+            findOperasjonstype(
                 healthInformation.aktivitet.periode.first(),
                 InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "")
             ) shouldBeEqualTo 2
@@ -166,7 +142,7 @@ class FindOprasjonstypeSpek : FunSpec({
                 }
             }
 
-            updateInfotrygdService.findOperasjonstype(
+            findOperasjonstype(
                 healthInformation.aktivitet.periode.first(),
                 InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "")
             ) shouldBeEqualTo 2
@@ -200,7 +176,7 @@ class FindOprasjonstypeSpek : FunSpec({
                 }
             }
 
-            updateInfotrygdService.findOperasjonstype(
+            findOperasjonstype(
                 healthInformation.aktivitet.periode.first(),
                 InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "")
             ) shouldBeEqualTo 2
@@ -234,7 +210,7 @@ class FindOprasjonstypeSpek : FunSpec({
                 }
             }
 
-            updateInfotrygdService.findOperasjonstype(
+            findOperasjonstype(
                 healthInformation.aktivitet.periode.first(),
                 InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "")
             ) shouldBeEqualTo 2
@@ -268,7 +244,7 @@ class FindOprasjonstypeSpek : FunSpec({
                 }
             }
 
-            updateInfotrygdService.findOperasjonstype(
+            findOperasjonstype(
                 healthInformation.aktivitet.periode.first(),
                 InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "")
             ) shouldBeEqualTo 1
@@ -302,7 +278,7 @@ class FindOprasjonstypeSpek : FunSpec({
                 }
             }
 
-            updateInfotrygdService.findOperasjonstype(
+            findOperasjonstype(
                 healthInformation.aktivitet.periode.first(),
                 InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "")
             ) shouldBeEqualTo 3
@@ -336,7 +312,7 @@ class FindOprasjonstypeSpek : FunSpec({
                 }
             }
 
-            updateInfotrygdService.findOperasjonstype(
+            findOperasjonstype(
                 healthInformation.aktivitet.periode.first(),
                 InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "")
             ) shouldBeEqualTo 3
@@ -374,7 +350,7 @@ class FindOprasjonstypeSpek : FunSpec({
                 }
             }
 
-            updateInfotrygdService.findOperasjonstype(
+            findOperasjonstype(
                 healthInformation.aktivitet.periode.first(),
                 InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "")
             ) shouldBeEqualTo 3
@@ -408,7 +384,7 @@ class FindOprasjonstypeSpek : FunSpec({
                 }
             }
 
-            updateInfotrygdService.findOperasjonstype(
+            findOperasjonstype(
                 healthInformation.aktivitet.periode.first(),
                 InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "")
             ) shouldBeEqualTo 3
@@ -453,7 +429,7 @@ class FindOprasjonstypeSpek : FunSpec({
                 }
             }
 
-            updateInfotrygdService.findOperasjonstype(
+            findOperasjonstype(
                 healthInformation.aktivitet.periode.first(),
                 InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "")
             ) shouldBeEqualTo 3
@@ -487,7 +463,7 @@ class FindOprasjonstypeSpek : FunSpec({
                 }
             }
 
-            updateInfotrygdService.findOperasjonstype(
+            findOperasjonstype(
                 healthInformation.aktivitet.periode.first(),
                 InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "")
             ) shouldBeEqualTo 2
@@ -521,7 +497,7 @@ class FindOprasjonstypeSpek : FunSpec({
                 }
             }
 
-            updateInfotrygdService.findOperasjonstype(
+            findOperasjonstype(
                 healthInformation.aktivitet.periode.first(),
                 InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "")
             ) shouldBeEqualTo 1
@@ -555,7 +531,7 @@ class FindOprasjonstypeSpek : FunSpec({
                 }
             }
 
-            updateInfotrygdService.findOperasjonstype(
+            findOperasjonstype(
                 healthInformation.aktivitet.periode.first(),
                 InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "")
             ) shouldBeEqualTo 1
@@ -589,7 +565,7 @@ class FindOprasjonstypeSpek : FunSpec({
                 }
             }
 
-            updateInfotrygdService.findOperasjonstype(
+            findOperasjonstype(
                 healthInformation.aktivitet.periode.first(),
                 InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "")
             ) shouldBeEqualTo 1
@@ -623,7 +599,7 @@ class FindOprasjonstypeSpek : FunSpec({
                 }
             }
 
-            updateInfotrygdService.findOperasjonstype(
+            findOperasjonstype(
                 healthInformation.aktivitet.periode.first(),
                 InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation), LoggingMeta("mottakId", "12315", "", "")
             ) shouldBeEqualTo 1

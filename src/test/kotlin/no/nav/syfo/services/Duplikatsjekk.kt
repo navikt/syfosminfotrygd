@@ -1,42 +1,18 @@
-package no.nav.syfo
+package no.nav.syfo.services
 
 import io.kotest.core.spec.style.FunSpec
-import io.mockk.mockk
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.infotrygd.foresp.StatusType
 import no.nav.helse.infotrygd.foresp.TypeSMinfo
 import no.nav.helse.sm2013.CS
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
-import no.nav.syfo.application.ApplicationState
-import no.nav.syfo.client.NorskHelsenettClient
-import no.nav.syfo.model.OpprettOppgaveKafkaMessage
-import no.nav.syfo.model.ReceivedSykmelding
-import no.nav.syfo.services.BehandlingsutfallService
-import no.nav.syfo.services.RedisService
-import no.nav.syfo.services.UpdateInfotrygdService
-import no.nav.syfo.services.sha256hashstring
+import no.nav.syfo.InfotrygdForespAndHealthInformation
+import no.nav.syfo.services.updateinfotrygd.createInfotrygdBlokk
 import no.nav.syfo.util.LoggingMeta
 import org.amshove.kluent.shouldBeEqualTo
-import org.apache.kafka.clients.producer.KafkaProducer
 import java.time.LocalDate
 
 class Duplikatsjekk : FunSpec({
-    val norskHelsenettClient = mockk<NorskHelsenettClient>()
-    val kafkaAivenProducerReceivedSykmelding = mockk<KafkaProducer<String, ReceivedSykmelding>>()
-    val kafkaAivenProducerOppgave = mockk<KafkaProducer<String, OpprettOppgaveKafkaMessage>>()
-    val behandlingsutfallService = mockk<BehandlingsutfallService>()
-    val redisService = mockk<RedisService>()
-    val updateInfotrygdService = UpdateInfotrygdService(
-        norskHelsenettClient,
-        ApplicationState(alive = true, ready = true),
-        kafkaAivenProducerReceivedSykmelding,
-        kafkaAivenProducerOppgave,
-        "retry",
-        "oppgave",
-        behandlingsutfallService,
-        redisService
-    )
-
     context("Tester duplikat hånderingen med redis") {
         test("Skal plukke meldingen som duplikat") {
             val healthInformationForstemelding = HelseOpplysningerArbeidsuforhet().apply {
@@ -66,7 +42,7 @@ class Duplikatsjekk : FunSpec({
 
             val ifthForstemelding = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformationForstemelding)
 
-            val infotrygdBlokkForsteMelding = updateInfotrygdService.createInfotrygdBlokk(
+            val infotrygdBlokkForsteMelding = createInfotrygdBlokk(
                 ifthForstemelding,
                 healthInformationForstemelding.aktivitet.periode.last(),
                 "2134",
@@ -102,7 +78,7 @@ class Duplikatsjekk : FunSpec({
 
             val ifthAndreMelding = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformationAndreMelding)
 
-            val infotrygdBlokkAndreMelding = updateInfotrygdService.createInfotrygdBlokk(
+            val infotrygdBlokkAndreMelding = createInfotrygdBlokk(
                 ifthAndreMelding,
                 healthInformationAndreMelding.aktivitet.periode.last(),
                 "2134",

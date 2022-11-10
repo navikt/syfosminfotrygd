@@ -3,21 +3,10 @@ package no.nav.syfo
 import io.kotest.core.spec.style.FunSpec
 import io.mockk.every
 import io.mockk.mockk
-import no.nav.syfo.application.ApplicationState
-import no.nav.syfo.client.NorskHelsenettClient
 import no.nav.syfo.model.Gradert
 import no.nav.syfo.model.Merknad
-import no.nav.syfo.model.OpprettOppgaveKafkaMessage
 import no.nav.syfo.model.ReceivedSykmelding
-import no.nav.syfo.model.RuleInfo
-import no.nav.syfo.model.Status
-import no.nav.syfo.model.ValidationResult
-import no.nav.syfo.services.BehandlingsutfallService
-import no.nav.syfo.services.RedisService
-import no.nav.syfo.services.UpdateInfotrygdService
 import org.amshove.kluent.shouldBeEqualTo
-import org.apache.kafka.clients.producer.KafkaProducer
-import java.time.LocalDate
 
 class SkalIkkeOppdatereInfotrygdSpek : FunSpec({
     context("Skal ikke oppdatere infotrygd") {
@@ -81,127 +70,6 @@ class SkalIkkeOppdatereInfotrygdSpek : FunSpec({
                 )
             )
             skalOppdatereInfotrygd(sm) shouldBeEqualTo false
-        }
-    }
-    context("Testing av metoden skalIkkeOppdatereInfotrygd") {
-        val norskHelsenettClient = mockk<NorskHelsenettClient>()
-        val kafkaAivenProducerReceivedSykmelding = mockk<KafkaProducer<String, ReceivedSykmelding>>()
-        val kafkaAivenProducerOppgave = mockk<KafkaProducer<String, OpprettOppgaveKafkaMessage>>()
-        val behandlingsutfallService = mockk<BehandlingsutfallService>()
-        val redisService = mockk<RedisService>()
-        val updateInfotrygdService = UpdateInfotrygdService(
-            norskHelsenettClient,
-            ApplicationState(alive = true, ready = true),
-            kafkaAivenProducerReceivedSykmelding,
-            kafkaAivenProducerOppgave,
-            "retry",
-            "oppgave",
-            behandlingsutfallService,
-            redisService
-        )
-
-        test("Skal ikkje oppdatere infotrygd, pga lik eller under 3 dager i sykmeldings peridene totalt") {
-            val validationResult = ValidationResult(
-                status = Status.MANUAL_PROCESSING,
-                ruleHits = listOf(
-                    RuleInfo(
-                        ruleName = "PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE",
-                        messageForUser = "messageForSender",
-                        messageForSender = "messageForUser",
-                        ruleStatus = Status.MANUAL_PROCESSING
-                    ),
-                    RuleInfo(
-                        ruleName = "NUMBER_OF_TREATMENT_DAYS_SET",
-                        messageForUser = "Hvis behandlingsdager er angitt sendes meldingen til manuell behandling.",
-                        messageForSender = "Hvis behandlingsdager er angitt sendes meldingen til manuell behandling.",
-                        ruleStatus = Status.MANUAL_PROCESSING
-                    )
-                )
-            )
-
-            val receivedSykmelding = receivedSykmelding(
-                "1",
-                generateSykmelding(
-                    perioder = listOf(
-                        generatePeriode(
-                            fom = LocalDate.of(2019, 1, 1),
-                            tom = LocalDate.of(2019, 1, 4)
-                        )
-                    )
-                )
-            )
-
-            updateInfotrygdService.skalIkkeProdusereManuellOppgave(receivedSykmelding, validationResult) shouldBeEqualTo true
-        }
-
-        test("Skal oppdatere infotrygd, pga større enn 3 dager i sykmeldings peridene totalt") {
-
-            val validationResult = ValidationResult(
-                status = Status.MANUAL_PROCESSING,
-                ruleHits = listOf(
-                    RuleInfo(
-                        ruleName = "PERIOD_IS_AF",
-                        messageForUser = "messageForSender",
-                        messageForSender = "messageForUser",
-                        ruleStatus = Status.MANUAL_PROCESSING
-                    ),
-                    RuleInfo(
-                        ruleName = "TRAVEL_SUBSIDY_SPECIFIED",
-                        messageForUser = "messageForSender",
-                        messageForSender = "messageForUser",
-                        ruleStatus = Status.MANUAL_PROCESSING
-                    )
-                )
-            )
-
-            val receivedSykmelding = receivedSykmelding(
-                "1",
-                generateSykmelding(
-                    perioder = listOf(
-                        generatePeriode(
-                            fom = LocalDate.of(2019, 1, 1),
-                            tom = LocalDate.of(2019, 1, 5)
-                        )
-                    )
-                )
-            )
-
-            updateInfotrygdService.skalIkkeProdusereManuellOppgave(receivedSykmelding, validationResult) shouldBeEqualTo false
-        }
-
-        test("Skal oppdatere infotrygd, pga større enn 3 dager i sykmeldings peridene totalt") {
-
-            val validationResult = ValidationResult(
-                status = Status.MANUAL_PROCESSING,
-                ruleHits = listOf(
-                    RuleInfo(
-                        ruleName = "PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE",
-                        messageForUser = "messageForSender",
-                        messageForSender = "messageForUser",
-                        ruleStatus = Status.MANUAL_PROCESSING
-                    ),
-                    RuleInfo(
-                        ruleName = "TRAVEL_SUBSIDY_SPECIFIED",
-                        messageForUser = "messageForSender",
-                        messageForSender = "messageForUser",
-                        ruleStatus = Status.MANUAL_PROCESSING
-                    )
-                )
-            )
-
-            val receivedSykmelding = receivedSykmelding(
-                "1",
-                generateSykmelding(
-                    perioder = listOf(
-                        generatePeriode(
-                            fom = LocalDate.of(2019, 1, 1),
-                            tom = LocalDate.of(2019, 1, 5)
-                        )
-                    )
-                )
-            )
-
-            updateInfotrygdService.skalIkkeProdusereManuellOppgave(receivedSykmelding, validationResult) shouldBeEqualTo false
         }
     }
 })

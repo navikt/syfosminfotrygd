@@ -65,10 +65,11 @@ import no.nav.syfo.rules.ValidationRuleChain
 import no.nav.syfo.rules.sortedSMInfos
 import no.nav.syfo.services.BehandlingsutfallService
 import no.nav.syfo.services.FinnNAVKontorService
+import no.nav.syfo.services.OppgaveService
 import no.nav.syfo.services.RedisService
-import no.nav.syfo.services.UpdateInfotrygdService
 import no.nav.syfo.services.fetchInfotrygdForesp
 import no.nav.syfo.services.fetchTssSamhandlerInfo
+import no.nav.syfo.services.updateinfotrygd.UpdateInfotrygdService
 import no.nav.syfo.util.JacksonKafkaSerializer
 import no.nav.syfo.util.LoggingMeta
 import no.nav.syfo.util.TrackableException
@@ -197,15 +198,19 @@ fun main() {
         behandlingsUtfallTopic = env.behandlingsUtfallTopic
     )
 
+    val oppgaveService = OppgaveService(
+        kafkaAivenProducerOppgave = kafkaAivenProducerOppgave,
+        produserOppgaveTopic = env.produserOppgaveTopic
+    )
+
     val updateInfotrygdService = UpdateInfotrygdService(
         norskHelsenettClient = norskHelsenettClient,
         applicationState = applicationState,
         kafkaAivenProducerReceivedSykmelding = kafkaAivenProducerReceivedSykmelding,
-        kafkaAivenProducerOppgave = kafkaAivenProducerOppgave,
         retryTopic = env.retryTopic,
-        produserOppgaveTopic = env.produserOppgaveTopic,
         behandlingsutfallService = behandlingsutfallService,
-        redisService = redisService
+        redisService = redisService,
+        oppgaveService = oppgaveService
     )
 
     launchListeners(
@@ -216,7 +221,8 @@ fun main() {
         serviceUser,
         kafkaAivenConsumerReceivedSykmelding,
         behandlingsutfallService,
-        manuellClient
+        manuellClient,
+        oppgaveService
     )
 
     applicationServer.start()
@@ -244,7 +250,8 @@ fun launchListeners(
     serviceUser: ServiceUser,
     kafkaAivenConsumerReceivedSykmelding: KafkaConsumer<String, String>,
     behandlingsutfallService: BehandlingsutfallService,
-    manuellClient: ManuellClient
+    manuellClient: ManuellClient,
+    oppgaveService: OppgaveService
 ) {
     createListener(applicationState) {
         connectionFactory(env).createConnection(serviceUser.serviceuserUsername, serviceUser.serviceuserPassword)
@@ -260,7 +267,8 @@ fun launchListeners(
                 blockingApplicationLogic(
                     applicationState, infotrygdOppdateringProducer, infotrygdSporringProducer,
                     session, finnNAVKontorService, updateInfotrygdService,
-                    tssProducer, env, kafkaAivenConsumerReceivedSykmelding, behandlingsutfallService, manuellClient
+                    tssProducer, env, kafkaAivenConsumerReceivedSykmelding, behandlingsutfallService,
+                    manuellClient, oppgaveService
                 )
             }
     }
@@ -279,7 +287,8 @@ suspend fun blockingApplicationLogic(
     env: Environment,
     kafkaAivenConsumerReceivedSykmelding: KafkaConsumer<String, String>,
     behandlingsutfallService: BehandlingsutfallService,
-    manuellClient: ManuellClient
+    manuellClient: ManuellClient,
+    oppgaveService: OppgaveService
 ) {
     while (applicationState.ready) {
         if (shouldRun(getCurrentTime())) {
@@ -297,7 +306,8 @@ suspend fun blockingApplicationLogic(
                 tssProducer,
                 kafkaAivenConsumerReceivedSykmelding,
                 behandlingsutfallService,
-                manuellClient
+                manuellClient,
+                oppgaveService
             )
             kafkaAivenConsumerReceivedSykmelding.unsubscribe()
             log.info("Stopper KafkaConsumer aiven")
@@ -316,7 +326,8 @@ private suspend fun runKafkaConsumer(
     tssProducer: MessageProducer,
     kafkaAivenConsumerReceivedSykmelding: KafkaConsumer<String, String>,
     behandlingsutfallService: BehandlingsutfallService,
-    manuellClient: ManuellClient
+    manuellClient: ManuellClient,
+    oppgaveService: OppgaveService
 ) {
     while (applicationState.ready && shouldRun(getCurrentTime())) {
         kafkaAivenConsumerReceivedSykmelding.poll(Duration.ofMillis(0)).mapNotNull { it.value() }
@@ -335,7 +346,7 @@ private suspend fun runKafkaConsumer(
                             receivedSykmelding, updateInfotrygdService,
                             infotrygdOppdateringProducer, infotrygdSporringProducer,
                             session, finnNAVKontorService,
-                            loggingMeta, tssProducer, behandlingsutfallService, manuellClient
+                            loggingMeta, tssProducer, behandlingsutfallService, manuellClient, oppgaveService
                         )
                     }
 
@@ -407,7 +418,8 @@ suspend fun handleMessage(
     loggingMeta: LoggingMeta,
     tssProducer: MessageProducer,
     behandlingsutfallService: BehandlingsutfallService,
-    manuellClient: ManuellClient
+    manuellClient: ManuellClient,
+    oppgaveService: OppgaveService
 ) {
     wrapExceptions(loggingMeta) {
         log.info("Received a SM2013, {}", fields(loggingMeta))
@@ -433,7 +445,7 @@ suspend fun handleMessage(
                 validationResultForMottattSykmelding,
                 loggingMeta
             )
-            updateInfotrygdService.opprettOppgave(receivedSykmelding, validationResultForMottattSykmelding, behandletAvManuell, loggingMeta)
+            oppgaveService.opprettOppgave(receivedSykmelding, validationResultForMottattSykmelding, behandletAvManuell, loggingMeta)
         } else {
             val infotrygdForespResponse = fetchInfotrygdForesp(
                 receivedSykmelding,

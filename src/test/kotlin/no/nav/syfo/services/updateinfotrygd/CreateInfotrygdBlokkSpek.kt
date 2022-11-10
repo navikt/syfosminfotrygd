@@ -1,42 +1,19 @@
-package no.nav.syfo
+package no.nav.syfo.services.updateinfotrygd
 
 import io.kotest.core.spec.style.FunSpec
-import io.mockk.mockk
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.infotrygd.foresp.StatusType
 import no.nav.helse.infotrygd.foresp.TypeSMinfo
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
-import no.nav.syfo.application.ApplicationState
-import no.nav.syfo.client.NorskHelsenettClient
-import no.nav.syfo.model.OpprettOppgaveKafkaMessage
-import no.nav.syfo.model.ReceivedSykmelding
+import no.nav.syfo.InfotrygdForespAndHealthInformation
 import no.nav.syfo.rules.sortedSMInfos
-import no.nav.syfo.services.BehandlingsutfallService
-import no.nav.syfo.services.RedisService
-import no.nav.syfo.services.UpdateInfotrygdService
+import no.nav.syfo.sortedFOMDate
 import no.nav.syfo.util.LoggingMeta
 import org.amshove.kluent.shouldBeEqualTo
-import org.apache.kafka.clients.producer.KafkaProducer
 import java.time.LocalDate
 
 class CreateInfotrygdBlokkSpek : FunSpec({
     context("Testing the creating of infotrygdblokk") {
-        val norskHelsenettClient = mockk<NorskHelsenettClient>()
-        val kafkaAivenProducerReceivedSykmelding = mockk<KafkaProducer<String, ReceivedSykmelding>>()
-        val kafkaAivenProducerOppgave = mockk<KafkaProducer<String, OpprettOppgaveKafkaMessage>>()
-        val behandlingsutfallService = mockk<BehandlingsutfallService>()
-        val redisService = mockk<RedisService>()
-        val updateInfotrygdService = UpdateInfotrygdService(
-            norskHelsenettClient,
-            ApplicationState(alive = true, ready = true),
-            kafkaAivenProducerReceivedSykmelding,
-            kafkaAivenProducerOppgave,
-            "retry",
-            "oppgave",
-            behandlingsutfallService,
-            redisService
-        )
-
         test("Should set forsteFravaersDag correctly, when oprasjosntype 1") {
 
             val healthInformation = HelseOpplysningerArbeidsuforhet().apply {
@@ -61,9 +38,9 @@ class CreateInfotrygdBlokkSpek : FunSpec({
             val ifth = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
 
             val perioder = ifth.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
-            val forsteFravaersDag = updateInfotrygdService.finnForsteFravaersDag(ifth, perioder.first(), LoggingMeta("mottakId", "12315", "", ""))
+            val forsteFravaersDag = finnForsteFravaersDag(ifth, perioder.first(), LoggingMeta("mottakId", "12315", "", ""))
 
-            val infotrygdBlokk = updateInfotrygdService.createInfotrygdBlokk(
+            val infotrygdBlokk = createInfotrygdBlokk(
                 ifth,
                 healthInformation.aktivitet.periode.last(),
                 "2134",
@@ -120,9 +97,9 @@ class CreateInfotrygdBlokkSpek : FunSpec({
             val ifth = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
 
             val perioder = ifth.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
-            val forsteFravaersDag = updateInfotrygdService.finnForsteFravaersDag(ifth, perioder.first(), LoggingMeta("mottakId", "12315", "", ""))
+            val forsteFravaersDag = finnForsteFravaersDag(ifth, perioder.first(), LoggingMeta("mottakId", "12315", "", ""))
 
-            val infotrygdfirstBlokk = updateInfotrygdService.createInfotrygdBlokk(
+            val infotrygdfirstBlokk = createInfotrygdBlokk(
                 ifth,
                 healthInformation.aktivitet.periode.first(),
                 "2134",
@@ -138,7 +115,7 @@ class CreateInfotrygdBlokkSpek : FunSpec({
 
             )
 
-            val infotrygdlastBlokk = updateInfotrygdService.createInfotrygdBlokk(
+            val infotrygdlastBlokk = createInfotrygdBlokk(
                 ifth,
                 healthInformation.aktivitet.periode.last(),
                 "2134",
@@ -200,9 +177,9 @@ class CreateInfotrygdBlokkSpek : FunSpec({
             val ifth = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
 
             val perioder = ifth.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
-            val forsteFravaersDag = updateInfotrygdService.finnForsteFravaersDag(ifth, perioder.first(), LoggingMeta("mottakId", "12315", "", ""))
+            val forsteFravaersDag = finnForsteFravaersDag(ifth, perioder.first(), LoggingMeta("mottakId", "12315", "", ""))
 
-            val infotrygdfirstBlokk = updateInfotrygdService.createInfotrygdBlokk(
+            val infotrygdfirstBlokk = createInfotrygdBlokk(
                 ifth,
                 healthInformation.aktivitet.periode.first(),
                 "2134",
@@ -218,7 +195,7 @@ class CreateInfotrygdBlokkSpek : FunSpec({
 
             )
 
-            val infotrygdlastBlokk = updateInfotrygdService.createInfotrygdBlokk(
+            val infotrygdlastBlokk = createInfotrygdBlokk(
                 ifth,
                 healthInformation.aktivitet.periode.last(),
                 "2134",
@@ -258,9 +235,9 @@ class CreateInfotrygdBlokkSpek : FunSpec({
             }
             val ifth = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
             val perioder = ifth.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
-            val forsteFravaersDag = updateInfotrygdService.finnForsteFravaersDag(ifth, perioder.first(), LoggingMeta("mottakId", "12315", "", ""))
+            val forsteFravaersDag = finnForsteFravaersDag(ifth, perioder.first(), LoggingMeta("mottakId", "12315", "", ""))
 
-            val infotrygdBlokk = updateInfotrygdService.createInfotrygdBlokk(
+            val infotrygdBlokk = createInfotrygdBlokk(
                 ifth,
                 healthInformation.aktivitet.periode.last(),
                 "2134",
