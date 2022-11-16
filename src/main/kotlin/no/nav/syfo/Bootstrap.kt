@@ -332,51 +332,55 @@ private suspend fun runKafkaConsumer(
     while (applicationState.ready && shouldRun(getCurrentTime())) {
         kafkaAivenConsumerReceivedSykmelding.poll(Duration.ofMillis(0)).mapNotNull { it.value() }
             .forEach { receivedSykmeldingString ->
-                val receivedSykmelding: ReceivedSykmelding = objectMapper.readValue(receivedSykmeldingString)
-                val loggingMeta = LoggingMeta(
-                    mottakId = receivedSykmelding.navLogId,
-                    orgNr = receivedSykmelding.legekontorOrgNr,
-                    msgId = receivedSykmelding.msgId,
-                    sykmeldingId = receivedSykmelding.sykmelding.id
-                )
-                log.info("Har mottatt sykmelding fra aiven, {}", fields(loggingMeta))
-                when (skalOppdatereInfotrygd(receivedSykmelding)) {
-                    true -> {
-                        handleMessage(
-                            receivedSykmelding, updateInfotrygdService,
-                            infotrygdOppdateringProducer, infotrygdSporringProducer,
-                            session, finnNAVKontorService,
-                            loggingMeta, tssProducer, behandlingsutfallService, manuellClient, oppgaveService
-                        )
-                    }
+                try {
+                    val receivedSykmelding: ReceivedSykmelding = objectMapper.readValue(receivedSykmeldingString)
+                    val loggingMeta = LoggingMeta(
+                        mottakId = receivedSykmelding.navLogId,
+                        orgNr = receivedSykmelding.legekontorOrgNr,
+                        msgId = receivedSykmelding.msgId,
+                        sykmeldingId = receivedSykmelding.sykmelding.id
+                    )
+                    log.info("Har mottatt sykmelding fra aiven, {}", fields(loggingMeta))
+                    when (skalOppdatereInfotrygd(receivedSykmelding)) {
+                        true -> {
+                            handleMessage(
+                                receivedSykmelding, updateInfotrygdService,
+                                infotrygdOppdateringProducer, infotrygdSporringProducer,
+                                session, finnNAVKontorService,
+                                loggingMeta, tssProducer, behandlingsutfallService, manuellClient, oppgaveService
+                            )
+                        }
 
-                    else -> {
-                        log.info(
-                            "Oppdaterer ikke infotrygd for sykmelding med merknad eller reisetilskudd, {}",
-                            fields(loggingMeta)
-                        )
-                        val validationResult =
-                            if (receivedSykmelding.merknader?.any { it.type == "UNDER_BEHANDLING" } == true) {
-                                ValidationResult(
-                                    Status.OK,
-                                    listOf(
-                                        RuleInfo(
-                                            "UNDER_BEHANDLING",
-                                            "Sykmeldingen er til manuell behandling",
-                                            "Sykmeldingen er til manuell behandling",
-                                            Status.OK
+                        else -> {
+                            log.info(
+                                "Oppdaterer ikke infotrygd for sykmelding med merknad eller reisetilskudd, {}",
+                                fields(loggingMeta)
+                            )
+                            val validationResult =
+                                if (receivedSykmelding.merknader?.any { it.type == "UNDER_BEHANDLING" } == true) {
+                                    ValidationResult(
+                                        Status.OK,
+                                        listOf(
+                                            RuleInfo(
+                                                "UNDER_BEHANDLING",
+                                                "Sykmeldingen er til manuell behandling",
+                                                "Sykmeldingen er til manuell behandling",
+                                                Status.OK
+                                            )
                                         )
                                     )
-                                )
-                            } else {
-                                ValidationResult(Status.OK, emptyList())
-                            }
-                        behandlingsutfallService.sendRuleCheckValidationResult(
-                            receivedSykmelding,
-                            validationResult,
-                            loggingMeta
-                        )
+                                } else {
+                                    ValidationResult(Status.OK, emptyList())
+                                }
+                            behandlingsutfallService.sendRuleCheckValidationResult(
+                                receivedSykmelding,
+                                validationResult,
+                                loggingMeta
+                            )
+                        }
                     }
+                } catch (e: Exception) {
+                    log.error("Noe gikk galt, men vi ignorerer feil i dev", e)
                 }
             }
         delay(100)
