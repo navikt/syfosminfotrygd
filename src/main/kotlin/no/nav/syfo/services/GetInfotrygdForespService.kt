@@ -3,6 +3,7 @@ package no.nav.syfo.services
 import com.ctc.wstx.exc.WstxException
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
+import no.nav.syfo.UTENLANDSK_SYKEHUS
 import no.nav.syfo.helpers.retry
 import no.nav.syfo.log
 import no.nav.syfo.model.Diagnosekode
@@ -82,7 +83,7 @@ fun finnLegeFnr(receivedSykmelding: ReceivedSykmelding): String {
         "10108000398"
     } else if (receivedSykmelding.utenlandskSykmelding != null) {
         log.info("Setter standardverdi for behandler for utenlandsk sykmelding med id ${receivedSykmelding.sykmelding.id}")
-        "LU ${receivedSykmelding.utenlandskSykmelding!!.land}"
+        UTENLANDSK_SYKEHUS
     } else {
         receivedSykmelding.personNrLege
     }

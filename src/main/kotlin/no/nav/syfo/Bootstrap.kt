@@ -104,6 +104,7 @@ val objectMapper: ObjectMapper = ObjectMapper().apply {
 }
 
 const val NAV_OPPFOLGING_UTLAND_KONTOR_NR = "0393"
+const val UTENLANDSK_SYKEHUS = "IN 9900004"
 
 @DelicateCoroutinesApi
 fun main() {
@@ -332,55 +333,51 @@ private suspend fun runKafkaConsumer(
     while (applicationState.ready && shouldRun(getCurrentTime())) {
         kafkaAivenConsumerReceivedSykmelding.poll(Duration.ofMillis(0)).mapNotNull { it.value() }
             .forEach { receivedSykmeldingString ->
-                try {
-                    val receivedSykmelding: ReceivedSykmelding = objectMapper.readValue(receivedSykmeldingString)
-                    val loggingMeta = LoggingMeta(
-                        mottakId = receivedSykmelding.navLogId,
-                        orgNr = receivedSykmelding.legekontorOrgNr,
-                        msgId = receivedSykmelding.msgId,
-                        sykmeldingId = receivedSykmelding.sykmelding.id
-                    )
-                    log.info("Har mottatt sykmelding fra aiven, {}", fields(loggingMeta))
-                    when (skalOppdatereInfotrygd(receivedSykmelding)) {
-                        true -> {
-                            handleMessage(
-                                receivedSykmelding, updateInfotrygdService,
-                                infotrygdOppdateringProducer, infotrygdSporringProducer,
-                                session, finnNAVKontorService,
-                                loggingMeta, tssProducer, behandlingsutfallService, manuellClient, oppgaveService
-                            )
-                        }
+                val receivedSykmelding: ReceivedSykmelding = objectMapper.readValue(receivedSykmeldingString)
+                val loggingMeta = LoggingMeta(
+                    mottakId = receivedSykmelding.navLogId,
+                    orgNr = receivedSykmelding.legekontorOrgNr,
+                    msgId = receivedSykmelding.msgId,
+                    sykmeldingId = receivedSykmelding.sykmelding.id
+                )
+                log.info("Har mottatt sykmelding fra aiven, {}", fields(loggingMeta))
+                when (skalOppdatereInfotrygd(receivedSykmelding)) {
+                    true -> {
+                        handleMessage(
+                            receivedSykmelding, updateInfotrygdService,
+                            infotrygdOppdateringProducer, infotrygdSporringProducer,
+                            session, finnNAVKontorService,
+                            loggingMeta, tssProducer, behandlingsutfallService, manuellClient, oppgaveService
+                        )
+                    }
 
-                        else -> {
-                            log.info(
-                                "Oppdaterer ikke infotrygd for sykmelding med merknad eller reisetilskudd, {}",
-                                fields(loggingMeta)
-                            )
-                            val validationResult =
-                                if (receivedSykmelding.merknader?.any { it.type == "UNDER_BEHANDLING" } == true) {
-                                    ValidationResult(
-                                        Status.OK,
-                                        listOf(
-                                            RuleInfo(
-                                                "UNDER_BEHANDLING",
-                                                "Sykmeldingen er til manuell behandling",
-                                                "Sykmeldingen er til manuell behandling",
-                                                Status.OK
-                                            )
+                    else -> {
+                        log.info(
+                            "Oppdaterer ikke infotrygd for sykmelding med merknad eller reisetilskudd, {}",
+                            fields(loggingMeta)
+                        )
+                        val validationResult =
+                            if (receivedSykmelding.merknader?.any { it.type == "UNDER_BEHANDLING" } == true) {
+                                ValidationResult(
+                                    Status.OK,
+                                    listOf(
+                                        RuleInfo(
+                                            "UNDER_BEHANDLING",
+                                            "Sykmeldingen er til manuell behandling",
+                                            "Sykmeldingen er til manuell behandling",
+                                            Status.OK
                                         )
                                     )
-                                } else {
-                                    ValidationResult(Status.OK, emptyList())
-                                }
-                            behandlingsutfallService.sendRuleCheckValidationResult(
-                                receivedSykmelding,
-                                validationResult,
-                                loggingMeta
-                            )
-                        }
+                                )
+                            } else {
+                                ValidationResult(Status.OK, emptyList())
+                            }
+                        behandlingsutfallService.sendRuleCheckValidationResult(
+                            receivedSykmelding,
+                            validationResult,
+                            loggingMeta
+                        )
                     }
-                } catch (e: Exception) {
-                    log.error("Noe gikk galt, men vi ignorerer feil i dev", e)
                 }
             }
         delay(100)
@@ -465,12 +462,15 @@ suspend fun handleMessage(
                     infotrygdForespResponse.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()?.periode,
                     receivedSykmelding.sykmelding.behandler
                 )
-                if (!tssIdInfotrygd.isNullOrBlank()) {
+                if (!tssIdInfotrygd.isNullOrBlank() && receivedSykmelding.utenlandskSykmelding == null) {
                     log.info(
                         "Sykmelding mangler tssid, har hentet tssid $tssIdInfotrygd fra infotrygd, {}",
                         fields(loggingMeta)
                     )
                     receivedSykmeldingMedTssId = receivedSykmelding.copy(tssid = tssIdInfotrygd)
+                } else if (receivedSykmelding.utenlandskSykmelding != null) {
+                    log.info("Bruker standardverdi for tssid for utenlandsk sykmelding, {}", fields(loggingMeta))
+                    receivedSykmeldingMedTssId = receivedSykmelding.copy(tssid = UTENLANDSK_SYKEHUS)
                 } else {
                     try {
                         val tssSamhandlerInfoResponse = fetchTssSamhandlerInfo(receivedSykmelding, tssProducer, session)
