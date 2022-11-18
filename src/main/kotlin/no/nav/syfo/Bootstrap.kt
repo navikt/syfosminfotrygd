@@ -491,6 +491,10 @@ suspend fun handleMessage(
                 }
             }
 
+            if (infotrygdForespResponse.hovedStatus?.kodeMelding?.toIntOrNull() != null && infotrygdForespResponse.hovedStatus.kodeMelding.toInt() > 4) {
+                log.info("Feilkode fra infotrygd: ${infotrygdForespResponse.hovedStatus.kodeMelding.toInt()}, {}", fields(loggingMeta))
+            }
+
             val validationResult = ruleCheck(receivedSykmeldingMedTssId, infotrygdForespResponse, loggingMeta)
 
             val lokaltNavkontor =
