@@ -470,7 +470,7 @@ suspend fun handleMessage(
                     receivedSykmeldingMedTssId = receivedSykmelding.copy(tssid = tssIdInfotrygd)
                 } else if (receivedSykmelding.utenlandskSykmelding != null) {
                     log.info("Bruker standardverdi for tssid for utenlandsk sykmelding, {}", fields(loggingMeta))
-                    receivedSykmeldingMedTssId = receivedSykmelding.copy(tssid = UTENLANDSK_SYKEHUS)
+                    receivedSykmeldingMedTssId = receivedSykmelding.copy(tssid = "0")
                 } else {
                     try {
                         val tssSamhandlerInfoResponse = fetchTssSamhandlerInfo(receivedSykmelding, tssProducer, session)
