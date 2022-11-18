@@ -6,6 +6,7 @@ import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.helse.sm2013.KontrollSystemBlokk
 import no.nav.helse.sm2013.KontrollsystemBlokkType
 import no.nav.syfo.InfotrygdForespAndHealthInformation
+import no.nav.syfo.UTENLANDSK_SYKEHUS
 import no.nav.syfo.client.Behandler
 import no.nav.syfo.client.Godkjenning
 import no.nav.syfo.daysBetween
@@ -34,6 +35,7 @@ fun createInfotrygdBlokk(
     navnArbeidsgiver: String?,
     identDato: LocalDate,
     behandletAvManuell: Boolean,
+    utenlandskSykmelding: Boolean,
     operasjonstypeKode: Int = findOperasjonstype(periode, itfh, loggingMeta)
 ) = KontrollsystemBlokkType.InfotrygdBlokk().apply {
     fodselsnummer = personNrPasient
@@ -49,6 +51,8 @@ fun createInfotrygdBlokk(
         legeEllerInstitusjonsNummer = tssid?.toBigInteger() ?: "0".toBigInteger()
         legeEllerInstitusjon = if (itfh.healthInformation.behandler != null) {
             itfh.healthInformation.behandler.formatName()
+        } else if (utenlandskSykmelding) {
+            UTENLANDSK_SYKEHUS
         } else {
             ""
         }
@@ -121,24 +125,26 @@ fun createInfotrygdFellesformat(
     navKontorNr: String,
     identDato: LocalDate,
     behandletAvManuell: Boolean,
+    utenlandskSykmelding: Boolean,
     operasjonstypeKode: Int = findOperasjonstype(periode, itfh, loggingMeta)
 ) = unmarshal<XMLEIFellesformat>(marshalledFellesformat).apply {
     any.add(
         KontrollSystemBlokk().apply {
             infotrygdBlokk.add(
                 createInfotrygdBlokk(
-                    itfh,
-                    periode,
-                    personNrPasient,
-                    signaturDato,
-                    helsepersonellKategoriVerdi,
-                    tssid,
-                    loggingMeta,
-                    navKontorNr,
-                    itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver,
-                    identDato,
-                    behandletAvManuell,
-                    operasjonstypeKode
+                    itfh = itfh,
+                    periode = periode,
+                    personNrPasient = personNrPasient,
+                    signaturDato = signaturDato,
+                    helsepersonellKategoriVerdi = helsepersonellKategoriVerdi,
+                    tssid = tssid,
+                    loggingMeta = loggingMeta,
+                    navKontorNr = navKontorNr,
+                    navnArbeidsgiver = itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver,
+                    identDato = identDato,
+                    behandletAvManuell = behandletAvManuell,
+                    utenlandskSykmelding = utenlandskSykmelding,
+                    operasjonstypeKode = operasjonstypeKode
                 )
             )
         }

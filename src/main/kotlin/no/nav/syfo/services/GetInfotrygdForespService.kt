@@ -4,6 +4,7 @@ import com.ctc.wstx.exc.WstxException
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.syfo.UTENLANDSK_SYKEHUS
+import no.nav.syfo.erUtenlandskSykmelding
 import no.nav.syfo.helpers.retry
 import no.nav.syfo.log
 import no.nav.syfo.model.Diagnosekode
@@ -81,7 +82,7 @@ fun finnLegeFnr(receivedSykmelding: ReceivedSykmelding): String {
         // Testfamilien Aremark stepper inn som lege for egenmeldte sykmeldinger
         log.info("Setter Aremark som lege for egenmeldt sykmelding med id {}", receivedSykmelding.sykmelding.id)
         "10108000398"
-    } else if (receivedSykmelding.utenlandskSykmelding != null) {
+    } else if (receivedSykmelding.erUtenlandskSykmelding()) {
         log.info("Setter standardverdi for behandler for utenlandsk sykmelding med id ${receivedSykmelding.sykmelding.id}")
         UTENLANDSK_SYKEHUS
     } else {

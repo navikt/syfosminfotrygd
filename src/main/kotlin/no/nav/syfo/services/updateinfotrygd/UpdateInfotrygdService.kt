@@ -13,6 +13,7 @@ import no.nav.syfo.client.Behandler
 import no.nav.syfo.client.Godkjenning
 import no.nav.syfo.client.Kode
 import no.nav.syfo.client.NorskHelsenettClient
+import no.nav.syfo.erUtenlandskSykmelding
 import no.nav.syfo.get
 import no.nav.syfo.log
 import no.nav.syfo.metrics.RULE_HIT_COUNTER
@@ -60,7 +61,7 @@ class UpdateInfotrygdService(
         healthInformation: HelseOpplysningerArbeidsuforhet,
         behandletAvManuell: Boolean
     ) {
-        val helsepersonell = if (erEgenmeldt(receivedSykmelding) || receivedSykmelding.utenlandskSykmelding != null) {
+        val helsepersonell = if (erEgenmeldt(receivedSykmelding) || receivedSykmelding.erUtenlandskSykmelding()) {
             Behandler(listOf(Godkjenning(helsepersonellkategori = Kode(aktiv = true, oid = 0, verdi = HelsepersonellKategori.LEGE.verdi), autorisasjon = Kode(aktiv = true, oid = 0, verdi = ""))))
         } else {
             norskHelsenettClient.finnBehandler(receivedSykmelding.personNrLege, receivedSykmelding.msgId)
@@ -141,9 +142,10 @@ class UpdateInfotrygdService(
 
         val sha256String = sha256hashstring(
             createInfotrygdBlokk(
-                itfh, perioder.first(), personNrPasient, LocalDate.of(2019, 1, 1),
-                behandlerKode, tssid, loggingMeta, navKontorNr, findArbeidsKategori(itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver),
-                forsteFravaersDag, behandletAvManuell
+                itfh = itfh, periode = perioder.first(), personNrPasient = personNrPasient, signaturDato = LocalDate.of(2019, 1, 1),
+                helsepersonellKategoriVerdi = behandlerKode, tssid = tssid, loggingMeta = loggingMeta, navKontorNr = navKontorNr,
+                navnArbeidsgiver = findArbeidsKategori(itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver),
+                identDato = forsteFravaersDag, behandletAvManuell = behandletAvManuell, utenlandskSykmelding = receivedSykmelding.erUtenlandskSykmelding()
             )
         )
 
@@ -194,7 +196,8 @@ class UpdateInfotrygdService(
                                     loggingMeta = loggingMeta,
                                     navKontorNr = navKontorNr,
                                     identDato = forsteFravaersDag,
-                                    behandletAvManuell = behandletAvManuell
+                                    behandletAvManuell = behandletAvManuell,
+                                    utenlandskSykmelding = receivedSykmelding.erUtenlandskSykmelding()
                                 ),
                                 loggingMeta
                             )
@@ -214,6 +217,7 @@ class UpdateInfotrygdService(
                                         navKontorNr = navKontorNr,
                                         identDato = forsteFravaersDag,
                                         behandletAvManuell = behandletAvManuell,
+                                        utenlandskSykmelding = receivedSykmelding.erUtenlandskSykmelding(),
                                         operasjonstypeKode = 2
                                     ),
                                     loggingMeta
@@ -266,10 +270,10 @@ class UpdateInfotrygdService(
             }
             val sha256String = sha256hashstring(
                 createInfotrygdBlokk(
-                    itfh, perioder.first(), receivedSykmelding.personNrPasient, LocalDate.of(2019, 1, 1),
-                    helsepersonellKategoriVerdi, tssid, loggingMeta, "",
-                    findArbeidsKategori(itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver),
-                    forsteFravaersDag, behandletAvManuell, 1
+                    itfh = itfh, periode = perioder.first(), personNrPasient = receivedSykmelding.personNrPasient, signaturDato = LocalDate.of(2019, 1, 1),
+                    helsepersonellKategoriVerdi = helsepersonellKategoriVerdi, tssid = tssid, loggingMeta = loggingMeta, navKontorNr = "",
+                    navnArbeidsgiver = findArbeidsKategori(itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver),
+                    identDato = forsteFravaersDag, behandletAvManuell = behandletAvManuell, utenlandskSykmelding = receivedSykmelding.erUtenlandskSykmelding(), operasjonstypeKode = 1
                 )
             )
 

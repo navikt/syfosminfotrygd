@@ -462,13 +462,13 @@ suspend fun handleMessage(
                     infotrygdForespResponse.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()?.periode,
                     receivedSykmelding.sykmelding.behandler
                 )
-                if (!tssIdInfotrygd.isNullOrBlank() && receivedSykmelding.utenlandskSykmelding == null) {
+                if (!tssIdInfotrygd.isNullOrBlank() && !receivedSykmelding.erUtenlandskSykmelding()) {
                     log.info(
                         "Sykmelding mangler tssid, har hentet tssid $tssIdInfotrygd fra infotrygd, {}",
                         fields(loggingMeta)
                     )
                     receivedSykmeldingMedTssId = receivedSykmelding.copy(tssid = tssIdInfotrygd)
-                } else if (receivedSykmelding.utenlandskSykmelding != null) {
+                } else if (receivedSykmelding.erUtenlandskSykmelding()) {
                     log.info("Bruker standardverdi for tssid for utenlandsk sykmelding, {}", fields(loggingMeta))
                     receivedSykmeldingMedTssId = receivedSykmelding.copy(tssid = "0")
                 } else {
@@ -618,6 +618,10 @@ private fun logRuleResultMetrics(result: List<RuleResult<*>>) {
 fun Marshaller.toString(input: Any): String = StringWriter().use {
     marshal(input, it)
     it.toString()
+}
+
+fun ReceivedSykmelding.erUtenlandskSykmelding(): Boolean {
+    return utenlandskSykmelding != null
 }
 
 val inputFactory = XMLInputFactory.newInstance()!!
