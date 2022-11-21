@@ -48,7 +48,7 @@ fun createInfotrygdBlokk(
         ?.lastOrNull()
 
     if (utenlandskSykmelding) {
-        legeEllerInstitusjon = UTENLANDSK_SYKEHUS
+        legeEllerInstitusjonsNummer = UTENLANDSK_SYKEHUS.toBigInteger()
     } else if ((typeSMinfo != null && tssid?.toBigInteger() != typeSMinfo.periode.legeInstNr) || operasjonstype == 1.toBigInteger()) {
         legeEllerInstitusjonsNummer = tssid?.toBigInteger() ?: "0".toBigInteger()
         legeEllerInstitusjon = if (itfh.healthInformation.behandler != null) {
