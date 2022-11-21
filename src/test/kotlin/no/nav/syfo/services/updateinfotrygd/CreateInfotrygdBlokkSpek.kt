@@ -302,7 +302,6 @@ class CreateInfotrygdBlokkSpek : FunSpec({
 
             )
 
-            infotrygdBlokk.legeEllerInstitusjonsNummer shouldBeEqualTo "0".toBigInteger()
             infotrygdBlokk.legeEllerInstitusjon shouldBeEqualTo UTENLANDSK_SYKEHUS
             infotrygdBlokk.mottakerKode shouldBeEqualTo "IN"
         }

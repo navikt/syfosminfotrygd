@@ -47,12 +47,12 @@ fun createInfotrygdBlokk(
         ?.sortedSMInfos()
         ?.lastOrNull()
 
-    if ((typeSMinfo != null && tssid?.toBigInteger() != typeSMinfo.periode.legeInstNr) || operasjonstype == 1.toBigInteger()) {
+    if (utenlandskSykmelding) {
+        legeEllerInstitusjon = UTENLANDSK_SYKEHUS
+    } else if ((typeSMinfo != null && tssid?.toBigInteger() != typeSMinfo.periode.legeInstNr) || operasjonstype == 1.toBigInteger()) {
         legeEllerInstitusjonsNummer = tssid?.toBigInteger() ?: "0".toBigInteger()
         legeEllerInstitusjon = if (itfh.healthInformation.behandler != null) {
             itfh.healthInformation.behandler.formatName()
-        } else if (utenlandskSykmelding) {
-            UTENLANDSK_SYKEHUS
         } else {
             ""
         }
