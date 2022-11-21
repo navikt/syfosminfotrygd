@@ -60,7 +60,11 @@ fun createInfotrygdBlokk(
 
     forsteFravaersDag = identDato
 
-    mottakerKode = helsepersonellKategoriVerdi
+    mottakerKode = if (utenlandskSykmelding) {
+        "IN"
+    } else {
+        helsepersonellKategoriVerdi
+    }
 
     if (itfh.infotrygdForesp.diagnosekodeOK != null) {
         hovedDiagnose = itfh.infotrygdForesp.hovedDiagnosekode

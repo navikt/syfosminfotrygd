@@ -104,7 +104,7 @@ val objectMapper: ObjectMapper = ObjectMapper().apply {
 }
 
 const val NAV_OPPFOLGING_UTLAND_KONTOR_NR = "0393"
-const val UTENLANDSK_SYKEHUS = "IN 9900004"
+const val UTENLANDSK_SYKEHUS = "9900004"
 
 @DelicateCoroutinesApi
 fun main() {
