@@ -6,6 +6,7 @@ import no.nav.helse.infotrygd.foresp.StatusType
 import no.nav.helse.infotrygd.foresp.TypeSMinfo
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.syfo.InfotrygdForespAndHealthInformation
+import no.nav.syfo.UTENLANDSK_SYKEHUS
 import no.nav.syfo.rules.sortedSMInfos
 import no.nav.syfo.sortedFOMDate
 import no.nav.syfo.util.LoggingMeta
@@ -51,8 +52,9 @@ class CreateInfotrygdBlokkSpek : FunSpec({
                 "1234",
                 "NAV IKT",
                 forsteFravaersDag,
-                false,
-                1
+                behandletAvManuell = false,
+                utenlandskSykmelding = false,
+                operasjonstypeKode = 1
 
             )
 
@@ -110,8 +112,9 @@ class CreateInfotrygdBlokkSpek : FunSpec({
                 "1234",
                 "NAV IKT",
                 forsteFravaersDag,
-                false,
-                2
+                behandletAvManuell = false,
+                utenlandskSykmelding = false,
+                operasjonstypeKode = 2
 
             )
 
@@ -126,8 +129,9 @@ class CreateInfotrygdBlokkSpek : FunSpec({
                 "1234",
                 "NAV IKT",
                 forsteFravaersDag,
-                false,
-                2
+                behandletAvManuell = false,
+                utenlandskSykmelding = false,
+                operasjonstypeKode = 2
 
             )
 
@@ -190,8 +194,9 @@ class CreateInfotrygdBlokkSpek : FunSpec({
                 "1234",
                 "NAV IKT",
                 forsteFravaersDag,
-                false,
-                1
+                behandletAvManuell = false,
+                utenlandskSykmelding = false,
+                operasjonstypeKode = 1
 
             )
 
@@ -206,8 +211,9 @@ class CreateInfotrygdBlokkSpek : FunSpec({
                 "1234",
                 "NAV IKT",
                 forsteFravaersDag,
-                false,
-                2
+                behandletAvManuell = false,
+                utenlandskSykmelding = false,
+                operasjonstypeKode = 2
 
             )
 
@@ -248,12 +254,56 @@ class CreateInfotrygdBlokkSpek : FunSpec({
                 "1234",
                 "NAV IKT",
                 forsteFravaersDag,
-                true,
-                1
+                behandletAvManuell = true,
+                utenlandskSykmelding = false,
+                operasjonstypeKode = 1
 
             )
 
             infotrygdBlokk.behandlingsDato shouldBeEqualTo LocalDate.of(2019, 1, 1)
+        }
+
+        test("Setter riktig behandlerinformasjon for utenlandsk sykmelding") {
+            val healthInformation = HelseOpplysningerArbeidsuforhet().apply {
+                aktivitet = HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
+                    periode.add(
+                        HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
+                            periodeFOMDato = LocalDate.of(2019, 1, 1)
+                            periodeTOMDato = LocalDate.of(2019, 1, 2)
+                        }
+                    )
+                }
+            }
+            val infotrygdForesp = InfotrygdForesp().apply {
+                sMhistorikk = InfotrygdForesp.SMhistorikk().apply {
+                    status = StatusType().apply {
+                        kodeMelding = "04"
+                    }
+                }
+            }
+            val ifth = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
+            val perioder = ifth.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
+            val forsteFravaersDag = finnForsteFravaersDag(ifth, perioder.first(), LoggingMeta("mottakId", "12315", "", ""))
+
+            val infotrygdBlokk = createInfotrygdBlokk(
+                ifth,
+                healthInformation.aktivitet.periode.last(),
+                "2134",
+                LocalDate.now(),
+                "LE",
+                "0",
+                LoggingMeta("mottakId", "12315", "", ""),
+                "1234",
+                "NAV IKT",
+                forsteFravaersDag,
+                behandletAvManuell = false,
+                utenlandskSykmelding = true,
+                operasjonstypeKode = 1
+
+            )
+
+            infotrygdBlokk.legeEllerInstitusjonsNummer shouldBeEqualTo UTENLANDSK_SYKEHUS.toBigInteger()
+            infotrygdBlokk.mottakerKode shouldBeEqualTo "IN"
         }
     }
 })

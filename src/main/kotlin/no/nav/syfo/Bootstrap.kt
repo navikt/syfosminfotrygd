@@ -104,6 +104,7 @@ val objectMapper: ObjectMapper = ObjectMapper().apply {
 }
 
 const val NAV_OPPFOLGING_UTLAND_KONTOR_NR = "0393"
+const val UTENLANDSK_SYKEHUS = "9900004"
 
 @DelicateCoroutinesApi
 fun main() {
@@ -461,12 +462,15 @@ suspend fun handleMessage(
                     infotrygdForespResponse.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()?.periode,
                     receivedSykmelding.sykmelding.behandler
                 )
-                if (!tssIdInfotrygd.isNullOrBlank()) {
+                if (!tssIdInfotrygd.isNullOrBlank() && !receivedSykmelding.erUtenlandskSykmelding()) {
                     log.info(
                         "Sykmelding mangler tssid, har hentet tssid $tssIdInfotrygd fra infotrygd, {}",
                         fields(loggingMeta)
                     )
                     receivedSykmeldingMedTssId = receivedSykmelding.copy(tssid = tssIdInfotrygd)
+                } else if (receivedSykmelding.erUtenlandskSykmelding()) {
+                    log.info("Bruker standardverdi for tssid for utenlandsk sykmelding, {}", fields(loggingMeta))
+                    receivedSykmeldingMedTssId = receivedSykmelding.copy(tssid = "0")
                 } else {
                     try {
                         val tssSamhandlerInfoResponse = fetchTssSamhandlerInfo(receivedSykmelding, tssProducer, session)
@@ -614,6 +618,10 @@ private fun logRuleResultMetrics(result: List<RuleResult<*>>) {
 fun Marshaller.toString(input: Any): String = StringWriter().use {
     marshal(input, it)
     it.toString()
+}
+
+fun ReceivedSykmelding.erUtenlandskSykmelding(): Boolean {
+    return utenlandskSykmelding != null
 }
 
 val inputFactory = XMLInputFactory.newInstance()!!

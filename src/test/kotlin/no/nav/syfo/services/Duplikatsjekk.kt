@@ -53,8 +53,9 @@ class Duplikatsjekk : FunSpec({
                 "1234",
                 "NAV IKT",
                 LocalDate.now(),
-                false,
-                1
+                behandletAvManuell = false,
+                utenlandskSykmelding = false,
+                operasjonstypeKode = 1
 
             )
 
@@ -89,8 +90,9 @@ class Duplikatsjekk : FunSpec({
                 "1234",
                 "NAV IKT",
                 LocalDate.now(),
-                false,
-                1
+                behandletAvManuell = false,
+                utenlandskSykmelding = false,
+                operasjonstypeKode = 1
 
             )
 
