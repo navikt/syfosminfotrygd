@@ -84,7 +84,7 @@ class MottattSykmeldingServiceTest : FunSpec({
                     session,
                     loggingMeta,
                     any(),
-                    receivedSykmelding,
+                    receivedSykmelding.copy(tssid = "1234"),
                     "LE",
                     "0101",
                     match { it.status == Status.OK },
@@ -155,7 +155,7 @@ class MottattSykmeldingServiceTest : FunSpec({
             coVerify(exactly = 0) { behandlingsutfallService.sendRuleCheckValidationResult(any(), any(), any()) }
             coVerify {
                 manuellBehandlingService.produceManualTaskAndSendValidationResults(
-                    receivedSykmelding,
+                    receivedSykmelding.copy(tssid = "1234"),
                     match { it.status == Status.MANUAL_PROCESSING && it.ruleHits.any { ruleInfo -> ruleInfo.ruleName == "BEHANDLER_NOT_IN_HPR" } },
                     loggingMeta,
                     any(),
@@ -185,7 +185,7 @@ class MottattSykmeldingServiceTest : FunSpec({
             coVerify(exactly = 0) { behandlingsutfallService.sendRuleCheckValidationResult(any(), any(), any()) }
             coVerify {
                 manuellBehandlingService.produceManualTaskAndSendValidationResults(
-                    receivedSykmelding,
+                    receivedSykmelding.copy(tssid = null),
                     match { it.status == Status.MANUAL_PROCESSING && it.ruleHits.any { ruleInfo -> ruleInfo.ruleName == "TSS_IDENT_MANGLER" } },
                     loggingMeta,
                     any(),

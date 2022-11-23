@@ -100,12 +100,12 @@ class MottattSykmeldingService(
                             ruleCheck(receivedSykmeldingMedTssId, infotrygdForespResponse, loggingMeta)
 
                         val lokaltNavkontor =
-                            finnNAVKontorService.finnLokaltNavkontor(receivedSykmelding.personNrPasient, loggingMeta)
+                            finnNAVKontorService.finnLokaltNavkontor(receivedSykmeldingMedTssId.personNrPasient, loggingMeta)
 
-                        val helsepersonell = getHelsepersonell(receivedSykmelding)
+                        val helsepersonell = getHelsepersonell(receivedSykmeldingMedTssId)
                         if (helsepersonell == null) {
                             handleBehandlerNotInHpr(
-                                receivedSykmelding = receivedSykmelding,
+                                receivedSykmelding = receivedSykmeldingMedTssId,
                                 itfh = InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
                                 behandletAvManuell = behandletAvManuell,
                                 loggingMeta = loggingMeta
@@ -115,7 +115,7 @@ class MottattSykmeldingService(
                             when (validationResult.status) {
                                 in arrayOf(Status.MANUAL_PROCESSING) ->
                                     manuellBehandlingService.produceManualTaskAndSendValidationResults(
-                                        receivedSykmelding,
+                                        receivedSykmeldingMedTssId,
                                         validationResult,
                                         loggingMeta,
                                         InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
@@ -127,7 +127,7 @@ class MottattSykmeldingService(
                                     session = session,
                                     loggingMeta = loggingMeta,
                                     itfh = InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
-                                    receivedSykmelding = receivedSykmelding,
+                                    receivedSykmelding = receivedSykmeldingMedTssId,
                                     behandlerKode = helsepersonellKategoriVerdi,
                                     navKontorNr = lokaltNavkontor,
                                     validationResult = validationResult,
