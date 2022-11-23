@@ -74,6 +74,7 @@ fun createDefaultHealthInformation(): HelseOpplysningerArbeidsuforhet =
 fun receivedSykmelding(
     id: String,
     sykmelding: Sykmelding = generateSykmelding(),
+    fellesformat: String = "",
     merknader: List<Merknad>? = null
 ) = ReceivedSykmelding(
     sykmelding = sykmelding,
@@ -88,7 +89,7 @@ fun receivedSykmelding(
     legekontorOrgName = "Legevakt",
     mottattDato = LocalDateTime.now(),
     rulesetVersion = "",
-    fellesformat = "",
+    fellesformat = fellesformat,
     tssid = "",
     merknader = merknader,
     partnerreferanse = null,

@@ -1,38 +1,22 @@
 package no.nav.syfo.services.updateinfotrygd
 
 import kotlinx.coroutines.delay
-import net.logstash.logback.argument.StructuredArguments
 import net.logstash.logback.argument.StructuredArguments.fields
 import no.nav.helse.eiFellesformat.XMLEIFellesformat
-import no.nav.helse.infotrygd.foresp.InfotrygdForesp
-import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.helse.sm2013.KontrollsystemBlokkType
 import no.nav.syfo.InfotrygdForespAndHealthInformation
-import no.nav.syfo.application.ApplicationState
-import no.nav.syfo.client.Behandler
-import no.nav.syfo.client.Godkjenning
-import no.nav.syfo.client.Kode
-import no.nav.syfo.client.NorskHelsenettClient
 import no.nav.syfo.erUtenlandskSykmelding
 import no.nav.syfo.get
 import no.nav.syfo.log
-import no.nav.syfo.metrics.RULE_HIT_COUNTER
-import no.nav.syfo.metrics.RULE_HIT_STATUS_COUNTER
-import no.nav.syfo.model.HelsepersonellKategori
 import no.nav.syfo.model.ReceivedSykmelding
-import no.nav.syfo.model.RuleInfo
-import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.services.BehandlingsutfallService
-import no.nav.syfo.services.OppgaveService
 import no.nav.syfo.services.RedisService
 import no.nav.syfo.services.sha256hashstring
-import no.nav.syfo.sortedFOMDate
 import no.nav.syfo.util.LoggingMeta
 import no.nav.syfo.util.xmlObjectWriter
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
-import redis.clients.jedis.exceptions.JedisConnectionException
 import java.time.LocalDate
 import java.util.concurrent.TimeUnit
 import javax.jms.MessageProducer
@@ -41,87 +25,13 @@ import javax.jms.Session
 const val INFOTRYGD = "INFOTRYGD"
 
 class UpdateInfotrygdService(
-    private val norskHelsenettClient: NorskHelsenettClient,
-    private val applicationState: ApplicationState,
     private val kafkaAivenProducerReceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
     private val retryTopic: String,
     private val behandlingsutfallService: BehandlingsutfallService,
-    private val redisService: RedisService,
-    private val oppgaveService: OppgaveService
+    private val redisService: RedisService
 ) {
 
     suspend fun updateInfotrygd(
-        receivedSykmelding: ReceivedSykmelding,
-        validationResult: ValidationResult,
-        infotrygdOppdateringProducer: MessageProducer,
-        navKontorLokalKontor: String,
-        loggingMeta: LoggingMeta,
-        session: Session,
-        infotrygdForespResponse: InfotrygdForesp,
-        healthInformation: HelseOpplysningerArbeidsuforhet,
-        behandletAvManuell: Boolean
-    ) {
-        val helsepersonell = if (erEgenmeldt(receivedSykmelding) || receivedSykmelding.erUtenlandskSykmelding()) {
-            Behandler(listOf(Godkjenning(helsepersonellkategori = Kode(aktiv = true, oid = 0, verdi = HelsepersonellKategori.LEGE.verdi), autorisasjon = Kode(aktiv = true, oid = 0, verdi = ""))))
-        } else {
-            norskHelsenettClient.finnBehandler(receivedSykmelding.personNrLege, receivedSykmelding.msgId)
-        }
-
-        if (helsepersonell != null) {
-            val helsepersonellKategoriVerdi = finnAktivHelsepersonellAutorisasjons(helsepersonell)
-            when (validationResult.status) {
-                in arrayOf(Status.MANUAL_PROCESSING) ->
-                    produceManualTaskAndSendValidationResults(
-                        receivedSykmelding, validationResult,
-                        loggingMeta,
-                        InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
-                        helsepersonellKategoriVerdi,
-                        behandletAvManuell
-                    )
-                else -> sendInfotrygdOppdateringAndValidationResult(
-                    infotrygdOppdateringProducer,
-                    session,
-                    loggingMeta,
-                    InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
-                    receivedSykmelding,
-                    helsepersonellKategoriVerdi,
-                    navKontorLokalKontor,
-                    validationResult,
-                    behandletAvManuell
-                )
-            }
-
-            log.info(
-                "Message(${fields(loggingMeta)}) got outcome {}, {}, processing took {}s",
-                StructuredArguments.keyValue("status", validationResult.status),
-                StructuredArguments.keyValue("ruleHits", validationResult.ruleHits.joinToString(", ", "(", ")") { it.ruleName })
-            )
-        } else {
-            val validationResultBehandler = ValidationResult(
-                status = Status.MANUAL_PROCESSING,
-                ruleHits = listOf(
-                    RuleInfo(
-                        ruleName = "BEHANDLER_NOT_IN_HPR",
-                        messageForSender = "Den som har skrevet sykmeldingen din har ikke autorisasjon til dette.",
-                        messageForUser = "Behandler er ikke registert i HPR",
-                        ruleStatus = Status.MANUAL_PROCESSING
-                    )
-                )
-            )
-            RULE_HIT_STATUS_COUNTER.labels(validationResultBehandler.status.name).inc()
-            RULE_HIT_COUNTER.labels(validationResultBehandler.ruleHits.first().ruleName).inc()
-            log.warn("Behandler er ikke registert i HPR")
-            produceManualTaskAndSendValidationResults(
-                receivedSykmelding, validationResultBehandler,
-                loggingMeta,
-                InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
-                HelsepersonellKategori.LEGE.verdi,
-                behandletAvManuell
-            )
-        }
-    }
-
-    private suspend fun sendInfotrygdOppdateringAndValidationResult(
         producer: MessageProducer,
         session: Session,
         loggingMeta: LoggingMeta,
@@ -163,9 +73,9 @@ class UpdateInfotrygdService(
                             receivedSykmelding
                         )
                     ).get()
-                    log.warn("Melding sendt på aiven retry topic {}", fields(loggingMeta))
+                    log.warn("Melding sendt på retry topic {}", fields(loggingMeta))
                 } catch (ex: Exception) {
-                    log.error("Failed to send sykmelding to aiven retrytopic {}", fields(loggingMeta))
+                    log.error("Failed to send sykmelding to retrytopic {}", fields(loggingMeta))
                     throw ex
                 }
             }
@@ -174,11 +84,11 @@ class UpdateInfotrygdService(
                 when {
                     duplikatInfotrygdOppdatering == null -> {
                         behandlingsutfallService.sendRuleCheckValidationResult(
-                            receivedSykmelding,
+                            receivedSykmelding.sykmelding.id,
                             validationResult,
                             loggingMeta
                         )
-                        log.warn("Melding market som infotrygd duplikat oppdaatering {}", fields(loggingMeta))
+                        log.warn("Melding market som infotrygd duplikat oppdatering {}", fields(loggingMeta))
                     }
                     else ->
                         try {
@@ -224,7 +134,7 @@ class UpdateInfotrygdService(
                                 )
                             }
                             behandlingsutfallService.sendRuleCheckValidationResult(
-                                receivedSykmelding,
+                                receivedSykmelding.sykmelding.id,
                                 validationResult,
                                 loggingMeta
                             )
@@ -250,66 +160,4 @@ class UpdateInfotrygdService(
             log.info("Melding er sendt til infotrygd {}", fields(loggingMeta))
         }
     )
-
-    private fun produceManualTaskAndSendValidationResults(
-        receivedSykmelding: ReceivedSykmelding,
-        validationResult: ValidationResult,
-        loggingMeta: LoggingMeta,
-        itfh: InfotrygdForespAndHealthInformation,
-        helsepersonellKategoriVerdi: String,
-        behandletAvManuell: Boolean
-    ) {
-        behandlingsutfallService.sendRuleCheckValidationResult(receivedSykmelding, validationResult, loggingMeta)
-        try {
-            val perioder = itfh.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
-            val forsteFravaersDag = itfh.healthInformation.aktivitet.periode.sortedFOMDate().first()
-            val tssid = if (!receivedSykmelding.tssid.isNullOrBlank()) {
-                receivedSykmelding.tssid
-            } else {
-                "0"
-            }
-            val sha256String = sha256hashstring(
-                createInfotrygdBlokk(
-                    itfh = itfh, periode = perioder.first(), personNrPasient = receivedSykmelding.personNrPasient, signaturDato = LocalDate.of(2019, 1, 1),
-                    helsepersonellKategoriVerdi = helsepersonellKategoriVerdi, tssid = tssid, loggingMeta = loggingMeta, navKontorNr = "",
-                    navnArbeidsgiver = findArbeidsKategori(itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver),
-                    identDato = forsteFravaersDag, behandletAvManuell = behandletAvManuell, utenlandskSykmelding = receivedSykmelding.erUtenlandskSykmelding(), operasjonstypeKode = 1
-                )
-            )
-
-            val duplikatInfotrygdOppdatering = redisService.erIRedis(sha256String)
-
-            if (errorFromInfotrygd(validationResult.ruleHits)) {
-                redisService.oppdaterAntallErrorIInfotrygd(INFOTRYGD, "1", TimeUnit.MINUTES.toSeconds(1).toInt(), loggingMeta)
-            }
-
-            val antallErrorFraInfotrygd = redisService.antallErrorIInfotrygd(INFOTRYGD, loggingMeta)
-
-            if (antallErrorFraInfotrygd > 50) {
-                log.error("Setter applicationState.ready til false")
-                applicationState.ready = false
-            }
-
-            val skalIkkeOppdatereInfotrygd = skalIkkeProdusereManuellOppgave(receivedSykmelding, validationResult)
-
-            when {
-                duplikatInfotrygdOppdatering -> {
-                    log.warn("Melding er infotrygd duplikat, ikke opprett manuelloppgave {}", fields(loggingMeta))
-                }
-                skalIkkeOppdatereInfotrygd -> {
-                    log.warn("Trenger ikke å opprett manuell oppgave for {}", fields(loggingMeta))
-                }
-                else -> {
-                    oppgaveService.opprettOppgave(receivedSykmelding, validationResult, behandletAvManuell, loggingMeta)
-                    redisService.oppdaterRedis(sha256String, sha256String, TimeUnit.DAYS.toSeconds(60).toInt(), loggingMeta)
-                }
-            }
-        } catch (connectionException: JedisConnectionException) {
-            log.error("Fikk ikkje opprettet kontakt med redis, kaster exception", connectionException)
-            throw connectionException
-        }
-    }
-
-    private fun erEgenmeldt(receivedSykmelding: ReceivedSykmelding): Boolean =
-        receivedSykmelding.sykmelding.avsenderSystem.navn == "Egenmeldt"
 }

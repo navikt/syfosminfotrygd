@@ -1,4 +1,4 @@
-package no.nav.syfo.services
+package no.nav.syfo.services.tss
 
 import com.ctc.wstx.exc.WstxException
 import no.nav.helse.tssSamhandlerData.XMLSamhandlerIDataB910Type
@@ -22,7 +22,7 @@ suspend fun fetchTssSamhandlerInfo(
     receivedSykmelding: ReceivedSykmelding,
     tssSamhnadlerInfoProducer: MessageProducer,
     session: Session
-): XMLTssSamhandlerData =
+): String? =
     retry(
         callName = "tss_hent_samhandler_data",
         retryIntervals = arrayOf(500L, 1000L, 3000L, 5000L),
@@ -47,7 +47,7 @@ suspend fun fetchTssSamhandlerInfo(
             sendTssSporring(tssSamhnadlerInfoProducer, session, tssSamhandlerDatainput, temporaryQueue)
             session.createConsumer(temporaryQueue).use { tmpConsumer ->
                 val consumedMessage = tmpConsumer.receive(20000) as TextMessage
-                tssSamhandlerdataUnmarshaller.unmarshal(StringReader(consumedMessage.text)) as XMLTssSamhandlerData
+                finnTssIdFraTSSRespons(tssSamhandlerdataUnmarshaller.unmarshal(StringReader(consumedMessage.text)) as XMLTssSamhandlerData)
             }
         } finally {
             temporaryQueue.delete()
@@ -65,6 +65,12 @@ fun sendTssSporring(
         jmsReplyTo = temporaryQueue
     }
 )
+
+fun finnTssIdFraTSSRespons(tssSamhandlerInfoResponse: XMLTssSamhandlerData): String? {
+    return tssSamhandlerInfoResponse.tssOutputData.samhandlerODataB960?.enkeltSamhandler?.firstOrNull()?.samhandlerAvd125?.samhAvd?.find {
+        it.avdNr == "01"
+    }?.idOffTSS
+}
 
 fun setFnrOrDnr(personNumber: String): String {
     return when (checkPersonNumberIsDnr(personNumber)) {
