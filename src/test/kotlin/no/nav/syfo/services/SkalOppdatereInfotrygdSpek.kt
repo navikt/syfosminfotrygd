@@ -1,14 +1,16 @@
-package no.nav.syfo
+package no.nav.syfo.services
 
 import io.kotest.core.spec.style.FunSpec
 import io.mockk.every
 import io.mockk.mockk
+import no.nav.syfo.generatePeriode
+import no.nav.syfo.generateSykmelding
 import no.nav.syfo.model.Gradert
 import no.nav.syfo.model.Merknad
 import no.nav.syfo.model.ReceivedSykmelding
 import org.amshove.kluent.shouldBeEqualTo
 
-class SkalIkkeOppdatereInfotrygdSpek : FunSpec({
+class SkalOppdatereInfotrygdSpek : FunSpec({
     context("Skal ikke oppdatere infotrygd") {
         val sm = mockk<ReceivedSykmelding>()
         test("Skal oppdater infotrygd ved ingen merknader") {

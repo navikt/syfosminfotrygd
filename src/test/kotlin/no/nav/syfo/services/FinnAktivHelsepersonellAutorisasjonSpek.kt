@@ -1,4 +1,4 @@
-package no.nav.syfo.services.updateinfotrygd
+package no.nav.syfo.services
 
 import io.kotest.core.spec.style.FunSpec
 import no.nav.syfo.client.Behandler
@@ -8,7 +8,6 @@ import no.nav.syfo.model.HelsepersonellKategori
 import org.amshove.kluent.shouldBeEqualTo
 
 class FinnAktivHelsepersonellAutorisasjonSpek : FunSpec({
-
     context("Tester at man finner riktig helsepersonell autorisasjoner verdi") {
         test("Sjekker at man velger Lege verdien dersom fleire helsepersonell autorisasjoner") {
 

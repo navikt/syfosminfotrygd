@@ -1,4 +1,4 @@
-package no.nav.syfo
+package no.nav.syfo.services.tss
 
 import io.kotest.core.spec.style.FunSpec
 import no.nav.helse.tssSamhandlerData.XMLSamhAvdPraType
@@ -13,7 +13,6 @@ import no.nav.helse.tssSamhandlerData.XMLTypeKomplett
 import no.nav.helse.tssSamhandlerData.XMLTypeOD960
 import no.nav.helse.tssSamhandlerData.XMLTypeSamhAvd
 import no.nav.helse.tssSamhandlerData.XMLTypeSamhandler
-import no.nav.syfo.services.setFnrOrDnr
 import org.amshove.kluent.shouldBeEqualTo
 
 class TssIdFraTSS : FunSpec({

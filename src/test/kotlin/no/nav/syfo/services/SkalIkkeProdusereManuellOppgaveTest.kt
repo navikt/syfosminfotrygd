@@ -1,4 +1,4 @@
-package no.nav.syfo.services.updateinfotrygd
+package no.nav.syfo.services
 
 import io.kotest.core.spec.style.FunSpec
 import no.nav.syfo.generatePeriode

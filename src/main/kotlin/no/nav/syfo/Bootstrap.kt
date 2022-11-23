@@ -27,11 +27,8 @@ import kotlinx.coroutines.launch
 import net.logstash.logback.argument.StructuredArguments.fields
 import no.nav.helse.eiFellesformat.XMLEIFellesformat
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
-import no.nav.helse.infotrygd.foresp.TypeSMinfo
 import no.nav.helse.msgHead.XMLMsgHead
-import no.nav.helse.sm2013.CV
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
-import no.nav.helse.tssSamhandlerData.XMLTssSamhandlerData
 import no.nav.syfo.application.ApplicationServer
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.application.createApplicationEngine
@@ -44,37 +41,24 @@ import no.nav.syfo.client.norg.Norg2RedisService
 import no.nav.syfo.kafka.aiven.KafkaUtils
 import no.nav.syfo.kafka.toConsumerConfig
 import no.nav.syfo.kafka.toProducerConfig
-import no.nav.syfo.metrics.ANNEN_FRAVERS_ARSKAK_CHANGE_TO_A99_COUNTER
-import no.nav.syfo.metrics.REQUEST_TIME
-import no.nav.syfo.metrics.RULE_HIT_COUNTER
-import no.nav.syfo.metrics.RULE_HIT_STATUS_COUNTER
-import no.nav.syfo.model.Behandler
 import no.nav.syfo.model.OpprettOppgaveKafkaMessage
 import no.nav.syfo.model.ReceivedSykmelding
-import no.nav.syfo.model.RuleInfo
-import no.nav.syfo.model.RuleMetadata
-import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.mq.MqTlsUtils
 import no.nav.syfo.mq.connectionFactory
 import no.nav.syfo.mq.producerForQueue
 import no.nav.syfo.pdl.PdlFactory
-import no.nav.syfo.rules.RuleResult
-import no.nav.syfo.rules.TssRuleChain
-import no.nav.syfo.rules.ValidationRuleChain
-import no.nav.syfo.rules.sortedSMInfos
 import no.nav.syfo.services.BehandlingsutfallService
 import no.nav.syfo.services.FinnNAVKontorService
+import no.nav.syfo.services.ManuellBehandlingService
+import no.nav.syfo.services.MottattSykmeldingService
 import no.nav.syfo.services.OppgaveService
 import no.nav.syfo.services.RedisService
-import no.nav.syfo.services.fetchInfotrygdForesp
-import no.nav.syfo.services.fetchTssSamhandlerInfo
 import no.nav.syfo.services.updateinfotrygd.UpdateInfotrygdService
 import no.nav.syfo.util.JacksonKafkaSerializer
 import no.nav.syfo.util.LoggingMeta
 import no.nav.syfo.util.TrackableException
 import no.nav.syfo.util.fellesformatUnmarshaller
-import no.nav.syfo.util.wrapExceptions
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -203,27 +187,35 @@ fun main() {
         kafkaAivenProducerOppgave = kafkaAivenProducerOppgave,
         produserOppgaveTopic = env.produserOppgaveTopic
     )
+    val manuellBehandlingService = ManuellBehandlingService(
+        behandlingsutfallService = behandlingsutfallService,
+        redisService = redisService,
+        oppgaveService = oppgaveService,
+        applicationState = applicationState
+    )
 
     val updateInfotrygdService = UpdateInfotrygdService(
-        norskHelsenettClient = norskHelsenettClient,
-        applicationState = applicationState,
         kafkaAivenProducerReceivedSykmelding = kafkaAivenProducerReceivedSykmelding,
         retryTopic = env.retryTopic,
         behandlingsutfallService = behandlingsutfallService,
-        redisService = redisService,
-        oppgaveService = oppgaveService
+        redisService = redisService
+    )
+
+    val mottattSykmeldingService = MottattSykmeldingService(
+        updateInfotrygdService = updateInfotrygdService,
+        finnNAVKontorService = finnNAVKontorService,
+        manuellClient = manuellClient,
+        manuellBehandlingService = manuellBehandlingService,
+        behandlingsutfallService = behandlingsutfallService,
+        norskHelsenettClient = norskHelsenettClient
     )
 
     launchListeners(
         applicationState,
-        finnNAVKontorService,
         env,
-        updateInfotrygdService,
         serviceUser,
         kafkaAivenConsumerReceivedSykmelding,
-        behandlingsutfallService,
-        manuellClient,
-        oppgaveService
+        mottattSykmeldingService
     )
 
     applicationServer.start()
@@ -245,14 +237,10 @@ fun createListener(applicationState: ApplicationState, action: suspend Coroutine
 @DelicateCoroutinesApi
 fun launchListeners(
     applicationState: ApplicationState,
-    finnNAVKontorService: FinnNAVKontorService,
     env: Environment,
-    updateInfotrygdService: UpdateInfotrygdService,
     serviceUser: ServiceUser,
     kafkaAivenConsumerReceivedSykmelding: KafkaConsumer<String, String>,
-    behandlingsutfallService: BehandlingsutfallService,
-    manuellClient: ManuellClient,
-    oppgaveService: OppgaveService
+    mottattSykmeldingService: MottattSykmeldingService
 ) {
     createListener(applicationState) {
         connectionFactory(env).createConnection(serviceUser.serviceuserUsername, serviceUser.serviceuserPassword)
@@ -267,9 +255,7 @@ fun launchListeners(
 
                 blockingApplicationLogic(
                     applicationState, infotrygdOppdateringProducer, infotrygdSporringProducer,
-                    session, finnNAVKontorService, updateInfotrygdService,
-                    tssProducer, env, kafkaAivenConsumerReceivedSykmelding, behandlingsutfallService,
-                    manuellClient, oppgaveService
+                    session, tssProducer, env, kafkaAivenConsumerReceivedSykmelding, mottattSykmeldingService
                 )
             }
     }
@@ -282,18 +268,14 @@ suspend fun blockingApplicationLogic(
     infotrygdOppdateringProducer: MessageProducer,
     infotrygdSporringProducer: MessageProducer,
     session: Session,
-    finnNAVKontorService: FinnNAVKontorService,
-    updateInfotrygdService: UpdateInfotrygdService,
     tssProducer: MessageProducer,
     env: Environment,
     kafkaAivenConsumerReceivedSykmelding: KafkaConsumer<String, String>,
-    behandlingsutfallService: BehandlingsutfallService,
-    manuellClient: ManuellClient,
-    oppgaveService: OppgaveService
+    mottattSykmeldingService: MottattSykmeldingService
 ) {
     while (applicationState.ready) {
         if (shouldRun(getCurrentTime())) {
-            log.info("Starter kafkaconsumer aiven")
+            log.info("Starter kafkaconsumer")
             kafkaAivenConsumerReceivedSykmelding.subscribe(
                 listOf(env.okSykmeldingTopic, env.retryTopic)
             )
@@ -301,17 +283,13 @@ suspend fun blockingApplicationLogic(
                 infotrygdOppdateringProducer,
                 infotrygdSporringProducer,
                 session,
-                finnNAVKontorService,
-                updateInfotrygdService,
                 applicationState,
                 tssProducer,
                 kafkaAivenConsumerReceivedSykmelding,
-                behandlingsutfallService,
-                manuellClient,
-                oppgaveService
+                mottattSykmeldingService
             )
             kafkaAivenConsumerReceivedSykmelding.unsubscribe()
-            log.info("Stopper KafkaConsumer aiven")
+            log.info("Stopper KafkaConsumer")
         }
         delay(100)
     }
@@ -321,14 +299,10 @@ private suspend fun runKafkaConsumer(
     infotrygdOppdateringProducer: MessageProducer,
     infotrygdSporringProducer: MessageProducer,
     session: Session,
-    finnNAVKontorService: FinnNAVKontorService,
-    updateInfotrygdService: UpdateInfotrygdService,
     applicationState: ApplicationState,
     tssProducer: MessageProducer,
     kafkaAivenConsumerReceivedSykmelding: KafkaConsumer<String, String>,
-    behandlingsutfallService: BehandlingsutfallService,
-    manuellClient: ManuellClient,
-    oppgaveService: OppgaveService
+    mottattSykmeldingService: MottattSykmeldingService
 ) {
     while (applicationState.ready && shouldRun(getCurrentTime())) {
         kafkaAivenConsumerReceivedSykmelding.poll(Duration.ofMillis(0)).mapNotNull { it.value() }
@@ -340,65 +314,18 @@ private suspend fun runKafkaConsumer(
                     msgId = receivedSykmelding.msgId,
                     sykmeldingId = receivedSykmelding.sykmelding.id
                 )
-                log.info("Har mottatt sykmelding fra aiven, {}", fields(loggingMeta))
-                when (skalOppdatereInfotrygd(receivedSykmelding)) {
-                    true -> {
-                        handleMessage(
-                            receivedSykmelding, updateInfotrygdService,
-                            infotrygdOppdateringProducer, infotrygdSporringProducer,
-                            session, finnNAVKontorService,
-                            loggingMeta, tssProducer, behandlingsutfallService, manuellClient, oppgaveService
-                        )
-                    }
-
-                    else -> {
-                        log.info(
-                            "Oppdaterer ikke infotrygd for sykmelding med merknad eller reisetilskudd, {}",
-                            fields(loggingMeta)
-                        )
-                        val validationResult =
-                            if (receivedSykmelding.merknader?.any { it.type == "UNDER_BEHANDLING" } == true) {
-                                ValidationResult(
-                                    Status.OK,
-                                    listOf(
-                                        RuleInfo(
-                                            "UNDER_BEHANDLING",
-                                            "Sykmeldingen er til manuell behandling",
-                                            "Sykmeldingen er til manuell behandling",
-                                            Status.OK
-                                        )
-                                    )
-                                )
-                            } else {
-                                ValidationResult(Status.OK, emptyList())
-                            }
-                        behandlingsutfallService.sendRuleCheckValidationResult(
-                            receivedSykmelding,
-                            validationResult,
-                            loggingMeta
-                        )
-                    }
-                }
+                log.info("Har mottatt sykmelding, {}", fields(loggingMeta))
+                mottattSykmeldingService.handleMessage(
+                    receivedSykmelding = receivedSykmelding,
+                    infotrygdOppdateringProducer = infotrygdOppdateringProducer,
+                    infotrygdSporringProducer = infotrygdSporringProducer,
+                    tssProducer = tssProducer,
+                    session = session,
+                    loggingMeta = loggingMeta
+                )
             }
         delay(100)
     }
-}
-
-fun skalOppdatereInfotrygd(receivedSykmelding: ReceivedSykmelding): Boolean {
-    // Vi skal ikke oppdatere Infotrygd hvis sykmeldingen inneholder en av de angitte merknadene
-    val merknad = receivedSykmelding.merknader?.none {
-        it.type == "UGYLDIG_TILBAKEDATERING" ||
-            it.type == "TILBAKEDATERING_KREVER_FLERE_OPPLYSNINGER" ||
-            it.type == "TILBAKEDATERT_PAPIRSYKMELDING" ||
-            it.type == "UNDER_BEHANDLING"
-    } ?: true
-
-    // Vi skal ikke oppdatere infotrygd hvis sykmeldingen inneholder reisetilskudd
-    val reisetilskudd = receivedSykmelding.sykmelding.perioder.none {
-        it.reisetilskudd || (it.gradert?.reisetilskudd == true)
-    }
-
-    return merknad && reisetilskudd
 }
 
 fun getCurrentTime(): OffsetTime {
@@ -407,212 +334,6 @@ fun getCurrentTime(): OffsetTime {
 
 fun shouldRun(now: OffsetTime): Boolean {
     return now.hour in 5..20
-}
-
-suspend fun handleMessage(
-    receivedSykmelding: ReceivedSykmelding,
-    updateInfotrygdService: UpdateInfotrygdService,
-    infotrygdOppdateringProducer: MessageProducer,
-    infotrygdSporringProducer: MessageProducer,
-    session: Session,
-    finnNAVKontorService: FinnNAVKontorService,
-    loggingMeta: LoggingMeta,
-    tssProducer: MessageProducer,
-    behandlingsutfallService: BehandlingsutfallService,
-    manuellClient: ManuellClient,
-    oppgaveService: OppgaveService
-) {
-    wrapExceptions(loggingMeta) {
-        log.info("Received a SM2013, {}", fields(loggingMeta))
-
-        val requestLatency = REQUEST_TIME.startTimer()
-
-        val fellesformat =
-            fellesformatUnmarshaller.unmarshal(StringReader(receivedSykmelding.fellesformat)) as XMLEIFellesformat
-
-        val healthInformation = setHovedDiagnoseToA99IfhovedDiagnoseIsNullAndAnnenFraversArsakIsSet(
-            extractHelseOpplysningerArbeidsuforhet(fellesformat)
-        )
-        val behandletAvManuell = manuellClient.behandletAvManuell(receivedSykmelding.sykmelding.id, loggingMeta)
-
-        val validationResultForMottattSykmelding = validerMottattSykmelding(healthInformation)
-        if (validationResultForMottattSykmelding.status == Status.MANUAL_PROCESSING) {
-            log.info(
-                "Mottatt sykmelding kan ikke legges inn i infotrygd automatisk, oppretter oppgave, {}",
-                fields(loggingMeta)
-            )
-            behandlingsutfallService.sendRuleCheckValidationResult(
-                receivedSykmelding,
-                validationResultForMottattSykmelding,
-                loggingMeta
-            )
-            oppgaveService.opprettOppgave(receivedSykmelding, validationResultForMottattSykmelding, behandletAvManuell, loggingMeta)
-        } else {
-            val infotrygdForespResponse = fetchInfotrygdForesp(
-                receivedSykmelding,
-                infotrygdSporringProducer,
-                session,
-                healthInformation
-            )
-
-            var receivedSykmeldingMedTssId = receivedSykmelding
-
-            if (receivedSykmelding.tssid.isNullOrBlank()) {
-                val tssIdInfotrygd = finnTssIdFraInfotrygdRespons(
-                    infotrygdForespResponse.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()?.periode,
-                    receivedSykmelding.sykmelding.behandler
-                )
-                if (!tssIdInfotrygd.isNullOrBlank() && !receivedSykmelding.erUtenlandskSykmelding()) {
-                    log.info(
-                        "Sykmelding mangler tssid, har hentet tssid $tssIdInfotrygd fra infotrygd, {}",
-                        fields(loggingMeta)
-                    )
-                    receivedSykmeldingMedTssId = receivedSykmelding.copy(tssid = tssIdInfotrygd)
-                } else if (receivedSykmelding.erUtenlandskSykmelding()) {
-                    log.info("Bruker standardverdi for tssid for utenlandsk sykmelding, {}", fields(loggingMeta))
-                    receivedSykmeldingMedTssId = receivedSykmelding.copy(tssid = "0")
-                } else {
-                    try {
-                        val tssSamhandlerInfoResponse = fetchTssSamhandlerInfo(receivedSykmelding, tssProducer, session)
-
-                        val tssIdFraTSS = finnTssIdFraTSSRespons(tssSamhandlerInfoResponse)
-
-                        if (!tssIdFraTSS.isNullOrBlank()) {
-                            log.info(
-                                "Sykmelding mangler tssid, har hentet tssid $tssIdFraTSS fra tss, {}",
-                                fields(loggingMeta)
-                            )
-                            receivedSykmeldingMedTssId = receivedSykmelding.copy(tssid = tssIdFraTSS)
-                        }
-                        log.info("Fant ingen tssider fra TSS!!!")
-                    } catch (e: Exception) {
-                        log.error("Kall mot TSS gikk dårligt", e)
-                    }
-                }
-            }
-
-            val validationResult = ruleCheck(receivedSykmeldingMedTssId, infotrygdForespResponse, loggingMeta)
-
-            val lokaltNavkontor =
-                finnNAVKontorService.finnLokaltNavkontor(receivedSykmelding.personNrPasient, loggingMeta)
-
-            updateInfotrygdService.updateInfotrygd(
-                receivedSykmeldingMedTssId,
-                validationResult,
-                infotrygdOppdateringProducer,
-                lokaltNavkontor,
-                loggingMeta,
-                session,
-                infotrygdForespResponse,
-                healthInformation,
-                behandletAvManuell
-            )
-        }
-        val currentRequestLatency = requestLatency.observeDuration()
-
-        log.info(
-            "Message processing took {}s, for message {}",
-            currentRequestLatency.toString(),
-            fields(loggingMeta)
-        )
-    }
-}
-
-fun finnTssIdFraInfotrygdRespons(sisteSmPeriode: TypeSMinfo.Periode?, behandler: Behandler): String? {
-    if (sisteSmPeriode != null &&
-        behandler.etternavn.equals(sisteSmPeriode.legeNavn?.etternavn, true) &&
-        behandler.fornavn.equals(sisteSmPeriode.legeNavn?.fornavn, true)
-    ) {
-        return sisteSmPeriode.legeInstNr?.toString()
-    }
-    return null
-}
-
-fun finnTssIdFraTSSRespons(tssSamhandlerInfoResponse: XMLTssSamhandlerData): String? {
-    return tssSamhandlerInfoResponse.tssOutputData.samhandlerODataB960?.enkeltSamhandler?.firstOrNull()?.samhandlerAvd125?.samhAvd?.find {
-        it.avdNr == "01"
-    }?.idOffTSS
-}
-
-fun validerMottattSykmelding(helseOpplysningerArbeidsuforhet: HelseOpplysningerArbeidsuforhet): ValidationResult {
-    return if (helseOpplysningerArbeidsuforhet.medisinskVurdering.hovedDiagnose == null) {
-        RULE_HIT_STATUS_COUNTER.labels("MANUAL_PROCESSING").inc()
-        log.warn("Sykmelding mangler hoveddiagnose")
-        RULE_HIT_COUNTER.labels("HOVEDDIAGNOSE_MANGLER").inc()
-        ValidationResult(
-            Status.MANUAL_PROCESSING,
-            listOf(
-                RuleInfo(
-                    "HOVEDDIAGNOSE_MANGLER",
-                    "Sykmeldingen inneholder ingen hoveddiagnose, vi kan ikke automatisk oppdatere Infotrygd",
-                    "Sykmeldingen inneholder ingen hoveddiagnose, vi kan ikke automatisk oppdatere Infotrygd",
-                    Status.MANUAL_PROCESSING
-                )
-            )
-        )
-    } else {
-        ValidationResult(Status.OK, emptyList())
-    }
-}
-
-fun setHovedDiagnoseToA99IfhovedDiagnoseIsNullAndAnnenFraversArsakIsSet(
-    helseOpplysningerArbeidsuforhet: HelseOpplysningerArbeidsuforhet
-): HelseOpplysningerArbeidsuforhet {
-    if (helseOpplysningerArbeidsuforhet.medisinskVurdering.hovedDiagnose == null &&
-        helseOpplysningerArbeidsuforhet.medisinskVurdering.annenFraversArsak != null
-    ) {
-
-        helseOpplysningerArbeidsuforhet.medisinskVurdering.hovedDiagnose =
-            HelseOpplysningerArbeidsuforhet.MedisinskVurdering.HovedDiagnose().apply {
-                diagnosekode = CV().apply {
-                    dn = "Helseproblem/sykdom IKA"
-                    s = "2.16.578.1.12.4.1.1.7170"
-                    v = "A99"
-                }
-            }
-        ANNEN_FRAVERS_ARSKAK_CHANGE_TO_A99_COUNTER.inc()
-        return helseOpplysningerArbeidsuforhet
-    } else {
-        return helseOpplysningerArbeidsuforhet
-    }
-}
-
-fun ruleCheck(
-    receivedSykmelding: ReceivedSykmelding,
-    infotrygdForespResponse: InfotrygdForesp,
-    loggingMeta: LoggingMeta
-): ValidationResult {
-
-    log.info("Going through rules {}", fields(loggingMeta))
-
-    val results = listOf(
-        ValidationRuleChain(receivedSykmelding.sykmelding, infotrygdForespResponse).executeRules(),
-        TssRuleChain(
-            RuleMetadata(
-                receivedDate = receivedSykmelding.mottattDato,
-                signatureDate = receivedSykmelding.sykmelding.signaturDato,
-                patientPersonNumber = receivedSykmelding.personNrPasient,
-                rulesetVersion = receivedSykmelding.rulesetVersion,
-                legekontorOrgnr = receivedSykmelding.legekontorOrgNr,
-                tssid = receivedSykmelding.tssid
-            )
-        ).executeRules(),
-    ).flatten().filter { it.result }
-
-    logRuleResultMetrics(results)
-
-    log.info("Rules hit {}, $loggingMeta", results.map { ruleResult -> ruleResult.rule.name }, fields(loggingMeta))
-
-    val validationResult = validationResult(results)
-    RULE_HIT_STATUS_COUNTER.labels(validationResult.status.name).inc()
-    return validationResult
-}
-
-private fun logRuleResultMetrics(result: List<RuleResult<*>>) {
-    result
-        .forEach {
-            RULE_HIT_COUNTER.labels(it.rule.name).inc()
-        }
 }
 
 fun Marshaller.toString(input: Any): String = StringWriter().use {
@@ -634,23 +355,6 @@ fun extractHelseOpplysningerArbeidsuforhet(fellesformat: XMLEIFellesformat): Hel
     fellesformat.get<XMLMsgHead>().document[0].refDoc.content.any[0] as HelseOpplysningerArbeidsuforhet
 
 fun ClosedRange<LocalDate>.daysBetween(): Long = ChronoUnit.DAYS.between(start, endInclusive)
-
-fun validationResult(results: List<RuleResult<*>>): ValidationResult =
-    ValidationResult(
-        status = results
-            .map { it.rule.status }.let {
-                it.firstOrNull { status -> status == Status.MANUAL_PROCESSING }
-                    ?: Status.OK
-            },
-        ruleHits = results.map { ruleReuslt ->
-            RuleInfo(
-                ruleReuslt.rule.name,
-                ruleReuslt.rule.messageForUser,
-                ruleReuslt.rule.messageForSender,
-                ruleReuslt.rule.status
-            )
-        }
-    )
 
 fun List<HelseOpplysningerArbeidsuforhet.Aktivitet.Periode>.sortedFOMDate(): List<LocalDate> =
     map { it.periodeFOMDato }.sorted()

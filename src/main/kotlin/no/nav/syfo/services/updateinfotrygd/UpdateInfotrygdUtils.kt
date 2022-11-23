@@ -7,16 +7,7 @@ import no.nav.helse.sm2013.KontrollSystemBlokk
 import no.nav.helse.sm2013.KontrollsystemBlokkType
 import no.nav.syfo.InfotrygdForespAndHealthInformation
 import no.nav.syfo.UTENLANDSK_SYKEHUS
-import no.nav.syfo.client.Behandler
-import no.nav.syfo.client.Godkjenning
-import no.nav.syfo.daysBetween
 import no.nav.syfo.log
-import no.nav.syfo.model.HelsepersonellKategori
-import no.nav.syfo.model.ReceivedSykmelding
-import no.nav.syfo.model.RuleInfo
-import no.nav.syfo.model.ValidationResult
-import no.nav.syfo.rules.sortedPeriodeFOMDate
-import no.nav.syfo.rules.sortedPeriodeTOMDate
 import no.nav.syfo.rules.sortedSMInfos
 import no.nav.syfo.sortedFOMDate
 import no.nav.syfo.unmarshal
@@ -155,64 +146,8 @@ fun createInfotrygdFellesformat(
     )
 }
 
-fun skalIkkeProdusereManuellOppgave(
-    receivedSykmelding: ReceivedSykmelding,
-    validationResult: ValidationResult
-): Boolean {
-
-    val delvisOverlappendeSykmeldingRule = validationResult.ruleHits.isNotEmpty() && validationResult.ruleHits.any {
-        (it.ruleName == "PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE")
-    } && receivedSykmelding.sykmelding.perioder.sortedPeriodeFOMDate().lastOrNull() != null &&
-        receivedSykmelding.sykmelding.perioder.sortedPeriodeTOMDate().lastOrNull() != null &&
-        (receivedSykmelding.sykmelding.perioder.sortedPeriodeFOMDate().last()..receivedSykmelding.sykmelding.perioder.sortedPeriodeTOMDate().last()).daysBetween() <= 3
-
-    return delvisOverlappendeSykmeldingRule
-}
-
-fun errorFromInfotrygd(rules: List<RuleInfo>): Boolean =
-    rules.any { ruleInfo ->
-        ruleInfo.ruleName == "ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING" ||
-            ruleInfo.ruleName == "ERROR_FROM_IT_SMHISTORIKK_STATUS_KODEMELDING" ||
-            ruleInfo.ruleName == "ERROR_FROM_IT_PARALELLYTELSER_STATUS_KODEMELDING" ||
-            ruleInfo.ruleName == "ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING" ||
-            ruleInfo.ruleName == "ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING"
-    }
-
-fun finnAktivHelsepersonellAutorisasjons(helsepersonelPerson: Behandler): String {
-    val godkjenteHelsepersonellAutorisasjonsAktiv = godkjenteHelsepersonellAutorisasjonsAktiv(helsepersonelPerson)
-    if (godkjenteHelsepersonellAutorisasjonsAktiv.isEmpty()) {
-        return ""
-    }
-    return when (
-        helsepersonellGodkjenningSom(
-            godkjenteHelsepersonellAutorisasjonsAktiv,
-            listOf(
-                HelsepersonellKategori.LEGE.verdi
-            )
-        )
-    ) {
-        true -> HelsepersonellKategori.LEGE.verdi
-        else -> godkjenteHelsepersonellAutorisasjonsAktiv.firstOrNull()?.helsepersonellkategori?.verdi ?: ""
-    }
-}
-
-private fun godkjenteHelsepersonellAutorisasjonsAktiv(helsepersonelPerson: Behandler): List<Godkjenning> =
-    helsepersonelPerson.godkjenninger.filter { godkjenning ->
-        godkjenning.helsepersonellkategori?.aktiv != null &&
-            godkjenning.autorisasjon?.aktiv == true &&
-            godkjenning.helsepersonellkategori.verdi != null &&
-            godkjenning.helsepersonellkategori.aktiv
-    }
-
-private fun helsepersonellGodkjenningSom(helsepersonellGodkjenning: List<Godkjenning>, helsepersonerVerdi: List<String>): Boolean =
-    helsepersonellGodkjenning.any { godkjenning ->
-        godkjenning.helsepersonellkategori.let { kode ->
-            kode?.verdi in helsepersonerVerdi
-        }
-    }
-
 fun findArbeidsKategori(navnArbeidsgiver: String?): String {
-    return if (navnArbeidsgiver == null || navnArbeidsgiver.isBlank() || navnArbeidsgiver.isEmpty()) {
+    return if (navnArbeidsgiver.isNullOrBlank() || navnArbeidsgiver.isEmpty()) {
         "030"
     } else {
         "01"
