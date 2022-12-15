@@ -1,6 +1,7 @@
 package no.nav.syfo.services
 
 import net.logstash.logback.argument.StructuredArguments
+import no.nav.syfo.erUtenlandskSykmelding
 import no.nav.syfo.log
 import no.nav.syfo.metrics.MANUELLE_OPPGAVER_COUNTER
 import no.nav.syfo.model.OpprettOppgaveKafkaMessage
@@ -54,14 +55,20 @@ class OppgaveService(
             behandlingstype = if (behandletAvManuell) {
                 log.info("sykmelding har vært behandlet av syfosmmanuell, {}", StructuredArguments.fields(loggingMeta))
                 "ae0256"
+            } else if (receivedSykmelding.erUtenlandskSykmelding()) {
+                log.info("sykmelding er utenlandsk, {}", StructuredArguments.fields(loggingMeta))
+                "ae0106"
             } else {
                 "ANY"
             },
             mappeId = 1,
             aktivDato = DateTimeFormatter.ISO_DATE.format(LocalDate.now()),
-            fristFerdigstillelse = when (behandletAvManuell) {
-                true -> DateTimeFormatter.ISO_DATE.format(LocalDate.now())
-                false -> DateTimeFormatter.ISO_DATE.format(finnFristForFerdigstillingAvOppgave(LocalDate.now().plusDays(4)))
+            fristFerdigstillelse = if (behandletAvManuell) {
+                DateTimeFormatter.ISO_DATE.format(LocalDate.now())
+            } else if (receivedSykmelding.erUtenlandskSykmelding()) {
+                DateTimeFormatter.ISO_DATE.format(finnFristForFerdigstillingAvOppgave(LocalDate.now().plusDays(1)))
+            } else {
+                DateTimeFormatter.ISO_DATE.format(finnFristForFerdigstillingAvOppgave(LocalDate.now().plusDays(4)))
             },
             prioritet = no.nav.syfo.model.PrioritetType.NORM,
             metadata = mapOf()
