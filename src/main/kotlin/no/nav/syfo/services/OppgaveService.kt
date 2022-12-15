@@ -63,9 +63,12 @@ class OppgaveService(
             },
             mappeId = 1,
             aktivDato = DateTimeFormatter.ISO_DATE.format(LocalDate.now()),
-            fristFerdigstillelse = when (behandletAvManuell || receivedSykmelding.erUtenlandskSykmelding()) {
-                true -> DateTimeFormatter.ISO_DATE.format(LocalDate.now())
-                false -> DateTimeFormatter.ISO_DATE.format(finnFristForFerdigstillingAvOppgave(LocalDate.now().plusDays(4)))
+            fristFerdigstillelse = if (behandletAvManuell) {
+                DateTimeFormatter.ISO_DATE.format(LocalDate.now())
+            } else if (receivedSykmelding.erUtenlandskSykmelding()) {
+                DateTimeFormatter.ISO_DATE.format(finnFristForFerdigstillingAvOppgave(LocalDate.now().plusDays(1)))
+            } else {
+                DateTimeFormatter.ISO_DATE.format(finnFristForFerdigstillingAvOppgave(LocalDate.now().plusDays(4)))
             },
             prioritet = no.nav.syfo.model.PrioritetType.NORM,
             metadata = mapOf()

@@ -36,13 +36,13 @@ val jaxbTimeAdaptersVersion = "1.1.3"
 val testcontainersVersion = "1.17.6"
 val syfoXmlCodegen = "1.35193f7"
 val mockkVersion = "1.13.2"
-val kotlinVersion = "1.7.21"
+val kotlinVersion = "1.7.22"
 val commonsCodecVersion = "1.15"
 val nettyCodecVersion = "4.1.86.Final"
 
 plugins {
     java
-    kotlin("jvm") version "1.7.21"
+    kotlin("jvm") version "1.7.22"
     id("org.jmailen.kotlinter") version "3.10.0"
     id("com.diffplug.spotless") version "6.5.0"
     id("com.github.johnrengelman.shadow") version "7.1.2"
