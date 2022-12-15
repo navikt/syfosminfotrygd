@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: snyk/actions/setup@master
       - name: Checkout code
-        uses: actions/checkout@master
+        uses: actions/checkout@v3
       - name: Run Snyk to check for vulnerabilities
         run: >
           snyk test
@@ -31,13 +31,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Setup java
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v3
         with:
+          distribution: 'temurin'
           java-version: '17'
       - name: Checkout code
-        uses: actions/checkout@master
+        uses: actions/checkout@v3
       - name: Setup gradle dependency cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             ~/.gradle/caches
@@ -70,7 +71,7 @@ jobs:
     needs: [ build, snyk-test ]
     steps:
       - name: Checkout code
-        uses: actions/checkout@master
+        uses: actions/checkout@v3
       - name: Deploy to Preprod
         uses: nais/deploy/actions/deploy@master
         env:

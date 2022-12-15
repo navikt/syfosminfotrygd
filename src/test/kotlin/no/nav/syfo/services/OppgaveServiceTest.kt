@@ -5,6 +5,7 @@ import io.mockk.mockk
 import no.nav.syfo.model.OpprettOppgaveKafkaMessage
 import no.nav.syfo.model.RuleInfo
 import no.nav.syfo.model.Status
+import no.nav.syfo.model.UtenlandskSykmelding
 import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.receivedSykmelding
 import no.nav.syfo.util.LoggingMeta
@@ -44,6 +45,14 @@ class OppgaveServiceTest : FunSpec({
             val oppgave = oppgaveService.opprettOpprettOppgaveKafkaMessage(receivedSykmelding, validationResults, behandletAvManuell = false, loggingMeta)
 
             oppgave.behandlingstype shouldBeEqualTo "ANY"
+        }
+        test("Behandlingstype er ae0106 hvis sykmeldingen er utenlandsk") {
+            val validationResults = ValidationResult(Status.MANUAL_PROCESSING, listOf(RuleInfo("ANNEN_REGEL", "message for sender", "message for user", Status.MANUAL_PROCESSING)))
+            val receivedSykmelding = receivedSykmelding(UUID.randomUUID().toString()).copy(utenlandskSykmelding = UtenlandskSykmelding("GER", false))
+
+            val oppgave = oppgaveService.opprettOpprettOppgaveKafkaMessage(receivedSykmelding, validationResults, behandletAvManuell = false, loggingMeta)
+
+            oppgave.behandlingstype shouldBeEqualTo "ae0106"
         }
     }
 })
