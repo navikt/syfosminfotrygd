@@ -41,11 +41,11 @@ spec:
     outbound:
       rules:
         - application: syfosminfotrygd-redis
+        - application: syfosmmanuell-backend
       external:
         - host: pdl-api.prod-fss-pub.nais.io
         - host: norg2.prod-fss-pub.nais.io
         - host: syfohelsenettproxy.prod-fss-pub
-        - host: syfosmmanuell-backend.prod-fss-pub.nais.io
   kafka:
     pool: nav-prod
   vault:
@@ -85,7 +85,5 @@ spec:
       value: api://prod-fss.teamsykmelding.syfohelsenettproxy/.default
     - name: MANUELL_SCOPE
       value: api://prod-gcp.teamsykmelding.syfosmmanuell-backend/.default
-    - name: MANUELL_URL
-      value: https://syfosmmanuell-backend.intern.nav.no
     - name: MQ_KEYSTORE_PATH
       value: /var/run/keystore/syfosminfotrygd-keystore.jks
