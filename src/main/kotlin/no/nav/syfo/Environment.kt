@@ -24,7 +24,7 @@ data class Environment(
     val clientSecretV2: String = getEnvVar("AZURE_APP_CLIENT_SECRET"),
     val pdlScope: String = getEnvVar("PDL_SCOPE"),
     val helsenettproxyScope: String = getEnvVar("HELSENETT_SCOPE"),
-    val manuellUrl: String = getEnvVar("MANUELL_URL"),
+    val manuellUrl: String = "http://syfosmmanuell-backend",
     val manuellScope: String = getEnvVar("MANUELL_SCOPE"),
     val okSykmeldingTopic: String = "teamsykmelding.ok-sykmelding",
     val behandlingsUtfallTopic: String = "teamsykmelding.sykmelding-behandlingsutfall",

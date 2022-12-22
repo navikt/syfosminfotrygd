@@ -85,7 +85,5 @@ spec:
       value: api://dev-fss.teamsykmelding.syfohelsenettproxy/.default
     - name: MANUELL_SCOPE
       value: api://dev-gcp.teamsykmelding.syfosmmanuell-backend/.default
-    - name: MANUELL_URL
-      value: https://syfosmmanuell-backend.dev.intern.nav.no
     - name: MQ_KEYSTORE_PATH
       value: /var/run/keystore/syfosminfotrygd-keystore.jks
