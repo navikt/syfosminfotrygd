@@ -41,11 +41,11 @@ spec:
     outbound:
       rules:
         - application: syfosminfotrygd-redis
+        - application: syfosmmanuell-backend
       external:
         - host: pdl-api.prod-fss-pub.nais.io
         - host: norg2.prod-fss-pub.nais.io
         - host: syfohelsenettproxy.prod-fss-pub
-        - host: syfosmmanuell-backend.prod-fss-pub.nais.io
   kafka:
     pool: nav-prod
   vault:
