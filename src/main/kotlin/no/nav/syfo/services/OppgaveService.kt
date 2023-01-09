@@ -1,6 +1,7 @@
 package no.nav.syfo.services
 
 import net.logstash.logback.argument.StructuredArguments
+import no.nav.syfo.erTilbakedatert
 import no.nav.syfo.erUtenlandskSykmelding
 import no.nav.syfo.log
 import no.nav.syfo.metrics.MANUELLE_OPPGAVER_COUNTER
@@ -52,8 +53,8 @@ class OppgaveService(
             tema = "SYM",
             behandlingstema = "ANY",
             oppgavetype = "BEH_EL_SYM",
-            behandlingstype = if (behandletAvManuell) {
-                log.info("sykmelding har vært behandlet av syfosmmanuell, {}", StructuredArguments.fields(loggingMeta))
+            behandlingstype = if (behandletAvManuell || receivedSykmelding.erTilbakedatert()) {
+                log.info("sykmelding har vært behandlet av syfosmmanuell eller er tilbakedatert, {}", StructuredArguments.fields(loggingMeta))
                 "ae0256"
             } else if (receivedSykmelding.erUtenlandskSykmelding()) {
                 log.info("sykmelding er utenlandsk, {}", StructuredArguments.fields(loggingMeta))

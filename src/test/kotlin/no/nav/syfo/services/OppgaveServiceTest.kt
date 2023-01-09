@@ -2,7 +2,11 @@ package no.nav.syfo.services
 
 import io.kotest.core.spec.style.FunSpec
 import io.mockk.mockk
+import no.nav.syfo.generateSykmelding
+import no.nav.syfo.model.AktivitetIkkeMulig
+import no.nav.syfo.model.MedisinskArsak
 import no.nav.syfo.model.OpprettOppgaveKafkaMessage
+import no.nav.syfo.model.Periode
 import no.nav.syfo.model.RuleInfo
 import no.nav.syfo.model.Status
 import no.nav.syfo.model.UtenlandskSykmelding
@@ -12,6 +16,7 @@ import no.nav.syfo.util.LoggingMeta
 import org.amshove.kluent.shouldBeEqualTo
 import org.apache.kafka.clients.producer.KafkaProducer
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 
@@ -38,7 +43,31 @@ class OppgaveServiceTest : FunSpec({
 
             oppgave.fristFerdigstillelse shouldBeEqualTo DateTimeFormatter.ISO_DATE.format(LocalDate.now())
         }
-        test("Behandlingstype er ANY hvis sykmelding ikke har blitt behandlet av manuell") {
+        test("Behandlingstype er ae0256 hvis sykmelding ikke har blitt behandlet av manuell, men er tilbakedatert") {
+            val validationResults = ValidationResult(Status.MANUAL_PROCESSING, listOf(RuleInfo("ANNEN_REGEL", "message for sender", "message for user", Status.MANUAL_PROCESSING)))
+            val receivedSykmelding = receivedSykmelding(
+                UUID.randomUUID().toString(),
+                sykmelding = generateSykmelding(
+                    behandletTidspunkt = LocalDateTime.now().minusDays(1),
+                    perioder = listOf(
+                        Periode(
+                            fom = LocalDate.now().minusDays(10),
+                            tom = LocalDate.now().plusDays(2),
+                            aktivitetIkkeMulig = AktivitetIkkeMulig(MedisinskArsak("", emptyList()), null),
+                            avventendeInnspillTilArbeidsgiver = null,
+                            behandlingsdager = null,
+                            gradert = null,
+                            reisetilskudd = false
+                        )
+                    )
+                )
+            )
+
+            val oppgave = oppgaveService.opprettOpprettOppgaveKafkaMessage(receivedSykmelding, validationResults, behandletAvManuell = false, loggingMeta)
+
+            oppgave.behandlingstype shouldBeEqualTo "ae0256"
+        }
+        test("Behandlingstype er ANY hvis sykmelding ikke har blitt behandlet av manuell og ikke er tilbakedatert") {
             val validationResults = ValidationResult(Status.MANUAL_PROCESSING, listOf(RuleInfo("ANNEN_REGEL", "message for sender", "message for user", Status.MANUAL_PROCESSING)))
             val receivedSykmelding = receivedSykmelding(UUID.randomUUID().toString())
 

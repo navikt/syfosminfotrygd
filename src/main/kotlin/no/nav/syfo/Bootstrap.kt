@@ -48,6 +48,7 @@ import no.nav.syfo.mq.MqTlsUtils
 import no.nav.syfo.mq.connectionFactory
 import no.nav.syfo.mq.producerForQueue
 import no.nav.syfo.pdl.PdlFactory
+import no.nav.syfo.rules.sortedPeriodeFOMDate
 import no.nav.syfo.services.BehandlingsutfallService
 import no.nav.syfo.services.FinnNAVKontorService
 import no.nav.syfo.services.ManuellBehandlingService
@@ -343,6 +344,10 @@ fun Marshaller.toString(input: Any): String = StringWriter().use {
 
 fun ReceivedSykmelding.erUtenlandskSykmelding(): Boolean {
     return utenlandskSykmelding != null
+}
+
+fun ReceivedSykmelding.erTilbakedatert(): Boolean {
+    return sykmelding.behandletTidspunkt.toLocalDate() > sykmelding.perioder.sortedPeriodeFOMDate().first().plusDays(8)
 }
 
 val inputFactory = XMLInputFactory.newInstance()!!
