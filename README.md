@@ -87,48 +87,67 @@ Alternatively, the variables can be configured via environment variables:
 
 or the command line:
 
-```
+``` bash
 ./gradlew -PgithubUser=x-access-token -PgithubPassword=[token]
 ```
 
 #### Running locally
 
-`./gradlew run`
+``` bash
+./gradlew run
+```
 
 #### Build and run tests
 
-To build locally and run the integration tests you can simply run `./gradlew shadowJar` or on windows
+To build locally and run the integration tests you can simply run 
+``` bash
+./gradlew shadowJar
+```
+or on windows
 `gradlew.bat shadowJar`
 
 #### Creating a docker image
 
-Creating a docker image should be as simple as `docker build -t syfosminfotrygd .`
+Creating a docker image should be as simple as
+``` bash
+docker build -t syfosminfotrygd .
+```
 
 #### Running a docker image
 
-`docker run --rm -it -p 8080:8080 syfosminfotrygd`
+``` bash
+docker run --rm -it -p 8080:8080 syfosminfotrygd
+```
 
-### Deploy redis to dev:
+### Deploy redis to dev manually:
 
-Deploying redis can be done with the following command:
-`kubectl apply --context dev-gcp --namespace teamsykmelding -f redis.yaml`
+Deploying redis can be done manually with the following command:
+``` bash
+kubectl apply --context dev-gcp --namespace teamsykmelding -f redis.yaml
+```
 
-### Deploy redis to prod:
+### Deploy redis to prod manually:
 
-Deploying redis can be done with the following command:
-`kubectl apply --context prod-gcp --namespace teamsykmelding -f redis.yaml`
+Deploying redis can be done manually with the following command:
+``` bash
+kubectl apply --context prod-gcp --namespace teamsykmelding -f redis.yaml
+```
 
 ### Upgrading the gradle wrapper
 
-Find the newest version of gradle here: https://gradle.org/releases/ Then run this command:
+Find the newest version of gradle here: https://gradle.org/releases/ 
+Then run this command(remeber to 
+replace $gradleVersjon with the newest version of gradle):
 
-```./gradlew wrapper --gradle-version $gradleVersjon```
+``` bash
+./gradlew wrapper --gradle-version $gradleVersjon
+```
 
 ### Contact
 
 This project is maintained by [teamsykmelding](CODEOWNERS)
 
-Questions and/or feature requests? Please create an [issue](https://github.com/navikt/syfosminfotrygd/issues).
+Questions and/or feature requests? Please create an [issue](https://github.com/navikt/syfosminfotrygd/issues)
 
 If you work in [@navikt](https://github.com/navikt) you can reach us at the Slack
-channel [#team-sykmelding](https://nav-it.slack.com/archives/CMA3XV997).
+channel [#team-sykmelding](https://nav-it.slack.com/archives/CMA3XV997)
