@@ -108,7 +108,7 @@ or on windows
 
 #### Creating a docker image
 
-Creating a docker image should be as simple as
+Creating a docker image should be as simple as running this command
 ``` bash
 docker build -t syfosminfotrygd .
 ```
