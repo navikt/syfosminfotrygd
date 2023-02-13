@@ -10,7 +10,6 @@ import no.nav.syfo.model.AktivitetIkkeMulig
 import no.nav.syfo.model.AnnenFraversArsak
 import no.nav.syfo.model.Arbeidsgiver
 import no.nav.syfo.model.ArbeidsrelatertArsak
-import no.nav.syfo.model.ArbeidsrelatertArsakType
 import no.nav.syfo.model.AvsenderSystem
 import no.nav.syfo.model.Behandler
 import no.nav.syfo.model.Diagnose
@@ -191,28 +190,12 @@ fun generateAktivitetIkkeMulig(
     arbeidsrelatertArsak = arbeidsrelatertArsak
 )
 
-fun generateArbeidsrelatertArsak(
-    beskrivelse: String = "test data",
-    arsak: List<ArbeidsrelatertArsakType> = listOf(ArbeidsrelatertArsakType.values()[Random.nextInt(ICPC2.values().size)])
-) = ArbeidsrelatertArsak(
-    beskrivelse = beskrivelse,
-    arsak = arsak
-)
-
 fun generateMedisinskArsak(
     beskrivelse: String = "test data",
     arsak: List<MedisinskArsakType> = listOf(MedisinskArsakType.values()[Random.nextInt(MedisinskArsakType.values().size)])
 ) = MedisinskArsak(
     beskrivelse = beskrivelse,
     arsak = arsak
-)
-
-fun generateGradert(
-    reisetilskudd: Boolean = false,
-    grad: Int = 50
-) = Gradert(
-    reisetilskudd = reisetilskudd,
-    grad = grad
 )
 
 fun generatePrognose(
@@ -225,16 +208,6 @@ fun generatePrognose(
     hensynArbeidsplassen = hennsynArbeidsplassen,
     erIArbeid = erIArbeid,
     erIkkeIArbeid = erIkkeIArbeid
-)
-
-fun generateErIkkeIArbeid(
-    arbeidsforPaSikt: Boolean = true,
-    arbeidsforFOM: LocalDate? = LocalDate.now().plusDays(30),
-    vurderingsdato: LocalDate? = LocalDate.now()
-) = ErIkkeIArbeid(
-    arbeidsforPaSikt = arbeidsforPaSikt,
-    arbeidsforFOM = arbeidsforFOM,
-    vurderingsdato = vurderingsdato
 )
 
 fun generateErIArbeid(
