@@ -23,6 +23,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import no.nav.syfo.NAV_OPPFOLGING_UTLAND_KONTOR_NR
+import no.nav.syfo.NAV_VIKAFOSSEN_KONTOR_NR
 import no.nav.syfo.util.LoggingMeta
 import org.amshove.kluent.shouldBeEqualTo
 import java.net.ServerSocket
@@ -61,6 +62,15 @@ class Norg2ClientTest : FunSpec({
             get("/norg2/enhet/navkontor/POL") {
                 call.respond(HttpStatusCode.NotFound)
             }
+            get("/norg2/enhet/navkontor/2103") {
+                call.respond(Enhet("2103"))
+            }
+            get("/norg2/enhet/navkontor/null") {
+                when (context.parameters["disk"]) {
+                    "SPSF" -> call.respond(Enhet("2103"))
+                    else -> call.respond(Enhet("0393"))
+                }
+            }
         }
     }.start()
 
@@ -84,12 +94,19 @@ class Norg2ClientTest : FunSpec({
         }
         test("Oppdaterer redis") {
             norg2Client.getLocalNAVOffice("1411", null, loggingMeta) shouldBeEqualTo Enhet("1400")
-
             coVerify(exactly = 1) { norg2RedisService.putEnhet("1411", Enhet("1400")) }
         }
         test("Oppdaterer ikke redis ved diskresjonskode") {
             norg2Client.getLocalNAVOffice("1411", "SPSF", loggingMeta) shouldBeEqualTo Enhet("1400")
 
+            coVerify(exactly = 0) { norg2RedisService.putEnhet(any(), any()) }
+        }
+        test("geografisk tilhørighet er null") {
+            norg2Client.getLocalNAVOffice(null, null, loggingMeta) shouldBeEqualTo Enhet(NAV_OPPFOLGING_UTLAND_KONTOR_NR)
+            coVerify(exactly = 0) { norg2RedisService.putEnhet(any(), any()) }
+        }
+        test("geografisk tilhørighet er null med diskresjonskode") {
+            norg2Client.getLocalNAVOffice(null, "SPSF", loggingMeta) shouldBeEqualTo Enhet(NAV_VIKAFOSSEN_KONTOR_NR)
             coVerify(exactly = 0) { norg2RedisService.putEnhet(any(), any()) }
         }
     }

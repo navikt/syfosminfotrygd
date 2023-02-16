@@ -58,7 +58,7 @@ class MottattSykmeldingServiceTest : FunSpec({
         clearMocks(updateInfotrygdService, finnNAVKontorService, manuellClient, manuellBehandlingService, behandlingsutfallService, norskHelsenettClient)
         coEvery { manuellClient.behandletAvManuell(any(), any()) } returns false
         coEvery { norskHelsenettClient.finnBehandler(any(), any()) } returns getBehandler()
-        coEvery { finnNAVKontorService.finnLokaltNavkontor(any(), any()) } returns "0101"
+        coEvery { finnNAVKontorService.finnLokaltNavkontor(any(), any(), any()) } returns "0101"
     }
 
     context("handleMessage") {

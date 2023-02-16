@@ -100,7 +100,7 @@ class MottattSykmeldingService(
                             ruleCheck(receivedSykmeldingMedTssId, infotrygdForespResponse, loggingMeta)
 
                         val lokaltNavkontor =
-                            finnNAVKontorService.finnLokaltNavkontor(receivedSykmeldingMedTssId.personNrPasient, loggingMeta)
+                            finnNAVKontorService.finnLokaltNavkontor(receivedSykmeldingMedTssId.personNrPasient, loggingMeta, receivedSykmelding.erUtenlandskSykmelding())
 
                         val helsepersonell = getHelsepersonell(receivedSykmeldingMedTssId)
                         if (helsepersonell == null) {
