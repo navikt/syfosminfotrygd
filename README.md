@@ -121,14 +121,14 @@ docker run --rm -it -p 8080:8080 syfosminfotrygd
 
 ### Deploy redis to dev manually:
 
-Deploying redis can be done manually with the following command:
+Deploying redis can be done manually with the following:
 ``` bash
 kubectl apply --context dev-gcp --namespace teamsykmelding -f redis.yaml
 ```
 
 ### Deploy redis to prod manually:
 
-Deploying redis can be done manually with the following command:
+Deploying redis can be done manually with the following:
 ``` bash
 kubectl apply --context prod-gcp --namespace teamsykmelding -f redis.yaml
 ```
