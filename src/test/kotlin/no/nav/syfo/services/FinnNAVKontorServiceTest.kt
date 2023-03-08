@@ -19,29 +19,22 @@ class FinnNAVKontorServiceTest : FunSpec({
     val loggingMeta = LoggingMeta("1", "1", "1", "1")
     test("Get utenlands enhetsnr") {
         coEvery { pdlService.getPerson(any(), any()) } returns PdlPerson("gt", null)
-        coEvery { norg2Client.getLocalNAVOffice(any(), null, loggingMeta) } returns Enhet("1234")
-        val enhetsnr = navKontorService.finnLokaltNavkontor("1234567890", loggingMeta, true)
+        coEvery { norg2Client.getLocalNAVOffice(any(), null, loggingMeta) } returns Enhet("0393")
+        val enhetsnr = navKontorService.finnLokaltNavkontor("1234567890", loggingMeta)
         enhetsnr shouldBeEqualTo NAV_OPPFOLGING_UTLAND_KONTOR_NR
     }
 
-    test("Get vikafossen enhetsnr when utenlandsk") {
+    test("Get vikafossen enhetsnr") {
         coEvery { pdlService.getPerson(any(), any()) } returns PdlPerson("gt", null)
         coEvery { norg2Client.getLocalNAVOffice(any(), null, loggingMeta) } returns Enhet(NAV_VIKAFOSSEN_KONTOR_NR)
-        val enhetsnr = navKontorService.finnLokaltNavkontor("1234567890", loggingMeta, true)
+        val enhetsnr = navKontorService.finnLokaltNavkontor("1234567890", loggingMeta)
         enhetsnr shouldBeEqualTo NAV_VIKAFOSSEN_KONTOR_NR
     }
 
-    test("Get lokalt navkontor enhetsnr when not utenlandsk") {
+    test("Get lokalt navkontor enhetsnr") {
         coEvery { pdlService.getPerson(any(), any()) } returns PdlPerson("gt", null)
         coEvery { norg2Client.getLocalNAVOffice(any(), null, loggingMeta) } returns Enhet("1234")
-        val enhetsnr = navKontorService.finnLokaltNavkontor("1234567890", loggingMeta, false)
+        val enhetsnr = navKontorService.finnLokaltNavkontor("1234567890", loggingMeta)
         enhetsnr shouldBeEqualTo "1234"
-    }
-
-    test("Get vikafossen enhetsnr when not utenlandsk") {
-        coEvery { pdlService.getPerson(any(), any()) } returns PdlPerson("gt", null)
-        coEvery { norg2Client.getLocalNAVOffice(any(), null, loggingMeta) } returns Enhet(NAV_VIKAFOSSEN_KONTOR_NR)
-        val enhetsnr = navKontorService.finnLokaltNavkontor("1234567890", loggingMeta, false)
-        enhetsnr shouldBeEqualTo NAV_VIKAFOSSEN_KONTOR_NR
     }
 })
