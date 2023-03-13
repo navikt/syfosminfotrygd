@@ -7,7 +7,7 @@ import no.nav.syfo.erUtenlandskSykmelding
 import no.nav.syfo.log
 import no.nav.syfo.model.Behandler
 import no.nav.syfo.model.ReceivedSykmelding
-import no.nav.syfo.rules.sortedSMInfos
+import no.nav.syfo.rules.validation.sortedSMInfos
 import no.nav.syfo.util.LoggingMeta
 import javax.jms.MessageProducer
 import javax.jms.Session

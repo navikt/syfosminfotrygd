@@ -74,7 +74,8 @@ fun receivedSykmelding(
     id: String,
     sykmelding: Sykmelding = generateSykmelding(),
     fellesformat: String = "",
-    merknader: List<Merknad>? = null
+    merknader: List<Merknad>? = null,
+    tssid: String = ""
 ) = ReceivedSykmelding(
     sykmelding = sykmelding,
     personNrPasient = "123124",
@@ -89,7 +90,7 @@ fun receivedSykmelding(
     mottattDato = LocalDateTime.now(),
     rulesetVersion = "",
     fellesformat = fellesformat,
-    tssid = "",
+    tssid = tssid,
     merknader = merknader,
     partnerreferanse = null,
     legeHprNr = null,

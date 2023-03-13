@@ -9,8 +9,8 @@ import no.nav.syfo.log
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.model.RuleInfo
 import no.nav.syfo.model.ValidationResult
-import no.nav.syfo.rules.sortedPeriodeFOMDate
-import no.nav.syfo.rules.sortedPeriodeTOMDate
+import no.nav.syfo.rules.validation.sortedPeriodeFOMDate
+import no.nav.syfo.rules.validation.sortedPeriodeTOMDate
 import no.nav.syfo.services.updateinfotrygd.INFOTRYGD
 import no.nav.syfo.services.updateinfotrygd.createInfotrygdBlokk
 import no.nav.syfo.services.updateinfotrygd.findArbeidsKategori

@@ -15,8 +15,6 @@ import no.nav.syfo.extractHelseOpplysningerArbeidsuforhet
 import no.nav.syfo.log
 import no.nav.syfo.metrics.ANNEN_FRAVERS_ARSKAK_CHANGE_TO_A99_COUNTER
 import no.nav.syfo.metrics.REQUEST_TIME
-import no.nav.syfo.metrics.RULE_HIT_COUNTER
-import no.nav.syfo.metrics.RULE_HIT_STATUS_COUNTER
 import no.nav.syfo.model.HelsepersonellKategori
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.model.RuleInfo
@@ -97,7 +95,7 @@ class MottattSykmeldingService(
                         }
 
                         val validationResult =
-                            ruleCheck(receivedSykmeldingMedTssId, infotrygdForespResponse, loggingMeta)
+                            ruleCheck(receivedSykmeldingMedTssId, infotrygdForespResponse, loggingMeta, RuleExecutionService())
 
                         val lokaltNavkontor =
                             finnNAVKontorService.finnLokaltNavkontor(receivedSykmeldingMedTssId.personNrPasient, loggingMeta)
@@ -184,8 +182,7 @@ class MottattSykmeldingService(
                 )
             )
         )
-        RULE_HIT_STATUS_COUNTER.labels(validationResultBehandler.status.name).inc()
-        RULE_HIT_COUNTER.labels(validationResultBehandler.ruleHits.first().ruleName).inc()
+
         log.warn("Behandler er ikke registert i HPR")
         manuellBehandlingService.produceManualTaskAndSendValidationResults(
             receivedSykmelding,
@@ -269,9 +266,7 @@ fun setHovedDiagnoseToA99IfhovedDiagnoseIsNullAndAnnenFraversArsakIsSet(
 
 fun validerMottattSykmelding(helseOpplysningerArbeidsuforhet: HelseOpplysningerArbeidsuforhet): ValidationResult {
     return if (helseOpplysningerArbeidsuforhet.medisinskVurdering.hovedDiagnose == null) {
-        RULE_HIT_STATUS_COUNTER.labels("MANUAL_PROCESSING").inc()
         log.warn("Sykmelding mangler hoveddiagnose")
-        RULE_HIT_COUNTER.labels("HOVEDDIAGNOSE_MANGLER").inc()
         ValidationResult(
             Status.MANUAL_PROCESSING,
             listOf(
