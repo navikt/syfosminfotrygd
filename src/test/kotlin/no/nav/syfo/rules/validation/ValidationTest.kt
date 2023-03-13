@@ -505,7 +505,7 @@ class ValidationTest : FunSpec({
             val generateSykmelding = generateSykmelding(
                 perioder = listOf(
                     generatePeriode(
-                        fom = LocalDate.of(2018, 1, 6),
+                        fom = LocalDate.of(2018, 1, 7),
                         tom = LocalDate.now().plusMonths(3).plusDays(1)
                     )
                 )
