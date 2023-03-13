@@ -62,6 +62,7 @@ val partiallConincidentSickLeavePeriodWithPreviousRegistertSickLave: ValidationR
         ),
         rule = ValidationRules.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE,
         ruleResult = infotrygdSykmelding != null &&
+            infotrygdSykmelding.sortedSMInfos().lastOrNull()?.periode?.arbufoerFOM != null &&
             infotrygdSykmelding.sortedTOMDate().lastOrNull() != null &&
             infotrygdSykmelding.sortedFOMDate().firstOrNull() != null &&
             sykmeldingPerioder.sortedPeriodeFOMDate().firstOrNull() != null &&
@@ -135,7 +136,8 @@ val sickLaveExtenionFromDiffrentNavOffice3: ValidationRule = { sykmelding, ruleM
             "sykmeldingPerioder" to sykmeldingPerioder
         ),
         rule = ValidationRules.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_3,
-        ruleResult = sykmeldingPerioder.sortedPeriodeFOMDate().lastOrNull() != null &&
+        ruleResult =
+        sykmeldingPerioder.sortedPeriodeFOMDate().lastOrNull() != null &&
             infotrygdSykmelding?.sortedSMInfos()
             ?.lastOrNull()?.periode?.utbetTOM != null &&
             !infotrygdSykmelding.sortedSMInfos()
