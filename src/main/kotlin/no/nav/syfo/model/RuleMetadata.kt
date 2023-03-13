@@ -1,5 +1,6 @@
 package no.nav.syfo.model
 
+import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import java.time.LocalDateTime
 
 data class RuleMetadata(
@@ -8,5 +9,6 @@ data class RuleMetadata(
     val patientPersonNumber: String,
     val rulesetVersion: String?,
     val legekontorOrgnr: String?,
-    val tssid: String?
+    val tssid: String?,
+    val infotrygdForesp: InfotrygdForesp
 )

@@ -1,6 +1,7 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import com.github.jengelman.gradle.plugins.shadow.transformers.ServiceFileTransformer
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import java.io.ByteArrayOutputStream
 
 group = "no.nav.syfo"
 version = "1.0.0"
@@ -11,15 +12,15 @@ val infotrygdForespVersion = "2019.07.29-02-53-86b22e73f7843e422ee500b486dac387a
 val fellesformatVersion = "2019.07.30-12-26-5c924ef4f04022bbb850aaf299eb8e4464c1ca6a"
 val ibmMqVersion = "9.2.5.0"
 val javaxActivationVersion = "1.1.1"
-val jacksonVersion = "2.14.1"
+val jacksonVersion = "2.14.2"
 val jaxbApiVersion = "2.4.0-b180830.0359"
 val jaxbVersion = "2.3.0.1"
 val jedisVersion = "4.3.1"
 val kafkaVersion = "3.3.1"
 val kluentVersion = "1.72"
-val ktorVersion = "2.2.3"
+val ktorVersion = "2.2.4"
 val logbackVersion = "1.4.5"
-val logstashEncoderVersion = "7.2"
+val logstashEncoderVersion = "7.3"
 val prometheusVersion = "0.16.0"
 val kotestVersion = "5.5.4"
 val sykmeldingVersion = "2019.07.29-02-53-86b22e73f7843e422ee500b486dac387a582f2d1"
@@ -43,8 +44,7 @@ plugins {
     java
     kotlin("jvm") version "1.8.10"
     id("org.jmailen.kotlinter") version "3.10.0"
-    id("com.diffplug.spotless") version "6.5.0"
-    id("com.github.johnrengelman.shadow") version "7.1.2"
+    id("com.github.johnrengelman.shadow") version "8.1.0"
 }
 
 val githubUser: String by project
@@ -171,7 +171,39 @@ tasks {
         }
     }
 
+    register<JavaExec>("generateRuleMermaid") {
+        val output = ByteArrayOutputStream()
+        mainClass.set("no.nav.syfo.rules.common.GenerateMermaidKt")
+        classpath = sourceSets["main"].runtimeClasspath
+        group = "documentation"
+        description = "Generates mermaid diagram source of rules"
+        standardOutput = output
+        doLast {
+            val readme = File("README.md")
+            val lines = readme.readLines()
+
+            val starterTag = "<!-- RULE_MARKER_START -->"
+            val endTag = "<!-- RULE_MARKER_END -->"
+
+            val start = lines.indexOfFirst { it.contains(starterTag) }
+            val end = lines.indexOfFirst { it.contains(endTag) }
+
+            val newLines: List<String> =
+                lines.subList(0, start) +
+                        listOf(
+                            starterTag,
+                        ) +
+                        output.toString().split("\n") +
+                        listOf(
+                            endTag,
+                        ) +
+                        lines.subList(end + 1, lines.size)
+            readme.writeText(newLines.joinToString("\n"))
+        }
+    }
+
     "check" {
         dependsOn("formatKotlin")
+        dependsOn("generateRuleMermaid")
     }
 }

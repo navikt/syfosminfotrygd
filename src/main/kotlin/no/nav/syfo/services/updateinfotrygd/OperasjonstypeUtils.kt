@@ -6,7 +6,7 @@ import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.syfo.InfotrygdForespAndHealthInformation
 import no.nav.syfo.daysBetween
 import no.nav.syfo.log
-import no.nav.syfo.rules.sortedSMInfos
+import no.nav.syfo.rules.validation.sortedSMInfos
 import no.nav.syfo.util.LoggingMeta
 import java.time.DayOfWeek
 import java.time.LocalDate

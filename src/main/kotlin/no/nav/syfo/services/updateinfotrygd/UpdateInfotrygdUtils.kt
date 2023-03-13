@@ -8,7 +8,7 @@ import no.nav.helse.sm2013.KontrollsystemBlokkType
 import no.nav.syfo.InfotrygdForespAndHealthInformation
 import no.nav.syfo.UTENLANDSK_SYKEHUS
 import no.nav.syfo.log
-import no.nav.syfo.rules.sortedSMInfos
+import no.nav.syfo.rules.validation.sortedSMInfos
 import no.nav.syfo.sortedFOMDate
 import no.nav.syfo.unmarshal
 import no.nav.syfo.util.LoggingMeta

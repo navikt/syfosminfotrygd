@@ -5,13 +5,6 @@ import io.prometheus.client.Summary
 
 const val NAMESPACE = "syfosminfotrygd"
 
-val RULE_HIT_STATUS_COUNTER: Counter = Counter.Builder()
-    .namespace(NAMESPACE)
-    .name("rule_hit_status_counter")
-    .labelNames("rule_status")
-    .help("Registers a counter for each rule status")
-    .register()
-
 val REQUEST_TIME: Summary = Summary.build()
     .namespace(NAMESPACE)
     .name("request_time_ms")
@@ -23,14 +16,22 @@ val MANUELLE_OPPGAVER_COUNTER: Counter = Counter.Builder()
     .help("Antall manuelle oppgaver som er opprettet")
     .register()
 
-val RULE_HIT_COUNTER: Counter = Counter.Builder()
-    .namespace(NAMESPACE)
-    .name("rule_hit_counter")
-    .labelNames("rule_name")
-    .help("Counts the amount of times a rule is hit").register()
-
 val ANNEN_FRAVERS_ARSKAK_CHANGE_TO_A99_COUNTER: Counter = Counter.Builder()
     .namespace(NAMESPACE)
     .name("annen_fravers_arsak_change_to_a99_counter")
     .help("Counts the amount houveddiagnose is null and AnnenFraversArsak is set")
+    .register()
+
+val RULE_NODE_RULE_HIT_COUNTER: Counter = Counter.Builder()
+    .namespace(NAMESPACE)
+    .name("rulenode_rule_hit_counter")
+    .labelNames("status", "rule_hit")
+    .help("Counts rulenode rules")
+    .register()
+
+val RULE_NODE_RULE_PATH_COUNTER: Counter = Counter.Builder()
+    .namespace(NAMESPACE)
+    .name("rulenode_rule_path_counter")
+    .labelNames("path")
+    .help("Counts rulenode rule paths")
     .register()
