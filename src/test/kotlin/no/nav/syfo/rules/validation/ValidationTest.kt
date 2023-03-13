@@ -501,7 +501,6 @@ class ValidationTest : FunSpec({
         }
 
         test("should trigger rule SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_3, should be MANUAL_PROCESSING") {
-            // TODO fix this test
             val generateSykmelding = generateSykmelding(
                 perioder = listOf(
                     generatePeriode(
