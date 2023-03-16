@@ -21,6 +21,16 @@ class BehandlingsutfallService(
             kafkaAivenProducerBehandlingsutfall.send(
                 ProducerRecord(behandlingsUtfallTopic, sykmeldingId, validationResult)
             ).get()
+
+            log.info(
+                "Message got outcome {}, {}, {}",
+                StructuredArguments.keyValue("status", validationResult.status),
+                StructuredArguments.keyValue(
+                    "ruleHits",
+                    validationResult.ruleHits.joinToString(", ", "(", ")") { it.ruleName }
+                ),
+                StructuredArguments.fields(loggingMeta)
+            )
             log.info(
                 "Validation results send to aiven kafka {} $loggingMeta", behandlingsUtfallTopic,
                 StructuredArguments.fields(loggingMeta)
