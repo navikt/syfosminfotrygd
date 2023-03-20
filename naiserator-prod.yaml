@@ -58,6 +58,8 @@ spec:
   filesFrom:
     - mountPath: /var/run/keystore
       secret: syfosminfotrygd-keystore
+  secureLogs:
+    enabled: true
   env:
     - name: INFOTRYGD_SPORRING_QUEUE
       value: QA.P278.IT00_FORESPORSEL_XML

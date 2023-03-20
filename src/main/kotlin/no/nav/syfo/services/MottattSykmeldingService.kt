@@ -26,10 +26,12 @@ import no.nav.syfo.services.updateinfotrygd.UpdateInfotrygdService
 import no.nav.syfo.util.LoggingMeta
 import no.nav.syfo.util.fellesformatUnmarshaller
 import no.nav.syfo.util.wrapExceptions
+import org.slf4j.LoggerFactory
 import java.io.StringReader
 import javax.jms.MessageProducer
 import javax.jms.Session
 
+val sikkerlogg = LoggerFactory.getLogger("securelog")
 class MottattSykmeldingService(
     private val updateInfotrygdService: UpdateInfotrygdService,
     private val finnNAVKontorService: FinnNAVKontorService,
@@ -93,6 +95,12 @@ class MottattSykmeldingService(
                         } else {
                             receivedSykmelding
                         }
+
+                        sikkerlogg.info(
+                            "infotrygdForespResponse: $infotrygdForespResponse" +
+                                " for {}",
+                            StructuredArguments.fields(loggingMeta)
+                        )
 
                         val validationResult =
                             ruleCheck(receivedSykmeldingMedTssId, infotrygdForespResponse, loggingMeta, RuleExecutionService())
