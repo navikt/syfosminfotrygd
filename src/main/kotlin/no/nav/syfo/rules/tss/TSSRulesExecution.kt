@@ -21,7 +21,7 @@ class TSSRulesExecution(val rootNode: TreeNode<TSSRules, RuleResult> = tssRuleTr
         rootNode
             .evaluate(sykmelding, ruleMetadata)
             .also { gradertRulePath ->
-                log.info("Rules ${sykmelding.id}, ${gradertRulePath.printRulePath()}")
+                log.info("Rules sykmeldingId: ${sykmelding.id}, ${gradertRulePath.printRulePath()}")
             } to UtenJuridisk
 }
 

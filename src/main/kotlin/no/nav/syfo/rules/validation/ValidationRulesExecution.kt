@@ -22,7 +22,7 @@ class ValidationRulesExecution(private val rootNode: ValidationTreeNode = valida
         rootNode
             .evaluate(sykmelding, ruleMetadata)
             .also { validationRulePath ->
-                log.info("Rules ${sykmelding.id}, ${validationRulePath.printRulePath()}")
+                log.info("Rules sykmeldingId: ${sykmelding.id}, ${validationRulePath.printRulePath()}")
             } to UtenJuridisk
 }
 
