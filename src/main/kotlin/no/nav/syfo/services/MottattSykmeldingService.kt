@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory
 import java.io.StringReader
 import javax.jms.MessageProducer
 import javax.jms.Session
+import no.nav.syfo.objectMapper
 
 val sikkerlogg = LoggerFactory.getLogger("securelog")
 class MottattSykmeldingService(
@@ -97,7 +98,7 @@ class MottattSykmeldingService(
                         }
 
                         sikkerlogg.info(
-                            "infotrygdForespResponse: $infotrygdForespResponse" +
+                            "infotrygdForespResponse: ${objectMapper.writeValueAsString(infotrygdForespResponse)}" +
                                 " for {}",
                             StructuredArguments.fields(loggingMeta)
                         )
