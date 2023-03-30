@@ -46,6 +46,11 @@ spec:
         - host: pdl-api.dev-fss-pub.nais.io
         - host: norg2.dev-fss-pub.nais.io
         - host: syfohelsenettproxy.dev-fss-pub
+        - host: b27apvl221.preprod.local
+          ports:
+            - name: mq
+              port: 1413
+              protocol: TCP
   kafka:
     pool: nav-dev
   vault:

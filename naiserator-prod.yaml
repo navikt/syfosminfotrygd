@@ -46,6 +46,11 @@ spec:
         - host: pdl-api.prod-fss-pub.nais.io
         - host: norg2.prod-fss-pub.nais.io
         - host: syfohelsenettproxy.prod-fss-pub
+        - host: mpls03.adeo.no
+          ports:
+            - name: mq
+              port: 1414
+              protocol: TCP
   kafka:
     pool: nav-prod
   vault:
