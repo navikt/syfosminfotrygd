@@ -8,7 +8,7 @@ version = "1.0.0"
 
 val artemisVersion = "2.27.1"
 val coroutinesVersion = "1.6.4"
-val infotrygdForespVersion = "2019.07.29-02-53-86b22e73f7843e422ee500b486dac387a582f2d1"
+val infotrygdForespVersion = "2019.09.09-08-50-693492ddc1d3f98e70c1638c94dcb95a66036d12"
 val fellesformatVersion = "2019.07.30-12-26-5c924ef4f04022bbb850aaf299eb8e4464c1ca6a"
 val ibmMqVersion = "9.2.5.0"
 val javaxActivationVersion = "1.1.1"
