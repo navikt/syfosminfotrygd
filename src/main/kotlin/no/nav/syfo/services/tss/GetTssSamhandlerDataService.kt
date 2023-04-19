@@ -21,12 +21,12 @@ import javax.jms.TextMessage
 suspend fun fetchTssSamhandlerInfo(
     receivedSykmelding: ReceivedSykmelding,
     tssSamhnadlerInfoProducer: MessageProducer,
-    session: Session
+    session: Session,
 ): String? =
     retry(
         callName = "tss_hent_samhandler_data",
         retryIntervals = arrayOf(500L, 1000L, 3000L, 5000L),
-        legalExceptions = arrayOf(IOException::class, WstxException::class, IllegalStateException::class)
+        legalExceptions = arrayOf(IOException::class, WstxException::class, IllegalStateException::class),
     ) {
         val tssSamhandlerDatainput = XMLTssSamhandlerData().apply {
             tssInputData = XMLTssSamhandlerData.TssInputData().apply {
@@ -58,12 +58,12 @@ fun sendTssSporring(
     producer: MessageProducer,
     session: Session,
     tssSamhandlerData: XMLTssSamhandlerData,
-    temporaryQueue: TemporaryQueue
+    temporaryQueue: TemporaryQueue,
 ) = producer.send(
     session.createTextMessage().apply {
         text = tssSamhandlerdataInputMarshaller.toString(tssSamhandlerData)
         jmsReplyTo = temporaryQueue
-    }
+    },
 )
 
 fun finnTssIdFraTSSRespons(tssSamhandlerInfoResponse: XMLTssSamhandlerData): String? {

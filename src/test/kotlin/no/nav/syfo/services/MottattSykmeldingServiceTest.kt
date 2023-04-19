@@ -46,8 +46,12 @@ class MottattSykmeldingServiceTest : FunSpec({
     val session = mockk<Session>(relaxed = true)
     val loggingMeta = LoggingMeta("", "", "", "")
     val mottattSykmeldingService = MottattSykmeldingService(
-        updateInfotrygdService, finnNAVKontorService,
-        manuellClient, manuellBehandlingService, behandlingsutfallService, norskHelsenettClient
+        updateInfotrygdService,
+        finnNAVKontorService,
+        manuellClient,
+        manuellBehandlingService,
+        behandlingsutfallService,
+        norskHelsenettClient,
     )
 
     beforeTest {
@@ -71,9 +75,9 @@ class MottattSykmeldingServiceTest : FunSpec({
             val receivedSykmelding = receivedSykmelding(
                 id = UUID.randomUUID().toString(),
                 sykmelding = generateSykmelding(
-                    medisinskVurdering = MedisinskVurdering(hovedDiagnose = null, biDiagnoser = emptyList(), svangerskap = false, yrkesskade = false, yrkesskadeDato = null, annenFraversArsak = null)
+                    medisinskVurdering = MedisinskVurdering(hovedDiagnose = null, biDiagnoser = emptyList(), svangerskap = false, yrkesskade = false, yrkesskadeDato = null, annenFraversArsak = null),
                 ),
-                fellesformat = fellesformatMarshaller.toString(fellesformat)
+                fellesformat = fellesformatMarshaller.toString(fellesformat),
             )
 
             mottattSykmeldingService.handleMessage(receivedSykmelding, infotrygdOppdateringProducer, infotrygdSporringProducer, tssProducer, session, loggingMeta)
@@ -88,7 +92,7 @@ class MottattSykmeldingServiceTest : FunSpec({
                     "LE",
                     "0101",
                     match { it.status == Status.OK },
-                    false
+                    false,
                 )
             }
             coVerify { manuellClient.behandletAvManuell(any(), any()) }
@@ -114,9 +118,9 @@ class MottattSykmeldingServiceTest : FunSpec({
             val receivedSykmeldingUtenHoveddiagose = receivedSykmelding(
                 id = UUID.randomUUID().toString(),
                 sykmelding = generateSykmelding(
-                    medisinskVurdering = MedisinskVurdering(hovedDiagnose = null, biDiagnoser = emptyList(), svangerskap = false, yrkesskade = false, yrkesskadeDato = null, annenFraversArsak = null)
+                    medisinskVurdering = MedisinskVurdering(hovedDiagnose = null, biDiagnoser = emptyList(), svangerskap = false, yrkesskade = false, yrkesskadeDato = null, annenFraversArsak = null),
                 ),
-                fellesformat = fellesformatMarshaller.toString(fellesformat)
+                fellesformat = fellesformatMarshaller.toString(fellesformat),
             )
 
             mottattSykmeldingService.handleMessage(receivedSykmeldingUtenHoveddiagose, infotrygdOppdateringProducer, infotrygdSporringProducer, tssProducer, session, loggingMeta)
@@ -129,7 +133,7 @@ class MottattSykmeldingServiceTest : FunSpec({
                     receivedSykmeldingUtenHoveddiagose,
                     match { it.status == Status.MANUAL_PROCESSING && it.ruleHits.any { ruleInfo -> ruleInfo.ruleName == "HOVEDDIAGNOSE_MANGLER" } },
                     false,
-                    loggingMeta
+                    loggingMeta,
                 )
             }
         }
@@ -143,9 +147,9 @@ class MottattSykmeldingServiceTest : FunSpec({
             val receivedSykmelding = receivedSykmelding(
                 id = UUID.randomUUID().toString(),
                 sykmelding = generateSykmelding(
-                    medisinskVurdering = MedisinskVurdering(hovedDiagnose = null, biDiagnoser = emptyList(), svangerskap = false, yrkesskade = false, yrkesskadeDato = null, annenFraversArsak = null)
+                    medisinskVurdering = MedisinskVurdering(hovedDiagnose = null, biDiagnoser = emptyList(), svangerskap = false, yrkesskade = false, yrkesskadeDato = null, annenFraversArsak = null),
                 ),
-                fellesformat = fellesformatMarshaller.toString(fellesformat)
+                fellesformat = fellesformatMarshaller.toString(fellesformat),
             )
 
             mottattSykmeldingService.handleMessage(receivedSykmelding, infotrygdOppdateringProducer, infotrygdSporringProducer, tssProducer, session, loggingMeta)
@@ -160,7 +164,7 @@ class MottattSykmeldingServiceTest : FunSpec({
                     loggingMeta,
                     any(),
                     "LE",
-                    false
+                    false,
                 )
             }
         }
@@ -173,9 +177,9 @@ class MottattSykmeldingServiceTest : FunSpec({
             val receivedSykmelding = receivedSykmelding(
                 id = UUID.randomUUID().toString(),
                 sykmelding = generateSykmelding(
-                    medisinskVurdering = MedisinskVurdering(hovedDiagnose = null, biDiagnoser = emptyList(), svangerskap = false, yrkesskade = false, yrkesskadeDato = null, annenFraversArsak = null)
+                    medisinskVurdering = MedisinskVurdering(hovedDiagnose = null, biDiagnoser = emptyList(), svangerskap = false, yrkesskade = false, yrkesskadeDato = null, annenFraversArsak = null),
                 ),
-                fellesformat = fellesformatMarshaller.toString(fellesformat)
+                fellesformat = fellesformatMarshaller.toString(fellesformat),
             )
 
             mottattSykmeldingService.handleMessage(receivedSykmelding, infotrygdOppdateringProducer, infotrygdSporringProducer, tssProducer, session, loggingMeta)
@@ -190,7 +194,7 @@ class MottattSykmeldingServiceTest : FunSpec({
                     loggingMeta,
                     any(),
                     "LE",
-                    false
+                    false,
                 )
             }
         }
@@ -204,11 +208,11 @@ private fun getBehandler() =
                 helsepersonellkategori = Kode(
                     aktiv = true,
                     oid = 0,
-                    verdi = HelsepersonellKategori.LEGE.verdi
+                    verdi = HelsepersonellKategori.LEGE.verdi,
                 ),
-                autorisasjon = Kode(aktiv = true, oid = 0, verdi = "")
-            )
-        )
+                autorisasjon = Kode(aktiv = true, oid = 0, verdi = ""),
+            ),
+        ),
     )
 
 private fun getInfotrygdForespResponse(): InfotrygdForesp =
@@ -220,7 +224,7 @@ private fun getInfotrygdForespResponse(): InfotrygdForesp =
                         arbufoerFOM = LocalDate.of(2019, 1, 1)
                         arbufoerTOM = LocalDate.of(2019, 1, 1)
                     }
-                }
+                },
             )
             status = StatusType().apply {
                 kodeMelding = "00"

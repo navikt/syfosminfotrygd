@@ -27,7 +27,7 @@ enum class ValidationRules {
     ERROR_FROM_IT_PARALELLYTELSER_STATUS_KODEMELDING,
     ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING,
     ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING,
-    ARBEIDUFORETOM_MANGLER
+    ARBEIDUFORETOM_MANGLER,
 }
 
 val validationRuleTree = tree<ValidationRules, RuleResult>(ValidationRules.NUMBER_OF_TREATMENT_DAYS_SET) {
@@ -41,26 +41,26 @@ val validationRuleTree = tree<ValidationRules, RuleResult>(ValidationRules.NUMBE
                 no(ValidationRules.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE) {
                     yes(
                         Status.MANUAL_PROCESSING,
-                        ValidationRuleHit.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE
+                        ValidationRuleHit.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE,
                     )
                     no(ValidationRules.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_1) {
                         yes(Status.MANUAL_PROCESSING, ValidationRuleHit.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_1)
                         no(ValidationRules.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_2) {
                             yes(
                                 Status.MANUAL_PROCESSING,
-                                ValidationRuleHit.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_2
+                                ValidationRuleHit.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_2,
                             )
                             no(ValidationRules.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_3) {
                                 yes(
                                     Status.MANUAL_PROCESSING,
-                                    ValidationRuleHit.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_3
+                                    ValidationRuleHit.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_3,
                                 )
                                 no(ValidationRules.NEW_CLEAN_BILL_DATE_BEFORE_PAYOUT) {
                                     yes(Status.MANUAL_PROCESSING, ValidationRuleHit.NEW_CLEAN_BILL_DATE_BEFORE_PAYOUT)
                                     no(ValidationRules.NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE) {
                                         yes(
                                             Status.MANUAL_PROCESSING,
-                                            ValidationRuleHit.NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE
+                                            ValidationRuleHit.NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE,
                                         )
                                         no(ValidationRules.EXTANION_OVER_FA) {
                                             yes(Status.MANUAL_PROCESSING, ValidationRuleHit.EXTANION_OVER_FA)
@@ -73,37 +73,37 @@ val validationRuleTree = tree<ValidationRules, RuleResult>(ValidationRules.NUMBE
                                                         no(ValidationRules.MAX_SICK_LEAVE_PAYOUT) {
                                                             yes(
                                                                 Status.MANUAL_PROCESSING,
-                                                                ValidationRuleHit.MAX_SICK_LEAVE_PAYOUT
+                                                                ValidationRuleHit.MAX_SICK_LEAVE_PAYOUT,
                                                             )
                                                             no(ValidationRules.ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING) {
                                                                 yes(
                                                                     Status.MANUAL_PROCESSING,
-                                                                    ValidationRuleHit.ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING
+                                                                    ValidationRuleHit.ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING,
                                                                 )
                                                                 no(ValidationRules.ERROR_FROM_IT_SMHISTORIKK_STATUS_KODEMELDING) {
                                                                     yes(
                                                                         Status.MANUAL_PROCESSING,
-                                                                        ValidationRuleHit.ERROR_FROM_IT_SMHISTORIKK_STATUS_KODEMELDING
+                                                                        ValidationRuleHit.ERROR_FROM_IT_SMHISTORIKK_STATUS_KODEMELDING,
                                                                     )
                                                                     no(ValidationRules.ERROR_FROM_IT_PARALELLYTELSER_STATUS_KODEMELDING) {
                                                                         yes(
                                                                             Status.MANUAL_PROCESSING,
-                                                                            ValidationRuleHit.ERROR_FROM_IT_PARALELLYTELSER_STATUS_KODEMELDING
+                                                                            ValidationRuleHit.ERROR_FROM_IT_PARALELLYTELSER_STATUS_KODEMELDING,
                                                                         )
                                                                         no(ValidationRules.ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING) {
                                                                             yes(
                                                                                 Status.MANUAL_PROCESSING,
-                                                                                ValidationRuleHit.ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING
+                                                                                ValidationRuleHit.ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING,
                                                                             )
                                                                             no(ValidationRules.ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING) {
                                                                                 yes(
                                                                                     Status.MANUAL_PROCESSING,
-                                                                                    ValidationRuleHit.ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING
+                                                                                    ValidationRuleHit.ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING,
                                                                                 )
                                                                                 no(ValidationRules.ARBEIDUFORETOM_MANGLER) {
                                                                                     yes(
                                                                                         Status.MANUAL_PROCESSING,
-                                                                                        ValidationRuleHit.ARBEIDUFORETOM_MANGLER
+                                                                                        ValidationRuleHit.ARBEIDUFORETOM_MANGLER,
                                                                                     )
                                                                                     no(OK)
                                                                                 }

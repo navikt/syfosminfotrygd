@@ -27,7 +27,7 @@ class TSSRulesExecution(val rootNode: TreeNode<TSSRules, RuleResult> = tssRuleTr
 
 private fun TreeNode<TSSRules, RuleResult>.evaluate(
     sykmelding: Sykmelding,
-    ruleMetadata: RuleMetadata
+    ruleMetadata: RuleMetadata,
 ): TSSTreeOutput =
     when (this) {
         is ResultNode -> TSSTreeOutput(treeResult = result)

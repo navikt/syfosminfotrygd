@@ -16,7 +16,7 @@ import no.nav.syfo.util.LoggingMeta
 class Norg2Client(
     private val httpClient: HttpClient,
     private val endpointUrl: String,
-    private val norg2RedisService: Norg2RedisService
+    private val norg2RedisService: Norg2RedisService,
 ) {
     suspend fun getLocalNAVOffice(geografiskOmraade: String?, diskresjonskode: String?, loggingMeta: LoggingMeta): Enhet {
         if (diskresjonskode == null && geografiskOmraade != null) {
@@ -43,14 +43,14 @@ class Norg2Client(
             HttpStatusCode.NotFound -> {
                 log.info(
                     "Fant ikke lokalt NAV-kontor for geografisk tilhørighet: $geografiskOmraade, setter da NAV-kontor oppfølging utland som lokalt navkontor: $NAV_OPPFOLGING_UTLAND_KONTOR_NR, {}",
-                    StructuredArguments.fields(loggingMeta)
+                    StructuredArguments.fields(loggingMeta),
                 )
                 return Enhet(NAV_OPPFOLGING_UTLAND_KONTOR_NR)
             }
             else -> {
                 log.error(
                     "Noe gikk galt ved henting av lokalkontor fra norg: ${httpResponse.status}, ${httpResponse.body<String>()}, {}",
-                    StructuredArguments.fields(loggingMeta)
+                    StructuredArguments.fields(loggingMeta),
                 )
                 throw RuntimeException("Noe gikk galt ved henting av lokalkontor fra norg: ${httpResponse.status}, ${httpResponse.body<String>()}")
             }
@@ -59,5 +59,5 @@ class Norg2Client(
 }
 
 data class Enhet(
-    val enhetNr: String
+    val enhetNr: String,
 )

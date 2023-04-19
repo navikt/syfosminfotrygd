@@ -17,22 +17,22 @@ suspend fun getTssId(
     receivedSykmelding: ReceivedSykmelding,
     tssProducer: MessageProducer,
     session: Session,
-    loggingMeta: LoggingMeta
+    loggingMeta: LoggingMeta,
 ): String? {
     val tssIdInfotrygd = finnTssIdFraInfotrygdRespons(
         infotrygdForespResponse.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()?.periode,
-        receivedSykmelding.sykmelding.behandler
+        receivedSykmelding.sykmelding.behandler,
     )
     if (!tssIdInfotrygd.isNullOrBlank() && !receivedSykmelding.erUtenlandskSykmelding()) {
         log.info(
             "Sykmelding mangler tssid, har hentet tssid $tssIdInfotrygd fra infotrygd, {}",
-            StructuredArguments.fields(loggingMeta)
+            StructuredArguments.fields(loggingMeta),
         )
         return tssIdInfotrygd
     } else if (receivedSykmelding.erUtenlandskSykmelding()) {
         log.info(
             "Bruker standardverdi for tssid for utenlandsk sykmelding, {}",
-            StructuredArguments.fields(loggingMeta)
+            StructuredArguments.fields(loggingMeta),
         )
         return "0"
     } else {
@@ -41,7 +41,7 @@ suspend fun getTssId(
             if (!tssIdFraTSS.isNullOrBlank()) {
                 log.info(
                     "Sykmelding mangler tssid, har hentet tssid $tssIdFraTSS fra tss, {}",
-                    StructuredArguments.fields(loggingMeta)
+                    StructuredArguments.fields(loggingMeta),
                 )
                 return tssIdFraTSS
             }

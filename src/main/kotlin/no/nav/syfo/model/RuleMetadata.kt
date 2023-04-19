@@ -10,5 +10,5 @@ data class RuleMetadata(
     val rulesetVersion: String?,
     val legekontorOrgnr: String?,
     val tssid: String?,
-    val infotrygdForesp: InfotrygdForesp
+    val infotrygdForesp: InfotrygdForesp,
 )

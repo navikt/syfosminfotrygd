@@ -15,7 +15,7 @@ class RedisSpek : FunSpec({
         mottakId = "1313",
         orgNr = "0",
         msgId = "0",
-        sykmeldingId = "0"
+        sykmeldingId = "0",
     )
 
     val redisContainer: GenericContainer<Nothing> = GenericContainer("navikt/secure-redis:5.0.3-alpine-2")
@@ -24,7 +24,7 @@ class RedisSpek : FunSpec({
     redisContainer.withClasspathResourceMapping(
         "redis.env",
         "/var/run/secrets/nais.io/vault/redis.env",
-        BindMode.READ_ONLY
+        BindMode.READ_ONLY,
     )
 
     redisContainer.start()

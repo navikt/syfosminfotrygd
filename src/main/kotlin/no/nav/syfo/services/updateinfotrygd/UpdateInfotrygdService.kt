@@ -28,7 +28,7 @@ class UpdateInfotrygdService(
     private val kafkaAivenProducerReceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
     private val retryTopic: String,
     private val behandlingsutfallService: BehandlingsutfallService,
-    private val redisService: RedisService
+    private val redisService: RedisService,
 ) {
 
     suspend fun updateInfotrygd(
@@ -40,7 +40,7 @@ class UpdateInfotrygdService(
         behandlerKode: String,
         navKontorNr: String,
         validationResult: ValidationResult,
-        behandletAvManuell: Boolean
+        behandletAvManuell: Boolean,
     ) {
         val perioder = itfh.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
         val marshalledFellesformat = receivedSykmelding.fellesformat
@@ -55,8 +55,8 @@ class UpdateInfotrygdService(
                 itfh = itfh, periode = perioder.first(), personNrPasient = personNrPasient, signaturDato = LocalDate.of(2019, 1, 1),
                 helsepersonellKategoriVerdi = behandlerKode, tssid = tssid, loggingMeta = loggingMeta, navKontorNr = navKontorNr,
                 navnArbeidsgiver = findArbeidsKategori(itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver),
-                identDato = forsteFravaersDag, behandletAvManuell = behandletAvManuell, utenlandskSykmelding = receivedSykmelding.erUtenlandskSykmelding()
-            )
+                identDato = forsteFravaersDag, behandletAvManuell = behandletAvManuell, utenlandskSykmelding = receivedSykmelding.erUtenlandskSykmelding(),
+            ),
         )
 
         delay(100)
@@ -70,8 +70,8 @@ class UpdateInfotrygdService(
                         ProducerRecord(
                             retryTopic,
                             receivedSykmelding.sykmelding.id,
-                            receivedSykmelding
-                        )
+                            receivedSykmelding,
+                        ),
                     ).get()
                     log.warn("Melding sendt på retry topic {}", fields(loggingMeta))
                 } catch (ex: Exception) {
@@ -86,7 +86,7 @@ class UpdateInfotrygdService(
                         behandlingsutfallService.sendRuleCheckValidationResult(
                             receivedSykmelding.sykmelding.id,
                             validationResult,
-                            loggingMeta
+                            loggingMeta,
                         )
                         log.warn("Melding market som infotrygd duplikat oppdatering {}", fields(loggingMeta))
                     }
@@ -107,9 +107,9 @@ class UpdateInfotrygdService(
                                     navKontorNr = navKontorNr,
                                     identDato = forsteFravaersDag,
                                     behandletAvManuell = behandletAvManuell,
-                                    utenlandskSykmelding = receivedSykmelding.erUtenlandskSykmelding()
+                                    utenlandskSykmelding = receivedSykmelding.erUtenlandskSykmelding(),
                                 ),
-                                loggingMeta
+                                loggingMeta,
                             )
                             perioder.drop(1).forEach { periode ->
                                 sendInfotrygdOppdateringMq(
@@ -128,15 +128,15 @@ class UpdateInfotrygdService(
                                         identDato = forsteFravaersDag,
                                         behandletAvManuell = behandletAvManuell,
                                         utenlandskSykmelding = receivedSykmelding.erUtenlandskSykmelding(),
-                                        operasjonstypeKode = 2
+                                        operasjonstypeKode = 2,
                                     ),
-                                    loggingMeta
+                                    loggingMeta,
                                 )
                             }
                             behandlingsutfallService.sendRuleCheckValidationResult(
                                 receivedSykmelding.sykmelding.id,
                                 validationResult,
-                                loggingMeta
+                                loggingMeta,
                             )
                         } catch (exception: Exception) {
                             redisService.slettRedisKey(sha256String, loggingMeta)
@@ -152,12 +152,12 @@ class UpdateInfotrygdService(
         producer: MessageProducer,
         session: Session,
         fellesformat: XMLEIFellesformat,
-        loggingMeta: LoggingMeta
+        loggingMeta: LoggingMeta,
     ) = producer.send(
         session.createTextMessage().apply {
             log.info("Melding har oprasjonstype: {}, tkNummer: {}, {}", fellesformat.get<KontrollsystemBlokkType>().infotrygdBlokk.first().operasjonstype, fellesformat.get<KontrollsystemBlokkType>().infotrygdBlokk.first().tkNummer, fields(loggingMeta))
             text = xmlObjectWriter.writeValueAsString(fellesformat)
             log.info("Melding er sendt til infotrygd {}", fields(loggingMeta))
-        }
+        },
     )
 }

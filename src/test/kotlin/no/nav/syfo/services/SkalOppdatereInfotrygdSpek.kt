@@ -54,9 +54,9 @@ class SkalOppdatereInfotrygdSpek : FunSpec({
             every { sm.sykmelding } returns generateSykmelding(
                 perioder = listOf(
                     generatePeriode(
-                        reisetilskudd = true
-                    )
-                )
+                        reisetilskudd = true,
+                    ),
+                ),
             )
             skalOppdatereInfotrygd(sm) shouldBeEqualTo false
         }
@@ -67,9 +67,9 @@ class SkalOppdatereInfotrygdSpek : FunSpec({
                 perioder = listOf(
                     generatePeriode(
                         reisetilskudd = false,
-                        gradert = Gradert(true, 50)
-                    )
-                )
+                        gradert = Gradert(true, 50),
+                    ),
+                ),
             )
             skalOppdatereInfotrygd(sm) shouldBeEqualTo false
         }

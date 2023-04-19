@@ -17,20 +17,21 @@ import java.time.format.DateTimeFormatter
 
 class OppgaveService(
     private val kafkaAivenProducerOppgave: KafkaProducer<String, OpprettOppgaveKafkaMessage>,
-    private val produserOppgaveTopic: String
+    private val produserOppgaveTopic: String,
 ) {
     fun opprettOppgave(
         receivedSykmelding: ReceivedSykmelding,
         validationResult: ValidationResult,
         behandletAvManuell: Boolean,
-        loggingMeta: LoggingMeta
+        loggingMeta: LoggingMeta,
     ) {
         try {
             kafkaAivenProducerOppgave.send(
                 ProducerRecord(
-                    produserOppgaveTopic, receivedSykmelding.sykmelding.id,
-                    opprettOpprettOppgaveKafkaMessage(receivedSykmelding, validationResult, behandletAvManuell, loggingMeta)
-                )
+                    produserOppgaveTopic,
+                    receivedSykmelding.sykmelding.id,
+                    opprettOpprettOppgaveKafkaMessage(receivedSykmelding, validationResult, behandletAvManuell, loggingMeta),
+                ),
             ).get()
             MANUELLE_OPPGAVER_COUNTER.inc()
             log.info("Message sendt to topic: {}, {}", produserOppgaveTopic, StructuredArguments.fields(loggingMeta))
@@ -72,7 +73,7 @@ class OppgaveService(
                 DateTimeFormatter.ISO_DATE.format(finnFristForFerdigstillingAvOppgave(LocalDate.now().plusDays(4)))
             },
             prioritet = no.nav.syfo.model.PrioritetType.NORM,
-            metadata = mapOf()
+            metadata = mapOf(),
         )
         return oppgave
     }

@@ -20,9 +20,8 @@ fun ruleCheck(
     receivedSykmelding: ReceivedSykmelding,
     infotrygdForespResponse: InfotrygdForesp,
     loggingMeta: LoggingMeta,
-    ruleExecutionService: RuleExecutionService
+    ruleExecutionService: RuleExecutionService,
 ): ValidationResult {
-
     log.info("Going through rules {}", StructuredArguments.fields(loggingMeta))
 
     val ruleMetadata = RuleMetadata(
@@ -32,20 +31,20 @@ fun ruleCheck(
         rulesetVersion = receivedSykmelding.rulesetVersion,
         legekontorOrgnr = receivedSykmelding.legekontorOrgNr,
         tssid = receivedSykmelding.tssid,
-        infotrygdForesp = infotrygdForespResponse
+        infotrygdForesp = infotrygdForespResponse,
     )
 
     val result = ruleExecutionService.runRules(receivedSykmelding.sykmelding, ruleMetadata)
     result.forEach {
         RULE_NODE_RULE_PATH_COUNTER.labels(
-            it.first.printRulePath()
+            it.first.printRulePath(),
         ).inc()
     }
 
     val validationResult = validationResult(result.map { it.first })
     RULE_NODE_RULE_HIT_COUNTER.labels(
         validationResult.status.name,
-        validationResult.ruleHits.firstOrNull()?.ruleName ?: validationResult.status.name
+        validationResult.ruleHits.firstOrNull()?.ruleName ?: validationResult.status.name,
     ).inc()
     return validationResult
 }
@@ -63,7 +62,7 @@ fun validationResult(results: List<TreeOutput<out Enum<*>, RuleResult>>): Valida
                 result.rule,
                 result.messageForSender,
                 result.messageForUser,
-                result.status
+                result.status,
             )
-        }
+        },
 )

@@ -10,7 +10,7 @@ import java.time.Duration
 
 class Norg2RedisService(
     private val jedisPool: JedisPool,
-    private val redisSecret: String
+    private val redisSecret: String,
 ) {
     companion object {
         private val log: Logger = LoggerFactory.getLogger(Norg2RedisService::class.java)

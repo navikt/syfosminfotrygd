@@ -15,7 +15,7 @@ import kotlin.math.absoluteValue
 fun findOperasjonstype(
     periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode,
     itfh: InfotrygdForespAndHealthInformation,
-    loggingMeta: LoggingMeta
+    loggingMeta: LoggingMeta,
 ): Int {
     // FORSTEGANGS = 1, PAFOLGENDE = 2, ENDRING = 3
     val typeSMinfo = itfh.infotrygdForesp.sMhistorikk?.sykmelding
@@ -43,7 +43,7 @@ fun findOperasjonstype(
 private fun forstegangsSykmelding(
     periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode,
     itfh: InfotrygdForespAndHealthInformation,
-    typeSMinfo: TypeSMinfo
+    typeSMinfo: TypeSMinfo,
 ): Boolean =
     itfh.infotrygdForesp.sMhistorikk.status.kodeMelding == "04" ||
         (typeSMinfo.periode.arbufoerTOM != null && (typeSMinfo.periode.arbufoerTOM..periode.periodeFOMDato).daysBetween().absoluteValue >= 1)
@@ -51,7 +51,7 @@ private fun forstegangsSykmelding(
 private fun paafolgendeSykmelding(
     periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode,
     itfh: InfotrygdForespAndHealthInformation,
-    typeSMinfo: TypeSMinfo
+    typeSMinfo: TypeSMinfo,
 ): Boolean =
     itfh.infotrygdForesp.sMhistorikk.status.kodeMelding != "04" &&
         periode.periodeFOMDato.isEqual(typeSMinfo.periode.arbufoerTOM) ||
@@ -81,7 +81,7 @@ private fun oppholdSkyldesHelg(arbufoerTOM: LocalDate, periodeFOMDato: LocalDate
 private fun endringSykmelding(
     periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode,
     itfh: InfotrygdForespAndHealthInformation,
-    typeSMinfo: TypeSMinfo
+    typeSMinfo: TypeSMinfo,
 ): Boolean =
     itfh.infotrygdForesp.sMhistorikk.status.kodeMelding != "04" &&
         (

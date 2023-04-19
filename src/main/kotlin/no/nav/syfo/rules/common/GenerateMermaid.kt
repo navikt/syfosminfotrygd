@@ -10,7 +10,7 @@ import no.nav.syfo.rules.validation.validationRuleTree
 fun main() {
     val ruleTrees = listOf(
         "Validation" to validationRuleTree,
-        "TSS" to tssRuleTree
+        "TSS" to tssRuleTree,
     )
 
     ruleTrees.forEach {
@@ -30,7 +30,7 @@ fun main() {
 private fun <T> TreeNode<T, RuleResult>.traverseTree(
     builder: StringBuilder,
     thisNodeKey: String,
-    nodeKey: String
+    nodeKey: String,
 ) {
     when (this) {
         is ResultNode -> {

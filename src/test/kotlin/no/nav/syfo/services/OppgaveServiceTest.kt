@@ -57,10 +57,10 @@ class OppgaveServiceTest : FunSpec({
                             avventendeInnspillTilArbeidsgiver = null,
                             behandlingsdager = null,
                             gradert = null,
-                            reisetilskudd = false
-                        )
-                    )
-                )
+                            reisetilskudd = false,
+                        ),
+                    ),
+                ),
             )
 
             val oppgave = oppgaveService.opprettOpprettOppgaveKafkaMessage(receivedSykmelding, validationResults, behandletAvManuell = false, loggingMeta)

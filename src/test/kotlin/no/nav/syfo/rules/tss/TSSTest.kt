@@ -22,9 +22,9 @@ class TSSTest : FunSpec({
                 perioder = listOf(
                     generatePeriode(
                         fom = LocalDate.now(),
-                        tom = LocalDate.now().plusDays(10)
-                    )
-                )
+                        tom = LocalDate.now().plusDays(10),
+                    ),
+                ),
             )
 
             val infotrygdForespResponse = InfotrygdForesp().apply {
@@ -37,7 +37,7 @@ class TSSTest : FunSpec({
                 id = UUID.randomUUID().toString(),
                 sykmelding = sykmelding,
                 fellesformat = "",
-                tssid = "124344"
+                tssid = "124344",
             )
 
             val ruleMetadata = RuleMetadata(
@@ -47,16 +47,16 @@ class TSSTest : FunSpec({
                 rulesetVersion = receivedSykmelding.rulesetVersion,
                 legekontorOrgnr = receivedSykmelding.legekontorOrgNr,
                 tssid = receivedSykmelding.tssid,
-                infotrygdForesp = infotrygdForespResponse
+                infotrygdForesp = infotrygdForespResponse,
             )
 
             val result = ruleTree.runRules(sykmelding, ruleMetadata)
 
             result.first.rulePath.map { it.rule to it.ruleResult } shouldBeEqualTo listOf(
-                TSSRules.TSS_IDENT_MANGLER to false
+                TSSRules.TSS_IDENT_MANGLER to false,
             )
             mapOf(
-                "tssId" to receivedSykmelding.tssid
+                "tssId" to receivedSykmelding.tssid,
             ) shouldBeEqualTo result.first.ruleInputs
 
             result.first.treeResult.ruleHit shouldBeEqualTo null
@@ -69,9 +69,9 @@ class TSSTest : FunSpec({
                 perioder = listOf(
                     generatePeriode(
                         fom = LocalDate.now(),
-                        tom = LocalDate.now().plusDays(10)
-                    )
-                )
+                        tom = LocalDate.now().plusDays(10),
+                    ),
+                ),
             )
 
             val infotrygdForespResponse = InfotrygdForesp().apply {
@@ -83,7 +83,7 @@ class TSSTest : FunSpec({
             val receivedSykmelding = receivedSykmelding(
                 id = UUID.randomUUID().toString(),
                 sykmelding = sykmelding,
-                fellesformat = ""
+                fellesformat = "",
             )
 
             val ruleMetadata = RuleMetadata(
@@ -93,17 +93,17 @@ class TSSTest : FunSpec({
                 rulesetVersion = receivedSykmelding.rulesetVersion,
                 legekontorOrgnr = receivedSykmelding.legekontorOrgNr,
                 tssid = null,
-                infotrygdForesp = infotrygdForespResponse
+                infotrygdForesp = infotrygdForespResponse,
             )
 
             val result = ruleTree.runRules(sykmelding, ruleMetadata)
 
             result.first.treeResult.status shouldBeEqualTo Status.MANUAL_PROCESSING
             result.first.rulePath.map { it.rule to it.ruleResult } shouldBeEqualTo listOf(
-                TSSRules.TSS_IDENT_MANGLER to true
+                TSSRules.TSS_IDENT_MANGLER to true,
             )
             mapOf(
-                "tssId" to ""
+                "tssId" to "",
             ) shouldBeEqualTo result.first.ruleInputs
 
             result.first.treeResult.ruleHit shouldBeEqualTo TSSRuleHit.TSS_IDENT_MANGLER.ruleHit

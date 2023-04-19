@@ -28,7 +28,7 @@ class ValidationRulesExecution(private val rootNode: ValidationTreeNode = valida
 
 private fun TreeNode<ValidationRules, RuleResult>.evaluate(
     sykmelding: Sykmelding,
-    ruleMetadata: RuleMetadata
+    ruleMetadata: RuleMetadata,
 ): ValidationTreeOutput =
     when (this) {
         is ResultNode -> ValidationTreeOutput(treeResult = result)

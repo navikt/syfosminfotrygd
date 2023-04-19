@@ -59,7 +59,7 @@ class TssIdFraTSS : FunSpec({
                                         kilde = "HPR"
                                         brukerId = "INITLOAD"
                                         tidReg = "200510201032"
-                                    }
+                                    },
                                 )
                             }
                             samhandlerAvd125 = XMLTypeSamhAvd().apply {
@@ -80,10 +80,10 @@ class TssIdFraTSS : FunSpec({
                                             brukerId = "INITLOAD"
                                             tidReg = "200510201032"
                                         }
-                                        )
+                                        ),
                                 )
                             }
-                        }
+                        },
                     )
                 }
             }

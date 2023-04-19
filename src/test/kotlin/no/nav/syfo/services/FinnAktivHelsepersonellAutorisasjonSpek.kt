@@ -17,28 +17,28 @@ class FinnAktivHelsepersonellAutorisasjonSpek : FunSpec({
                         autorisasjon = Kode(
                             aktiv = true,
                             oid = 0,
-                            verdi = ""
+                            verdi = "",
                         ),
                         helsepersonellkategori = Kode(
                             aktiv = true,
                             oid = 0,
-                            verdi = HelsepersonellKategori.KIROPRAKTOR.verdi
-                        )
+                            verdi = HelsepersonellKategori.KIROPRAKTOR.verdi,
+                        ),
                     ),
                     Godkjenning(
                         autorisasjon = Kode(
                             aktiv = true,
                             oid = 0,
-                            verdi = ""
+                            verdi = "",
                         ),
                         helsepersonellkategori = Kode(
                             aktiv = true,
                             oid = 0,
-                            verdi = HelsepersonellKategori.LEGE.verdi
-                        )
-                    )
+                            verdi = HelsepersonellKategori.LEGE.verdi,
+                        ),
+                    ),
 
-                )
+                ),
             )
 
             finnAktivHelsepersonellAutorisasjons(helsepersonelPerson) shouldBeEqualTo HelsepersonellKategori.LEGE.verdi
@@ -52,28 +52,28 @@ class FinnAktivHelsepersonellAutorisasjonSpek : FunSpec({
                         autorisasjon = Kode(
                             aktiv = true,
                             oid = 0,
-                            verdi = ""
+                            verdi = "",
                         ),
                         helsepersonellkategori = Kode(
                             aktiv = true,
                             oid = 0,
-                            verdi = HelsepersonellKategori.KIROPRAKTOR.verdi
-                        )
+                            verdi = HelsepersonellKategori.KIROPRAKTOR.verdi,
+                        ),
                     ),
                     Godkjenning(
                         autorisasjon = Kode(
                             aktiv = true,
                             oid = 0,
-                            verdi = ""
+                            verdi = "",
                         ),
                         helsepersonellkategori = Kode(
                             aktiv = false,
                             oid = 0,
-                            verdi = HelsepersonellKategori.LEGE.verdi
-                        )
-                    )
+                            verdi = HelsepersonellKategori.LEGE.verdi,
+                        ),
+                    ),
 
-                )
+                ),
             )
 
             finnAktivHelsepersonellAutorisasjons(helsepersonelPerson) shouldBeEqualTo HelsepersonellKategori.KIROPRAKTOR.verdi
@@ -87,28 +87,28 @@ class FinnAktivHelsepersonellAutorisasjonSpek : FunSpec({
                         autorisasjon = Kode(
                             aktiv = true,
                             oid = 0,
-                            verdi = ""
+                            verdi = "",
                         ),
                         helsepersonellkategori = Kode(
                             aktiv = false,
                             oid = 0,
-                            verdi = HelsepersonellKategori.KIROPRAKTOR.verdi
-                        )
+                            verdi = HelsepersonellKategori.KIROPRAKTOR.verdi,
+                        ),
                     ),
                     Godkjenning(
                         autorisasjon = Kode(
                             aktiv = true,
                             oid = 0,
-                            verdi = ""
+                            verdi = "",
                         ),
                         helsepersonellkategori = Kode(
                             aktiv = false,
                             oid = 0,
-                            verdi = HelsepersonellKategori.LEGE.verdi
-                        )
-                    )
+                            verdi = HelsepersonellKategori.LEGE.verdi,
+                        ),
+                    ),
 
-                )
+                ),
             )
 
             finnAktivHelsepersonellAutorisasjons(helsepersonelPerson) shouldBeEqualTo ""

@@ -16,13 +16,13 @@ class RuleExecutionService() {
 
     private val ruleExecution = sequenceOf(
         ValidationRulesExecution(validationRuleTree),
-        TSSRulesExecution(tssRuleTree)
+        TSSRulesExecution(tssRuleTree),
     )
 
     fun runRules(
         sykmelding: Sykmelding,
         ruleMetadataSykmelding: RuleMetadata,
-        sequence: Sequence<RuleExecution<out Enum<*>>> = ruleExecution
+        sequence: Sequence<RuleExecution<out Enum<*>>> = ruleExecution,
     ): List<Pair<TreeOutput<out Enum<*>, RuleResult>, Juridisk>> {
         var lastStatus = Status.OK
         val results = sequence

@@ -27,7 +27,7 @@ fun createInfotrygdBlokk(
     identDato: LocalDate,
     behandletAvManuell: Boolean,
     utenlandskSykmelding: Boolean,
-    operasjonstypeKode: Int = findOperasjonstype(periode, itfh, loggingMeta)
+    operasjonstypeKode: Int = findOperasjonstype(periode, itfh, loggingMeta),
 ) = KontrollsystemBlokkType.InfotrygdBlokk().apply {
     fodselsnummer = personNrPasient
     tkNummer = navKontorNr
@@ -67,7 +67,7 @@ fun createInfotrygdBlokk(
         behandlingsDato = if (behandletAvManuell) {
             log.info(
                 "Bruker første fom som behandlingsdato for manuelt behandlet sykmelding {}",
-                StructuredArguments.fields(loggingMeta)
+                StructuredArguments.fields(loggingMeta),
             )
             periode.periodeFOMDato
         } else {
@@ -121,7 +121,7 @@ fun createInfotrygdFellesformat(
     identDato: LocalDate,
     behandletAvManuell: Boolean,
     utenlandskSykmelding: Boolean,
-    operasjonstypeKode: Int = findOperasjonstype(periode, itfh, loggingMeta)
+    operasjonstypeKode: Int = findOperasjonstype(periode, itfh, loggingMeta),
 ) = unmarshal<XMLEIFellesformat>(marshalledFellesformat).apply {
     any.add(
         KontrollSystemBlokk().apply {
@@ -139,10 +139,10 @@ fun createInfotrygdFellesformat(
                     identDato = identDato,
                     behandletAvManuell = behandletAvManuell,
                     utenlandskSykmelding = utenlandskSykmelding,
-                    operasjonstypeKode = operasjonstypeKode
-                )
+                    operasjonstypeKode = operasjonstypeKode,
+                ),
             )
-        }
+        },
     )
 }
 
@@ -157,7 +157,7 @@ fun findArbeidsKategori(navnArbeidsgiver: String?): String {
 fun finnForsteFravaersDag(
     itfh: InfotrygdForespAndHealthInformation,
     forstePeriode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode,
-    loggingMeta: LoggingMeta
+    loggingMeta: LoggingMeta,
 ): LocalDate {
     val typeSMinfo = itfh.infotrygdForesp.sMhistorikk?.sykmelding
         ?.sortedSMInfos()
@@ -175,7 +175,7 @@ private fun findBehandlingsDato(itfh: InfotrygdForespAndHealthInformation, signa
     ) {
         listOf(
             itfh.healthInformation.kontaktMedPasient.kontaktDato,
-            itfh.healthInformation.kontaktMedPasient.behandletDato.toLocalDate()
+            itfh.healthInformation.kontaktMedPasient.behandletDato.toLocalDate(),
         ).sorted().first()
     } else if (itfh.healthInformation.kontaktMedPasient?.behandletDato != null) {
         itfh.healthInformation.kontaktMedPasient.behandletDato.toLocalDate()

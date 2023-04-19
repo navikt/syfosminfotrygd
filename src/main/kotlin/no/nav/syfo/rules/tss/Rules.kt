@@ -13,6 +13,6 @@ val tssidentmangler: TSSRule = { _, ruleMetadata ->
     RuleResult(
         ruleInputs = mapOf("tssId" to (tssId ?: "")),
         rule = TSSRules.TSS_IDENT_MANGLER,
-        ruleResult = tssId.isNullOrBlank()
+        ruleResult = tssId.isNullOrBlank(),
     )
 }

@@ -29,12 +29,12 @@ data class Environment(
     val okSykmeldingTopic: String = "teamsykmelding.ok-sykmelding",
     val behandlingsUtfallTopic: String = "teamsykmelding.sykmelding-behandlingsutfall",
     val produserOppgaveTopic: String = "teamsykmelding.oppgave-produser-oppgave",
-    val retryTopic: String = "teamsykmelding.privat-sminfotrygd-retry"
+    val retryTopic: String = "teamsykmelding.privat-sminfotrygd-retry",
 ) : MqConfig
 
 data class ServiceUser(
     val serviceuserUsername: String = getEnvVar("SERVICEUSER_USERNAME"),
-    val serviceuserPassword: String = getEnvVar("SERVICEUSER_PASSWORD")
+    val serviceuserPassword: String = getEnvVar("SERVICEUSER_PASSWORD"),
 )
 
 fun getEnvVar(varName: String, defaultValue: String? = null) =

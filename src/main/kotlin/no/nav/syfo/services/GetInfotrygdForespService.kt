@@ -26,12 +26,12 @@ suspend fun fetchInfotrygdForesp(
     receivedSykmelding: ReceivedSykmelding,
     infotrygdSporringProducer: MessageProducer,
     session: Session,
-    healthInformation: HelseOpplysningerArbeidsuforhet
+    healthInformation: HelseOpplysningerArbeidsuforhet,
 ): InfotrygdForesp =
     retry(
         callName = "it_hent_infotrygdForesp",
         retryIntervals = arrayOf(500L, 1000L, 3000L, 5000L, 10000L),
-        legalExceptions = arrayOf(IOException::class, WstxException::class, IllegalStateException::class)
+        legalExceptions = arrayOf(IOException::class, WstxException::class, IllegalStateException::class),
     ) {
         val infotrygdForespRequest = createInfotrygdForesp(receivedSykmelding.personNrPasient, healthInformation, finnLegeFnr(receivedSykmelding))
         val temporaryQueue = session.createTemporaryQueue()
@@ -94,10 +94,10 @@ fun sendInfotrygdSporring(
     producer: MessageProducer,
     session: Session,
     infotrygdForesp: InfotrygdForesp,
-    temporaryQueue: TemporaryQueue
+    temporaryQueue: TemporaryQueue,
 ) = producer.send(
     session.createTextMessage().apply {
         text = infotrygdSporringMarshaller.toString(infotrygdForesp)
         jmsReplyTo = temporaryQueue
-    }
+    },
 )

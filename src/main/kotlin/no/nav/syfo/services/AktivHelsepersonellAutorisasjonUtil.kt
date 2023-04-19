@@ -13,8 +13,8 @@ fun finnAktivHelsepersonellAutorisasjons(helsepersonelPerson: Behandler): String
         helsepersonellGodkjenningSom(
             godkjenteHelsepersonellAutorisasjonsAktiv,
             listOf(
-                HelsepersonellKategori.LEGE.verdi
-            )
+                HelsepersonellKategori.LEGE.verdi,
+            ),
         )
     ) {
         true -> HelsepersonellKategori.LEGE.verdi

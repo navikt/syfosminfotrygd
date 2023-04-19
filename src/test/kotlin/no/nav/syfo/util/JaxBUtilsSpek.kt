@@ -19,7 +19,7 @@ class JaxBUtilsSpek : FunSpec({
             escapetXMLSomString.contains("<TeleAddress V=\"Tlf:&lt;Ikkespesifisert&gt;\"/>").shouldBeTrue()
             escapetXMLSomString.contains(
                 "<Beskriv>&lt;&lt;&lt;VENSTRE KNE 5mm beinmargsOdem i mediale tibiakondylen med litt intrameniskeal degenerasjon i bakhornet av mediale menisken&gt;&gt;&gt; og &lt;&lt;&lt; HOYRE KNE Minimal degenerasjon i mediale menisken utan gjennomgaande ruptur og med liten skvett hydrops&gt;&gt;&gt;" +
-                    " sterke smerte ved belastning av begge knaer. Kan ikke gar pa flaten.</Beskriv>"
+                    " sterke smerte ved belastning av begge knaer. Kan ikke gar pa flaten.</Beskriv>",
             ).shouldBeTrue()
 
             escapetXMLSomString.contains("Diagnosekode V=\"W05\" S=\"2.16.578.1.12.4.1.1.7170\" DN=\"KVALME SVANGERSKAP (&gt;22 UKER)\"/>").shouldBeTrue()

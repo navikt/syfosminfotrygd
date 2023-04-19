@@ -7,7 +7,7 @@ import no.nav.syfo.util.LoggingMeta
 
 class FinnNAVKontorService(
     private val pdlPersonService: PdlPersonService,
-    private val norg2Client: Norg2Client
+    private val norg2Client: Norg2Client,
 ) {
     suspend fun finnLokaltNavkontor(fnr: String, loggingMeta: LoggingMeta): String {
         val pdlPerson = pdlPersonService.getPerson(fnr, loggingMeta)

@@ -21,7 +21,7 @@ class Duplikatsjekk : FunSpec({
                         HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
                             periodeFOMDato = LocalDate.of(2019, 1, 1)
                             periodeTOMDato = LocalDate.of(2019, 1, 2)
-                        }
+                        },
                     )
                 }
             }
@@ -32,7 +32,7 @@ class Duplikatsjekk : FunSpec({
                         TypeSMinfo().apply {
                             periode = TypeSMinfo.Periode().apply {
                             }
-                        }
+                        },
                     )
                     status = StatusType().apply {
                         kodeMelding = "00"
@@ -55,7 +55,7 @@ class Duplikatsjekk : FunSpec({
                 LocalDate.now(),
                 behandletAvManuell = false,
                 utenlandskSykmelding = false,
-                operasjonstypeKode = 1
+                operasjonstypeKode = 1,
 
             )
 
@@ -65,7 +65,7 @@ class Duplikatsjekk : FunSpec({
                         HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
                             periodeFOMDato = LocalDate.of(2019, 1, 1)
                             periodeTOMDato = LocalDate.of(2019, 1, 2)
-                        }
+                        },
                     )
                 }
                 arbeidsgiver = HelseOpplysningerArbeidsuforhet.Arbeidsgiver().apply {
@@ -92,7 +92,7 @@ class Duplikatsjekk : FunSpec({
                 LocalDate.now(),
                 behandletAvManuell = false,
                 utenlandskSykmelding = false,
-                operasjonstypeKode = 1
+                operasjonstypeKode = 1,
 
             )
 

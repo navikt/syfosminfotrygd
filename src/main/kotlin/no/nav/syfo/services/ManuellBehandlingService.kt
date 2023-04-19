@@ -24,18 +24,18 @@ class ManuellBehandlingService(
     private val behandlingsutfallService: BehandlingsutfallService,
     private val redisService: RedisService,
     private val oppgaveService: OppgaveService,
-    private val applicationState: ApplicationState
+    private val applicationState: ApplicationState,
 ) {
     fun produceManualTaskAndSendValidationResults(
         receivedSykmelding: ReceivedSykmelding,
         validationResult: ValidationResult,
         behandletAvManuell: Boolean,
-        loggingMeta: LoggingMeta
+        loggingMeta: LoggingMeta,
     ) {
         behandlingsutfallService.sendRuleCheckValidationResult(
             receivedSykmelding.sykmelding.id,
             validationResult,
-            loggingMeta
+            loggingMeta,
         )
         oppgaveService.opprettOppgave(receivedSykmelding, validationResult, behandletAvManuell, loggingMeta)
     }
@@ -46,7 +46,7 @@ class ManuellBehandlingService(
         loggingMeta: LoggingMeta,
         itfh: InfotrygdForespAndHealthInformation,
         helsepersonellKategoriVerdi: String,
-        behandletAvManuell: Boolean
+        behandletAvManuell: Boolean,
     ) {
         behandlingsutfallService.sendRuleCheckValidationResult(receivedSykmelding.sykmelding.id, validationResult, loggingMeta)
         try {
@@ -62,8 +62,8 @@ class ManuellBehandlingService(
                     itfh = itfh, periode = perioder.first(), personNrPasient = receivedSykmelding.personNrPasient, signaturDato = LocalDate.of(2019, 1, 1),
                     helsepersonellKategoriVerdi = helsepersonellKategoriVerdi, tssid = tssid, loggingMeta = loggingMeta, navKontorNr = "",
                     navnArbeidsgiver = findArbeidsKategori(itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver),
-                    identDato = forsteFravaersDag, behandletAvManuell = behandletAvManuell, utenlandskSykmelding = receivedSykmelding.erUtenlandskSykmelding(), operasjonstypeKode = 1
-                )
+                    identDato = forsteFravaersDag, behandletAvManuell = behandletAvManuell, utenlandskSykmelding = receivedSykmelding.erUtenlandskSykmelding(), operasjonstypeKode = 1,
+                ),
             )
 
             val duplikatInfotrygdOppdatering = redisService.erIRedis(sha256String)
@@ -85,7 +85,7 @@ class ManuellBehandlingService(
                 duplikatInfotrygdOppdatering -> {
                     log.warn(
                         "Melding er infotrygd duplikat, ikke opprett manuelloppgave {}",
-                        StructuredArguments.fields(loggingMeta)
+                        StructuredArguments.fields(loggingMeta),
                     )
                 }
                 skalIkkeOppdatereInfotrygd -> {
@@ -105,9 +105,8 @@ class ManuellBehandlingService(
 
 fun skalIkkeProdusereManuellOppgave(
     receivedSykmelding: ReceivedSykmelding,
-    validationResult: ValidationResult
+    validationResult: ValidationResult,
 ): Boolean {
-
     val delvisOverlappendeSykmeldingRule = validationResult.ruleHits.isNotEmpty() && validationResult.ruleHits.any {
         (it.ruleName == "PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE")
     } && receivedSykmelding.sykmelding.perioder.sortedPeriodeFOMDate().lastOrNull() != null &&

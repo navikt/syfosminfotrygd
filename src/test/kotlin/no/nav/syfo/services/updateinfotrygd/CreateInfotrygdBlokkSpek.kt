@@ -23,7 +23,7 @@ class CreateInfotrygdBlokkSpek : FunSpec({
                         HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
                             periodeFOMDato = LocalDate.of(2019, 1, 1)
                             periodeTOMDato = LocalDate.of(2019, 1, 2)
-                        }
+                        },
                     )
                 }
             }
@@ -54,7 +54,7 @@ class CreateInfotrygdBlokkSpek : FunSpec({
                 forsteFravaersDag,
                 behandletAvManuell = false,
                 utenlandskSykmelding = false,
-                operasjonstypeKode = 1
+                operasjonstypeKode = 1,
 
             )
 
@@ -69,13 +69,13 @@ class CreateInfotrygdBlokkSpek : FunSpec({
                         HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
                             periodeFOMDato = LocalDate.of(2019, 1, 2)
                             periodeTOMDato = LocalDate.of(2019, 1, 3)
-                        }
+                        },
                     )
                     periode.add(
                         HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
                             periodeFOMDato = LocalDate.of(2019, 1, 4)
                             periodeTOMDato = LocalDate.of(2019, 1, 5)
-                        }
+                        },
                     )
                 }
             }
@@ -88,7 +88,7 @@ class CreateInfotrygdBlokkSpek : FunSpec({
                                 arbufoerFOM = LocalDate.of(2019, 1, 1)
                                 arbufoerTOM = LocalDate.of(2019, 1, 1)
                             }
-                        }
+                        },
                     )
                     status = StatusType().apply {
                         kodeMelding = "00"
@@ -114,7 +114,7 @@ class CreateInfotrygdBlokkSpek : FunSpec({
                 forsteFravaersDag,
                 behandletAvManuell = false,
                 utenlandskSykmelding = false,
-                operasjonstypeKode = 2
+                operasjonstypeKode = 2,
 
             )
 
@@ -131,7 +131,7 @@ class CreateInfotrygdBlokkSpek : FunSpec({
                 forsteFravaersDag,
                 behandletAvManuell = false,
                 utenlandskSykmelding = false,
-                operasjonstypeKode = 2
+                operasjonstypeKode = 2,
 
             )
 
@@ -151,13 +151,13 @@ class CreateInfotrygdBlokkSpek : FunSpec({
                         HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
                             periodeFOMDato = LocalDate.of(2019, 1, 3)
                             periodeTOMDato = LocalDate.of(2019, 1, 4)
-                        }
+                        },
                     )
                     periode.add(
                         HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
                             periodeFOMDato = LocalDate.of(2019, 1, 5)
                             periodeTOMDato = LocalDate.of(2019, 1, 6)
-                        }
+                        },
                     )
                 }
             }
@@ -170,7 +170,7 @@ class CreateInfotrygdBlokkSpek : FunSpec({
                                 arbufoerFOM = LocalDate.of(2019, 1, 1)
                                 arbufoerTOM = LocalDate.of(2019, 1, 1)
                             }
-                        }
+                        },
                     )
                     status = StatusType().apply {
                         kodeMelding = "00"
@@ -196,7 +196,7 @@ class CreateInfotrygdBlokkSpek : FunSpec({
                 forsteFravaersDag,
                 behandletAvManuell = false,
                 utenlandskSykmelding = false,
-                operasjonstypeKode = 1
+                operasjonstypeKode = 1,
 
             )
 
@@ -213,7 +213,7 @@ class CreateInfotrygdBlokkSpek : FunSpec({
                 forsteFravaersDag,
                 behandletAvManuell = false,
                 utenlandskSykmelding = false,
-                operasjonstypeKode = 2
+                operasjonstypeKode = 2,
 
             )
 
@@ -228,7 +228,7 @@ class CreateInfotrygdBlokkSpek : FunSpec({
                         HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
                             periodeFOMDato = LocalDate.of(2019, 1, 1)
                             periodeTOMDato = LocalDate.of(2019, 1, 2)
-                        }
+                        },
                     )
                 }
             }
@@ -256,7 +256,7 @@ class CreateInfotrygdBlokkSpek : FunSpec({
                 forsteFravaersDag,
                 behandletAvManuell = true,
                 utenlandskSykmelding = false,
-                operasjonstypeKode = 1
+                operasjonstypeKode = 1,
 
             )
 
@@ -270,7 +270,7 @@ class CreateInfotrygdBlokkSpek : FunSpec({
                         HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
                             periodeFOMDato = LocalDate.of(2019, 1, 1)
                             periodeTOMDato = LocalDate.of(2019, 1, 2)
-                        }
+                        },
                     )
                 }
             }
@@ -298,7 +298,7 @@ class CreateInfotrygdBlokkSpek : FunSpec({
                 forsteFravaersDag,
                 behandletAvManuell = false,
                 utenlandskSykmelding = true,
-                operasjonstypeKode = 1
+                operasjonstypeKode = 1,
 
             )
 

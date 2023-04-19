@@ -32,8 +32,12 @@ val tssSamhandlerdataUnmarshaller: Unmarshaller = tssSamhandlerdataInputJaxBCont
 
 val fellesformatJaxBContext: JAXBContext = JAXBContext.newInstance(
     XMLEIFellesformat::class.java,
-    XMLMsgHead::class.java, XMLMottakenhetBlokk::class.java, HelseOpplysningerArbeidsuforhet::class.java,
-    KontrollsystemBlokkType::class.java, KontrollSystemBlokk::class.java, InfotrygdForesp::class.java
+    XMLMsgHead::class.java,
+    XMLMottakenhetBlokk::class.java,
+    HelseOpplysningerArbeidsuforhet::class.java,
+    KontrollsystemBlokkType::class.java,
+    KontrollSystemBlokk::class.java,
+    InfotrygdForesp::class.java,
 )
 val fellesformatUnmarshaller: Unmarshaller = fellesformatJaxBContext.createUnmarshaller().apply {
     setAdapter(LocalDateTimeXmlAdapter::class.java, XMLDateTimeAdapter())
@@ -48,7 +52,7 @@ val xmlObjectWriter: XmlMapper = (
     XmlMapper(
         JacksonXmlModule().apply {
             setDefaultUseWrapper(false)
-        }
+        },
     )
         .configure(ToXmlGenerator.Feature.WRITE_XML_DECLARATION, true)
         .registerModule(JaxbAnnotationModule())

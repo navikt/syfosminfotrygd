@@ -54,7 +54,7 @@ class CreateInfotrygdInfoSpek : FunSpec({
                 "0435",
                 LocalDate.now(),
                 behandletAvManuell = false,
-                utenlandskSykmelding = false
+                utenlandskSykmelding = false,
             )
 
             extractHelseOpplysningerArbeidsuforhet(infotrygdFellesformat).regelSettVersjon shouldBeEqualTo
@@ -76,7 +76,7 @@ class CreateInfotrygdInfoSpek : FunSpec({
                 fellesFormatString, itfh, healthInformation.aktivitet.periode.first(),
                 "1231234", LocalDate.now(), "LE",
                 "1341515", LoggingMeta("mottakId", "12315", "", ""),
-                "0435", LocalDate.now(), behandletAvManuell = false, utenlandskSykmelding = false
+                "0435", LocalDate.now(), behandletAvManuell = false, utenlandskSykmelding = false,
             )
 
             extractHelseOpplysningerArbeidsuforhet(infotrygdFellesformat).aktivitet.periode.first().periodeTOMDato shouldBeEqualTo
@@ -188,7 +188,7 @@ class CreateInfotrygdInfoSpek : FunSpec({
                         medisinskeArsaker = ArsakType().apply {
                         }
                     }
-                }
+                },
 
             )
             val fellesFormat = createFellesFormat(healthInformation)
@@ -200,7 +200,7 @@ class CreateInfotrygdInfoSpek : FunSpec({
                         periode = TypeSMinfo.Periode().apply {
                             arbufoerFOM = LocalDate.now()
                         }
-                    }
+                    },
                 )
             }
             val itfh = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
@@ -226,7 +226,7 @@ class CreateInfotrygdInfoSpek : FunSpec({
                         medisinskeArsaker = ArsakType().apply {
                         }
                     }
-                }
+                },
             )
             healthInformation.medisinskVurdering = HelseOpplysningerArbeidsuforhet.MedisinskVurdering().apply {
                 hovedDiagnose = HelseOpplysningerArbeidsuforhet.MedisinskVurdering.HovedDiagnose().apply {
@@ -282,7 +282,7 @@ class CreateInfotrygdInfoSpek : FunSpec({
                         medisinskeArsaker = ArsakType().apply {
                         }
                     }
-                }
+                },
 
             )
             healthInformation.medisinskVurdering = HelseOpplysningerArbeidsuforhet.MedisinskVurdering().apply {
@@ -303,7 +303,7 @@ class CreateInfotrygdInfoSpek : FunSpec({
                         periode = TypeSMinfo.Periode().apply {
                             arbufoerFOM = LocalDate.now()
                         }
-                    }
+                    },
                 )
             }
             val itfh = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
@@ -341,12 +341,12 @@ fun createFellesFormat(healthInformation: HelseOpplysningerArbeidsuforhet): XMLE
                     refDoc = XMLRefDoc().apply {
                         content = XMLRefDoc.Content().apply {
                             any.add(
-                                healthInformation
+                                healthInformation,
                             )
                         }
                     }
-                }
+                },
             )
-        }
+        },
     )
 }

@@ -40,7 +40,7 @@ class TssServiceKtTest : FunSpec({
                                 }
                                 legeInstNr = "9898".toBigInteger()
                             }
-                        }
+                        },
                     )
                 }
             }
@@ -82,13 +82,13 @@ class TssServiceKtTest : FunSpec({
                                 }
                                 legeInstNr = "9898".toBigInteger()
                             }
-                        }
+                        },
                     )
                 }
             }
             val receivedSykmelding = receivedSykmelding(UUID.randomUUID().toString()).copy(
                 tssid = null,
-                utenlandskSykmelding = UtenlandskSykmelding("POL", false)
+                utenlandskSykmelding = UtenlandskSykmelding("POL", false),
             )
 
             val tssId = getTssId(infotrygdForespResponse, receivedSykmelding, tssProducer, session, loggingMeta)

@@ -100,7 +100,7 @@ fun main() {
     val applicationState = ApplicationState()
     val applicationEngine = createApplicationEngine(
         env,
-        applicationState
+        applicationState,
     )
 
     val applicationServer = ApplicationServer(applicationEngine)
@@ -120,7 +120,7 @@ fun main() {
             .also {
                 it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "none"
                 it[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = 1
-            }
+            },
     )
 
     MQEnvironment.channel = env.mqChannelName
@@ -182,25 +182,25 @@ fun main() {
     val manuellClient = ManuellClient(httpClient, env.manuellUrl, accessTokenClientV2, env.manuellScope)
     val behandlingsutfallService = BehandlingsutfallService(
         kafkaAivenProducerBehandlingsutfall = kafkaAivenProducerBehandlingsutfall,
-        behandlingsUtfallTopic = env.behandlingsUtfallTopic
+        behandlingsUtfallTopic = env.behandlingsUtfallTopic,
     )
 
     val oppgaveService = OppgaveService(
         kafkaAivenProducerOppgave = kafkaAivenProducerOppgave,
-        produserOppgaveTopic = env.produserOppgaveTopic
+        produserOppgaveTopic = env.produserOppgaveTopic,
     )
     val manuellBehandlingService = ManuellBehandlingService(
         behandlingsutfallService = behandlingsutfallService,
         redisService = redisService,
         oppgaveService = oppgaveService,
-        applicationState = applicationState
+        applicationState = applicationState,
     )
 
     val updateInfotrygdService = UpdateInfotrygdService(
         kafkaAivenProducerReceivedSykmelding = kafkaAivenProducerReceivedSykmelding,
         retryTopic = env.retryTopic,
         behandlingsutfallService = behandlingsutfallService,
-        redisService = redisService
+        redisService = redisService,
     )
 
     val mottattSykmeldingService = MottattSykmeldingService(
@@ -209,7 +209,7 @@ fun main() {
         manuellClient = manuellClient,
         manuellBehandlingService = manuellBehandlingService,
         behandlingsutfallService = behandlingsutfallService,
-        norskHelsenettClient = norskHelsenettClient
+        norskHelsenettClient = norskHelsenettClient,
     )
 
     launchListeners(
@@ -217,7 +217,7 @@ fun main() {
         env,
         serviceUser,
         kafkaAivenConsumerReceivedSykmelding,
-        mottattSykmeldingService
+        mottattSykmeldingService,
     )
 
     applicationServer.start()
@@ -242,7 +242,7 @@ fun launchListeners(
     env: Environment,
     serviceUser: ServiceUser,
     kafkaAivenConsumerReceivedSykmelding: KafkaConsumer<String, String>,
-    mottattSykmeldingService: MottattSykmeldingService
+    mottattSykmeldingService: MottattSykmeldingService,
 ) {
     createListener(applicationState) {
         connectionFactory(env).createConnection(serviceUser.serviceuserUsername, serviceUser.serviceuserPassword)
@@ -256,8 +256,14 @@ fun launchListeners(
                 val tssProducer = session.producerForQueue("queue:///${env.tssQueue}?targetClient=1")
 
                 blockingApplicationLogic(
-                    applicationState, infotrygdOppdateringProducer, infotrygdSporringProducer,
-                    session, tssProducer, env, kafkaAivenConsumerReceivedSykmelding, mottattSykmeldingService
+                    applicationState,
+                    infotrygdOppdateringProducer,
+                    infotrygdSporringProducer,
+                    session,
+                    tssProducer,
+                    env,
+                    kafkaAivenConsumerReceivedSykmelding,
+                    mottattSykmeldingService,
                 )
             }
     }
@@ -273,13 +279,13 @@ suspend fun blockingApplicationLogic(
     tssProducer: MessageProducer,
     env: Environment,
     kafkaAivenConsumerReceivedSykmelding: KafkaConsumer<String, String>,
-    mottattSykmeldingService: MottattSykmeldingService
+    mottattSykmeldingService: MottattSykmeldingService,
 ) {
     while (applicationState.ready) {
         if (shouldRun(getCurrentTime())) {
             log.info("Starter kafkaconsumer")
             kafkaAivenConsumerReceivedSykmelding.subscribe(
-                listOf(env.okSykmeldingTopic, env.retryTopic)
+                listOf(env.okSykmeldingTopic, env.retryTopic),
             )
             runKafkaConsumer(
                 infotrygdOppdateringProducer,
@@ -288,7 +294,7 @@ suspend fun blockingApplicationLogic(
                 applicationState,
                 tssProducer,
                 kafkaAivenConsumerReceivedSykmelding,
-                mottattSykmeldingService
+                mottattSykmeldingService,
             )
             kafkaAivenConsumerReceivedSykmelding.unsubscribe()
             log.info("Stopper KafkaConsumer")
@@ -304,7 +310,7 @@ private suspend fun runKafkaConsumer(
     applicationState: ApplicationState,
     tssProducer: MessageProducer,
     kafkaAivenConsumerReceivedSykmelding: KafkaConsumer<String, String>,
-    mottattSykmeldingService: MottattSykmeldingService
+    mottattSykmeldingService: MottattSykmeldingService,
 ) {
     while (applicationState.ready && shouldRun(getCurrentTime())) {
         kafkaAivenConsumerReceivedSykmelding.poll(Duration.ofMillis(0)).mapNotNull { it.value() }
@@ -314,7 +320,7 @@ private suspend fun runKafkaConsumer(
                     mottakId = receivedSykmelding.navLogId,
                     orgNr = receivedSykmelding.legekontorOrgNr,
                     msgId = receivedSykmelding.msgId,
-                    sykmeldingId = receivedSykmelding.sykmelding.id
+                    sykmeldingId = receivedSykmelding.sykmelding.id,
                 )
                 log.info("Har mottatt sykmelding, {}", fields(loggingMeta))
                 mottattSykmeldingService.handleMessage(
@@ -323,7 +329,7 @@ private suspend fun runKafkaConsumer(
                     infotrygdSporringProducer = infotrygdSporringProducer,
                     tssProducer = tssProducer,
                     session = session,
-                    loggingMeta = loggingMeta
+                    loggingMeta = loggingMeta,
                 )
             }
         delay(100)
@@ -367,5 +373,5 @@ fun List<HelseOpplysningerArbeidsuforhet.Aktivitet.Periode>.sortedFOMDate(): Lis
 
 data class InfotrygdForespAndHealthInformation(
     val infotrygdForesp: InfotrygdForesp,
-    val healthInformation: HelseOpplysningerArbeidsuforhet
+    val healthInformation: HelseOpplysningerArbeidsuforhet,
 )

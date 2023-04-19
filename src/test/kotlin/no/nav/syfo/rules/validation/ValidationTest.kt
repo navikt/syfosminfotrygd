@@ -25,9 +25,9 @@ class ValidationTest : FunSpec({
                 perioder = listOf(
                     generatePeriode(
                         fom = LocalDate.now(),
-                        tom = LocalDate.now().plusDays(10)
-                    )
-                )
+                        tom = LocalDate.now().plusDays(10),
+                    ),
+                ),
             )
 
             val infotrygdForespResponse = InfotrygdForesp().apply {
@@ -39,7 +39,7 @@ class ValidationTest : FunSpec({
             val receivedSykmelding = receivedSykmelding(
                 id = UUID.randomUUID().toString(),
                 sykmelding = sykmelding,
-                fellesformat = ""
+                fellesformat = "",
             )
 
             val ruleMetadata = RuleMetadata(
@@ -49,7 +49,7 @@ class ValidationTest : FunSpec({
                 rulesetVersion = receivedSykmelding.rulesetVersion,
                 legekontorOrgnr = receivedSykmelding.legekontorOrgNr,
                 tssid = receivedSykmelding.tssid,
-                infotrygdForesp = infotrygdForespResponse
+                infotrygdForesp = infotrygdForespResponse,
             )
 
             val result = ruleTree.runRules(sykmelding, ruleMetadata)
@@ -75,7 +75,7 @@ class ValidationTest : FunSpec({
                 ValidationRules.ERROR_FROM_IT_PARALELLYTELSER_STATUS_KODEMELDING to false,
                 ValidationRules.ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING to false,
                 ValidationRules.ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING to false,
-                ValidationRules.ARBEIDUFORETOM_MANGLER to false
+                ValidationRules.ARBEIDUFORETOM_MANGLER to false,
             )
 
             mapOf(
@@ -90,7 +90,7 @@ class ValidationTest : FunSpec({
                 "parallelleYtelsesKodeMelding" to "",
                 "diagnoseKodeKodeMelding" to "",
                 "pasientStatusKodeMelding" to "",
-                "status" to ""
+                "status" to "",
             ) shouldBeEqualTo result.first.ruleInputs
 
             result.first.treeResult.ruleHit shouldBeEqualTo null
@@ -104,9 +104,9 @@ class ValidationTest : FunSpec({
                     generatePeriode(
                         fom = LocalDate.now(),
                         tom = LocalDate.now().plusDays(10),
-                        behandlingsdager = 1
-                    )
-                )
+                        behandlingsdager = 1,
+                    ),
+                ),
             )
 
             val infotrygdForespResponse = InfotrygdForesp().apply {
@@ -118,7 +118,7 @@ class ValidationTest : FunSpec({
             val receivedSykmelding = receivedSykmelding(
                 id = UUID.randomUUID().toString(),
                 sykmelding = sykmelding,
-                fellesformat = ""
+                fellesformat = "",
             )
 
             val ruleMetadata = RuleMetadata(
@@ -128,17 +128,17 @@ class ValidationTest : FunSpec({
                 rulesetVersion = receivedSykmelding.rulesetVersion,
                 legekontorOrgnr = receivedSykmelding.legekontorOrgNr,
                 tssid = receivedSykmelding.tssid,
-                infotrygdForesp = infotrygdForespResponse
+                infotrygdForesp = infotrygdForespResponse,
             )
 
             val result = ruleTree.runRules(sykmelding, ruleMetadata)
 
             result.first.rulePath.map { it.rule to it.ruleResult } shouldBeEqualTo listOf(
-                ValidationRules.NUMBER_OF_TREATMENT_DAYS_SET to true
+                ValidationRules.NUMBER_OF_TREATMENT_DAYS_SET to true,
             )
 
             mapOf(
-                "perioder" to sykmelding.perioder
+                "perioder" to sykmelding.perioder,
             ) shouldBeEqualTo result.first.ruleInputs
 
             result.first.treeResult.ruleHit shouldBeEqualTo ValidationRuleHit.NUMBER_OF_TREATMENT_DAYS_SET.ruleHit
@@ -154,10 +154,10 @@ class ValidationTest : FunSpec({
                         tom = LocalDate.now().plusDays(10),
                         gradert = Gradert(
                             reisetilskudd = true,
-                            grad = 90
-                        )
-                    )
-                )
+                            grad = 90,
+                        ),
+                    ),
+                ),
             )
 
             val infotrygdForespResponse = InfotrygdForesp().apply {
@@ -169,7 +169,7 @@ class ValidationTest : FunSpec({
             val receivedSykmelding = receivedSykmelding(
                 id = UUID.randomUUID().toString(),
                 sykmelding = sykmelding,
-                fellesformat = ""
+                fellesformat = "",
             )
 
             val ruleMetadata = RuleMetadata(
@@ -179,18 +179,18 @@ class ValidationTest : FunSpec({
                 rulesetVersion = receivedSykmelding.rulesetVersion,
                 legekontorOrgnr = receivedSykmelding.legekontorOrgNr,
                 tssid = receivedSykmelding.tssid,
-                infotrygdForesp = infotrygdForespResponse
+                infotrygdForesp = infotrygdForespResponse,
             )
 
             val result = ruleTree.runRules(sykmelding, ruleMetadata)
 
             result.first.rulePath.map { it.rule to it.ruleResult } shouldBeEqualTo listOf(
                 ValidationRules.NUMBER_OF_TREATMENT_DAYS_SET to false,
-                ValidationRules.GRADERT_REISETILSKUDD_ER_OPPGITT to true
+                ValidationRules.GRADERT_REISETILSKUDD_ER_OPPGITT to true,
             )
 
             mapOf(
-                "perioder" to sykmelding.perioder
+                "perioder" to sykmelding.perioder,
             ) shouldBeEqualTo result.first.ruleInputs
 
             result.first.treeResult.ruleHit shouldBeEqualTo ValidationRuleHit.GRADERT_REISETILSKUDD_ER_OPPGITT.ruleHit
@@ -204,9 +204,9 @@ class ValidationTest : FunSpec({
                     generatePeriode(
                         fom = LocalDate.now(),
                         tom = LocalDate.now().plusDays(10),
-                        reisetilskudd = true
-                    )
-                )
+                        reisetilskudd = true,
+                    ),
+                ),
             )
 
             val infotrygdForespResponse = InfotrygdForesp().apply {
@@ -218,7 +218,7 @@ class ValidationTest : FunSpec({
             val receivedSykmelding = receivedSykmelding(
                 id = UUID.randomUUID().toString(),
                 sykmelding = sykmelding,
-                fellesformat = ""
+                fellesformat = "",
             )
 
             val ruleMetadata = RuleMetadata(
@@ -228,7 +228,7 @@ class ValidationTest : FunSpec({
                 rulesetVersion = receivedSykmelding.rulesetVersion,
                 legekontorOrgnr = receivedSykmelding.legekontorOrgNr,
                 tssid = receivedSykmelding.tssid,
-                infotrygdForesp = infotrygdForespResponse
+                infotrygdForesp = infotrygdForespResponse,
             )
 
             val result = ruleTree.runRules(sykmelding, ruleMetadata)
@@ -236,11 +236,11 @@ class ValidationTest : FunSpec({
             result.first.rulePath.map { it.rule to it.ruleResult } shouldBeEqualTo listOf(
                 ValidationRules.NUMBER_OF_TREATMENT_DAYS_SET to false,
                 ValidationRules.GRADERT_REISETILSKUDD_ER_OPPGITT to false,
-                ValidationRules.TRAVEL_SUBSIDY_SPECIFIED to true
+                ValidationRules.TRAVEL_SUBSIDY_SPECIFIED to true,
             )
 
             mapOf(
-                "perioder" to sykmelding.perioder
+                "perioder" to sykmelding.perioder,
             ) shouldBeEqualTo result.first.ruleInputs
 
             result.first.treeResult.ruleHit shouldBeEqualTo ValidationRuleHit.TRAVEL_SUBSIDY_SPECIFIED.ruleHit
@@ -253,9 +253,9 @@ class ValidationTest : FunSpec({
                 perioder = listOf(
                     generatePeriode(
                         fom = LocalDate.now(),
-                        tom = LocalDate.now().plusDays(10)
-                    )
-                )
+                        tom = LocalDate.now().plusDays(10),
+                    ),
+                ),
             )
 
             val infotrygdForespResponse = InfotrygdForesp().apply {
@@ -270,7 +270,7 @@ class ValidationTest : FunSpec({
             val receivedSykmelding = receivedSykmelding(
                 id = UUID.randomUUID().toString(),
                 sykmelding = sykmelding,
-                fellesformat = ""
+                fellesformat = "",
             )
 
             val ruleMetadata = RuleMetadata(
@@ -280,7 +280,7 @@ class ValidationTest : FunSpec({
                 rulesetVersion = receivedSykmelding.rulesetVersion,
                 legekontorOrgnr = receivedSykmelding.legekontorOrgNr,
                 tssid = receivedSykmelding.tssid,
-                infotrygdForesp = infotrygdForespResponse
+                infotrygdForesp = infotrygdForespResponse,
             )
 
             val result = ruleTree.runRules(sykmelding, ruleMetadata)
@@ -289,12 +289,12 @@ class ValidationTest : FunSpec({
                 ValidationRules.NUMBER_OF_TREATMENT_DAYS_SET to false,
                 ValidationRules.GRADERT_REISETILSKUDD_ER_OPPGITT to false,
                 ValidationRules.TRAVEL_SUBSIDY_SPECIFIED to false,
-                ValidationRules.PATIENT_NOT_IN_IP to true
+                ValidationRules.PATIENT_NOT_IN_IP to true,
             )
 
             mapOf(
                 "perioder" to sykmelding.perioder,
-                "pasient" to ruleMetadata.infotrygdForesp.pasient
+                "pasient" to ruleMetadata.infotrygdForesp.pasient,
             ) shouldBeEqualTo result.first.ruleInputs
 
             result.first.treeResult.ruleHit shouldBeEqualTo ValidationRuleHit.PATIENT_NOT_IN_IP.ruleHit
@@ -307,9 +307,9 @@ class ValidationTest : FunSpec({
                 perioder = listOf(
                     generatePeriode(
                         fom = LocalDate.of(2019, 1, 1),
-                        tom = LocalDate.of(2019, 1, 5)
-                    )
-                )
+                        tom = LocalDate.of(2019, 1, 5),
+                    ),
+                ),
             )
 
             val infotrygdForespResponse = InfotrygdForesp().apply {
@@ -323,7 +323,7 @@ class ValidationTest : FunSpec({
                                 arbufoerFOM = LocalDate.of(2019, 1, 2)
                                 arbufoerTOM = LocalDate.of(2019, 1, 5)
                             }
-                        }
+                        },
                     )
                 }
             }
@@ -331,7 +331,7 @@ class ValidationTest : FunSpec({
             val receivedSykmelding = receivedSykmelding(
                 id = UUID.randomUUID().toString(),
                 sykmelding = generateSykmelding,
-                fellesformat = ""
+                fellesformat = "",
             )
 
             val ruleMetadata = RuleMetadata(
@@ -341,7 +341,7 @@ class ValidationTest : FunSpec({
                 rulesetVersion = receivedSykmelding.rulesetVersion,
                 legekontorOrgnr = receivedSykmelding.legekontorOrgNr,
                 tssid = receivedSykmelding.tssid,
-                infotrygdForesp = infotrygdForespResponse
+                infotrygdForesp = infotrygdForespResponse,
             )
 
             val result = ruleTree.runRules(generateSykmelding, ruleMetadata)
@@ -351,14 +351,14 @@ class ValidationTest : FunSpec({
                 ValidationRules.GRADERT_REISETILSKUDD_ER_OPPGITT to false,
                 ValidationRules.TRAVEL_SUBSIDY_SPECIFIED to false,
                 ValidationRules.PATIENT_NOT_IN_IP to false,
-                ValidationRules.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE to true
+                ValidationRules.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE to true,
             )
 
             mapOf(
                 "perioder" to generateSykmelding.perioder,
                 "pasient" to ruleMetadata.infotrygdForesp.pasient,
                 "infotrygdSykmelding" to ruleMetadata.infotrygdForesp.sMhistorikk?.sykmelding,
-                "sykmeldingPerioder" to generateSykmelding.perioder
+                "sykmeldingPerioder" to generateSykmelding.perioder,
             ) shouldBeEqualTo result.first.ruleInputs
 
             result.first.treeResult.ruleHit shouldBeEqualTo ValidationRuleHit.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE.ruleHit
@@ -371,9 +371,9 @@ class ValidationTest : FunSpec({
                 perioder = listOf(
                     generatePeriode(
                         fom = LocalDate.of(2018, 1, 2),
-                        tom = LocalDate.of(2018, 1, 15)
-                    )
-                )
+                        tom = LocalDate.of(2018, 1, 15),
+                    ),
+                ),
             )
 
             val infotrygdForespResponse = InfotrygdForesp().apply {
@@ -389,7 +389,7 @@ class ValidationTest : FunSpec({
                                 hovedDiagnosekode = "001"
                                 utbetTOM = LocalDate.of(2018, 1, 3)
                             }
-                        }
+                        },
                     )
                 }
             }
@@ -397,7 +397,7 @@ class ValidationTest : FunSpec({
             val receivedSykmelding = receivedSykmelding(
                 id = UUID.randomUUID().toString(),
                 sykmelding = generateSykmelding,
-                fellesformat = ""
+                fellesformat = "",
             )
 
             val ruleMetadata = RuleMetadata(
@@ -407,7 +407,7 @@ class ValidationTest : FunSpec({
                 rulesetVersion = receivedSykmelding.rulesetVersion,
                 legekontorOrgnr = receivedSykmelding.legekontorOrgNr,
                 tssid = receivedSykmelding.tssid,
-                infotrygdForesp = infotrygdForespResponse
+                infotrygdForesp = infotrygdForespResponse,
             )
 
             val result = ruleTree.runRules(generateSykmelding, ruleMetadata)
@@ -418,14 +418,14 @@ class ValidationTest : FunSpec({
                 ValidationRules.TRAVEL_SUBSIDY_SPECIFIED to false,
                 ValidationRules.PATIENT_NOT_IN_IP to false,
                 ValidationRules.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE to false,
-                ValidationRules.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_1 to true
+                ValidationRules.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_1 to true,
             )
 
             mapOf(
                 "perioder" to generateSykmelding.perioder,
                 "pasient" to ruleMetadata.infotrygdForesp.pasient,
                 "infotrygdSykmelding" to ruleMetadata.infotrygdForesp.sMhistorikk?.sykmelding,
-                "sykmeldingPerioder" to generateSykmelding.perioder
+                "sykmeldingPerioder" to generateSykmelding.perioder,
             ) shouldBeEqualTo result.first.ruleInputs
 
             result.first.treeResult.ruleHit shouldBeEqualTo ValidationRuleHit.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_1.ruleHit
@@ -438,9 +438,9 @@ class ValidationTest : FunSpec({
                 perioder = listOf(
                     generatePeriode(
                         fom = LocalDate.of(2018, 1, 4),
-                        tom = LocalDate.now().plusMonths(3).plusDays(1)
-                    )
-                )
+                        tom = LocalDate.now().plusMonths(3).plusDays(1),
+                    ),
+                ),
             )
 
             val infotrygdForespResponse = InfotrygdForesp().apply {
@@ -455,7 +455,7 @@ class ValidationTest : FunSpec({
                                 hovedDiagnosekode = "001"
                                 utbetTOM = LocalDate.of(2018, 1, 3)
                             }
-                        }
+                        },
                     )
                 }
             }
@@ -463,7 +463,7 @@ class ValidationTest : FunSpec({
             val receivedSykmelding = receivedSykmelding(
                 id = UUID.randomUUID().toString(),
                 sykmelding = generateSykmelding,
-                fellesformat = ""
+                fellesformat = "",
             )
 
             val ruleMetadata = RuleMetadata(
@@ -473,7 +473,7 @@ class ValidationTest : FunSpec({
                 rulesetVersion = receivedSykmelding.rulesetVersion,
                 legekontorOrgnr = receivedSykmelding.legekontorOrgNr,
                 tssid = receivedSykmelding.tssid,
-                infotrygdForesp = infotrygdForespResponse
+                infotrygdForesp = infotrygdForespResponse,
             )
 
             val result = ruleTree.runRules(generateSykmelding, ruleMetadata)
@@ -485,14 +485,14 @@ class ValidationTest : FunSpec({
                 ValidationRules.PATIENT_NOT_IN_IP to false,
                 ValidationRules.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE to false,
                 ValidationRules.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_1 to false,
-                ValidationRules.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_2 to true
+                ValidationRules.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_2 to true,
             )
 
             mapOf(
                 "perioder" to generateSykmelding.perioder,
                 "pasient" to ruleMetadata.infotrygdForesp.pasient,
                 "infotrygdSykmelding" to ruleMetadata.infotrygdForesp.sMhistorikk?.sykmelding,
-                "sykmeldingPerioder" to generateSykmelding.perioder
+                "sykmeldingPerioder" to generateSykmelding.perioder,
             ) shouldBeEqualTo result.first.ruleInputs
 
             result.first.treeResult.ruleHit shouldBeEqualTo ValidationRuleHit.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_2.ruleHit
@@ -505,9 +505,9 @@ class ValidationTest : FunSpec({
                 perioder = listOf(
                     generatePeriode(
                         fom = LocalDate.of(2018, 1, 7),
-                        tom = LocalDate.now().plusMonths(3).plusDays(1)
-                    )
-                )
+                        tom = LocalDate.now().plusMonths(3).plusDays(1),
+                    ),
+                ),
             )
 
             val infotrygdForespResponse = InfotrygdForesp().apply {
@@ -522,7 +522,7 @@ class ValidationTest : FunSpec({
                                 hovedDiagnosekode = "001"
                                 utbetTOM = LocalDate.of(2018, 1, 5)
                             }
-                        }
+                        },
                     )
                 }
             }
@@ -530,7 +530,7 @@ class ValidationTest : FunSpec({
             val receivedSykmelding = receivedSykmelding(
                 id = UUID.randomUUID().toString(),
                 sykmelding = generateSykmelding,
-                fellesformat = ""
+                fellesformat = "",
             )
 
             val ruleMetadata = RuleMetadata(
@@ -540,7 +540,7 @@ class ValidationTest : FunSpec({
                 rulesetVersion = receivedSykmelding.rulesetVersion,
                 legekontorOrgnr = receivedSykmelding.legekontorOrgNr,
                 tssid = receivedSykmelding.tssid,
-                infotrygdForesp = infotrygdForespResponse
+                infotrygdForesp = infotrygdForespResponse,
             )
 
             val result = ruleTree.runRules(generateSykmelding, ruleMetadata)
@@ -553,14 +553,14 @@ class ValidationTest : FunSpec({
                 ValidationRules.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE to false,
                 ValidationRules.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_1 to false,
                 ValidationRules.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_2 to false,
-                ValidationRules.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_3 to true
+                ValidationRules.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_3 to true,
             )
 
             mapOf(
                 "perioder" to generateSykmelding.perioder,
                 "pasient" to ruleMetadata.infotrygdForesp.pasient,
                 "infotrygdSykmelding" to ruleMetadata.infotrygdForesp.sMhistorikk?.sykmelding,
-                "sykmeldingPerioder" to generateSykmelding.perioder
+                "sykmeldingPerioder" to generateSykmelding.perioder,
             ) shouldBeEqualTo result.first.ruleInputs
 
             result.first.treeResult.ruleHit shouldBeEqualTo ValidationRuleHit.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_3.ruleHit
@@ -572,9 +572,9 @@ class ValidationTest : FunSpec({
             val generateSykmelding = generateSykmelding(
                 perioder = listOf(
                     generatePeriode(
-                        tom = LocalDate.of(2017, 1, 2)
-                    )
-                )
+                        tom = LocalDate.of(2017, 1, 2),
+                    ),
+                ),
             )
 
             val infotrygdForespResponse = InfotrygdForesp().apply {
@@ -588,7 +588,7 @@ class ValidationTest : FunSpec({
                                 friskmeldtDato = LocalDate.of(2017, 1, 1)
                                 utbetTOM = LocalDate.of(2018, 1, 1)
                             }
-                        }
+                        },
                     )
                 }
             }
@@ -596,7 +596,7 @@ class ValidationTest : FunSpec({
             val receivedSykmelding = receivedSykmelding(
                 id = UUID.randomUUID().toString(),
                 sykmelding = generateSykmelding,
-                fellesformat = ""
+                fellesformat = "",
             )
 
             val ruleMetadata = RuleMetadata(
@@ -606,7 +606,7 @@ class ValidationTest : FunSpec({
                 rulesetVersion = receivedSykmelding.rulesetVersion,
                 legekontorOrgnr = receivedSykmelding.legekontorOrgNr,
                 tssid = receivedSykmelding.tssid,
-                infotrygdForesp = infotrygdForespResponse
+                infotrygdForesp = infotrygdForespResponse,
             )
 
             val result = ruleTree.runRules(generateSykmelding, ruleMetadata)
@@ -620,7 +620,7 @@ class ValidationTest : FunSpec({
                 ValidationRules.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_1 to false,
                 ValidationRules.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_2 to false,
                 ValidationRules.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_3 to false,
-                ValidationRules.NEW_CLEAN_BILL_DATE_BEFORE_PAYOUT to true
+                ValidationRules.NEW_CLEAN_BILL_DATE_BEFORE_PAYOUT to true,
             )
 
             mapOf(
@@ -628,7 +628,7 @@ class ValidationTest : FunSpec({
                 "pasient" to ruleMetadata.infotrygdForesp.pasient,
                 "infotrygdSykmelding" to ruleMetadata.infotrygdForesp.sMhistorikk?.sykmelding,
                 "sykmeldingPerioder" to generateSykmelding.perioder,
-                "sykmeldingPrognose" to generateSykmelding.prognose
+                "sykmeldingPrognose" to generateSykmelding.prognose,
             ) shouldBeEqualTo result.first.ruleInputs
 
             result.first.treeResult.ruleHit shouldBeEqualTo ValidationRuleHit.NEW_CLEAN_BILL_DATE_BEFORE_PAYOUT.ruleHit
@@ -640,10 +640,10 @@ class ValidationTest : FunSpec({
             val generateSykmelding = generateSykmelding(
                 perioder = listOf(
                     generatePeriode(
-                        tom = LocalDate.of(2017, 1, 2)
-                    )
+                        tom = LocalDate.of(2017, 1, 2),
+                    ),
                 ),
-                prognose = generatePrognose(arbeidsforEtterPeriode = true)
+                prognose = generatePrognose(arbeidsforEtterPeriode = true),
             )
 
             val infotrygdForespResponse = InfotrygdForesp().apply {
@@ -656,7 +656,7 @@ class ValidationTest : FunSpec({
                             periode = TypeSMinfo.Periode().apply {
                                 friskmeldtDato = LocalDate.of(2018, 1, 3)
                             }
-                        }
+                        },
                     )
                 }
             }
@@ -664,7 +664,7 @@ class ValidationTest : FunSpec({
             val receivedSykmelding = receivedSykmelding(
                 id = UUID.randomUUID().toString(),
                 sykmelding = generateSykmelding,
-                fellesformat = ""
+                fellesformat = "",
             )
 
             val ruleMetadata = RuleMetadata(
@@ -674,7 +674,7 @@ class ValidationTest : FunSpec({
                 rulesetVersion = receivedSykmelding.rulesetVersion,
                 legekontorOrgnr = receivedSykmelding.legekontorOrgNr,
                 tssid = receivedSykmelding.tssid,
-                infotrygdForesp = infotrygdForespResponse
+                infotrygdForesp = infotrygdForespResponse,
             )
 
             val result = ruleTree.runRules(generateSykmelding, ruleMetadata)
@@ -689,7 +689,7 @@ class ValidationTest : FunSpec({
                 ValidationRules.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_2 to false,
                 ValidationRules.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_3 to false,
                 ValidationRules.NEW_CLEAN_BILL_DATE_BEFORE_PAYOUT to false,
-                ValidationRules.NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE to true
+                ValidationRules.NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE to true,
             )
 
             mapOf(
@@ -697,7 +697,7 @@ class ValidationTest : FunSpec({
                 "pasient" to ruleMetadata.infotrygdForesp.pasient,
                 "infotrygdSykmelding" to ruleMetadata.infotrygdForesp.sMhistorikk?.sykmelding,
                 "sykmeldingPerioder" to generateSykmelding.perioder,
-                "sykmeldingPrognose" to generateSykmelding.prognose
+                "sykmeldingPrognose" to generateSykmelding.prognose,
             ) shouldBeEqualTo result.first.ruleInputs
 
             result.first.treeResult.ruleHit shouldBeEqualTo ValidationRuleHit.NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE.ruleHit
@@ -710,9 +710,9 @@ class ValidationTest : FunSpec({
                 perioder = listOf(
                     generatePeriode(
                         fom = LocalDate.of(2018, 1, 1),
-                        tom = LocalDate.of(2018, 2, 1)
-                    )
-                )
+                        tom = LocalDate.of(2018, 2, 1),
+                    ),
+                ),
             )
 
             val infotrygdForespResponse = InfotrygdForesp().apply {
@@ -729,9 +729,9 @@ class ValidationTest : FunSpec({
                                         fom = LocalDate.of(2018, 1, 20)
                                         tom = LocalDate.of(2018, 1, 26)
                                     }
-                                }
+                                },
                             )
-                        }
+                        },
                     )
                 }
             }
@@ -739,7 +739,7 @@ class ValidationTest : FunSpec({
             val receivedSykmelding = receivedSykmelding(
                 id = UUID.randomUUID().toString(),
                 sykmelding = generateSykmelding,
-                fellesformat = ""
+                fellesformat = "",
             )
 
             val ruleMetadata = RuleMetadata(
@@ -749,7 +749,7 @@ class ValidationTest : FunSpec({
                 rulesetVersion = receivedSykmelding.rulesetVersion,
                 legekontorOrgnr = receivedSykmelding.legekontorOrgNr,
                 tssid = receivedSykmelding.tssid,
-                infotrygdForesp = infotrygdForespResponse
+                infotrygdForesp = infotrygdForespResponse,
             )
 
             val result = ruleTree.runRules(generateSykmelding, ruleMetadata)
@@ -765,7 +765,7 @@ class ValidationTest : FunSpec({
                 ValidationRules.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_3 to false,
                 ValidationRules.NEW_CLEAN_BILL_DATE_BEFORE_PAYOUT to false,
                 ValidationRules.NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE to false,
-                ValidationRules.EXTANION_OVER_FA to true
+                ValidationRules.EXTANION_OVER_FA to true,
             )
 
             mapOf(
@@ -773,7 +773,7 @@ class ValidationTest : FunSpec({
                 "pasient" to ruleMetadata.infotrygdForesp.pasient,
                 "infotrygdSykmelding" to ruleMetadata.infotrygdForesp.sMhistorikk?.sykmelding,
                 "sykmeldingPerioder" to generateSykmelding.perioder,
-                "sykmeldingPrognose" to generateSykmelding.prognose
+                "sykmeldingPrognose" to generateSykmelding.prognose,
             ) shouldBeEqualTo result.first.ruleInputs
 
             result.first.treeResult.ruleHit shouldBeEqualTo ValidationRuleHit.EXTANION_OVER_FA.ruleHit
@@ -795,14 +795,14 @@ class ValidationTest : FunSpec({
                                 stans = "FL"
                                 arbufoerFOM = LocalDate.of(2017, 2, 1)
                             }
-                        }
+                        },
                     )
                     sykmelding.add(
                         TypeSMinfo().apply {
                             periode = TypeSMinfo.Periode().apply {
                                 arbufoerFOM = LocalDate.of(2017, 1, 1)
                             }
-                        }
+                        },
                     )
                 }
             }
@@ -810,7 +810,7 @@ class ValidationTest : FunSpec({
             val receivedSykmelding = receivedSykmelding(
                 id = UUID.randomUUID().toString(),
                 sykmelding = generateSykmelding,
-                fellesformat = ""
+                fellesformat = "",
             )
 
             val ruleMetadata = RuleMetadata(
@@ -820,7 +820,7 @@ class ValidationTest : FunSpec({
                 rulesetVersion = receivedSykmelding.rulesetVersion,
                 legekontorOrgnr = receivedSykmelding.legekontorOrgNr,
                 tssid = receivedSykmelding.tssid,
-                infotrygdForesp = infotrygdForespResponse
+                infotrygdForesp = infotrygdForespResponse,
             )
 
             val result = ruleTree.runRules(generateSykmelding, ruleMetadata)
@@ -837,7 +837,7 @@ class ValidationTest : FunSpec({
                 ValidationRules.NEW_CLEAN_BILL_DATE_BEFORE_PAYOUT to false,
                 ValidationRules.NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE to false,
                 ValidationRules.EXTANION_OVER_FA to false,
-                ValidationRules.PERSON_MOVING_KODE_FL to true
+                ValidationRules.PERSON_MOVING_KODE_FL to true,
             )
 
             mapOf(
@@ -845,7 +845,7 @@ class ValidationTest : FunSpec({
                 "pasient" to ruleMetadata.infotrygdForesp.pasient,
                 "infotrygdSykmelding" to ruleMetadata.infotrygdForesp.sMhistorikk?.sykmelding,
                 "sykmeldingPerioder" to generateSykmelding.perioder,
-                "sykmeldingPrognose" to generateSykmelding.prognose
+                "sykmeldingPrognose" to generateSykmelding.prognose,
             ) shouldBeEqualTo result.first.ruleInputs
 
             result.first.treeResult.ruleHit shouldBeEqualTo ValidationRuleHit.PERSON_MOVING_KODE_FL.ruleHit
@@ -858,9 +858,9 @@ class ValidationTest : FunSpec({
                 perioder = listOf(
                     generatePeriode(
                         fom = LocalDate.of(2017, 2, 1),
-                        tom = LocalDate.now().plusMonths(3).plusDays(1)
-                    )
-                )
+                        tom = LocalDate.now().plusMonths(3).plusDays(1),
+                    ),
+                ),
             )
 
             val infotrygdForespResponse = InfotrygdForesp().apply {
@@ -874,7 +874,7 @@ class ValidationTest : FunSpec({
                                 stans = "AA"
                                 arbufoerTOM = LocalDate.of(2017, 2, 2)
                             }
-                        }
+                        },
                     )
                 }
             }
@@ -882,7 +882,7 @@ class ValidationTest : FunSpec({
             val receivedSykmelding = receivedSykmelding(
                 id = UUID.randomUUID().toString(),
                 sykmelding = generateSykmelding,
-                fellesformat = ""
+                fellesformat = "",
             )
 
             val ruleMetadata = RuleMetadata(
@@ -892,7 +892,7 @@ class ValidationTest : FunSpec({
                 rulesetVersion = receivedSykmelding.rulesetVersion,
                 legekontorOrgnr = receivedSykmelding.legekontorOrgNr,
                 tssid = receivedSykmelding.tssid,
-                infotrygdForesp = infotrygdForespResponse
+                infotrygdForesp = infotrygdForespResponse,
             )
 
             val result = ruleTree.runRules(generateSykmelding, ruleMetadata)
@@ -910,7 +910,7 @@ class ValidationTest : FunSpec({
                 ValidationRules.NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE to false,
                 ValidationRules.EXTANION_OVER_FA to false,
                 ValidationRules.PERSON_MOVING_KODE_FL to false,
-                ValidationRules.PERIOD_FOR_AA_ENDED to true
+                ValidationRules.PERIOD_FOR_AA_ENDED to true,
             )
 
             mapOf(
@@ -918,7 +918,7 @@ class ValidationTest : FunSpec({
                 "pasient" to ruleMetadata.infotrygdForesp.pasient,
                 "infotrygdSykmelding" to ruleMetadata.infotrygdForesp.sMhistorikk?.sykmelding,
                 "sykmeldingPerioder" to generateSykmelding.perioder,
-                "sykmeldingPrognose" to generateSykmelding.prognose
+                "sykmeldingPrognose" to generateSykmelding.prognose,
             ) shouldBeEqualTo result.first.ruleInputs
 
             result.first.treeResult.ruleHit shouldBeEqualTo ValidationRuleHit.PERIOD_FOR_AA_ENDED.ruleHit
@@ -931,9 +931,9 @@ class ValidationTest : FunSpec({
                 perioder = listOf(
                     generatePeriode(
                         fom = LocalDate.of(2017, 2, 1),
-                        tom = LocalDate.now().plusMonths(3).plusDays(1)
-                    )
-                )
+                        tom = LocalDate.now().plusMonths(3).plusDays(1),
+                    ),
+                ),
             )
 
             val infotrygdForespResponse = InfotrygdForesp().apply {
@@ -947,7 +947,7 @@ class ValidationTest : FunSpec({
                                 stans = "AF"
                                 arbufoerTOM = LocalDate.of(2017, 2, 2)
                             }
-                        }
+                        },
                     )
                 }
             }
@@ -955,7 +955,7 @@ class ValidationTest : FunSpec({
             val receivedSykmelding = receivedSykmelding(
                 id = UUID.randomUUID().toString(),
                 sykmelding = generateSykmelding,
-                fellesformat = ""
+                fellesformat = "",
             )
 
             val ruleMetadata = RuleMetadata(
@@ -965,7 +965,7 @@ class ValidationTest : FunSpec({
                 rulesetVersion = receivedSykmelding.rulesetVersion,
                 legekontorOrgnr = receivedSykmelding.legekontorOrgNr,
                 tssid = receivedSykmelding.tssid,
-                infotrygdForesp = infotrygdForespResponse
+                infotrygdForesp = infotrygdForespResponse,
             )
 
             val result = ruleTree.runRules(generateSykmelding, ruleMetadata)
@@ -984,7 +984,7 @@ class ValidationTest : FunSpec({
                 ValidationRules.EXTANION_OVER_FA to false,
                 ValidationRules.PERSON_MOVING_KODE_FL to false,
                 ValidationRules.PERIOD_FOR_AA_ENDED to false,
-                ValidationRules.PERIOD_IS_AF to true
+                ValidationRules.PERIOD_IS_AF to true,
             )
 
             mapOf(
@@ -993,7 +993,7 @@ class ValidationTest : FunSpec({
                 "infotrygdSykmelding" to ruleMetadata.infotrygdForesp.sMhistorikk?.sykmelding,
                 "sykmeldingPerioder" to generateSykmelding.perioder,
                 "sykmeldingPrognose" to generateSykmelding.prognose,
-                "sykmelding" to generateSykmelding
+                "sykmelding" to generateSykmelding,
             ) shouldBeEqualTo result.first.ruleInputs
 
             result.first.treeResult.ruleHit shouldBeEqualTo ValidationRuleHit.PERIOD_IS_AF.ruleHit
@@ -1006,9 +1006,9 @@ class ValidationTest : FunSpec({
                 perioder = listOf(
                     generatePeriode(
                         fom = LocalDate.of(2017, 2, 1),
-                        tom = LocalDate.of(2017, 2, 10)
-                    )
-                )
+                        tom = LocalDate.of(2017, 2, 10),
+                    ),
+                ),
             )
 
             val infotrygdForespResponse = InfotrygdForesp().apply {
@@ -1022,7 +1022,7 @@ class ValidationTest : FunSpec({
                                 arbufoerTOM = LocalDate.of(2017, 2, 2)
                                 stans = "MAX"
                             }
-                        }
+                        },
                     )
                 }
             }
@@ -1030,7 +1030,7 @@ class ValidationTest : FunSpec({
             val receivedSykmelding = receivedSykmelding(
                 id = UUID.randomUUID().toString(),
                 sykmelding = generateSykmelding,
-                fellesformat = ""
+                fellesformat = "",
             )
 
             val ruleMetadata = RuleMetadata(
@@ -1040,7 +1040,7 @@ class ValidationTest : FunSpec({
                 rulesetVersion = receivedSykmelding.rulesetVersion,
                 legekontorOrgnr = receivedSykmelding.legekontorOrgNr,
                 tssid = receivedSykmelding.tssid,
-                infotrygdForesp = infotrygdForespResponse
+                infotrygdForesp = infotrygdForespResponse,
             )
 
             val result = ruleTree.runRules(generateSykmelding, ruleMetadata)
@@ -1060,7 +1060,7 @@ class ValidationTest : FunSpec({
                 ValidationRules.PERSON_MOVING_KODE_FL to false,
                 ValidationRules.PERIOD_FOR_AA_ENDED to false,
                 ValidationRules.PERIOD_IS_AF to false,
-                ValidationRules.MAX_SICK_LEAVE_PAYOUT to true
+                ValidationRules.MAX_SICK_LEAVE_PAYOUT to true,
             )
 
             mapOf(
@@ -1069,7 +1069,7 @@ class ValidationTest : FunSpec({
                 "infotrygdSykmelding" to ruleMetadata.infotrygdForesp.sMhistorikk?.sykmelding,
                 "sykmeldingPerioder" to generateSykmelding.perioder,
                 "sykmeldingPrognose" to generateSykmelding.prognose,
-                "sykmelding" to generateSykmelding
+                "sykmelding" to generateSykmelding,
             ) shouldBeEqualTo result.first.ruleInputs
 
             result.first.treeResult.ruleHit shouldBeEqualTo ValidationRuleHit.MAX_SICK_LEAVE_PAYOUT.ruleHit
@@ -1082,9 +1082,9 @@ class ValidationTest : FunSpec({
                 perioder = listOf(
                     generatePeriode(
                         fom = LocalDate.of(2017, 2, 1),
-                        tom = LocalDate.of(2017, 2, 10)
-                    )
-                )
+                        tom = LocalDate.of(2017, 2, 10),
+                    ),
+                ),
             )
 
             val infotrygdForespResponse = InfotrygdForesp().apply {
@@ -1096,7 +1096,7 @@ class ValidationTest : FunSpec({
             val receivedSykmelding = receivedSykmelding(
                 id = UUID.randomUUID().toString(),
                 sykmelding = generateSykmelding,
-                fellesformat = ""
+                fellesformat = "",
             )
 
             val ruleMetadata = RuleMetadata(
@@ -1106,7 +1106,7 @@ class ValidationTest : FunSpec({
                 rulesetVersion = receivedSykmelding.rulesetVersion,
                 legekontorOrgnr = receivedSykmelding.legekontorOrgNr,
                 tssid = receivedSykmelding.tssid,
-                infotrygdForesp = infotrygdForespResponse
+                infotrygdForesp = infotrygdForespResponse,
             )
 
             val result = ruleTree.runRules(generateSykmelding, ruleMetadata)
@@ -1127,7 +1127,7 @@ class ValidationTest : FunSpec({
                 ValidationRules.PERIOD_FOR_AA_ENDED to false,
                 ValidationRules.PERIOD_IS_AF to false,
                 ValidationRules.MAX_SICK_LEAVE_PAYOUT to false,
-                ValidationRules.ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING to true
+                ValidationRules.ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING to true,
             )
 
             mapOf(
@@ -1137,7 +1137,7 @@ class ValidationTest : FunSpec({
                 "sykmeldingPerioder" to generateSykmelding.perioder,
                 "sykmeldingPrognose" to generateSykmelding.prognose,
                 "sykmelding" to generateSykmelding,
-                "hovedStatusKodeMelding" to "5"
+                "hovedStatusKodeMelding" to "5",
             ) shouldBeEqualTo result.first.ruleInputs
 
             result.first.treeResult.ruleHit shouldBeEqualTo ValidationRuleHit.ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING.ruleHit
@@ -1150,9 +1150,9 @@ class ValidationTest : FunSpec({
                 perioder = listOf(
                     generatePeriode(
                         fom = LocalDate.of(2017, 2, 1),
-                        tom = LocalDate.of(2017, 2, 10)
-                    )
-                )
+                        tom = LocalDate.of(2017, 2, 10),
+                    ),
+                ),
             )
 
             val infotrygdForespResponse = InfotrygdForesp().apply {
@@ -1169,7 +1169,7 @@ class ValidationTest : FunSpec({
             val receivedSykmelding = receivedSykmelding(
                 id = UUID.randomUUID().toString(),
                 sykmelding = generateSykmelding,
-                fellesformat = ""
+                fellesformat = "",
             )
 
             val ruleMetadata = RuleMetadata(
@@ -1179,7 +1179,7 @@ class ValidationTest : FunSpec({
                 rulesetVersion = receivedSykmelding.rulesetVersion,
                 legekontorOrgnr = receivedSykmelding.legekontorOrgNr,
                 tssid = receivedSykmelding.tssid,
-                infotrygdForesp = infotrygdForespResponse
+                infotrygdForesp = infotrygdForespResponse,
             )
 
             val result = ruleTree.runRules(generateSykmelding, ruleMetadata)
@@ -1201,7 +1201,7 @@ class ValidationTest : FunSpec({
                 ValidationRules.PERIOD_IS_AF to false,
                 ValidationRules.MAX_SICK_LEAVE_PAYOUT to false,
                 ValidationRules.ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING to false,
-                ValidationRules.ERROR_FROM_IT_SMHISTORIKK_STATUS_KODEMELDING to true
+                ValidationRules.ERROR_FROM_IT_SMHISTORIKK_STATUS_KODEMELDING to true,
             )
 
             mapOf(
@@ -1212,7 +1212,7 @@ class ValidationTest : FunSpec({
                 "sykmeldingPrognose" to generateSykmelding.prognose,
                 "sykmelding" to generateSykmelding,
                 "hovedStatusKodeMelding" to "00",
-                "smHistorikkKodeMelding" to "5"
+                "smHistorikkKodeMelding" to "5",
             ) shouldBeEqualTo result.first.ruleInputs
 
             result.first.treeResult.ruleHit shouldBeEqualTo ValidationRuleHit.ERROR_FROM_IT_SMHISTORIKK_STATUS_KODEMELDING.ruleHit
@@ -1225,9 +1225,9 @@ class ValidationTest : FunSpec({
                 perioder = listOf(
                     generatePeriode(
                         fom = LocalDate.of(2017, 2, 1),
-                        tom = LocalDate.of(2017, 2, 10)
-                    )
-                )
+                        tom = LocalDate.of(2017, 2, 10),
+                    ),
+                ),
             )
 
             val infotrygdForespResponse = InfotrygdForesp().apply {
@@ -1244,7 +1244,7 @@ class ValidationTest : FunSpec({
             val receivedSykmelding = receivedSykmelding(
                 id = UUID.randomUUID().toString(),
                 sykmelding = generateSykmelding,
-                fellesformat = ""
+                fellesformat = "",
             )
 
             val ruleMetadata = RuleMetadata(
@@ -1254,7 +1254,7 @@ class ValidationTest : FunSpec({
                 rulesetVersion = receivedSykmelding.rulesetVersion,
                 legekontorOrgnr = receivedSykmelding.legekontorOrgNr,
                 tssid = receivedSykmelding.tssid,
-                infotrygdForesp = infotrygdForespResponse
+                infotrygdForesp = infotrygdForespResponse,
             )
 
             val result = ruleTree.runRules(generateSykmelding, ruleMetadata)
@@ -1277,7 +1277,7 @@ class ValidationTest : FunSpec({
                 ValidationRules.MAX_SICK_LEAVE_PAYOUT to false,
                 ValidationRules.ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING to false,
                 ValidationRules.ERROR_FROM_IT_SMHISTORIKK_STATUS_KODEMELDING to false,
-                ValidationRules.ERROR_FROM_IT_PARALELLYTELSER_STATUS_KODEMELDING to true
+                ValidationRules.ERROR_FROM_IT_PARALELLYTELSER_STATUS_KODEMELDING to true,
             )
 
             mapOf(
@@ -1289,7 +1289,7 @@ class ValidationTest : FunSpec({
                 "sykmelding" to generateSykmelding,
                 "hovedStatusKodeMelding" to "00",
                 "smHistorikkKodeMelding" to "",
-                "parallelleYtelsesKodeMelding" to "5"
+                "parallelleYtelsesKodeMelding" to "5",
             ) shouldBeEqualTo result.first.ruleInputs
 
             result.first.treeResult.ruleHit shouldBeEqualTo ValidationRuleHit.ERROR_FROM_IT_PARALELLYTELSER_STATUS_KODEMELDING.ruleHit
@@ -1302,9 +1302,9 @@ class ValidationTest : FunSpec({
                 perioder = listOf(
                     generatePeriode(
                         fom = LocalDate.of(2017, 2, 1),
-                        tom = LocalDate.of(2017, 2, 10)
-                    )
-                )
+                        tom = LocalDate.of(2017, 2, 10),
+                    ),
+                ),
             )
 
             val infotrygdForespResponse = InfotrygdForesp().apply {
@@ -1321,7 +1321,7 @@ class ValidationTest : FunSpec({
             val receivedSykmelding = receivedSykmelding(
                 id = UUID.randomUUID().toString(),
                 sykmelding = generateSykmelding,
-                fellesformat = ""
+                fellesformat = "",
             )
 
             val ruleMetadata = RuleMetadata(
@@ -1331,7 +1331,7 @@ class ValidationTest : FunSpec({
                 rulesetVersion = receivedSykmelding.rulesetVersion,
                 legekontorOrgnr = receivedSykmelding.legekontorOrgNr,
                 tssid = receivedSykmelding.tssid,
-                infotrygdForesp = infotrygdForespResponse
+                infotrygdForesp = infotrygdForespResponse,
             )
 
             val result = ruleTree.runRules(generateSykmelding, ruleMetadata)
@@ -1355,7 +1355,7 @@ class ValidationTest : FunSpec({
                 ValidationRules.ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING to false,
                 ValidationRules.ERROR_FROM_IT_SMHISTORIKK_STATUS_KODEMELDING to false,
                 ValidationRules.ERROR_FROM_IT_PARALELLYTELSER_STATUS_KODEMELDING to false,
-                ValidationRules.ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING to true
+                ValidationRules.ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING to true,
             )
 
             mapOf(
@@ -1368,7 +1368,7 @@ class ValidationTest : FunSpec({
                 "hovedStatusKodeMelding" to "00",
                 "smHistorikkKodeMelding" to "",
                 "parallelleYtelsesKodeMelding" to "",
-                "diagnoseKodeKodeMelding" to "5"
+                "diagnoseKodeKodeMelding" to "5",
             ) shouldBeEqualTo result.first.ruleInputs
 
             result.first.treeResult.ruleHit shouldBeEqualTo ValidationRuleHit.ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING.ruleHit
@@ -1394,7 +1394,7 @@ class ValidationTest : FunSpec({
             val receivedSykmelding = receivedSykmelding(
                 id = UUID.randomUUID().toString(),
                 sykmelding = generateSykmelding,
-                fellesformat = ""
+                fellesformat = "",
             )
 
             val ruleMetadata = RuleMetadata(
@@ -1404,7 +1404,7 @@ class ValidationTest : FunSpec({
                 rulesetVersion = receivedSykmelding.rulesetVersion,
                 legekontorOrgnr = receivedSykmelding.legekontorOrgNr,
                 tssid = receivedSykmelding.tssid,
-                infotrygdForesp = infotrygdForespResponse
+                infotrygdForesp = infotrygdForespResponse,
             )
 
             val result = ruleTree.runRules(generateSykmelding, ruleMetadata)
@@ -1429,7 +1429,7 @@ class ValidationTest : FunSpec({
                 ValidationRules.ERROR_FROM_IT_SMHISTORIKK_STATUS_KODEMELDING to false,
                 ValidationRules.ERROR_FROM_IT_PARALELLYTELSER_STATUS_KODEMELDING to false,
                 ValidationRules.ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING to false,
-                ValidationRules.ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING to true
+                ValidationRules.ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING to true,
             )
 
             mapOf(
@@ -1443,7 +1443,7 @@ class ValidationTest : FunSpec({
                 "smHistorikkKodeMelding" to "",
                 "parallelleYtelsesKodeMelding" to "",
                 "diagnoseKodeKodeMelding" to "",
-                "pasientStatusKodeMelding" to "5"
+                "pasientStatusKodeMelding" to "5",
             ) shouldBeEqualTo result.first.ruleInputs
 
             result.first.treeResult.ruleHit shouldBeEqualTo ValidationRuleHit.ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING.ruleHit
@@ -1456,9 +1456,9 @@ class ValidationTest : FunSpec({
                 perioder = listOf(
                     generatePeriode(
                         fom = LocalDate.of(2019, 6, 27),
-                        tom = LocalDate.of(2019, 6, 28)
-                    )
-                )
+                        tom = LocalDate.of(2019, 6, 28),
+                    ),
+                ),
             )
 
             val statusType = StatusType().apply {
@@ -1475,7 +1475,7 @@ class ValidationTest : FunSpec({
                             periode = TypeSMinfo.Periode().apply {
                                 arbufoerFOM = LocalDate.of(2019, 6, 24)
                             }
-                        }
+                        },
                     )
                     status = statusType
                 }
@@ -1484,7 +1484,7 @@ class ValidationTest : FunSpec({
             val receivedSykmelding = receivedSykmelding(
                 id = UUID.randomUUID().toString(),
                 sykmelding = generateSykmelding,
-                fellesformat = ""
+                fellesformat = "",
             )
 
             val ruleMetadata = RuleMetadata(
@@ -1494,7 +1494,7 @@ class ValidationTest : FunSpec({
                 rulesetVersion = receivedSykmelding.rulesetVersion,
                 legekontorOrgnr = receivedSykmelding.legekontorOrgNr,
                 tssid = receivedSykmelding.tssid,
-                infotrygdForesp = infotrygdForespResponse
+                infotrygdForesp = infotrygdForespResponse,
             )
 
             val result = ruleTree.runRules(generateSykmelding, ruleMetadata)
@@ -1520,7 +1520,7 @@ class ValidationTest : FunSpec({
                 ValidationRules.ERROR_FROM_IT_PARALELLYTELSER_STATUS_KODEMELDING to false,
                 ValidationRules.ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING to false,
                 ValidationRules.ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING to false,
-                ValidationRules.ARBEIDUFORETOM_MANGLER to true
+                ValidationRules.ARBEIDUFORETOM_MANGLER to true,
             )
 
             mapOf(
@@ -1536,7 +1536,7 @@ class ValidationTest : FunSpec({
                 "diagnoseKodeKodeMelding" to "",
                 "pasientStatusKodeMelding" to "",
                 "sykmelding" to ruleMetadata.infotrygdForesp.sMhistorikk?.sykmelding,
-                "status" to statusType
+                "status" to statusType,
             ) shouldBeEqualTo result.first.ruleInputs
 
             result.first.treeResult.ruleHit shouldBeEqualTo ValidationRuleHit.ARBEIDUFORETOM_MANGLER.ruleHit

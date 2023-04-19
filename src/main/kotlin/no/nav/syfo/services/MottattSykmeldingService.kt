@@ -39,7 +39,7 @@ class MottattSykmeldingService(
     private val manuellClient: ManuellClient,
     private val manuellBehandlingService: ManuellBehandlingService,
     private val behandlingsutfallService: BehandlingsutfallService,
-    private val norskHelsenettClient: NorskHelsenettClient
+    private val norskHelsenettClient: NorskHelsenettClient,
 ) {
     suspend fun handleMessage(
         receivedSykmelding: ReceivedSykmelding,
@@ -47,7 +47,7 @@ class MottattSykmeldingService(
         infotrygdSporringProducer: MessageProducer,
         tssProducer: MessageProducer,
         session: Session,
-        loggingMeta: LoggingMeta
+        loggingMeta: LoggingMeta,
     ) {
         wrapExceptions(loggingMeta) {
             when (skalOppdatereInfotrygd(receivedSykmelding)) {
@@ -59,7 +59,7 @@ class MottattSykmeldingService(
                         fellesformatUnmarshaller.unmarshal(StringReader(receivedSykmelding.fellesformat)) as XMLEIFellesformat
 
                     val healthInformation = setHovedDiagnoseToA99IfhovedDiagnoseIsNullAndAnnenFraversArsakIsSet(
-                        extractHelseOpplysningerArbeidsuforhet(fellesformat)
+                        extractHelseOpplysningerArbeidsuforhet(fellesformat),
                     )
                     val behandletAvManuell =
                         manuellClient.behandletAvManuell(receivedSykmelding.sykmelding.id, loggingMeta)
@@ -68,20 +68,20 @@ class MottattSykmeldingService(
                     if (validationResultForMottattSykmelding.status == Status.MANUAL_PROCESSING) {
                         log.info(
                             "Mottatt sykmelding kan ikke legges inn i infotrygd automatisk, oppretter oppgave, {}",
-                            StructuredArguments.fields(loggingMeta)
+                            StructuredArguments.fields(loggingMeta),
                         )
                         manuellBehandlingService.produceManualTaskAndSendValidationResults(
                             receivedSykmelding = receivedSykmelding,
                             validationResult = validationResultForMottattSykmelding,
                             behandletAvManuell = behandletAvManuell,
-                            loggingMeta = loggingMeta
+                            loggingMeta = loggingMeta,
                         )
                     } else {
                         val infotrygdForespResponse = fetchInfotrygdForesp(
                             receivedSykmelding,
                             infotrygdSporringProducer,
                             session,
-                            healthInformation
+                            healthInformation,
                         )
                         val receivedSykmeldingMedTssId = if (receivedSykmelding.tssid.isNullOrBlank()) {
                             receivedSykmelding.copy(
@@ -90,8 +90,8 @@ class MottattSykmeldingService(
                                     receivedSykmelding = receivedSykmelding,
                                     tssProducer = tssProducer,
                                     session = session,
-                                    loggingMeta = loggingMeta
-                                )
+                                    loggingMeta = loggingMeta,
+                                ),
                             )
                         } else {
                             receivedSykmelding
@@ -100,7 +100,7 @@ class MottattSykmeldingService(
                         sikkerlogg.info(
                             "infotrygdForespResponse: ${objectMapper.writeValueAsString(infotrygdForespResponse)}" +
                                 " for {}",
-                            StructuredArguments.fields(loggingMeta)
+                            StructuredArguments.fields(loggingMeta),
                         )
 
                         val validationResult =
@@ -115,7 +115,7 @@ class MottattSykmeldingService(
                                 receivedSykmelding = receivedSykmeldingMedTssId,
                                 itfh = InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
                                 behandletAvManuell = behandletAvManuell,
-                                loggingMeta = loggingMeta
+                                loggingMeta = loggingMeta,
                             )
                         } else {
                             val helsepersonellKategoriVerdi = finnAktivHelsepersonellAutorisasjons(helsepersonell)
@@ -127,7 +127,7 @@ class MottattSykmeldingService(
                                         loggingMeta,
                                         InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
                                         helsepersonellKategoriVerdi,
-                                        behandletAvManuell
+                                        behandletAvManuell,
                                     )
                                 else -> updateInfotrygdService.updateInfotrygd(
                                     producer = infotrygdOppdateringProducer,
@@ -138,13 +138,13 @@ class MottattSykmeldingService(
                                     behandlerKode = helsepersonellKategoriVerdi,
                                     navKontorNr = lokaltNavkontor,
                                     validationResult = validationResult,
-                                    behandletAvManuell = behandletAvManuell
+                                    behandletAvManuell = behandletAvManuell,
                                 )
                             }
                             log.info(
                                 "Message(${StructuredArguments.fields(loggingMeta)}) got outcome {}, {}, processing took {}s",
                                 StructuredArguments.keyValue("status", validationResult.status),
-                                StructuredArguments.keyValue("ruleHits", validationResult.ruleHits.joinToString(", ", "(", ")") { it.ruleName })
+                                StructuredArguments.keyValue("ruleHits", validationResult.ruleHits.joinToString(", ", "(", ")") { it.ruleName }),
                             )
                         }
                     }
@@ -152,13 +152,13 @@ class MottattSykmeldingService(
                     log.info(
                         "Message processing took {}s, for message {}",
                         currentRequestLatency.toString(),
-                        StructuredArguments.fields(loggingMeta)
+                        StructuredArguments.fields(loggingMeta),
                     )
                 }
                 else -> {
                     log.info(
                         "Oppdaterer ikke infotrygd for sykmelding med merknad eller reisetilskudd, {}",
-                        StructuredArguments.fields(loggingMeta)
+                        StructuredArguments.fields(loggingMeta),
                     )
                     handleSkalIkkeOppdatereInfotrygd(receivedSykmelding, loggingMeta)
                 }
@@ -178,7 +178,7 @@ class MottattSykmeldingService(
         receivedSykmelding: ReceivedSykmelding,
         itfh: InfotrygdForespAndHealthInformation,
         behandletAvManuell: Boolean,
-        loggingMeta: LoggingMeta
+        loggingMeta: LoggingMeta,
     ) {
         val validationResultBehandler = ValidationResult(
             status = Status.MANUAL_PROCESSING,
@@ -187,9 +187,9 @@ class MottattSykmeldingService(
                     ruleName = "BEHANDLER_NOT_IN_HPR",
                     messageForSender = "Den som har skrevet sykmeldingen din har ikke autorisasjon til dette.",
                     messageForUser = "Behandler er ikke registert i HPR",
-                    ruleStatus = Status.MANUAL_PROCESSING
-                )
-            )
+                    ruleStatus = Status.MANUAL_PROCESSING,
+                ),
+            ),
         )
 
         log.warn("Behandler er ikke registert i HPR")
@@ -199,13 +199,13 @@ class MottattSykmeldingService(
             loggingMeta,
             itfh,
             HelsepersonellKategori.LEGE.verdi,
-            behandletAvManuell
+            behandletAvManuell,
         )
     }
 
     private fun handleSkalIkkeOppdatereInfotrygd(
         receivedSykmelding: ReceivedSykmelding,
-        loggingMeta: LoggingMeta
+        loggingMeta: LoggingMeta,
     ) {
         val validationResult =
             if (receivedSykmelding.merknader?.any { it.type == "UNDER_BEHANDLING" } == true) {
@@ -216,9 +216,9 @@ class MottattSykmeldingService(
                             "UNDER_BEHANDLING",
                             "Sykmeldingen er til manuell behandling",
                             "Sykmeldingen er til manuell behandling",
-                            Status.OK
-                        )
-                    )
+                            Status.OK,
+                        ),
+                    ),
                 )
             } else {
                 ValidationResult(Status.OK, emptyList())
@@ -226,7 +226,7 @@ class MottattSykmeldingService(
         behandlingsutfallService.sendRuleCheckValidationResult(
             receivedSykmelding.sykmelding.id,
             validationResult,
-            loggingMeta
+            loggingMeta,
         )
     }
 
@@ -252,12 +252,11 @@ fun skalOppdatereInfotrygd(receivedSykmelding: ReceivedSykmelding): Boolean {
 }
 
 fun setHovedDiagnoseToA99IfhovedDiagnoseIsNullAndAnnenFraversArsakIsSet(
-    helseOpplysningerArbeidsuforhet: HelseOpplysningerArbeidsuforhet
+    helseOpplysningerArbeidsuforhet: HelseOpplysningerArbeidsuforhet,
 ): HelseOpplysningerArbeidsuforhet {
     if (helseOpplysningerArbeidsuforhet.medisinskVurdering.hovedDiagnose == null &&
         helseOpplysningerArbeidsuforhet.medisinskVurdering.annenFraversArsak != null
     ) {
-
         helseOpplysningerArbeidsuforhet.medisinskVurdering.hovedDiagnose =
             HelseOpplysningerArbeidsuforhet.MedisinskVurdering.HovedDiagnose().apply {
                 diagnosekode = CV().apply {
@@ -283,9 +282,9 @@ fun validerMottattSykmelding(helseOpplysningerArbeidsuforhet: HelseOpplysningerA
                     "HOVEDDIAGNOSE_MANGLER",
                     "Sykmeldingen inneholder ingen hoveddiagnose, vi kan ikke automatisk oppdatere Infotrygd",
                     "Sykmeldingen inneholder ingen hoveddiagnose, vi kan ikke automatisk oppdatere Infotrygd",
-                    Status.MANUAL_PROCESSING
-                )
-            )
+                    Status.MANUAL_PROCESSING,
+                ),
+            ),
         )
     } else {
         ValidationResult(Status.OK, emptyList())

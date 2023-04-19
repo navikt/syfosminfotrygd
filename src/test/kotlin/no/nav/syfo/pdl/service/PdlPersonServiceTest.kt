@@ -33,9 +33,9 @@ class PdlPersonServiceTest : FunSpec({
             coEvery { pdlClient.getPerson(any(), any()) } returns GetPersonResponse(
                 ResponseData(
                     hentGeografiskTilknytning = HentGeografiskTilknytning(gtType = "BYDEL", gtKommune = null, gtBydel = "030102", gtLand = null),
-                    hentPerson = HentPerson(adressebeskyttelse = listOf(Adressebeskyttelse("FORTROLIG")))
+                    hentPerson = HentPerson(adressebeskyttelse = listOf(Adressebeskyttelse("FORTROLIG"))),
                 ),
-                errors = null
+                errors = null,
             )
 
             coEvery { accessTokenClient.getAccessTokenV2(any()) } returns "token"
@@ -49,9 +49,9 @@ class PdlPersonServiceTest : FunSpec({
             coEvery { pdlClient.getPerson(any(), any()) } returns GetPersonResponse(
                 ResponseData(
                     hentGeografiskTilknytning = HentGeografiskTilknytning(gtType = "BYDEL", gtKommune = null, gtBydel = "030102", gtLand = null),
-                    hentPerson = null
+                    hentPerson = null,
                 ),
-                errors = null
+                errors = null,
             )
 
             coEvery { accessTokenClient.getAccessTokenV2(any()) } returns "token"
@@ -66,9 +66,9 @@ class PdlPersonServiceTest : FunSpec({
             coEvery { pdlClient.getPerson(any(), any()) } returns GetPersonResponse(
                 ResponseData(
                     hentGeografiskTilknytning = null,
-                    hentPerson = HentPerson(emptyList())
+                    hentPerson = HentPerson(emptyList()),
                 ),
-                errors = null
+                errors = null,
             )
 
             coEvery { accessTokenClient.getAccessTokenV2(any()) } returns "token"

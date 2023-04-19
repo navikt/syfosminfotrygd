@@ -13,14 +13,14 @@ class ErrorFromInfotrygdSpek : FunSpec({
                     ruleName = "ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING",
                     messageForSender = "messageForSender",
                     messageForUser = "messageforUser ",
-                    ruleStatus = Status.MANUAL_PROCESSING
+                    ruleStatus = Status.MANUAL_PROCESSING,
                 ),
                 RuleInfo(
                     ruleName = "ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING",
                     messageForSender = "messageForSender",
                     messageForUser = "messageForUser",
-                    ruleStatus = Status.MANUAL_PROCESSING
-                )
+                    ruleStatus = Status.MANUAL_PROCESSING,
+                ),
             )
 
             errorFromInfotrygd(rules) shouldBeEqualTo true
@@ -32,14 +32,14 @@ class ErrorFromInfotrygdSpek : FunSpec({
                     ruleName = "TRAVEL_SUBSIDY_SPECIFIED",
                     messageForSender = "messageForSender",
                     messageForUser = "messageForUser",
-                    ruleStatus = Status.MANUAL_PROCESSING
+                    ruleStatus = Status.MANUAL_PROCESSING,
                 ),
                 RuleInfo(
                     ruleName = "PERIOD_IS_AF",
                     messageForSender = "messageForSender",
                     messageForUser = "messageForUser",
-                    ruleStatus = Status.MANUAL_PROCESSING
-                )
+                    ruleStatus = Status.MANUAL_PROCESSING,
+                ),
             )
 
             errorFromInfotrygd(rules) shouldBeEqualTo false
@@ -51,14 +51,14 @@ class ErrorFromInfotrygdSpek : FunSpec({
                     ruleName = "TRAVEL_SUBSIDY_SPECIFIED",
                     messageForSender = "messageForSender",
                     messageForUser = "messageForUser",
-                    ruleStatus = Status.MANUAL_PROCESSING
+                    ruleStatus = Status.MANUAL_PROCESSING,
                 ),
                 RuleInfo(
                     ruleName = "ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING",
                     messageForSender = "messageForSender",
                     messageForUser = "messageForUser",
-                    ruleStatus = Status.MANUAL_PROCESSING
-                )
+                    ruleStatus = Status.MANUAL_PROCESSING,
+                ),
             )
 
             errorFromInfotrygd(rules) shouldBeEqualTo true

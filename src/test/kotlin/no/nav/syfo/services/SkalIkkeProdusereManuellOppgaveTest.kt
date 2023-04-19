@@ -20,15 +20,15 @@ class SkalIkkeProdusereManuellOppgaveTest : FunSpec({
                         ruleName = "PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE",
                         messageForUser = "messageForSender",
                         messageForSender = "messageForUser",
-                        ruleStatus = Status.MANUAL_PROCESSING
+                        ruleStatus = Status.MANUAL_PROCESSING,
                     ),
                     RuleInfo(
                         ruleName = "NUMBER_OF_TREATMENT_DAYS_SET",
                         messageForUser = "Hvis behandlingsdager er angitt sendes meldingen til manuell behandling.",
                         messageForSender = "Hvis behandlingsdager er angitt sendes meldingen til manuell behandling.",
-                        ruleStatus = Status.MANUAL_PROCESSING
-                    )
-                )
+                        ruleStatus = Status.MANUAL_PROCESSING,
+                    ),
+                ),
             )
             val receivedSykmelding = receivedSykmelding(
                 "1",
@@ -36,10 +36,10 @@ class SkalIkkeProdusereManuellOppgaveTest : FunSpec({
                     perioder = listOf(
                         generatePeriode(
                             fom = LocalDate.of(2019, 1, 1),
-                            tom = LocalDate.of(2019, 1, 4)
-                        )
-                    )
-                )
+                            tom = LocalDate.of(2019, 1, 4),
+                        ),
+                    ),
+                ),
             )
 
             skalIkkeProdusereManuellOppgave(receivedSykmelding, validationResult) shouldBeEqualTo true
@@ -53,15 +53,15 @@ class SkalIkkeProdusereManuellOppgaveTest : FunSpec({
                         ruleName = "PERIOD_IS_AF",
                         messageForUser = "messageForSender",
                         messageForSender = "messageForUser",
-                        ruleStatus = Status.MANUAL_PROCESSING
+                        ruleStatus = Status.MANUAL_PROCESSING,
                     ),
                     RuleInfo(
                         ruleName = "TRAVEL_SUBSIDY_SPECIFIED",
                         messageForUser = "messageForSender",
                         messageForSender = "messageForUser",
-                        ruleStatus = Status.MANUAL_PROCESSING
-                    )
-                )
+                        ruleStatus = Status.MANUAL_PROCESSING,
+                    ),
+                ),
             )
             val receivedSykmelding = receivedSykmelding(
                 "1",
@@ -69,10 +69,10 @@ class SkalIkkeProdusereManuellOppgaveTest : FunSpec({
                     perioder = listOf(
                         generatePeriode(
                             fom = LocalDate.of(2019, 1, 1),
-                            tom = LocalDate.of(2019, 1, 5)
-                        )
-                    )
-                )
+                            tom = LocalDate.of(2019, 1, 5),
+                        ),
+                    ),
+                ),
             )
 
             skalIkkeProdusereManuellOppgave(receivedSykmelding, validationResult) shouldBeEqualTo false
@@ -86,15 +86,15 @@ class SkalIkkeProdusereManuellOppgaveTest : FunSpec({
                         ruleName = "PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE",
                         messageForUser = "messageForSender",
                         messageForSender = "messageForUser",
-                        ruleStatus = Status.MANUAL_PROCESSING
+                        ruleStatus = Status.MANUAL_PROCESSING,
                     ),
                     RuleInfo(
                         ruleName = "TRAVEL_SUBSIDY_SPECIFIED",
                         messageForUser = "messageForSender",
                         messageForSender = "messageForUser",
-                        ruleStatus = Status.MANUAL_PROCESSING
-                    )
-                )
+                        ruleStatus = Status.MANUAL_PROCESSING,
+                    ),
+                ),
             )
             val receivedSykmelding = receivedSykmelding(
                 "1",
@@ -102,10 +102,10 @@ class SkalIkkeProdusereManuellOppgaveTest : FunSpec({
                     perioder = listOf(
                         generatePeriode(
                             fom = LocalDate.of(2019, 1, 1),
-                            tom = LocalDate.of(2019, 1, 5)
-                        )
-                    )
-                )
+                            tom = LocalDate.of(2019, 1, 5),
+                        ),
+                    ),
+                ),
             )
 
             skalIkkeProdusereManuellOppgave(receivedSykmelding, validationResult) shouldBeEqualTo false

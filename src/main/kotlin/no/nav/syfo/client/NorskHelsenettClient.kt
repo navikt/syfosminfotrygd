@@ -16,7 +16,7 @@ class NorskHelsenettClient(
     private val httpClient: HttpClient,
     private val endpointUrl: String,
     private val accessTokenClient: AccessTokenClientV2,
-    private val resourceId: String
+    private val resourceId: String,
 ) {
     suspend fun finnBehandler(behandlerFnr: String, msgId: String): Behandler? {
         log.info("Henter behandler fra syfohelsenettproxy for msgId {}", msgId)
@@ -47,16 +47,16 @@ class NorskHelsenettClient(
 }
 
 data class Behandler(
-    val godkjenninger: List<Godkjenning>
+    val godkjenninger: List<Godkjenning>,
 )
 
 data class Godkjenning(
     val helsepersonellkategori: Kode? = null,
-    val autorisasjon: Kode? = null
+    val autorisasjon: Kode? = null,
 )
 
 data class Kode(
     val aktiv: Boolean,
     val oid: Int,
-    val verdi: String?
+    val verdi: String?,
 )

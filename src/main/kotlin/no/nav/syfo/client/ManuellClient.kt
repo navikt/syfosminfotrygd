@@ -12,7 +12,7 @@ class ManuellClient(
     private val httpClient: HttpClient,
     private val endpointUrl: String,
     private val accessTokenClient: AccessTokenClientV2,
-    private val resourceId: String
+    private val resourceId: String,
 ) {
     suspend fun behandletAvManuell(sykmeldingId: String, loggingMeta: LoggingMeta): Boolean {
         val httpResponse: HttpResponse = httpClient.get("$endpointUrl/api/v1/sykmelding/$sykmeldingId") {

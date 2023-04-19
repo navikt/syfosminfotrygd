@@ -12,7 +12,7 @@ import java.security.MessageDigest
 
 class RedisService(
     private val jedisPool: JedisPool,
-    private val redisSecret: String
+    private val redisSecret: String,
 ) {
     fun erIRedis(redisKey: String): Boolean {
         var jedis: Jedis? = null
@@ -43,7 +43,7 @@ class RedisService(
                 SetParams().apply {
                     ex(sekunder.toLong())
                     nx()
-                }
+                },
             )
         } catch (e: Exception) {
             log.error("Noe gikk galt ved oppdatering av redis {}", e.message)
