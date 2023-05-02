@@ -17,11 +17,13 @@ import no.nav.syfo.client.ManuellClient
 import no.nav.syfo.client.NorskHelsenettClient
 import no.nav.syfo.client.SyketilfelleClient
 import no.nav.syfo.createDefaultHealthInformation
+import no.nav.syfo.generatePeriode
 import no.nav.syfo.generateSykmelding
 import no.nav.syfo.model.HelsepersonellKategori
 import no.nav.syfo.model.MedisinskVurdering
 import no.nav.syfo.model.Merknad
 import no.nav.syfo.model.Status
+import no.nav.syfo.model.UtenlandskSykmelding
 import no.nav.syfo.receivedSykmelding
 import no.nav.syfo.services.tss.fetchTssSamhandlerInfo
 import no.nav.syfo.services.updateinfotrygd.UpdateInfotrygdService
@@ -33,8 +35,6 @@ import java.time.LocalDate
 import java.util.UUID
 import javax.jms.MessageProducer
 import javax.jms.Session
-import no.nav.syfo.generatePeriode
-import no.nav.syfo.model.UtenlandskSykmelding
 
 class MottattSykmeldingServiceTest : FunSpec({
     val updateInfotrygdService = mockk<UpdateInfotrygdService>(relaxed = true)
@@ -255,10 +255,10 @@ class MottattSykmeldingServiceTest : FunSpec({
                 sykmelding = generateSykmelding(
                     perioder = listOf(
                         generatePeriode(
-                            fom =  LocalDate.now(),
+                            fom = LocalDate.now(),
                             tom = LocalDate.now().plusDays(85),
                         ),
-            ),
+                    ),
                     medisinskVurdering = MedisinskVurdering(hovedDiagnose = null, biDiagnoser = emptyList(), svangerskap = false, yrkesskade = false, yrkesskadeDato = null, annenFraversArsak = null),
                 ),
                 fellesformat = fellesformatMarshaller.toString(fellesformat),
@@ -287,7 +287,7 @@ class MottattSykmeldingServiceTest : FunSpec({
         test("Use local nav office when under 12 weeks and utenlandsksykmelding") {
             coEvery { fetchInfotrygdForesp(any(), any(), any(), any()) } returns getInfotrygdForespResponse()
             val startdato = LocalDate.of(2023, 1, 1)
-            coEvery { syketilfelleClient.finnStartdato(any(), any(), any() ) } returns startdato
+            coEvery { syketilfelleClient.finnStartdato(any(), any(), any()) } returns startdato
             coEvery { fetchTssSamhandlerInfo(any(), any(), any()) } returns "1234"
             val healthInformation = createDefaultHealthInformation()
             val fellesformat = createFellesFormat(healthInformation)
@@ -331,7 +331,7 @@ class MottattSykmeldingServiceTest : FunSpec({
             coEvery { fetchInfotrygdForesp(any(), any(), any(), any()) } returns getInfotrygdForespResponse()
             coEvery { fetchTssSamhandlerInfo(any(), any(), any()) } returns "1234"
             val startdato = LocalDate.of(2023, 1, 1)
-            coEvery { syketilfelleClient.finnStartdato(any(), any(), any() ) } returns startdato
+            coEvery { syketilfelleClient.finnStartdato(any(), any(), any()) } returns startdato
             val healthInformation = createDefaultHealthInformation()
             val fellesformat = createFellesFormat(healthInformation)
 
@@ -341,7 +341,7 @@ class MottattSykmeldingServiceTest : FunSpec({
                     perioder = listOf(
                         generatePeriode(
                             fom = startdato,
-                            tom = startdato.plusDays(84),
+                            tom = startdato.plusDays(85),
                         ),
                     ),
                     medisinskVurdering = MedisinskVurdering(hovedDiagnose = null, biDiagnoser = emptyList(), svangerskap = false, yrkesskade = false, yrkesskadeDato = null, annenFraversArsak = null),
@@ -369,7 +369,6 @@ class MottattSykmeldingServiceTest : FunSpec({
             coVerify(exactly = 0) { behandlingsutfallService.sendRuleCheckValidationResult(any(), any(), any()) }
             coVerify(exactly = 0) { manuellBehandlingService.produceManualTaskAndSendValidationResults(any(), any(), any(), any(), any(), any()) }
         }
-
     }
 })
 
