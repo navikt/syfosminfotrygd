@@ -1,10 +1,10 @@
 package no.nav.syfo.services.tss
 
 import com.ctc.wstx.exc.WstxException
-import no.nav.helse.tssSamhandlerData.XMLSamhandlerIDataB910Type
-import no.nav.helse.tssSamhandlerData.XMLTServicerutiner
-import no.nav.helse.tssSamhandlerData.XMLTidOFF1
-import no.nav.helse.tssSamhandlerData.XMLTssSamhandlerData
+import no.nav.helse.tss.samhandler.data.XMLSamhandlerIDataB910Type
+import no.nav.helse.tss.samhandler.data.XMLTServicerutiner
+import no.nav.helse.tss.samhandler.data.XMLTidOFF1
+import no.nav.helse.tss.samhandler.data.XMLTssSamhandlerData
 import no.nav.syfo.helpers.retry
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.toString

@@ -1,18 +1,18 @@
 package no.nav.syfo.services.tss
 
 import io.kotest.core.spec.style.FunSpec
-import no.nav.helse.tssSamhandlerData.XMLSamhAvdPraType
-import no.nav.helse.tssSamhandlerData.XMLSamhandlerIDataB910Type
-import no.nav.helse.tssSamhandlerData.XMLSamhandlerType
-import no.nav.helse.tssSamhandlerData.XMLSvarStatusType
-import no.nav.helse.tssSamhandlerData.XMLTOutputElementer
-import no.nav.helse.tssSamhandlerData.XMLTServicerutiner
-import no.nav.helse.tssSamhandlerData.XMLTidOFF1
-import no.nav.helse.tssSamhandlerData.XMLTssSamhandlerData
-import no.nav.helse.tssSamhandlerData.XMLTypeKomplett
-import no.nav.helse.tssSamhandlerData.XMLTypeOD960
-import no.nav.helse.tssSamhandlerData.XMLTypeSamhAvd
-import no.nav.helse.tssSamhandlerData.XMLTypeSamhandler
+import no.nav.helse.tss.samhandler.data.XMLSamhAvdPraType
+import no.nav.helse.tss.samhandler.data.XMLSamhandlerIDataB910Type
+import no.nav.helse.tss.samhandler.data.XMLSamhandlerType
+import no.nav.helse.tss.samhandler.data.XMLSvarStatusType
+import no.nav.helse.tss.samhandler.data.XMLTOutputElementer
+import no.nav.helse.tss.samhandler.data.XMLTServicerutiner
+import no.nav.helse.tss.samhandler.data.XMLTidOFF1
+import no.nav.helse.tss.samhandler.data.XMLTssSamhandlerData
+import no.nav.helse.tss.samhandler.data.XMLTypeKomplett
+import no.nav.helse.tss.samhandler.data.XMLTypeOD960
+import no.nav.helse.tss.samhandler.data.XMLTypeSamhAvd
+import no.nav.helse.tss.samhandler.data.XMLTypeSamhandler
 import org.amshove.kluent.shouldBeEqualTo
 
 class TssIdFraTSS : FunSpec({

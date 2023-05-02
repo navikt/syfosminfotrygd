@@ -16,7 +16,7 @@ import no.nav.helse.msgHead.XMLMsgHead
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.helse.sm2013.KontrollSystemBlokk
 import no.nav.helse.sm2013.KontrollsystemBlokkType
-import no.nav.helse.tssSamhandlerData.XMLTssSamhandlerData
+import no.nav.helse.tss.samhandler.data.XMLTssSamhandlerData
 import org.codehaus.stax2.XMLOutputFactory2
 import javax.xml.bind.JAXBContext
 import javax.xml.bind.Marshaller
