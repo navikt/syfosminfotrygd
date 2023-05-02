@@ -36,6 +36,7 @@ import no.nav.syfo.application.exception.ServiceUnavailableException
 import no.nav.syfo.client.AccessTokenClientV2
 import no.nav.syfo.client.ManuellClient
 import no.nav.syfo.client.NorskHelsenettClient
+import no.nav.syfo.client.SyketilfelleClient
 import no.nav.syfo.client.norg.Norg2Client
 import no.nav.syfo.client.norg.Norg2RedisService
 import no.nav.syfo.kafka.aiven.KafkaUtils
@@ -180,6 +181,8 @@ fun main() {
     val finnNAVKontorService = FinnNAVKontorService(pdlPersonService, norg2Client)
 
     val manuellClient = ManuellClient(httpClient, env.manuellUrl, accessTokenClientV2, env.manuellScope)
+    val syketilfelleClient = SyketilfelleClient(env.syketilfelleEndpointURL, accessTokenClientV2, env.syketilfelleScope, httpClient)
+
     val behandlingsutfallService = BehandlingsutfallService(
         kafkaAivenProducerBehandlingsutfall = kafkaAivenProducerBehandlingsutfall,
         behandlingsUtfallTopic = env.behandlingsUtfallTopic,
@@ -210,6 +213,7 @@ fun main() {
         manuellBehandlingService = manuellBehandlingService,
         behandlingsutfallService = behandlingsutfallService,
         norskHelsenettClient = norskHelsenettClient,
+        syketilfelleClient = syketilfelleClient,
     )
 
     launchListeners(

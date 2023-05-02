@@ -32,6 +32,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 import kotlin.random.Random
+import no.nav.syfo.model.UtenlandskSykmelding
 
 fun createDefaultHealthInformation(): HelseOpplysningerArbeidsuforhet =
     HelseOpplysningerArbeidsuforhet().apply {
@@ -76,6 +77,7 @@ fun receivedSykmelding(
     fellesformat: String = "",
     merknader: List<Merknad>? = null,
     tssid: String = "",
+    utenlandskSykmelding: UtenlandskSykmelding? = null
 ) = ReceivedSykmelding(
     sykmelding = sykmelding,
     personNrPasient = "123124",
@@ -96,7 +98,7 @@ fun receivedSykmelding(
     legeHprNr = null,
     legeHelsepersonellkategori = null,
     vedlegg = null,
-    utenlandskSykmelding = null,
+    utenlandskSykmelding = utenlandskSykmelding,
 )
 
 fun generateSykmelding(

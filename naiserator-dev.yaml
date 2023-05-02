@@ -42,6 +42,9 @@ spec:
       rules:
         - application: syfosminfotrygd-redis
         - application: syfosmmanuell-backend
+        - application: flex-syketilfelle
+          namespace: flex
+          cluster: dev-gcp
       external:
         - host: pdl-api.dev-fss-pub.nais.io
         - host: norg2.dev-fss-pub.nais.io
@@ -94,3 +97,5 @@ spec:
       value: api://dev-gcp.teamsykmelding.syfosmmanuell-backend/.default
     - name: MQ_KEYSTORE_PATH
       value: /var/run/keystore/syfosminfotrygd-keystore.jks
+    - name: SYKETILLFELLE_SCOPE
+      value: api://dev-gcp.flex.flex-syketilfelle/.default
