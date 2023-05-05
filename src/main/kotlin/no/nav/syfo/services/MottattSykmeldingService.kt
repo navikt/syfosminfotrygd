@@ -24,7 +24,6 @@ import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.objectMapper
 import no.nav.syfo.rules.ruleCheck
-import no.nav.syfo.services.tss.getTssId
 import no.nav.syfo.services.updateinfotrygd.UpdateInfotrygdService
 import no.nav.syfo.util.LoggingMeta
 import no.nav.syfo.util.fellesformatUnmarshaller
@@ -50,7 +49,6 @@ class MottattSykmeldingService(
         receivedSykmelding: ReceivedSykmelding,
         infotrygdOppdateringProducer: MessageProducer,
         infotrygdSporringProducer: MessageProducer,
-        tssProducer: MessageProducer,
         session: Session,
         loggingMeta: LoggingMeta,
     ) {
@@ -88,19 +86,6 @@ class MottattSykmeldingService(
                             session,
                             healthInformation,
                         )
-                        val receivedSykmeldingMedTssId = if (receivedSykmelding.tssid.isNullOrBlank()) {
-                            receivedSykmelding.copy(
-                                tssid = getTssId(
-                                    infotrygdForespResponse = infotrygdForespResponse,
-                                    receivedSykmelding = receivedSykmelding,
-                                    tssProducer = tssProducer,
-                                    session = session,
-                                    loggingMeta = loggingMeta,
-                                ),
-                            )
-                        } else {
-                            receivedSykmelding
-                        }
 
                         sikkerlogg.info(
                             "infotrygdForespResponse: ${objectMapper.writeValueAsString(infotrygdForespResponse)}" +
@@ -109,10 +94,10 @@ class MottattSykmeldingService(
                         )
 
                         val validationResult =
-                            ruleCheck(receivedSykmeldingMedTssId, infotrygdForespResponse, loggingMeta, RuleExecutionService())
+                            ruleCheck(receivedSykmelding, infotrygdForespResponse, loggingMeta, RuleExecutionService())
 
                         val lokaltNavkontor =
-                            finnNAVKontorService.finnLokaltNavkontor(receivedSykmeldingMedTssId.personNrPasient, loggingMeta)
+                            finnNAVKontorService.finnLokaltNavkontor(receivedSykmelding.personNrPasient, loggingMeta)
 
                         val syketilfelleStartdato = syketilfelleClient.finnStartdatoForSammenhengendeSyketilfelle(
                             receivedSykmelding.personNrPasient,
@@ -120,10 +105,10 @@ class MottattSykmeldingService(
                             loggingMeta,
                         )
 
-                        val helsepersonell = getHelsepersonell(receivedSykmeldingMedTssId)
+                        val helsepersonell = getHelsepersonell(receivedSykmelding)
                         if (helsepersonell == null) {
                             handleBehandlerNotInHpr(
-                                receivedSykmelding = receivedSykmeldingMedTssId,
+                                receivedSykmelding = receivedSykmelding,
                                 itfh = InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
                                 behandletAvManuell = behandletAvManuell,
                                 loggingMeta = loggingMeta,
@@ -133,7 +118,7 @@ class MottattSykmeldingService(
                             when (validationResult.status) {
                                 in arrayOf(Status.MANUAL_PROCESSING) ->
                                     manuellBehandlingService.produceManualTaskAndSendValidationResults(
-                                        receivedSykmeldingMedTssId,
+                                        receivedSykmelding,
                                         validationResult,
                                         loggingMeta,
                                         InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
@@ -145,7 +130,7 @@ class MottattSykmeldingService(
                                     session = session,
                                     loggingMeta = loggingMeta,
                                     itfh = InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
-                                    receivedSykmelding = receivedSykmeldingMedTssId,
+                                    receivedSykmelding = receivedSykmelding,
                                     behandlerKode = helsepersonellKategoriVerdi,
                                     navKontorNr = setNavKontorNr(receivedSykmelding, syketilfelleStartdato, lokaltNavkontor),
                                     validationResult = validationResult,

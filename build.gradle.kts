@@ -100,7 +100,6 @@ dependencies {
     implementation ("no.nav.helse.xml:kontrollsystemblokk:$syfoXmlCodegen")
     implementation ("no.nav.helse.xml:infotrygd-foresp:$syfoXmlCodegen")
     implementation ("no.nav.helse.xml:kith-hodemelding:$syfoXmlCodegen")
-    implementation ("no.nav.helse.xml:tss-samhandler-data:$syfoXmlCodegen")
 
     implementation ("no.nav.helse:syfosm-common-models:$smCommonVersion")
     implementation ("no.nav.helse:syfosm-common-mq:$smCommonVersion")
