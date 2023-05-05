@@ -76,7 +76,7 @@ fun receivedSykmelding(
     sykmelding: Sykmelding = generateSykmelding(),
     fellesformat: String = "",
     merknader: List<Merknad>? = null,
-    tssid: String = "",
+    tssid: String? = "2344123",
     utenlandskSykmelding: UtenlandskSykmelding? = null,
 ) = ReceivedSykmelding(
     sykmelding = sykmelding,

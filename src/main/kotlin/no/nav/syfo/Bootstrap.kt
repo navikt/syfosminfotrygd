@@ -257,14 +257,12 @@ fun launchListeners(
                     session.producerForQueue("queue:///${env.infotrygdOppdateringQueue}?targetClient=1")
                 val infotrygdSporringProducer =
                     session.producerForQueue("queue:///${env.infotrygdSporringQueue}?targetClient=1")
-                val tssProducer = session.producerForQueue("queue:///${env.tssQueue}?targetClient=1")
 
                 blockingApplicationLogic(
                     applicationState,
                     infotrygdOppdateringProducer,
                     infotrygdSporringProducer,
                     session,
-                    tssProducer,
                     env,
                     kafkaAivenConsumerReceivedSykmelding,
                     mottattSykmeldingService,
@@ -280,7 +278,6 @@ suspend fun blockingApplicationLogic(
     infotrygdOppdateringProducer: MessageProducer,
     infotrygdSporringProducer: MessageProducer,
     session: Session,
-    tssProducer: MessageProducer,
     env: Environment,
     kafkaAivenConsumerReceivedSykmelding: KafkaConsumer<String, String>,
     mottattSykmeldingService: MottattSykmeldingService,
@@ -296,7 +293,6 @@ suspend fun blockingApplicationLogic(
                 infotrygdSporringProducer,
                 session,
                 applicationState,
-                tssProducer,
                 kafkaAivenConsumerReceivedSykmelding,
                 mottattSykmeldingService,
             )
@@ -312,7 +308,6 @@ private suspend fun runKafkaConsumer(
     infotrygdSporringProducer: MessageProducer,
     session: Session,
     applicationState: ApplicationState,
-    tssProducer: MessageProducer,
     kafkaAivenConsumerReceivedSykmelding: KafkaConsumer<String, String>,
     mottattSykmeldingService: MottattSykmeldingService,
 ) {
@@ -331,7 +326,6 @@ private suspend fun runKafkaConsumer(
                     receivedSykmelding = receivedSykmelding,
                     infotrygdOppdateringProducer = infotrygdOppdateringProducer,
                     infotrygdSporringProducer = infotrygdSporringProducer,
-                    tssProducer = tssProducer,
                     session = session,
                     loggingMeta = loggingMeta,
                 )

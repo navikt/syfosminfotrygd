@@ -25,7 +25,6 @@ import no.nav.syfo.model.Merknad
 import no.nav.syfo.model.Status
 import no.nav.syfo.model.UtenlandskSykmelding
 import no.nav.syfo.receivedSykmelding
-import no.nav.syfo.services.tss.fetchTssSamhandlerInfo
 import no.nav.syfo.services.updateinfotrygd.UpdateInfotrygdService
 import no.nav.syfo.services.updateinfotrygd.createFellesFormat
 import no.nav.syfo.toString
@@ -45,7 +44,6 @@ class MottattSykmeldingServiceTest : FunSpec({
     val norskHelsenettClient = mockk<NorskHelsenettClient>()
     val infotrygdOppdateringProducer = mockk<MessageProducer>(relaxed = true)
     val infotrygdSporringProducer = mockk<MessageProducer>(relaxed = true)
-    val tssProducer = mockk<MessageProducer>(relaxed = true)
     val session = mockk<Session>(relaxed = true)
     val loggingMeta = LoggingMeta("", "", "", "")
     val syketilfelleClient = mockk<SyketilfelleClient>(relaxed = true)
@@ -61,7 +59,6 @@ class MottattSykmeldingServiceTest : FunSpec({
 
     beforeTest {
         mockkStatic("no.nav.syfo.services.GetInfotrygdForespServiceKt")
-        mockkStatic("no.nav.syfo.services.tss.GetTssSamhandlerDataServiceKt")
     }
     beforeEach {
         clearMocks(updateInfotrygdService, finnNAVKontorService, manuellClient, manuellBehandlingService, behandlingsutfallService, norskHelsenettClient)
@@ -73,7 +70,6 @@ class MottattSykmeldingServiceTest : FunSpec({
     context("handleMessage") {
         test("Happy case") {
             coEvery { fetchInfotrygdForesp(any(), any(), any(), any()) } returns getInfotrygdForespResponse()
-            coEvery { fetchTssSamhandlerInfo(any(), any(), any()) } returns "1234"
             val healthInformation = createDefaultHealthInformation()
             val fellesformat = createFellesFormat(healthInformation)
 
@@ -85,7 +81,7 @@ class MottattSykmeldingServiceTest : FunSpec({
                 fellesformat = fellesformatMarshaller.toString(fellesformat),
             )
 
-            mottattSykmeldingService.handleMessage(receivedSykmelding, infotrygdOppdateringProducer, infotrygdSporringProducer, tssProducer, session, loggingMeta)
+            mottattSykmeldingService.handleMessage(receivedSykmelding, infotrygdOppdateringProducer, infotrygdSporringProducer, session, loggingMeta)
 
             coVerify {
                 updateInfotrygdService.updateInfotrygd(
@@ -93,7 +89,7 @@ class MottattSykmeldingServiceTest : FunSpec({
                     session,
                     loggingMeta,
                     any(),
-                    receivedSykmelding.copy(tssid = "1234"),
+                    receivedSykmelding,
                     "LE",
                     "0101",
                     match { it.status == Status.OK },
@@ -107,7 +103,7 @@ class MottattSykmeldingServiceTest : FunSpec({
         test("Oppdaterer ikke infotrygd hvis sykmelding har merknad") {
             val receivedSykmeldingMedMerknad = receivedSykmelding(id = UUID.randomUUID().toString(), merknader = listOf(Merknad("UNDER_BEHANDLING", "")))
 
-            mottattSykmeldingService.handleMessage(receivedSykmeldingMedMerknad, infotrygdOppdateringProducer, infotrygdSporringProducer, tssProducer, session, loggingMeta)
+            mottattSykmeldingService.handleMessage(receivedSykmeldingMedMerknad, infotrygdOppdateringProducer, infotrygdSporringProducer, session, loggingMeta)
 
             coVerify(exactly = 0) { updateInfotrygdService.updateInfotrygd(any(), any(), any(), any(), any(), any(), any(), any(), any()) }
             coVerify(exactly = 0) { manuellClient.behandletAvManuell(any(), any()) }
@@ -128,7 +124,7 @@ class MottattSykmeldingServiceTest : FunSpec({
                 fellesformat = fellesformatMarshaller.toString(fellesformat),
             )
 
-            mottattSykmeldingService.handleMessage(receivedSykmeldingUtenHoveddiagose, infotrygdOppdateringProducer, infotrygdSporringProducer, tssProducer, session, loggingMeta)
+            mottattSykmeldingService.handleMessage(receivedSykmeldingUtenHoveddiagose, infotrygdOppdateringProducer, infotrygdSporringProducer, session, loggingMeta)
 
             coVerify(exactly = 0) { updateInfotrygdService.updateInfotrygd(any(), any(), any(), any(), any(), any(), any(), any(), any()) }
             coVerify { manuellClient.behandletAvManuell(any(), any()) }
@@ -145,7 +141,6 @@ class MottattSykmeldingServiceTest : FunSpec({
         test("Går til manuell behandling hvis vi mangler behandler") {
             coEvery { norskHelsenettClient.finnBehandler(any(), any()) } returns null
             coEvery { fetchInfotrygdForesp(any(), any(), any(), any()) } returns getInfotrygdForespResponse()
-            coEvery { fetchTssSamhandlerInfo(any(), any(), any()) } returns "1234"
             val healthInformation = createDefaultHealthInformation()
             val fellesformat = createFellesFormat(healthInformation)
 
@@ -157,14 +152,14 @@ class MottattSykmeldingServiceTest : FunSpec({
                 fellesformat = fellesformatMarshaller.toString(fellesformat),
             )
 
-            mottattSykmeldingService.handleMessage(receivedSykmelding, infotrygdOppdateringProducer, infotrygdSporringProducer, tssProducer, session, loggingMeta)
+            mottattSykmeldingService.handleMessage(receivedSykmelding, infotrygdOppdateringProducer, infotrygdSporringProducer, session, loggingMeta)
 
             coVerify(exactly = 0) { updateInfotrygdService.updateInfotrygd(any(), any(), any(), any(), any(), any(), any(), any(), any()) }
             coVerify { manuellClient.behandletAvManuell(any(), any()) }
             coVerify(exactly = 0) { behandlingsutfallService.sendRuleCheckValidationResult(any(), any(), any()) }
             coVerify {
                 manuellBehandlingService.produceManualTaskAndSendValidationResults(
-                    receivedSykmelding.copy(tssid = "1234"),
+                    receivedSykmelding,
                     match { it.status == Status.MANUAL_PROCESSING && it.ruleHits.any { ruleInfo -> ruleInfo.ruleName == "BEHANDLER_NOT_IN_HPR" } },
                     loggingMeta,
                     any(),
@@ -175,7 +170,6 @@ class MottattSykmeldingServiceTest : FunSpec({
         }
         test("Går til manuell behandling hvis infotrygd-regler slår ut") {
             coEvery { fetchInfotrygdForesp(any(), any(), any(), any()) } returns getInfotrygdForespResponse()
-            coEvery { fetchTssSamhandlerInfo(any(), any(), any()) } returns null
             val healthInformation = createDefaultHealthInformation()
             val fellesformat = createFellesFormat(healthInformation)
 
@@ -185,16 +179,17 @@ class MottattSykmeldingServiceTest : FunSpec({
                     medisinskVurdering = MedisinskVurdering(hovedDiagnose = null, biDiagnoser = emptyList(), svangerskap = false, yrkesskade = false, yrkesskadeDato = null, annenFraversArsak = null),
                 ),
                 fellesformat = fellesformatMarshaller.toString(fellesformat),
+                tssid = null,
             )
 
-            mottattSykmeldingService.handleMessage(receivedSykmelding, infotrygdOppdateringProducer, infotrygdSporringProducer, tssProducer, session, loggingMeta)
+            mottattSykmeldingService.handleMessage(receivedSykmelding, infotrygdOppdateringProducer, infotrygdSporringProducer, session, loggingMeta)
 
             coVerify(exactly = 0) { updateInfotrygdService.updateInfotrygd(any(), any(), any(), any(), any(), any(), any(), any(), any()) }
             coVerify { manuellClient.behandletAvManuell(any(), any()) }
             coVerify(exactly = 0) { behandlingsutfallService.sendRuleCheckValidationResult(any(), any(), any()) }
             coVerify {
                 manuellBehandlingService.produceManualTaskAndSendValidationResults(
-                    receivedSykmelding.copy(tssid = null),
+                    receivedSykmelding,
                     match { it.status == Status.MANUAL_PROCESSING && it.ruleHits.any { ruleInfo -> ruleInfo.ruleName == "TSS_IDENT_MANGLER" } },
                     loggingMeta,
                     any(),
@@ -206,7 +201,6 @@ class MottattSykmeldingServiceTest : FunSpec({
 
         test("Use local nav office when under 12 weeks and not utenlandsksykmelding") {
             coEvery { fetchInfotrygdForesp(any(), any(), any(), any()) } returns getInfotrygdForespResponse()
-            coEvery { fetchTssSamhandlerInfo(any(), any(), any()) } returns "1234"
             val healthInformation = createDefaultHealthInformation()
             val fellesformat = createFellesFormat(healthInformation)
 
@@ -224,7 +218,7 @@ class MottattSykmeldingServiceTest : FunSpec({
                 fellesformat = fellesformatMarshaller.toString(fellesformat),
             )
 
-            mottattSykmeldingService.handleMessage(receivedSykmelding, infotrygdOppdateringProducer, infotrygdSporringProducer, tssProducer, session, loggingMeta)
+            mottattSykmeldingService.handleMessage(receivedSykmelding, infotrygdOppdateringProducer, infotrygdSporringProducer, session, loggingMeta)
 
             coVerify {
                 updateInfotrygdService.updateInfotrygd(
@@ -232,7 +226,7 @@ class MottattSykmeldingServiceTest : FunSpec({
                     session,
                     loggingMeta,
                     any(),
-                    receivedSykmelding.copy(tssid = "1234"),
+                    receivedSykmelding,
                     "LE",
                     "0101",
                     match { it.status == Status.OK },
@@ -246,7 +240,6 @@ class MottattSykmeldingServiceTest : FunSpec({
 
         test("Use local nav office when over 12 weeks and not utenlandsksykmelding") {
             coEvery { fetchInfotrygdForesp(any(), any(), any(), any()) } returns getInfotrygdForespResponse()
-            coEvery { fetchTssSamhandlerInfo(any(), any(), any()) } returns "1234"
             val healthInformation = createDefaultHealthInformation()
             val fellesformat = createFellesFormat(healthInformation)
 
@@ -264,7 +257,7 @@ class MottattSykmeldingServiceTest : FunSpec({
                 fellesformat = fellesformatMarshaller.toString(fellesformat),
             )
 
-            mottattSykmeldingService.handleMessage(receivedSykmelding, infotrygdOppdateringProducer, infotrygdSporringProducer, tssProducer, session, loggingMeta)
+            mottattSykmeldingService.handleMessage(receivedSykmelding, infotrygdOppdateringProducer, infotrygdSporringProducer, session, loggingMeta)
 
             coVerify {
                 updateInfotrygdService.updateInfotrygd(
@@ -272,7 +265,7 @@ class MottattSykmeldingServiceTest : FunSpec({
                     session,
                     loggingMeta,
                     any(),
-                    receivedSykmelding.copy(tssid = "1234"),
+                    receivedSykmelding,
                     "LE",
                     "0101",
                     match { it.status == Status.OK },
@@ -288,7 +281,6 @@ class MottattSykmeldingServiceTest : FunSpec({
             coEvery { fetchInfotrygdForesp(any(), any(), any(), any()) } returns getInfotrygdForespResponse()
             val startdato = LocalDate.of(2023, 1, 1)
             coEvery { syketilfelleClient.finnStartdato(any(), any(), any()) } returns startdato
-            coEvery { fetchTssSamhandlerInfo(any(), any(), any()) } returns "1234"
             val healthInformation = createDefaultHealthInformation()
             val fellesformat = createFellesFormat(healthInformation)
 
@@ -307,7 +299,7 @@ class MottattSykmeldingServiceTest : FunSpec({
                 utenlandskSykmelding = UtenlandskSykmelding("POL", false),
             )
 
-            mottattSykmeldingService.handleMessage(receivedSykmelding, infotrygdOppdateringProducer, infotrygdSporringProducer, tssProducer, session, loggingMeta)
+            mottattSykmeldingService.handleMessage(receivedSykmelding, infotrygdOppdateringProducer, infotrygdSporringProducer, session, loggingMeta)
 
             coVerify {
                 updateInfotrygdService.updateInfotrygd(
@@ -329,7 +321,6 @@ class MottattSykmeldingServiceTest : FunSpec({
 
         test("Use nav office 0393 when over 12 weeks and utenlandsksykmelding") {
             coEvery { fetchInfotrygdForesp(any(), any(), any(), any()) } returns getInfotrygdForespResponse()
-            coEvery { fetchTssSamhandlerInfo(any(), any(), any()) } returns "1234"
             val startdato = LocalDate.of(2023, 1, 1)
             coEvery { syketilfelleClient.finnStartdato(any(), any(), any()) } returns startdato
             val healthInformation = createDefaultHealthInformation()
@@ -350,7 +341,7 @@ class MottattSykmeldingServiceTest : FunSpec({
                 utenlandskSykmelding = UtenlandskSykmelding("POL", false),
             )
 
-            mottattSykmeldingService.handleMessage(receivedSykmelding, infotrygdOppdateringProducer, infotrygdSporringProducer, tssProducer, session, loggingMeta)
+            mottattSykmeldingService.handleMessage(receivedSykmelding, infotrygdOppdateringProducer, infotrygdSporringProducer, session, loggingMeta)
 
             coVerify {
                 updateInfotrygdService.updateInfotrygd(

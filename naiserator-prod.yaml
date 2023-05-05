@@ -83,8 +83,6 @@ spec:
       value: P_SYFOSMINFOTRYGD
     - name: NORG2_V1_ENDPOINT_URL
       value: https://norg2.prod-fss-pub.nais.io/norg2/api/v1
-    - name: MQ_TSS_SAMHANDLER_SERVICE_QUEUE
-      value: QA.P415.AS10_SAMHANDLER_SERVICE
     - name: PDL_GRAPHQL_PATH
       value: https://pdl-api.prod-fss-pub.nais.io/graphql
     - name: HELSENETT_ENDPOINT_URL
