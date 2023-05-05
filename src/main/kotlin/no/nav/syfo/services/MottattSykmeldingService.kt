@@ -10,12 +10,14 @@ import no.nav.syfo.client.Godkjenning
 import no.nav.syfo.client.Kode
 import no.nav.syfo.client.ManuellClient
 import no.nav.syfo.client.NorskHelsenettClient
+import no.nav.syfo.client.SyketilfelleClient
 import no.nav.syfo.erUtenlandskSykmelding
 import no.nav.syfo.extractHelseOpplysningerArbeidsuforhet
 import no.nav.syfo.log
 import no.nav.syfo.metrics.ANNEN_FRAVERS_ARSKAK_CHANGE_TO_A99_COUNTER
 import no.nav.syfo.metrics.REQUEST_TIME
 import no.nav.syfo.model.HelsepersonellKategori
+import no.nav.syfo.model.Periode
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.model.RuleInfo
 import no.nav.syfo.model.Status
@@ -29,6 +31,8 @@ import no.nav.syfo.util.fellesformatUnmarshaller
 import no.nav.syfo.util.wrapExceptions
 import org.slf4j.LoggerFactory
 import java.io.StringReader
+import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 import javax.jms.MessageProducer
 import javax.jms.Session
 
@@ -40,6 +44,7 @@ class MottattSykmeldingService(
     private val manuellBehandlingService: ManuellBehandlingService,
     private val behandlingsutfallService: BehandlingsutfallService,
     private val norskHelsenettClient: NorskHelsenettClient,
+    private val syketilfelleClient: SyketilfelleClient,
 ) {
     suspend fun handleMessage(
         receivedSykmelding: ReceivedSykmelding,
@@ -109,6 +114,12 @@ class MottattSykmeldingService(
                         val lokaltNavkontor =
                             finnNAVKontorService.finnLokaltNavkontor(receivedSykmeldingMedTssId.personNrPasient, loggingMeta)
 
+                        val syketilfelleStartdato = syketilfelleClient.finnStartdatoForSammenhengendeSyketilfelle(
+                            receivedSykmelding.personNrPasient,
+                            receivedSykmelding.sykmelding.perioder,
+                            loggingMeta,
+                        )
+
                         val helsepersonell = getHelsepersonell(receivedSykmeldingMedTssId)
                         if (helsepersonell == null) {
                             handleBehandlerNotInHpr(
@@ -136,7 +147,7 @@ class MottattSykmeldingService(
                                     itfh = InfotrygdForespAndHealthInformation(infotrygdForespResponse, healthInformation),
                                     receivedSykmelding = receivedSykmeldingMedTssId,
                                     behandlerKode = helsepersonellKategoriVerdi,
-                                    navKontorNr = lokaltNavkontor,
+                                    navKontorNr = setNavKontorNr(receivedSykmelding, syketilfelleStartdato, lokaltNavkontor),
                                     validationResult = validationResult,
                                     behandletAvManuell = behandletAvManuell,
                                 )
@@ -164,6 +175,36 @@ class MottattSykmeldingService(
                 }
             }
         }
+    }
+
+    private fun setNavKontorNr(
+        receivedSykmelding: ReceivedSykmelding,
+        syketilfelleStartdato: LocalDate?,
+        lokaltNavkontor: String,
+    ): String {
+        return if (receivedSykmelding.erUtenlandskSykmelding() &&
+            sickLeavePeriodOver12Weeks(receivedSykmelding, syketilfelleStartdato)
+        ) {
+            "0393"
+        } else {
+            lokaltNavkontor
+        }
+    }
+
+    private fun sickLeavePeriodOver12Weeks(
+        receivedSykmelding: ReceivedSykmelding,
+        syketilfelleStartdato: LocalDate?,
+    ): Boolean {
+        val forsteFomDato = receivedSykmelding.sykmelding.perioder.sortedFOMDate().first()
+        val sisteTomDato = receivedSykmelding.sykmelding.perioder.sortedTOMDate().last()
+
+        return (
+            (forsteFomDato..sisteTomDato).daysBetween() > 84 ||
+                (
+                    syketilfelleStartdato != null &&
+                        (syketilfelleStartdato..sisteTomDato).daysBetween() > 84
+                    )
+            )
     }
 
     private suspend fun getHelsepersonell(receivedSykmelding: ReceivedSykmelding): Behandler? {
@@ -290,3 +331,11 @@ fun validerMottattSykmelding(helseOpplysningerArbeidsuforhet: HelseOpplysningerA
         ValidationResult(Status.OK, emptyList())
     }
 }
+
+fun List<Periode>.sortedFOMDate(): List<LocalDate> =
+    map { it.fom }.sorted()
+
+fun List<Periode>.sortedTOMDate(): List<LocalDate> =
+    map { it.tom }.sorted()
+
+fun ClosedRange<LocalDate>.daysBetween(): Long = ChronoUnit.DAYS.between(start, endInclusive)

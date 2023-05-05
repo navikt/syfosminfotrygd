@@ -30,6 +30,8 @@ data class Environment(
     val behandlingsUtfallTopic: String = "teamsykmelding.sykmelding-behandlingsutfall",
     val produserOppgaveTopic: String = "teamsykmelding.oppgave-produser-oppgave",
     val retryTopic: String = "teamsykmelding.privat-sminfotrygd-retry",
+    val syketilfelleEndpointURL: String = getEnvVar("SYKETILLFELLE_ENDPOINT_URL", "http://flex-syketilfelle.flex"),
+    val syketilfelleScope: String = getEnvVar("SYKETILLFELLE_SCOPE"),
 ) : MqConfig
 
 data class ServiceUser(

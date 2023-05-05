@@ -15,12 +15,15 @@ import no.nav.syfo.client.Godkjenning
 import no.nav.syfo.client.Kode
 import no.nav.syfo.client.ManuellClient
 import no.nav.syfo.client.NorskHelsenettClient
+import no.nav.syfo.client.SyketilfelleClient
 import no.nav.syfo.createDefaultHealthInformation
+import no.nav.syfo.generatePeriode
 import no.nav.syfo.generateSykmelding
 import no.nav.syfo.model.HelsepersonellKategori
 import no.nav.syfo.model.MedisinskVurdering
 import no.nav.syfo.model.Merknad
 import no.nav.syfo.model.Status
+import no.nav.syfo.model.UtenlandskSykmelding
 import no.nav.syfo.receivedSykmelding
 import no.nav.syfo.services.tss.fetchTssSamhandlerInfo
 import no.nav.syfo.services.updateinfotrygd.UpdateInfotrygdService
@@ -45,6 +48,7 @@ class MottattSykmeldingServiceTest : FunSpec({
     val tssProducer = mockk<MessageProducer>(relaxed = true)
     val session = mockk<Session>(relaxed = true)
     val loggingMeta = LoggingMeta("", "", "", "")
+    val syketilfelleClient = mockk<SyketilfelleClient>(relaxed = true)
     val mottattSykmeldingService = MottattSykmeldingService(
         updateInfotrygdService,
         finnNAVKontorService,
@@ -52,6 +56,7 @@ class MottattSykmeldingServiceTest : FunSpec({
         manuellBehandlingService,
         behandlingsutfallService,
         norskHelsenettClient,
+        syketilfelleClient,
     )
 
     beforeTest {
@@ -197,6 +202,172 @@ class MottattSykmeldingServiceTest : FunSpec({
                     false,
                 )
             }
+        }
+
+        test("Use local nav office when under 12 weeks and not utenlandsksykmelding") {
+            coEvery { fetchInfotrygdForesp(any(), any(), any(), any()) } returns getInfotrygdForespResponse()
+            coEvery { fetchTssSamhandlerInfo(any(), any(), any()) } returns "1234"
+            val healthInformation = createDefaultHealthInformation()
+            val fellesformat = createFellesFormat(healthInformation)
+
+            val receivedSykmelding = receivedSykmelding(
+                id = UUID.randomUUID().toString(),
+                sykmelding = generateSykmelding(
+                    perioder = listOf(
+                        generatePeriode(
+                            fom = LocalDate.now(),
+                            tom = LocalDate.now().plusDays(84),
+                        ),
+                    ),
+                    medisinskVurdering = MedisinskVurdering(hovedDiagnose = null, biDiagnoser = emptyList(), svangerskap = false, yrkesskade = false, yrkesskadeDato = null, annenFraversArsak = null),
+                ),
+                fellesformat = fellesformatMarshaller.toString(fellesformat),
+            )
+
+            mottattSykmeldingService.handleMessage(receivedSykmelding, infotrygdOppdateringProducer, infotrygdSporringProducer, tssProducer, session, loggingMeta)
+
+            coVerify {
+                updateInfotrygdService.updateInfotrygd(
+                    infotrygdOppdateringProducer,
+                    session,
+                    loggingMeta,
+                    any(),
+                    receivedSykmelding.copy(tssid = "1234"),
+                    "LE",
+                    "0101",
+                    match { it.status == Status.OK },
+                    false,
+                )
+            }
+            coVerify { manuellClient.behandletAvManuell(any(), any()) }
+            coVerify(exactly = 0) { behandlingsutfallService.sendRuleCheckValidationResult(any(), any(), any()) }
+            coVerify(exactly = 0) { manuellBehandlingService.produceManualTaskAndSendValidationResults(any(), any(), any(), any(), any(), any()) }
+        }
+
+        test("Use local nav office when over 12 weeks and not utenlandsksykmelding") {
+            coEvery { fetchInfotrygdForesp(any(), any(), any(), any()) } returns getInfotrygdForespResponse()
+            coEvery { fetchTssSamhandlerInfo(any(), any(), any()) } returns "1234"
+            val healthInformation = createDefaultHealthInformation()
+            val fellesformat = createFellesFormat(healthInformation)
+
+            val receivedSykmelding = receivedSykmelding(
+                id = UUID.randomUUID().toString(),
+                sykmelding = generateSykmelding(
+                    perioder = listOf(
+                        generatePeriode(
+                            fom = LocalDate.now(),
+                            tom = LocalDate.now().plusDays(85),
+                        ),
+                    ),
+                    medisinskVurdering = MedisinskVurdering(hovedDiagnose = null, biDiagnoser = emptyList(), svangerskap = false, yrkesskade = false, yrkesskadeDato = null, annenFraversArsak = null),
+                ),
+                fellesformat = fellesformatMarshaller.toString(fellesformat),
+            )
+
+            mottattSykmeldingService.handleMessage(receivedSykmelding, infotrygdOppdateringProducer, infotrygdSporringProducer, tssProducer, session, loggingMeta)
+
+            coVerify {
+                updateInfotrygdService.updateInfotrygd(
+                    infotrygdOppdateringProducer,
+                    session,
+                    loggingMeta,
+                    any(),
+                    receivedSykmelding.copy(tssid = "1234"),
+                    "LE",
+                    "0101",
+                    match { it.status == Status.OK },
+                    false,
+                )
+            }
+            coVerify { manuellClient.behandletAvManuell(any(), any()) }
+            coVerify(exactly = 0) { behandlingsutfallService.sendRuleCheckValidationResult(any(), any(), any()) }
+            coVerify(exactly = 0) { manuellBehandlingService.produceManualTaskAndSendValidationResults(any(), any(), any(), any(), any(), any()) }
+        }
+
+        test("Use local nav office when under 12 weeks and utenlandsksykmelding") {
+            coEvery { fetchInfotrygdForesp(any(), any(), any(), any()) } returns getInfotrygdForespResponse()
+            val startdato = LocalDate.of(2023, 1, 1)
+            coEvery { syketilfelleClient.finnStartdato(any(), any(), any()) } returns startdato
+            coEvery { fetchTssSamhandlerInfo(any(), any(), any()) } returns "1234"
+            val healthInformation = createDefaultHealthInformation()
+            val fellesformat = createFellesFormat(healthInformation)
+
+            val receivedSykmelding = receivedSykmelding(
+                id = UUID.randomUUID().toString(),
+                sykmelding = generateSykmelding(
+                    perioder = listOf(
+                        generatePeriode(
+                            fom = startdato,
+                            tom = startdato.plusDays(83),
+                        ),
+                    ),
+                    medisinskVurdering = MedisinskVurdering(hovedDiagnose = null, biDiagnoser = emptyList(), svangerskap = false, yrkesskade = false, yrkesskadeDato = null, annenFraversArsak = null),
+                ),
+                fellesformat = fellesformatMarshaller.toString(fellesformat),
+                utenlandskSykmelding = UtenlandskSykmelding("POL", false),
+            )
+
+            mottattSykmeldingService.handleMessage(receivedSykmelding, infotrygdOppdateringProducer, infotrygdSporringProducer, tssProducer, session, loggingMeta)
+
+            coVerify {
+                updateInfotrygdService.updateInfotrygd(
+                    infotrygdOppdateringProducer,
+                    session,
+                    loggingMeta,
+                    any(),
+                    any(),
+                    any(),
+                    "0101",
+                    any(),
+                    false,
+                )
+            }
+            coVerify { manuellClient.behandletAvManuell(any(), any()) }
+            coVerify(exactly = 0) { behandlingsutfallService.sendRuleCheckValidationResult(any(), any(), any()) }
+            coVerify(exactly = 0) { manuellBehandlingService.produceManualTaskAndSendValidationResults(any(), any(), any(), any(), any(), any()) }
+        }
+
+        test("Use nav office 0393 when over 12 weeks and utenlandsksykmelding") {
+            coEvery { fetchInfotrygdForesp(any(), any(), any(), any()) } returns getInfotrygdForespResponse()
+            coEvery { fetchTssSamhandlerInfo(any(), any(), any()) } returns "1234"
+            val startdato = LocalDate.of(2023, 1, 1)
+            coEvery { syketilfelleClient.finnStartdato(any(), any(), any()) } returns startdato
+            val healthInformation = createDefaultHealthInformation()
+            val fellesformat = createFellesFormat(healthInformation)
+
+            val receivedSykmelding = receivedSykmelding(
+                id = UUID.randomUUID().toString(),
+                sykmelding = generateSykmelding(
+                    perioder = listOf(
+                        generatePeriode(
+                            fom = startdato,
+                            tom = startdato.plusDays(85),
+                        ),
+                    ),
+                    medisinskVurdering = MedisinskVurdering(hovedDiagnose = null, biDiagnoser = emptyList(), svangerskap = false, yrkesskade = false, yrkesskadeDato = null, annenFraversArsak = null),
+                ),
+                fellesformat = fellesformatMarshaller.toString(fellesformat),
+                utenlandskSykmelding = UtenlandskSykmelding("POL", false),
+            )
+
+            mottattSykmeldingService.handleMessage(receivedSykmelding, infotrygdOppdateringProducer, infotrygdSporringProducer, tssProducer, session, loggingMeta)
+
+            coVerify {
+                updateInfotrygdService.updateInfotrygd(
+                    infotrygdOppdateringProducer,
+                    session,
+                    loggingMeta,
+                    any(),
+                    any(),
+                    any(),
+                    "0393",
+                    any(),
+                    any(),
+                )
+            }
+            coVerify { manuellClient.behandletAvManuell(any(), any()) }
+            coVerify(exactly = 0) { behandlingsutfallService.sendRuleCheckValidationResult(any(), any(), any()) }
+            coVerify(exactly = 0) { manuellBehandlingService.produceManualTaskAndSendValidationResults(any(), any(), any(), any(), any(), any()) }
         }
     }
 })

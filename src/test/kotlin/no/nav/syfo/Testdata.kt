@@ -28,6 +28,7 @@ import no.nav.syfo.model.Prognose
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.model.SporsmalSvar
 import no.nav.syfo.model.Sykmelding
+import no.nav.syfo.model.UtenlandskSykmelding
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
@@ -76,6 +77,7 @@ fun receivedSykmelding(
     fellesformat: String = "",
     merknader: List<Merknad>? = null,
     tssid: String = "",
+    utenlandskSykmelding: UtenlandskSykmelding? = null,
 ) = ReceivedSykmelding(
     sykmelding = sykmelding,
     personNrPasient = "123124",
@@ -96,7 +98,7 @@ fun receivedSykmelding(
     legeHprNr = null,
     legeHelsepersonellkategori = null,
     vedlegg = null,
-    utenlandskSykmelding = null,
+    utenlandskSykmelding = utenlandskSykmelding,
 )
 
 fun generateSykmelding(
