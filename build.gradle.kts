@@ -7,7 +7,7 @@ group = "no.nav.syfo"
 version = "1.0.0"
 
 val artemisVersion = "2.28.0"
-val coroutinesVersion = "1.7.0"
+val coroutinesVersion = "1.7.1"
 val infotrygdForespVersion = "1.0.3"
 val fellesformatVersion = "1.0.3"
 val ibmMqVersion = "9.3.2.1"
