@@ -5,6 +5,7 @@ import io.ktor.client.call.body
 import io.ktor.client.request.accept
 import io.ktor.client.request.get
 import io.ktor.client.request.headers
+import io.ktor.client.request.parameter
 import io.ktor.http.ContentType
 import no.nav.syfo.client.AccessTokenClientV2
 import no.nav.syfo.model.Periode
@@ -17,7 +18,7 @@ class SmregisterClient(
     private val scope: String,
     private val httpClient: HttpClient,
 ) {
-    suspend fun getSykmeldinger(fnr: String): List<SykmeldingDTO> =
+    suspend fun getSykmeldinger(fnr: String, fom: LocalDate, tom: LocalDate): List<SykmeldingDTO> =
         httpClient.get("$smregisterEndpointURL/api/v2/sykmelding/sykmeldinger") {
             accept(ContentType.Application.Json)
             val accessToken = accessTokenClientV2.getAccessTokenV2(scope)
@@ -25,6 +26,8 @@ class SmregisterClient(
                 append("Authorization", "Bearer $accessToken")
                 append("fnr", fnr)
             }
+            parameter("fom", fom)
+            parameter("tom", tom)
         }.body()
 }
 

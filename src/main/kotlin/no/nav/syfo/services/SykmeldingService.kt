@@ -1,0 +1,44 @@
+package no.nav.syfo.services
+
+import no.nav.syfo.model.ReceivedSykmelding
+import no.nav.syfo.smregister.MerknadType
+import no.nav.syfo.smregister.PeriodetypeDTO
+import no.nav.syfo.smregister.RegelStatusDTO
+import no.nav.syfo.smregister.SmregisterClient
+import no.nav.syfo.smregister.SykmeldingDTO
+import java.time.LocalDate
+
+class SykmeldingService(private val smregisterClient: SmregisterClient) {
+
+    suspend fun hasOverlappingPeriods(receivedSykmelding: ReceivedSykmelding) : Boolean {
+        val fom = receivedSykmelding.sykmelding.perioder.sortedFOMDate().first()
+        val tom = receivedSykmelding.sykmelding.perioder.sortedTOMDate().last()
+        val sykmeldingDays = getWorkdays(fom, tom)
+        val previousDays =
+            smregisterClient.getSykmeldinger(receivedSykmelding.personNrPasient, fom, tom)
+                .filterNot { harTilbakedatertMerknad(it) }
+                .filterNot { it.behandlingsutfall.status == RegelStatusDTO.INVALID }
+                .flatMap { sykmelding ->
+                    sykmelding.sykmeldingsperioder.filter { periode ->
+                        periode.type == PeriodetypeDTO.AKTIVITET_IKKE_MULIG ||
+                                periode.type == PeriodetypeDTO.GRADERT
+                    }
+                }
+                .flatMap { getWorkdays(it.fom, it.tom) }
+                .distinct()
+
+        return previousDays.containsAll(sykmeldingDays)
+    }
+
+    private fun getWorkdays(
+        fom: LocalDate,
+        tom: LocalDate
+    ): MutableList<LocalDate> =
+        fom.datesUntil(tom).filter { date -> date.dayOfWeek.value < 6 }.toList()
+
+    private fun harTilbakedatertMerknad(sykmelding: SykmeldingDTO): Boolean {
+        return sykmelding.merknader?.any {
+            MerknadType.contains(it.type)
+        } ?: false
+    }
+}
