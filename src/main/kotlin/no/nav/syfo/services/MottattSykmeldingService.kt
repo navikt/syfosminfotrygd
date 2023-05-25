@@ -168,7 +168,11 @@ class MottattSykmeldingService(
         lokaltNavkontor: String,
     ): String {
         return if (receivedSykmelding.erUtenlandskSykmelding() &&
-            sickLeavePeriodOver12Weeks(receivedSykmelding, syketilfelleStartdato)
+            sickLeavePeriodOver12Weeks(receivedSykmelding, syketilfelleStartdato) ||
+            (
+                receivedSykmelding.utenlandskSykmelding != null &&
+                    receivedSykmelding.utenlandskSykmelding!!.folkeRegistertAdresseErBrakkeEllerTilsvarende
+                )
         ) {
             "0393"
         } else {
