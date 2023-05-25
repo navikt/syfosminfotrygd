@@ -19,6 +19,13 @@ data class ResponseData(
 
 data class HentPerson(
     val adressebeskyttelse: List<Adressebeskyttelse>?,
+    val kontaktadresse: List<Kontaktadresse>?,
+)
+
+data class Kontaktadresse(
+    val type: String,
+    val gyldigFraOgMed: String?,
+    val gyldigTilOgMed: String?,
 )
 
 data class Adressebeskyttelse(

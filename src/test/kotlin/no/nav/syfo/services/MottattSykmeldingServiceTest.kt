@@ -360,6 +360,90 @@ class MottattSykmeldingServiceTest : FunSpec({
             coVerify(exactly = 0) { behandlingsutfallService.sendRuleCheckValidationResult(any(), any(), any()) }
             coVerify(exactly = 0) { manuellBehandlingService.produceManualTaskAndSendValidationResults(any(), any(), any(), any(), any(), any()) }
         }
+
+        test("Use nav office 0393 when sisteKontaktAdresseIUtlandet is true") {
+            coEvery { fetchInfotrygdForesp(any(), any(), any(), any()) } returns getInfotrygdForespResponse()
+            val startdato = LocalDate.of(2023, 1, 1)
+            coEvery { syketilfelleClient.finnStartdato(any(), any(), any()) } returns startdato
+            val healthInformation = createDefaultHealthInformation()
+            val fellesformat = createFellesFormat(healthInformation)
+
+            val receivedSykmelding = receivedSykmelding(
+                id = UUID.randomUUID().toString(),
+                sykmelding = generateSykmelding(
+                    perioder = listOf(
+                        generatePeriode(
+                            fom = startdato,
+                            tom = startdato.plusDays(10),
+                        ),
+                    ),
+                    medisinskVurdering = MedisinskVurdering(hovedDiagnose = null, biDiagnoser = emptyList(), svangerskap = false, yrkesskade = false, yrkesskadeDato = null, annenFraversArsak = null),
+                ),
+                fellesformat = fellesformatMarshaller.toString(fellesformat),
+                utenlandskSykmelding = UtenlandskSykmelding("POL", true),
+            )
+
+            mottattSykmeldingService.handleMessage(receivedSykmelding, infotrygdOppdateringProducer, infotrygdSporringProducer, session, loggingMeta)
+
+            coVerify {
+                updateInfotrygdService.updateInfotrygd(
+                    infotrygdOppdateringProducer,
+                    session,
+                    loggingMeta,
+                    any(),
+                    any(),
+                    any(),
+                    "0393",
+                    any(),
+                    any(),
+                )
+            }
+            coVerify { manuellClient.behandletAvManuell(any(), any()) }
+            coVerify(exactly = 0) { behandlingsutfallService.sendRuleCheckValidationResult(any(), any(), any()) }
+            coVerify(exactly = 0) { manuellBehandlingService.produceManualTaskAndSendValidationResults(any(), any(), any(), any(), any(), any()) }
+        }
+
+        test("Use nav office 0101 when sisteKontaktAdresseIUtlandet is false") {
+            coEvery { fetchInfotrygdForesp(any(), any(), any(), any()) } returns getInfotrygdForespResponse()
+            val startdato = LocalDate.of(2023, 1, 1)
+            coEvery { syketilfelleClient.finnStartdato(any(), any(), any()) } returns startdato
+            val healthInformation = createDefaultHealthInformation()
+            val fellesformat = createFellesFormat(healthInformation)
+
+            val receivedSykmelding = receivedSykmelding(
+                id = UUID.randomUUID().toString(),
+                sykmelding = generateSykmelding(
+                    perioder = listOf(
+                        generatePeriode(
+                            fom = startdato,
+                            tom = startdato.plusDays(10),
+                        ),
+                    ),
+                    medisinskVurdering = MedisinskVurdering(hovedDiagnose = null, biDiagnoser = emptyList(), svangerskap = false, yrkesskade = false, yrkesskadeDato = null, annenFraversArsak = null),
+                ),
+                fellesformat = fellesformatMarshaller.toString(fellesformat),
+                utenlandskSykmelding = UtenlandskSykmelding("POL", false),
+            )
+
+            mottattSykmeldingService.handleMessage(receivedSykmelding, infotrygdOppdateringProducer, infotrygdSporringProducer, session, loggingMeta)
+
+            coVerify {
+                updateInfotrygdService.updateInfotrygd(
+                    infotrygdOppdateringProducer,
+                    session,
+                    loggingMeta,
+                    any(),
+                    any(),
+                    any(),
+                    "0101",
+                    any(),
+                    any(),
+                )
+            }
+            coVerify { manuellClient.behandletAvManuell(any(), any()) }
+            coVerify(exactly = 0) { behandlingsutfallService.sendRuleCheckValidationResult(any(), any(), any()) }
+            coVerify(exactly = 0) { manuellBehandlingService.produceManualTaskAndSendValidationResults(any(), any(), any(), any(), any(), any()) }
+        }
     }
 })
 

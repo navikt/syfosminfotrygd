@@ -12,6 +12,7 @@ import no.nav.syfo.pdl.client.model.Adressebeskyttelse
 import no.nav.syfo.pdl.client.model.GetPersonResponse
 import no.nav.syfo.pdl.client.model.HentGeografiskTilknytning
 import no.nav.syfo.pdl.client.model.HentPerson
+import no.nav.syfo.pdl.client.model.Kontaktadresse
 import no.nav.syfo.pdl.client.model.ResponseData
 import no.nav.syfo.util.LoggingMeta
 import org.amshove.kluent.shouldBeEqualTo
@@ -33,7 +34,16 @@ class PdlPersonServiceTest : FunSpec({
             coEvery { pdlClient.getPerson(any(), any()) } returns GetPersonResponse(
                 ResponseData(
                     hentGeografiskTilknytning = HentGeografiskTilknytning(gtType = "BYDEL", gtKommune = null, gtBydel = "030102", gtLand = null),
-                    hentPerson = HentPerson(adressebeskyttelse = listOf(Adressebeskyttelse("FORTROLIG"))),
+                    hentPerson = HentPerson(
+                        adressebeskyttelse = listOf(Adressebeskyttelse("FORTROLIG")),
+                        kontaktadresse = listOf(
+                            Kontaktadresse(
+                                type = "Innland",
+                                gyldigFraOgMed = "2023-01-01",
+                                gyldigTilOgMed = null,
+                            ),
+                        ),
+                    ),
                 ),
                 errors = null,
             )
@@ -66,7 +76,7 @@ class PdlPersonServiceTest : FunSpec({
             coEvery { pdlClient.getPerson(any(), any()) } returns GetPersonResponse(
                 ResponseData(
                     hentGeografiskTilknytning = null,
-                    hentPerson = HentPerson(emptyList()),
+                    hentPerson = HentPerson(emptyList(), emptyList()),
                 ),
                 errors = null,
             )
@@ -94,6 +104,67 @@ class PdlPersonServiceTest : FunSpec({
             val hentGeografiskTilknytning = HentGeografiskTilknytning(gtType = "UDEFINERT", gtKommune = null, gtBydel = null, gtLand = null)
 
             hentGeografiskTilknytning.finnGT() shouldBeEqualTo null
+        }
+    }
+    context("finn sisteKontaktAdresse") {
+        test("Siste kontakt adresse er utlandet") {
+            coEvery { pdlClient.getPerson(any(), any()) } returns GetPersonResponse(
+                ResponseData(
+                    hentGeografiskTilknytning = null,
+                    hentPerson = HentPerson(
+                        emptyList(),
+                        kontaktadresse = listOf(
+                            Kontaktadresse(
+                                type = "Utland",
+                                gyldigFraOgMed = "2023-02-02",
+                                gyldigTilOgMed = null,
+                            ),
+                            Kontaktadresse(
+                                type = "Innland",
+                                gyldigFraOgMed = "2023-01-01",
+                                gyldigTilOgMed = "2023-02-01",
+                            ),
+                        ),
+                    ),
+                ),
+                errors = null,
+            )
+
+            coEvery { accessTokenClient.getAccessTokenV2(any()) } returns "token"
+
+            val person = pdlPersonService.getPerson("fnr", loggingMeta)
+
+            person.sisteKontaktAdresseIUtlandet shouldBeEqualTo true
+        }
+
+        test("Siste kontakt adresse er innland") {
+            coEvery { pdlClient.getPerson(any(), any()) } returns GetPersonResponse(
+                ResponseData(
+                    hentGeografiskTilknytning = null,
+                    hentPerson = HentPerson(
+                        emptyList(),
+                        kontaktadresse = listOf(
+                            Kontaktadresse(
+                                type = "Innland",
+                                gyldigFraOgMed = "2023-02-02",
+                                gyldigTilOgMed = null,
+                            ),
+                            Kontaktadresse(
+                                type = "Utland",
+                                gyldigFraOgMed = "2023-01-01",
+                                gyldigTilOgMed = "2023-02-01",
+                            ),
+                        ),
+                    ),
+                ),
+                errors = null,
+            )
+
+            coEvery { accessTokenClient.getAccessTokenV2(any()) } returns "token"
+
+            val person = pdlPersonService.getPerson("fnr", loggingMeta)
+
+            person.sisteKontaktAdresseIUtlandet shouldBeEqualTo false
         }
     }
 })

@@ -9,5 +9,10 @@ query($ident: ID!){
     adressebeskyttelse {
       gradering
     }
+    kontaktadresse {
+      type,
+      gyldigFraOgMed,
+      gyldigTilOgMed
+    }
   }
 }

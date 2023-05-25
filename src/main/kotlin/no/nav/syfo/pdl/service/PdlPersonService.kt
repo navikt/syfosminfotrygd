@@ -5,8 +5,10 @@ import no.nav.syfo.client.AccessTokenClientV2
 import no.nav.syfo.log
 import no.nav.syfo.pdl.client.PdlClient
 import no.nav.syfo.pdl.client.model.HentGeografiskTilknytning
+import no.nav.syfo.pdl.client.model.Kontaktadresse
 import no.nav.syfo.pdl.model.PdlPerson
 import no.nav.syfo.util.LoggingMeta
+import java.time.LocalDate
 
 class PdlPersonService(
     private val pdlClient: PdlClient,
@@ -33,7 +35,21 @@ class PdlPersonService(
         return PdlPerson(
             gt = pdlResponse.data.hentGeografiskTilknytning?.finnGT(),
             adressebeskyttelse = pdlResponse.data.hentPerson.adressebeskyttelse?.firstOrNull()?.gradering,
+            sisteKontaktAdresseIUtlandet = sisteKontaktAdresseIUtlandet(pdlResponse.data.hentPerson.kontaktadresse),
         )
+    }
+}
+
+fun sisteKontaktAdresseIUtlandet(kontaktadresser: List<Kontaktadresse>?): Boolean {
+    if (kontaktadresser.isNullOrEmpty()) {
+        return false
+    }
+    val lastKontaktAdresse = kontaktadresser.sortedByDescending { LocalDate.parse(it.gyldigFraOgMed) }.firstOrNull()
+
+    return if (lastKontaktAdresse != null) {
+        lastKontaktAdresse.type == "Utland"
+    } else {
+        false
     }
 }
 
