@@ -146,7 +146,7 @@ class PdlPersonServiceTest : FunSpec({
                         kontaktadresse = listOf(
                             Kontaktadresse(
                                 type = "Innland",
-                                gyldigFraOgMed = "2023-02-02T00:00:,
+                                gyldigFraOgMed = "2023-02-02T00:00",
                                 gyldigTilOgMed = null,
                             ),
                             Kontaktadresse(
