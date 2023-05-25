@@ -39,7 +39,7 @@ class PdlPersonServiceTest : FunSpec({
                         kontaktadresse = listOf(
                             Kontaktadresse(
                                 type = "Innland",
-                                gyldigFraOgMed = "2023-01-01",
+                                gyldigFraOgMed = "2023-01-01T00:00",
                                 gyldigTilOgMed = null,
                             ),
                         ),
@@ -116,13 +116,13 @@ class PdlPersonServiceTest : FunSpec({
                         kontaktadresse = listOf(
                             Kontaktadresse(
                                 type = "Utland",
-                                gyldigFraOgMed = "2023-02-02",
+                                gyldigFraOgMed = "2023-02-02T00:00",
                                 gyldigTilOgMed = null,
                             ),
                             Kontaktadresse(
                                 type = "Innland",
-                                gyldigFraOgMed = "2023-01-01",
-                                gyldigTilOgMed = "2023-02-01",
+                                gyldigFraOgMed = "2023-01-01T00:00",
+                                gyldigTilOgMed = "2023-02-01T00:00",
                             ),
                         ),
                     ),
@@ -146,13 +146,13 @@ class PdlPersonServiceTest : FunSpec({
                         kontaktadresse = listOf(
                             Kontaktadresse(
                                 type = "Innland",
-                                gyldigFraOgMed = "2023-02-02",
+                                gyldigFraOgMed = "2023-02-02T00:00:,
                                 gyldigTilOgMed = null,
                             ),
                             Kontaktadresse(
                                 type = "Utland",
-                                gyldigFraOgMed = "2023-01-01",
-                                gyldigTilOgMed = "2023-02-01",
+                                gyldigFraOgMed = "2023-01-01T00:00",
+                                gyldigTilOgMed = "2023-02-01T00:00",
                             ),
                         ),
                     ),
