@@ -42,6 +42,7 @@ spec:
       rules:
         - application: syfosminfotrygd-redis
         - application: syfosmmanuell-backend
+        - application: syfosmregister
         - application: flex-syketilfelle
           namespace: flex
           cluster: prod-gcp
