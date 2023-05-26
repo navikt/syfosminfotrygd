@@ -187,7 +187,6 @@ fun main() {
         kafkaAivenProducerBehandlingsutfall = kafkaAivenProducerBehandlingsutfall,
         behandlingsUtfallTopic = env.behandlingsUtfallTopic,
     )
-    
 
     val oppgaveService = OppgaveService(
         kafkaAivenProducerOppgave = kafkaAivenProducerOppgave,

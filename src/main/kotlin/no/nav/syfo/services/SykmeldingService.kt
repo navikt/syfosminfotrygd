@@ -1,5 +1,6 @@
 package no.nav.syfo.services
 
+import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.smregister.MerknadType
 import no.nav.syfo.smregister.PeriodetypeDTO
@@ -10,7 +11,22 @@ import java.time.LocalDate
 
 class SykmeldingService(private val smregisterClient: SmregisterClient) {
 
-    suspend fun hasOverlappingPeriods(receivedSykmelding: ReceivedSykmelding) : Boolean {
+    fun hasOverlappingPeriodsFromInfotrygd(receivedSykmelding: ReceivedSykmelding, infotrygdForesp: InfotrygdForesp): Boolean {
+        val fom = receivedSykmelding.sykmelding.perioder.sortedFOMDate().first()
+        val tom = receivedSykmelding.sykmelding.perioder.sortedTOMDate().last()
+        val sykmeldingDays = getWorkdays(fom, tom)
+
+        val infotrygdDays = infotrygdForesp.sMhistorikk.sykmelding.filter {
+            fom <= it.periode.arbufoerTOM
+        }.filter {
+            tom >= it.periode.arbufoerFOM
+        }.flatMap { getWorkdays(it.periode.arbufoerFOM, it.periode.arbufoerTOM) }
+            .distinct()
+
+        return infotrygdDays.containsAll(sykmeldingDays)
+    }
+
+    suspend fun hasOverlappingPeriodsFromRegister(receivedSykmelding: ReceivedSykmelding): Boolean {
         val fom = receivedSykmelding.sykmelding.perioder.sortedFOMDate().first()
         val tom = receivedSykmelding.sykmelding.perioder.sortedTOMDate().last()
         val sykmeldingDays = getWorkdays(fom, tom)
@@ -21,7 +37,7 @@ class SykmeldingService(private val smregisterClient: SmregisterClient) {
                 .flatMap { sykmelding ->
                     sykmelding.sykmeldingsperioder.filter { periode ->
                         periode.type == PeriodetypeDTO.AKTIVITET_IKKE_MULIG ||
-                                periode.type == PeriodetypeDTO.GRADERT
+                            periode.type == PeriodetypeDTO.GRADERT
                     }
                 }
                 .flatMap { getWorkdays(it.fom, it.tom) }
@@ -32,7 +48,7 @@ class SykmeldingService(private val smregisterClient: SmregisterClient) {
 
     private fun getWorkdays(
         fom: LocalDate,
-        tom: LocalDate
+        tom: LocalDate,
     ): MutableList<LocalDate> =
         fom.datesUntil(tom).filter { date -> date.dayOfWeek.value < 6 }.toList()
 
