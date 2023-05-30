@@ -44,7 +44,7 @@ fun sisteKontaktAdresseIUtlandet(kontaktadresser: List<Kontaktadresse>?): Boolea
     if (kontaktadresser.isNullOrEmpty()) {
         return false
     }
-    val lastKontaktAdresse = kontaktadresser.sortedByDescending { LocalDateTime.parse(it.gyldigFraOgMed) }.firstOrNull()
+    val lastKontaktAdresse = kontaktadresser.filter { it.gyldigFraOgMed != null }.sortedByDescending { LocalDateTime.parse(it.gyldigFraOgMed) }.firstOrNull()
 
     return if (lastKontaktAdresse != null) {
         lastKontaktAdresse.type == "Utland"
