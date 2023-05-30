@@ -50,7 +50,9 @@ class SykmeldingService(private val smregisterClient: SmregisterClient) {
         fom: LocalDate,
         tom: LocalDate,
     ): MutableList<LocalDate> =
-        fom.datesUntil(tom).filter { date -> date.dayOfWeek.value < 6 }.toList()
+        fom.datesUntil(tom.plusDays(1)).filter { date ->
+            date.dayOfWeek.value < 6
+        }.toList()
 
     private fun harTilbakedatertMerknad(sykmelding: SykmeldingDTO): Boolean {
         return sykmelding.merknader?.any {
