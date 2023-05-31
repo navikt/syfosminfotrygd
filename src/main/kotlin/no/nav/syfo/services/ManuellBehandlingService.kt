@@ -1,11 +1,13 @@
 package no.nav.syfo.services
 
 import net.logstash.logback.argument.StructuredArguments
+import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.syfo.InfotrygdForespAndHealthInformation
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.daysBetween
 import no.nav.syfo.erUtenlandskSykmelding
 import no.nav.syfo.log
+import no.nav.syfo.metrics.OVERLAPPER_PERIODER_COUNTER
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.model.RuleInfo
 import no.nav.syfo.model.ValidationResult
@@ -25,6 +27,7 @@ class ManuellBehandlingService(
     private val redisService: RedisService,
     private val oppgaveService: OppgaveService,
     private val applicationState: ApplicationState,
+    private val sykmeldingService: SykmeldingService,
 ) {
     fun produceManualTaskAndSendValidationResults(
         receivedSykmelding: ReceivedSykmelding,
@@ -40,7 +43,7 @@ class ManuellBehandlingService(
         oppgaveService.opprettOppgave(receivedSykmelding, validationResult, behandletAvManuell, loggingMeta)
     }
 
-    fun produceManualTaskAndSendValidationResults(
+    suspend fun produceManualTaskAndSendValidationResults(
         receivedSykmelding: ReceivedSykmelding,
         validationResult: ValidationResult,
         loggingMeta: LoggingMeta,
@@ -78,9 +81,14 @@ class ManuellBehandlingService(
                 log.error("Setter applicationState.ready til false")
                 applicationState.ready = false
             }
-
             val skalIkkeOppdatereInfotrygd = skalIkkeProdusereManuellOppgave(receivedSykmelding, validationResult)
-
+            val newRule = skalIkkeOppdatereInfotrygdNewCheck(receivedSykmelding, validationResult, itfh.infotrygdForesp)
+            if (validationResult.ruleHits.isNotEmpty() && validationResult.ruleHits.any {
+                    (it.ruleName == "PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE")
+                }
+            ) {
+                log.info("Overlappende perioder -> Old rule: $skalIkkeOppdatereInfotrygd, new rule $newRule")
+            }
             when {
                 duplikatInfotrygdOppdatering -> {
                     log.warn(
@@ -101,6 +109,33 @@ class ManuellBehandlingService(
             throw connectionException
         }
     }
+
+    private suspend fun skalIkkeOppdatereInfotrygdNewCheck(
+        receivedSykmelding: ReceivedSykmelding,
+        validationResult: ValidationResult,
+        infotrygdForesp: InfotrygdForesp,
+    ): Boolean {
+        val delvisOverlappendeSykmeldingRule = validationResult.ruleHits.isNotEmpty() && validationResult.ruleHits.any {
+            (it.ruleName == "PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE")
+        }
+        if (delvisOverlappendeSykmeldingRule) {
+            return harOverlappendePerioder(receivedSykmelding, infotrygdForesp)
+        }
+        return false
+    }
+
+    suspend fun harOverlappendePerioder(receivedSykmelding: ReceivedSykmelding, infotrygdForesp: InfotrygdForesp): Boolean {
+        val overlapperFraRegisteret = sykmeldingService.hasOverlappingPeriodsFromRegister(receivedSykmelding)
+        if (overlapperFraRegisteret) {
+            OVERLAPPER_PERIODER_COUNTER.labels("smregister").inc()
+        }
+        val overlapperFraInfotrygd = sykmeldingService.hasOverlappingPeriodsFromInfotrygd(receivedSykmelding, infotrygdForesp)
+        if (overlapperFraInfotrygd) {
+            OVERLAPPER_PERIODER_COUNTER.labels("infotrygd").inc()
+        }
+        log.info("overlappendet perioder fra smregister: $overlapperFraRegisteret, infotrygd: $overlapperFraInfotrygd")
+        return overlapperFraRegisteret || overlapperFraInfotrygd
+    }
 }
 
 fun skalIkkeProdusereManuellOppgave(
@@ -113,6 +148,9 @@ fun skalIkkeProdusereManuellOppgave(
         receivedSykmelding.sykmelding.perioder.sortedPeriodeTOMDate().lastOrNull() != null &&
         (receivedSykmelding.sykmelding.perioder.sortedPeriodeFOMDate().last()..receivedSykmelding.sykmelding.perioder.sortedPeriodeTOMDate().last()).daysBetween() <= 3
 
+    if (delvisOverlappendeSykmeldingRule) {
+        OVERLAPPER_PERIODER_COUNTER.labels("old").inc()
+    }
     return delvisOverlappendeSykmeldingRule
 }
 

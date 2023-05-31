@@ -42,6 +42,7 @@ spec:
       rules:
         - application: syfosminfotrygd-redis
         - application: syfosmmanuell-backend
+        - application: syfosmregister
         - application: flex-syketilfelle
           namespace: flex
           cluster: dev-gcp
@@ -97,3 +98,5 @@ spec:
       value: /var/run/keystore/syfosminfotrygd-keystore.jks
     - name: SYKETILLFELLE_SCOPE
       value: api://dev-gcp.flex.flex-syketilfelle/.default
+    - name: SMREGISTER_AUDIENCE
+      value: api://dev-gcp.teamsykmelding.syfosmregister/.default

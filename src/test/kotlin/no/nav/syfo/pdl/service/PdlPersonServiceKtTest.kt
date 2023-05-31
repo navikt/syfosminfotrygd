@@ -11,11 +11,13 @@ class PdlPersonServiceKtTest : FunSpec({
             Kontaktadresse(
                 type = "Utland",
                 gyldigFraOgMed = null,
-                gyldigTilOgMed = null
+                gyldigTilOgMed = null,
             ),
-            Kontaktadresse("Innland",
+            Kontaktadresse(
+                "Innland",
                 LocalDateTime.now().toString(),
-                null)
+                null,
+            ),
         )
 
         val utland = sisteKontaktAdresseIUtlandet(kontaktaddresser)

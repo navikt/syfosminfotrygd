@@ -29,8 +29,15 @@ import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.model.SporsmalSvar
 import no.nav.syfo.model.Sykmelding
 import no.nav.syfo.model.UtenlandskSykmelding
+import no.nav.syfo.smregister.BehandlingsutfallDTO
+import no.nav.syfo.smregister.DiagnoseDTO
+import no.nav.syfo.smregister.MedisinskVurderingDTO
+import no.nav.syfo.smregister.RegelStatusDTO
+import no.nav.syfo.smregister.SykmeldingDTO
+import no.nav.syfo.smregister.SykmeldingsperiodeDTO
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.util.UUID
 import kotlin.random.Random
 
@@ -100,7 +107,19 @@ fun receivedSykmelding(
     vedlegg = null,
     utenlandskSykmelding = utenlandskSykmelding,
 )
-
+fun generateSykmeldingDto(
+    perioder: List<SykmeldingsperiodeDTO> = emptyList(),
+    merknader: List<no.nav.syfo.smregister.Merknad>? = emptyList(),
+): SykmeldingDTO {
+    return SykmeldingDTO(
+        id = UUID.randomUUID().toString(),
+        merknader = merknader,
+        behandletTidspunkt = OffsetDateTime.now(),
+        medisinskVurdering = MedisinskVurderingDTO(hovedDiagnose = DiagnoseDTO("kode")),
+        behandlingsutfall = BehandlingsutfallDTO(status = RegelStatusDTO.OK),
+        sykmeldingsperioder = perioder,
+    )
+}
 fun generateSykmelding(
     id: String = UUID.randomUUID().toString(),
     pasientAktoerId: String = UUID.randomUUID().toString(),
