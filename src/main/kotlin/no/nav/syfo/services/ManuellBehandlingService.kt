@@ -128,6 +128,7 @@ class ManuellBehandlingService(
         if (overlapperFraInfotrygd) {
             OVERLAPPER_PERIODER_COUNTER.labels("infotrygd").inc()
         }
+        log.info("overlappendet perioder fra smregister: $overlapperFraRegisteret, infotrygd: $overlapperFraInfotrygd")
         return overlapperFraRegisteret || overlapperFraInfotrygd
     }
 }
