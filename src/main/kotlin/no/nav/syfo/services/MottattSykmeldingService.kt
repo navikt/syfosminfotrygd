@@ -204,7 +204,7 @@ class MottattSykmeldingService(
         }
     }
 
-    private fun handleBehandlerNotInHpr(
+    private suspend fun handleBehandlerNotInHpr(
         receivedSykmelding: ReceivedSykmelding,
         itfh: InfotrygdForespAndHealthInformation,
         behandletAvManuell: Boolean,

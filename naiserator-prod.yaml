@@ -98,3 +98,5 @@ spec:
       value: /var/run/keystore/syfosminfotrygd-keystore.jks
     - name: SYKETILLFELLE_SCOPE
       value: api://prod-gcp.flex.flex-syketilfelle/.default
+    - name: SMREGISTER_AUDIENCE
+      value: api://prod-gcp.teamsykmelding.syfosmregister/.default

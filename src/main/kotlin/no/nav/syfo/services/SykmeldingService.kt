@@ -16,12 +16,14 @@ class SykmeldingService(private val smregisterClient: SmregisterClient) {
         val tom = receivedSykmelding.sykmelding.perioder.sortedTOMDate().last()
         val sykmeldingDays = getWorkdays(fom, tom)
 
-        val infotrygdDays = infotrygdForesp.sMhistorikk.sykmelding.filter {
-            fom <= it.periode.arbufoerTOM
-        }.filter {
-            tom >= it.periode.arbufoerFOM
-        }.flatMap { getWorkdays(it.periode.arbufoerFOM, it.periode.arbufoerTOM) }
-            .distinct()
+        val infotrygdDays = infotrygdForesp.sMhistorikk?.sykmelding?.filter {
+            it.periode.arbufoerTOM != null &&
+                fom <= it.periode.arbufoerTOM
+        }?.filter {
+            it.periode.arbufoerFOM != null &&
+                tom >= it.periode.arbufoerFOM
+        }?.flatMap { getWorkdays(it.periode.arbufoerFOM, it.periode.arbufoerTOM) }
+            ?.distinct() ?: emptyList()
 
         return infotrygdDays.containsAll(sykmeldingDays)
     }

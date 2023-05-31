@@ -31,6 +31,8 @@ data class Environment(
     val retryTopic: String = "teamsykmelding.privat-sminfotrygd-retry",
     val syketilfelleEndpointURL: String = getEnvVar("SYKETILLFELLE_ENDPOINT_URL", "http://flex-syketilfelle.flex"),
     val syketilfelleScope: String = getEnvVar("SYKETILLFELLE_SCOPE"),
+    val smregisterEndpointURL: String = getEnvVar("SMREGISTER_URL", "http://syfosmregister"),
+    val smregisterAudience: String = getEnvVar("SMREGISTER_AUDIENCE"),
 ) : MqConfig
 
 data class ServiceUser(

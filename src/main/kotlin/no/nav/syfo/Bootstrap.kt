@@ -56,7 +56,9 @@ import no.nav.syfo.services.ManuellBehandlingService
 import no.nav.syfo.services.MottattSykmeldingService
 import no.nav.syfo.services.OppgaveService
 import no.nav.syfo.services.RedisService
+import no.nav.syfo.services.SykmeldingService
 import no.nav.syfo.services.updateinfotrygd.UpdateInfotrygdService
+import no.nav.syfo.smregister.SmregisterClient
 import no.nav.syfo.util.JacksonKafkaSerializer
 import no.nav.syfo.util.LoggingMeta
 import no.nav.syfo.util.TrackableException
@@ -182,7 +184,14 @@ fun main() {
 
     val manuellClient = ManuellClient(httpClient, env.manuellUrl, accessTokenClientV2, env.manuellScope)
     val syketilfelleClient = SyketilfelleClient(env.syketilfelleEndpointURL, accessTokenClientV2, env.syketilfelleScope, httpClient)
-
+    val sykmeldingService = SykmeldingService(
+        smregisterClient = SmregisterClient(
+            smregisterEndpointURL = env.smregisterEndpointURL,
+            accessTokenClientV2 = accessTokenClientV2,
+            scope = env.smregisterAudience,
+            httpClient = httpClient,
+        ),
+    )
     val behandlingsutfallService = BehandlingsutfallService(
         kafkaAivenProducerBehandlingsutfall = kafkaAivenProducerBehandlingsutfall,
         behandlingsUtfallTopic = env.behandlingsUtfallTopic,
@@ -197,6 +206,7 @@ fun main() {
         redisService = redisService,
         oppgaveService = oppgaveService,
         applicationState = applicationState,
+        sykmeldingService = sykmeldingService,
     )
 
     val updateInfotrygdService = UpdateInfotrygdService(
