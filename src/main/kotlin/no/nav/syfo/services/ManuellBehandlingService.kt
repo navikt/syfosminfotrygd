@@ -81,9 +81,14 @@ class ManuellBehandlingService(
                 log.error("Setter applicationState.ready til false")
                 applicationState.ready = false
             }
-
             val skalIkkeOppdatereInfotrygd = skalIkkeProdusereManuellOppgave(receivedSykmelding, validationResult)
-            skalIkkeOppdatereInfotrygdNewCheck(receivedSykmelding, validationResult, itfh.infotrygdForesp)
+            val newRule = skalIkkeOppdatereInfotrygdNewCheck(receivedSykmelding, validationResult, itfh.infotrygdForesp)
+            if (validationResult.ruleHits.isNotEmpty() && validationResult.ruleHits.any {
+                    (it.ruleName == "PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE")
+                }
+            ) {
+                log.info("Overlappende perioder -> Old rule: $skalIkkeOppdatereInfotrygd, new rule $newRule")
+            }
             when {
                 duplikatInfotrygdOppdatering -> {
                     log.warn(
@@ -143,6 +148,9 @@ fun skalIkkeProdusereManuellOppgave(
         receivedSykmelding.sykmelding.perioder.sortedPeriodeTOMDate().lastOrNull() != null &&
         (receivedSykmelding.sykmelding.perioder.sortedPeriodeFOMDate().last()..receivedSykmelding.sykmelding.perioder.sortedPeriodeTOMDate().last()).daysBetween() <= 3
 
+    if (delvisOverlappendeSykmeldingRule) {
+        OVERLAPPER_PERIODER_COUNTER.labels("old").inc()
+    }
     return delvisOverlappendeSykmeldingRule
 }
 
