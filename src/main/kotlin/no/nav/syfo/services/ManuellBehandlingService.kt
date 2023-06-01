@@ -11,6 +11,7 @@ import no.nav.syfo.metrics.OVERLAPPENDE_PERIODER_IKKE_OPPRETT_OPPGAVE
 import no.nav.syfo.metrics.OVERLAPPER_PERIODER_COUNTER
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.model.RuleInfo
+import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.rules.validation.sortedPeriodeFOMDate
 import no.nav.syfo.rules.validation.sortedPeriodeTOMDate
@@ -52,7 +53,6 @@ class ManuellBehandlingService(
         helsepersonellKategoriVerdi: String,
         behandletAvManuell: Boolean,
     ) {
-        behandlingsutfallService.sendRuleCheckValidationResult(receivedSykmelding.sykmelding.id, validationResult, loggingMeta)
         try {
             val perioder = itfh.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
             val forsteFravaersDag = itfh.healthInformation.aktivitet.periode.sortedFOMDate().first()
@@ -86,6 +86,14 @@ class ManuellBehandlingService(
             skalIkkeProdusereManuellOppgave(receivedSykmelding, validationResult)
             when {
                 duplikatInfotrygdOppdatering -> {
+                    behandlingsutfallService.sendRuleCheckValidationResult(
+                        receivedSykmelding.sykmelding.id,
+                        ValidationResult(
+                            Status.OK,
+                            emptyList(),
+                        ),
+                        loggingMeta,
+                    )
                     log.warn(
                         "Melding er infotrygd duplikat, ikke opprett manuelloppgave {}",
                         StructuredArguments.fields(loggingMeta),
@@ -93,9 +101,18 @@ class ManuellBehandlingService(
                 }
                 skalIkkeOppdatereInfotrygd -> {
                     OVERLAPPENDE_PERIODER_IKKE_OPPRETT_OPPGAVE.inc()
+                    behandlingsutfallService.sendRuleCheckValidationResult(
+                        receivedSykmelding.sykmelding.id,
+                        ValidationResult(
+                            Status.OK,
+                            emptyList(),
+                        ),
+                        loggingMeta,
+                    )
                     log.warn("Sykmelding overlapper, trenger ikke å opprette manuell oppgave for {}", StructuredArguments.fields(loggingMeta))
                 }
                 else -> {
+                    behandlingsutfallService.sendRuleCheckValidationResult(receivedSykmelding.sykmelding.id, validationResult, loggingMeta)
                     oppgaveService.opprettOppgave(receivedSykmelding, validationResult, behandletAvManuell, loggingMeta)
                     redisService.oppdaterRedis(sha256String, sha256String, TimeUnit.DAYS.toSeconds(60).toInt(), loggingMeta)
                 }
