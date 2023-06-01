@@ -83,7 +83,7 @@ class ManuellBehandlingService(
                 applicationState.ready = false
             }
             val skalIkkeOppdatereInfotrygd = skalIkkeOppdatereInfotrygdNewCheck(receivedSykmelding, validationResult, itfh.infotrygdForesp)
-
+            skalIkkeProdusereManuellOppgave(receivedSykmelding, validationResult)
             when {
                 duplikatInfotrygdOppdatering -> {
                     log.warn(
