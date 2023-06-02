@@ -33,7 +33,9 @@ class OppgaveService(
                     opprettOpprettOppgaveKafkaMessage(receivedSykmelding, validationResult, behandletAvManuell, loggingMeta),
                 ),
             ).get()
-            MANUELLE_OPPGAVER_COUNTER.inc()
+            MANUELLE_OPPGAVER_COUNTER.labels(
+                validationResult.ruleHits.firstOrNull()?.ruleName ?: validationResult.status.name,
+            ).inc()
             log.info("Message sendt to topic: {}, {}", produserOppgaveTopic, StructuredArguments.fields(loggingMeta))
         } catch (ex: Exception) {
             log.error("Error when writing to oppgave kafka topic {}", StructuredArguments.fields(loggingMeta))
