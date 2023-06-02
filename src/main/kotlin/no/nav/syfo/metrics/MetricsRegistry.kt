@@ -13,6 +13,7 @@ val REQUEST_TIME: Summary = Summary.build()
 val MANUELLE_OPPGAVER_COUNTER: Counter = Counter.Builder()
     .namespace(NAMESPACE)
     .name("manuelle_oppgaver_counter")
+    .labelNames("oppgavetype")
     .help("Antall manuelle oppgaver som er opprettet")
     .register()
 
