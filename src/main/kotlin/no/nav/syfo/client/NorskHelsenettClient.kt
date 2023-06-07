@@ -35,7 +35,7 @@ class NorskHelsenettClient(
             }
 
             NotFound -> {
-                log.error("Syfohelsenettproxy svarte med finnBehandler basert på fnr med NotFound msgId {}", msgId)
+                log.warn("Syfohelsenettproxy svarte med finnBehandler basert på fnr med NotFound msgId {}", msgId)
                 null
             }
             else -> {
