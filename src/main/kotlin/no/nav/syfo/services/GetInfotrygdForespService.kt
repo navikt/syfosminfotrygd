@@ -12,6 +12,7 @@ import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.toString
 import no.nav.syfo.util.infotrygdSporringMarshaller
 import no.nav.syfo.util.infotrygdSporringUnmarshaller
+import org.xml.sax.InputSource
 import java.io.IOException
 import java.io.StringReader
 import java.lang.IllegalStateException
@@ -21,6 +22,9 @@ import javax.jms.MessageProducer
 import javax.jms.Session
 import javax.jms.TemporaryQueue
 import javax.jms.TextMessage
+import javax.xml.parsers.SAXParserFactory
+import javax.xml.transform.Source
+import javax.xml.transform.sax.SAXSource
 
 suspend fun fetchInfotrygdForesp(
     receivedSykmelding: ReceivedSykmelding,
@@ -43,8 +47,7 @@ suspend fun fetchInfotrygdForesp(
                     is TextMessage -> consumedMessage.text
                     else -> throw RuntimeException("Incoming message needs to be a byte message or text message, JMS type:" + consumedMessage.jmsType)
                 }
-
-                infotrygdSporringUnmarshaller.unmarshal(StringReader(inputMessageText)) as InfotrygdForesp
+                safeUnmarshal(inputMessageText)
             }
         } finally {
             temporaryQueue.delete()
@@ -101,3 +104,16 @@ fun sendInfotrygdSporring(
         jmsReplyTo = temporaryQueue
     },
 )
+
+private fun safeUnmarshal(inputMessageText: String): InfotrygdForesp {
+    // Disable XXE
+    val spf: SAXParserFactory = SAXParserFactory.newInstance()
+    spf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true)
+    spf.isNamespaceAware = true
+
+    val xmlSource: Source = SAXSource(
+        spf.newSAXParser().xmlReader,
+        InputSource(StringReader(inputMessageText)),
+    )
+    return infotrygdSporringUnmarshaller.unmarshal(xmlSource) as InfotrygdForesp
+}
