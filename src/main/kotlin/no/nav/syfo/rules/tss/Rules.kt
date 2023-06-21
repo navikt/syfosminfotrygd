@@ -5,6 +5,7 @@ import no.nav.syfo.model.Sykmelding
 import no.nav.syfo.rules.dsl.RuleResult
 
 typealias Rule<T> = (sykmelding: Sykmelding, ruleMetadata: RuleMetadata) -> RuleResult<T>
+
 typealias TSSRule = Rule<TSSRules>
 
 val tssidentmangler: TSSRule = { _, ruleMetadata ->

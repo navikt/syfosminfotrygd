@@ -7,4 +7,5 @@ import java.nio.file.Files
 import java.nio.file.Paths
 
 @Throws(IOException::class, URISyntaxException::class)
-fun getFileAsString(filePath: String) = String(Files.readAllBytes(Paths.get(filePath)), StandardCharsets.UTF_8)
+fun getFileAsString(filePath: String) =
+    String(Files.readAllBytes(Paths.get(filePath)), StandardCharsets.UTF_8)

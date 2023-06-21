@@ -9,8 +9,8 @@ import io.ktor.client.statement.HttpResponse
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.HttpStatusCode.Companion.NotFound
-import no.nav.syfo.log
 import java.io.IOException
+import no.nav.syfo.log
 
 class NorskHelsenettClient(
     private val httpClient: HttpClient,
@@ -20,26 +20,33 @@ class NorskHelsenettClient(
 ) {
     suspend fun finnBehandler(behandlerFnr: String, msgId: String): Behandler? {
         log.info("Henter behandler fra syfohelsenettproxy for msgId {}", msgId)
-        val httpResponse: HttpResponse = httpClient.get("$endpointUrl/api/v2/behandler") {
-            accept(ContentType.Application.Json)
-            val accessToken = accessTokenClient.getAccessTokenV2(resourceId)
-            headers {
-                append("Authorization", "Bearer $accessToken")
-                append("Nav-CallId", msgId)
-                append("behandlerFnr", behandlerFnr)
+        val httpResponse: HttpResponse =
+            httpClient.get("$endpointUrl/api/v2/behandler") {
+                accept(ContentType.Application.Json)
+                val accessToken = accessTokenClient.getAccessTokenV2(resourceId)
+                headers {
+                    append("Authorization", "Bearer $accessToken")
+                    append("Nav-CallId", msgId)
+                    append("behandlerFnr", behandlerFnr)
+                }
             }
-        }
         return when (httpResponse.status) {
             HttpStatusCode.OK -> {
                 httpResponse.body<Behandler>()
             }
-
             NotFound -> {
-                log.warn("Syfohelsenettproxy svarte med finnBehandler basert på fnr med NotFound msgId {}", msgId)
+                log.warn(
+                    "Syfohelsenettproxy svarte med finnBehandler basert på fnr med NotFound msgId {}",
+                    msgId
+                )
                 null
             }
             else -> {
-                log.error("Syfohelsenettproxy svarte med feilmelding for msgId {}: {}", msgId, httpResponse.status)
+                log.error(
+                    "Syfohelsenettproxy svarte med feilmelding for msgId {}: {}",
+                    msgId,
+                    httpResponse.status
+                )
                 throw IOException("Syfohelsenettproxy svarte med feilmelding for $msgId")
             }
         }

@@ -5,7 +5,8 @@ import no.nav.syfo.client.Godkjenning
 import no.nav.syfo.model.HelsepersonellKategori
 
 fun finnAktivHelsepersonellAutorisasjons(helsepersonelPerson: Behandler): String {
-    val godkjenteHelsepersonellAutorisasjonsAktiv = godkjenteHelsepersonellAutorisasjonsAktiv(helsepersonelPerson)
+    val godkjenteHelsepersonellAutorisasjonsAktiv =
+        godkjenteHelsepersonellAutorisasjonsAktiv(helsepersonelPerson)
     if (godkjenteHelsepersonellAutorisasjonsAktiv.isEmpty()) {
         return ""
     }
@@ -18,11 +19,15 @@ fun finnAktivHelsepersonellAutorisasjons(helsepersonelPerson: Behandler): String
         )
     ) {
         true -> HelsepersonellKategori.LEGE.verdi
-        else -> godkjenteHelsepersonellAutorisasjonsAktiv.firstOrNull()?.helsepersonellkategori?.verdi ?: ""
+        else ->
+            godkjenteHelsepersonellAutorisasjonsAktiv.firstOrNull()?.helsepersonellkategori?.verdi
+                ?: ""
     }
 }
 
-private fun godkjenteHelsepersonellAutorisasjonsAktiv(helsepersonelPerson: Behandler): List<Godkjenning> =
+private fun godkjenteHelsepersonellAutorisasjonsAktiv(
+    helsepersonelPerson: Behandler
+): List<Godkjenning> =
     helsepersonelPerson.godkjenninger.filter { godkjenning ->
         godkjenning.helsepersonellkategori?.aktiv != null &&
             godkjenning.autorisasjon?.aktiv == true &&
@@ -30,9 +35,10 @@ private fun godkjenteHelsepersonellAutorisasjonsAktiv(helsepersonelPerson: Behan
             godkjenning.helsepersonellkategori.aktiv
     }
 
-private fun helsepersonellGodkjenningSom(helsepersonellGodkjenning: List<Godkjenning>, helsepersonerVerdi: List<String>): Boolean =
+private fun helsepersonellGodkjenningSom(
+    helsepersonellGodkjenning: List<Godkjenning>,
+    helsepersonerVerdi: List<String>
+): Boolean =
     helsepersonellGodkjenning.any { godkjenning ->
-        godkjenning.helsepersonellkategori.let { kode ->
-            kode?.verdi in helsepersonerVerdi
-        }
+        godkjenning.helsepersonellkategori.let { kode -> kode?.verdi in helsepersonerVerdi }
     }

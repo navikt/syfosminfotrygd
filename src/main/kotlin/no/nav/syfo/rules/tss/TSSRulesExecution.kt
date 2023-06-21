@@ -18,11 +18,9 @@ typealias TSSTreeOutput = TreeOutput<TSSRules, RuleResult>
 class TSSRulesExecution(val rootNode: TreeNode<TSSRules, RuleResult> = tssRuleTree) :
     RuleExecution<TSSRules> {
     override fun runRules(sykmelding: Sykmelding, ruleMetadata: RuleMetadata) =
-        rootNode
-            .evaluate(sykmelding, ruleMetadata)
-            .also { gradertRulePath ->
-                log.info("Rules sykmeldingId: ${sykmelding.id}, ${gradertRulePath.printRulePath()}")
-            } to UtenJuridisk
+        rootNode.evaluate(sykmelding, ruleMetadata).also { gradertRulePath ->
+            log.info("Rules sykmeldingId: ${sykmelding.id}, ${gradertRulePath.printRulePath()}")
+        } to UtenJuridisk
 }
 
 private fun TreeNode<TSSRules, RuleResult>.evaluate(

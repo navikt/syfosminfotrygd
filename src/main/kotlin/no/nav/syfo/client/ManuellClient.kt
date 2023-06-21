@@ -15,12 +15,11 @@ class ManuellClient(
     private val resourceId: String,
 ) {
     suspend fun behandletAvManuell(sykmeldingId: String, loggingMeta: LoggingMeta): Boolean {
-        val httpResponse: HttpResponse = httpClient.get("$endpointUrl/api/v1/sykmelding/$sykmeldingId") {
-            val accessToken = accessTokenClient.getAccessTokenV2(resourceId)
-            headers {
-                append("Authorization", "Bearer $accessToken")
+        val httpResponse: HttpResponse =
+            httpClient.get("$endpointUrl/api/v1/sykmelding/$sykmeldingId") {
+                val accessToken = accessTokenClient.getAccessTokenV2(resourceId)
+                headers { append("Authorization", "Bearer $accessToken") }
             }
-        }
         return when (httpResponse.status) {
             HttpStatusCode.OK -> {
                 true
@@ -29,8 +28,13 @@ class ManuellClient(
                 false
             }
             else -> {
-                log.error("Noe gikk galt ved sjekk av om sykmeldingid $sykmeldingId har vært til manuell behandling, {}", loggingMeta)
-                throw RuntimeException("Noe gikk galt ved sjekk av om sykmeldingid $sykmeldingId har vært til manuell behandling")
+                log.error(
+                    "Noe gikk galt ved sjekk av om sykmeldingid $sykmeldingId har vært til manuell behandling, {}",
+                    loggingMeta
+                )
+                throw RuntimeException(
+                    "Noe gikk galt ved sjekk av om sykmeldingid $sykmeldingId har vært til manuell behandling"
+                )
             }
         }
     }

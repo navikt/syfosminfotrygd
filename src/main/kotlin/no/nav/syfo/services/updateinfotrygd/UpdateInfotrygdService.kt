@@ -1,5 +1,9 @@
 package no.nav.syfo.services.updateinfotrygd
 
+import java.time.LocalDate
+import java.util.concurrent.TimeUnit
+import javax.jms.MessageProducer
+import javax.jms.Session
 import kotlinx.coroutines.delay
 import net.logstash.logback.argument.StructuredArguments.fields
 import no.nav.helse.eiFellesformat.XMLEIFellesformat
@@ -17,10 +21,6 @@ import no.nav.syfo.util.LoggingMeta
 import no.nav.syfo.util.xmlObjectWriter
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
-import java.time.LocalDate
-import java.util.concurrent.TimeUnit
-import javax.jms.MessageProducer
-import javax.jms.Session
 
 const val INFOTRYGD = "INFOTRYGD"
 
@@ -50,29 +50,42 @@ class UpdateInfotrygdService(
 
         val forsteFravaersDag = finnForsteFravaersDag(itfh, perioder.first(), loggingMeta)
 
-        val sha256String = sha256hashstring(
-            createInfotrygdBlokk(
-                itfh = itfh, periode = perioder.first(), personNrPasient = personNrPasient, signaturDato = LocalDate.of(2019, 1, 1),
-                helsepersonellKategoriVerdi = behandlerKode, tssid = tssid, loggingMeta = loggingMeta, navKontorNr = navKontorNr,
-                navnArbeidsgiver = findArbeidsKategori(itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver),
-                identDato = forsteFravaersDag, behandletAvManuell = behandletAvManuell, utenlandskSykmelding = receivedSykmelding.erUtenlandskSykmelding(),
-            ),
-        )
+        val sha256String =
+            sha256hashstring(
+                createInfotrygdBlokk(
+                    itfh = itfh,
+                    periode = perioder.first(),
+                    personNrPasient = personNrPasient,
+                    signaturDato = LocalDate.of(2019, 1, 1),
+                    helsepersonellKategoriVerdi = behandlerKode,
+                    tssid = tssid,
+                    loggingMeta = loggingMeta,
+                    navKontorNr = navKontorNr,
+                    navnArbeidsgiver =
+                        findArbeidsKategori(itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver),
+                    identDato = forsteFravaersDag,
+                    behandletAvManuell = behandletAvManuell,
+                    utenlandskSykmelding = receivedSykmelding.erUtenlandskSykmelding(),
+                ),
+            )
 
         delay(100)
-        val nyligInfotrygdOppdatering = redisService.oppdaterRedis(personNrPasient, personNrPasient, 4, loggingMeta)
+        val nyligInfotrygdOppdatering =
+            redisService.oppdaterRedis(personNrPasient, personNrPasient, 4, loggingMeta)
 
         when {
             nyligInfotrygdOppdatering == null -> {
                 delay(10000)
                 try {
-                    kafkaAivenProducerReceivedSykmelding.send(
-                        ProducerRecord(
-                            retryTopic,
-                            receivedSykmelding.sykmelding.id,
-                            receivedSykmelding,
-                        ),
-                    ).get()
+                    kafkaAivenProducerReceivedSykmelding
+                        .send(
+                            ProducerRecord(
+                                retryTopic,
+                                receivedSykmelding.sykmelding.id,
+                                receivedSykmelding,
+                            ),
+                        )
+                        .get()
                     log.warn("Melding sendt på retry topic {}", fields(loggingMeta))
                 } catch (ex: Exception) {
                     log.error("Failed to send sykmelding to retrytopic {}", fields(loggingMeta))
@@ -80,7 +93,13 @@ class UpdateInfotrygdService(
                 }
             }
             else -> {
-                val duplikatInfotrygdOppdatering = redisService.oppdaterRedis(sha256String, sha256String, TimeUnit.DAYS.toSeconds(60).toInt(), loggingMeta)
+                val duplikatInfotrygdOppdatering =
+                    redisService.oppdaterRedis(
+                        sha256String,
+                        sha256String,
+                        TimeUnit.DAYS.toSeconds(60).toInt(),
+                        loggingMeta
+                    )
                 when {
                     duplikatInfotrygdOppdatering == null -> {
                         behandlingsutfallService.sendRuleCheckValidationResult(
@@ -88,7 +107,10 @@ class UpdateInfotrygdService(
                             validationResult,
                             loggingMeta,
                         )
-                        log.warn("Melding market som infotrygd duplikat oppdatering {}", fields(loggingMeta))
+                        log.warn(
+                            "Melding market som infotrygd duplikat oppdatering {}",
+                            fields(loggingMeta)
+                        )
                     }
                     else ->
                         try {
@@ -107,7 +129,8 @@ class UpdateInfotrygdService(
                                     navKontorNr = navKontorNr,
                                     identDato = forsteFravaersDag,
                                     behandletAvManuell = behandletAvManuell,
-                                    utenlandskSykmelding = receivedSykmelding.erUtenlandskSykmelding(),
+                                    utenlandskSykmelding =
+                                        receivedSykmelding.erUtenlandskSykmelding(),
                                 ),
                                 loggingMeta,
                             )
@@ -127,7 +150,8 @@ class UpdateInfotrygdService(
                                         navKontorNr = navKontorNr,
                                         identDato = forsteFravaersDag,
                                         behandletAvManuell = behandletAvManuell,
-                                        utenlandskSykmelding = receivedSykmelding.erUtenlandskSykmelding(),
+                                        utenlandskSykmelding =
+                                            receivedSykmelding.erUtenlandskSykmelding(),
                                         operasjonstypeKode = 2,
                                     ),
                                     loggingMeta,
@@ -140,7 +164,10 @@ class UpdateInfotrygdService(
                             )
                         } catch (exception: Exception) {
                             redisService.slettRedisKey(sha256String, loggingMeta)
-                            log.error("Feilet i infotrygd oppdaternings biten, kaster exception", exception)
+                            log.error(
+                                "Feilet i infotrygd oppdaternings biten, kaster exception",
+                                exception
+                            )
                             throw exception
                         }
                 }
@@ -153,11 +180,21 @@ class UpdateInfotrygdService(
         session: Session,
         fellesformat: XMLEIFellesformat,
         loggingMeta: LoggingMeta,
-    ) = producer.send(
-        session.createTextMessage().apply {
-            log.info("Melding har oprasjonstype: {}, tkNummer: {}, {}", fellesformat.get<KontrollsystemBlokkType>().infotrygdBlokk.first().operasjonstype, fellesformat.get<KontrollsystemBlokkType>().infotrygdBlokk.first().tkNummer, fields(loggingMeta))
-            text = xmlObjectWriter.writeValueAsString(fellesformat)
-            log.info("Melding er sendt til infotrygd {}", fields(loggingMeta))
-        },
-    )
+    ) =
+        producer.send(
+            session.createTextMessage().apply {
+                log.info(
+                    "Melding har oprasjonstype: {}, tkNummer: {}, {}",
+                    fellesformat
+                        .get<KontrollsystemBlokkType>()
+                        .infotrygdBlokk
+                        .first()
+                        .operasjonstype,
+                    fellesformat.get<KontrollsystemBlokkType>().infotrygdBlokk.first().tkNummer,
+                    fields(loggingMeta)
+                )
+                text = xmlObjectWriter.writeValueAsString(fellesformat)
+                log.info("Melding er sendt til infotrygd {}", fields(loggingMeta))
+            },
+        )
 }

@@ -30,82 +30,145 @@ enum class ValidationRules {
     ARBEIDUFORETOM_MANGLER,
 }
 
-val validationRuleTree = tree<ValidationRules, RuleResult>(ValidationRules.NUMBER_OF_TREATMENT_DAYS_SET) {
-    yes(Status.MANUAL_PROCESSING, ValidationRuleHit.NUMBER_OF_TREATMENT_DAYS_SET)
-    no(ValidationRules.GRADERT_REISETILSKUDD_ER_OPPGITT) {
-        yes(Status.MANUAL_PROCESSING, ValidationRuleHit.GRADERT_REISETILSKUDD_ER_OPPGITT)
-        no(ValidationRules.TRAVEL_SUBSIDY_SPECIFIED) {
-            yes(Status.MANUAL_PROCESSING, ValidationRuleHit.TRAVEL_SUBSIDY_SPECIFIED)
-            no(ValidationRules.PATIENT_NOT_IN_IP) {
-                yes(Status.MANUAL_PROCESSING, ValidationRuleHit.PATIENT_NOT_IN_IP)
-                no(ValidationRules.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE) {
-                    yes(
-                        Status.MANUAL_PROCESSING,
-                        ValidationRuleHit.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE,
-                    )
-                    no(ValidationRules.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_1) {
-                        yes(Status.MANUAL_PROCESSING, ValidationRuleHit.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_1)
-                        no(ValidationRules.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_2) {
+val validationRuleTree =
+    tree<ValidationRules, RuleResult>(ValidationRules.NUMBER_OF_TREATMENT_DAYS_SET) {
+        yes(Status.MANUAL_PROCESSING, ValidationRuleHit.NUMBER_OF_TREATMENT_DAYS_SET)
+        no(ValidationRules.GRADERT_REISETILSKUDD_ER_OPPGITT) {
+            yes(Status.MANUAL_PROCESSING, ValidationRuleHit.GRADERT_REISETILSKUDD_ER_OPPGITT)
+            no(ValidationRules.TRAVEL_SUBSIDY_SPECIFIED) {
+                yes(Status.MANUAL_PROCESSING, ValidationRuleHit.TRAVEL_SUBSIDY_SPECIFIED)
+                no(ValidationRules.PATIENT_NOT_IN_IP) {
+                    yes(Status.MANUAL_PROCESSING, ValidationRuleHit.PATIENT_NOT_IN_IP)
+                    no(
+                        ValidationRules
+                            .PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE
+                    ) {
+                        yes(
+                            Status.MANUAL_PROCESSING,
+                            ValidationRuleHit
+                                .PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE,
+                        )
+                        no(ValidationRules.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_1) {
                             yes(
                                 Status.MANUAL_PROCESSING,
-                                ValidationRuleHit.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_2,
+                                ValidationRuleHit.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_1
                             )
-                            no(ValidationRules.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_3) {
+                            no(ValidationRules.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_2) {
                                 yes(
                                     Status.MANUAL_PROCESSING,
-                                    ValidationRuleHit.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_3,
+                                    ValidationRuleHit
+                                        .SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_2,
                                 )
-                                no(ValidationRules.NEW_CLEAN_BILL_DATE_BEFORE_PAYOUT) {
-                                    yes(Status.MANUAL_PROCESSING, ValidationRuleHit.NEW_CLEAN_BILL_DATE_BEFORE_PAYOUT)
-                                    no(ValidationRules.NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE) {
+                                no(ValidationRules.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_3) {
+                                    yes(
+                                        Status.MANUAL_PROCESSING,
+                                        ValidationRuleHit
+                                            .SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_3,
+                                    )
+                                    no(ValidationRules.NEW_CLEAN_BILL_DATE_BEFORE_PAYOUT) {
                                         yes(
                                             Status.MANUAL_PROCESSING,
-                                            ValidationRuleHit.NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE,
+                                            ValidationRuleHit.NEW_CLEAN_BILL_DATE_BEFORE_PAYOUT
                                         )
-                                        no(ValidationRules.EXTANION_OVER_FA) {
-                                            yes(Status.MANUAL_PROCESSING, ValidationRuleHit.EXTANION_OVER_FA)
-                                            no(ValidationRules.PERSON_MOVING_KODE_FL) {
-                                                yes(Status.MANUAL_PROCESSING, ValidationRuleHit.PERSON_MOVING_KODE_FL)
-                                                no(ValidationRules.PERIOD_FOR_AA_ENDED) {
-                                                    yes(Status.MANUAL_PROCESSING, ValidationRuleHit.PERIOD_FOR_AA_ENDED)
-                                                    no(ValidationRules.PERIOD_IS_AF) {
-                                                        yes(Status.MANUAL_PROCESSING, ValidationRuleHit.PERIOD_IS_AF)
-                                                        no(ValidationRules.MAX_SICK_LEAVE_PAYOUT) {
+                                        no(
+                                            ValidationRules
+                                                .NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE
+                                        ) {
+                                            yes(
+                                                Status.MANUAL_PROCESSING,
+                                                ValidationRuleHit
+                                                    .NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE,
+                                            )
+                                            no(ValidationRules.EXTANION_OVER_FA) {
+                                                yes(
+                                                    Status.MANUAL_PROCESSING,
+                                                    ValidationRuleHit.EXTANION_OVER_FA
+                                                )
+                                                no(ValidationRules.PERSON_MOVING_KODE_FL) {
+                                                    yes(
+                                                        Status.MANUAL_PROCESSING,
+                                                        ValidationRuleHit.PERSON_MOVING_KODE_FL
+                                                    )
+                                                    no(ValidationRules.PERIOD_FOR_AA_ENDED) {
+                                                        yes(
+                                                            Status.MANUAL_PROCESSING,
+                                                            ValidationRuleHit.PERIOD_FOR_AA_ENDED
+                                                        )
+                                                        no(ValidationRules.PERIOD_IS_AF) {
                                                             yes(
                                                                 Status.MANUAL_PROCESSING,
-                                                                ValidationRuleHit.MAX_SICK_LEAVE_PAYOUT,
+                                                                ValidationRuleHit.PERIOD_IS_AF
                                                             )
-                                                            no(ValidationRules.ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING) {
+                                                            no(
+                                                                ValidationRules
+                                                                    .MAX_SICK_LEAVE_PAYOUT
+                                                            ) {
                                                                 yes(
                                                                     Status.MANUAL_PROCESSING,
-                                                                    ValidationRuleHit.ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING,
+                                                                    ValidationRuleHit
+                                                                        .MAX_SICK_LEAVE_PAYOUT,
                                                                 )
-                                                                no(ValidationRules.ERROR_FROM_IT_SMHISTORIKK_STATUS_KODEMELDING) {
+                                                                no(
+                                                                    ValidationRules
+                                                                        .ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING
+                                                                ) {
                                                                     yes(
                                                                         Status.MANUAL_PROCESSING,
-                                                                        ValidationRuleHit.ERROR_FROM_IT_SMHISTORIKK_STATUS_KODEMELDING,
+                                                                        ValidationRuleHit
+                                                                            .ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING,
                                                                     )
-                                                                    no(ValidationRules.ERROR_FROM_IT_PARALELLYTELSER_STATUS_KODEMELDING) {
+                                                                    no(
+                                                                        ValidationRules
+                                                                            .ERROR_FROM_IT_SMHISTORIKK_STATUS_KODEMELDING
+                                                                    ) {
                                                                         yes(
-                                                                            Status.MANUAL_PROCESSING,
-                                                                            ValidationRuleHit.ERROR_FROM_IT_PARALELLYTELSER_STATUS_KODEMELDING,
+                                                                            Status
+                                                                                .MANUAL_PROCESSING,
+                                                                            ValidationRuleHit
+                                                                                .ERROR_FROM_IT_SMHISTORIKK_STATUS_KODEMELDING,
                                                                         )
-                                                                        no(ValidationRules.ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING) {
+                                                                        no(
+                                                                            ValidationRules
+                                                                                .ERROR_FROM_IT_PARALELLYTELSER_STATUS_KODEMELDING
+                                                                        ) {
                                                                             yes(
-                                                                                Status.MANUAL_PROCESSING,
-                                                                                ValidationRuleHit.ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING,
+                                                                                Status
+                                                                                    .MANUAL_PROCESSING,
+                                                                                ValidationRuleHit
+                                                                                    .ERROR_FROM_IT_PARALELLYTELSER_STATUS_KODEMELDING,
                                                                             )
-                                                                            no(ValidationRules.ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING) {
+                                                                            no(
+                                                                                ValidationRules
+                                                                                    .ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING
+                                                                            ) {
                                                                                 yes(
-                                                                                    Status.MANUAL_PROCESSING,
-                                                                                    ValidationRuleHit.ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING,
+                                                                                    Status
+                                                                                        .MANUAL_PROCESSING,
+                                                                                    ValidationRuleHit
+                                                                                        .ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING,
                                                                                 )
-                                                                                no(ValidationRules.ARBEIDUFORETOM_MANGLER) {
+                                                                                no(
+                                                                                    ValidationRules
+                                                                                        .ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING
+                                                                                ) {
                                                                                     yes(
-                                                                                        Status.MANUAL_PROCESSING,
-                                                                                        ValidationRuleHit.ARBEIDUFORETOM_MANGLER,
+                                                                                        Status
+                                                                                            .MANUAL_PROCESSING,
+                                                                                        ValidationRuleHit
+                                                                                            .ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING,
                                                                                     )
-                                                                                    no(OK)
+                                                                                    no(
+                                                                                        ValidationRules
+                                                                                            .ARBEIDUFORETOM_MANGLER
+                                                                                    ) {
+                                                                                        yes(
+                                                                                            Status
+                                                                                                .MANUAL_PROCESSING,
+                                                                                            ValidationRuleHit
+                                                                                                .ARBEIDUFORETOM_MANGLER,
+                                                                                        )
+                                                                                        no(OK)
+                                                                                    }
                                                                                 }
                                                                             }
                                                                         }
@@ -126,13 +189,18 @@ val validationRuleTree = tree<ValidationRules, RuleResult>(ValidationRules.NUMBE
             }
         }
     }
-}
 
-internal fun RuleNode<ValidationRules, RuleResult>.yes(status: Status, ruleHit: ValidationRuleHit? = null) {
+internal fun RuleNode<ValidationRules, RuleResult>.yes(
+    status: Status,
+    ruleHit: ValidationRuleHit? = null
+) {
     yes(RuleResult(status, ruleHit?.ruleHit))
 }
 
-internal fun RuleNode<ValidationRules, RuleResult>.no(status: Status, ruleHit: ValidationRuleHit? = null) {
+internal fun RuleNode<ValidationRules, RuleResult>.no(
+    status: Status,
+    ruleHit: ValidationRuleHit? = null
+) {
     no(RuleResult(status, ruleHit?.ruleHit))
 }
 
@@ -142,22 +210,33 @@ fun getRule(rules: ValidationRules): Rule<ValidationRules> {
         ValidationRules.GRADERT_REISETILSKUDD_ER_OPPGITT -> gradertReiseTilskuddErOppgitt
         ValidationRules.TRAVEL_SUBSIDY_SPECIFIED -> travelSubSidySpecified
         ValidationRules.PATIENT_NOT_IN_IP -> patientNotInIP
-        ValidationRules.PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE -> partiallConincidentSickLeavePeriodWithPreviousRegistertSickLave
-        ValidationRules.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_1 -> sickLaveExtenionFromDiffrentNavOffice1
-        ValidationRules.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_2 -> sickLaveExtenionFromDiffrentNavOffice2
-        ValidationRules.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_3 -> sickLaveExtenionFromDiffrentNavOffice3
+        ValidationRules
+            .PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE ->
+            partiallConincidentSickLeavePeriodWithPreviousRegistertSickLave
+        ValidationRules.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_1 ->
+            sickLaveExtenionFromDiffrentNavOffice1
+        ValidationRules.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_2 ->
+            sickLaveExtenionFromDiffrentNavOffice2
+        ValidationRules.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_3 ->
+            sickLaveExtenionFromDiffrentNavOffice3
         ValidationRules.NEW_CLEAN_BILL_DATE_BEFORE_PAYOUT -> newCleanBillDateBeforePayout
-        ValidationRules.NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE -> newCleanBillDateBeforeRegisteredCleanBillDate
+        ValidationRules.NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE ->
+            newCleanBillDateBeforeRegisteredCleanBillDate
         ValidationRules.EXTANION_OVER_FA -> extaionOverFa
         ValidationRules.PERSON_MOVING_KODE_FL -> personMovingKodeFl
         ValidationRules.PERIOD_FOR_AA_ENDED -> periodForAAEnded
         ValidationRules.PERIOD_IS_AF -> periodIsAf
         ValidationRules.MAX_SICK_LEAVE_PAYOUT -> maxSickLeavePayout
-        ValidationRules.ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING -> errorFromItHouvedStatusKodeMelding
-        ValidationRules.ERROR_FROM_IT_SMHISTORIKK_STATUS_KODEMELDING -> errorFromItSmgistorikkStatusKodemelding
-        ValidationRules.ERROR_FROM_IT_PARALELLYTELSER_STATUS_KODEMELDING -> errorFromItParalellytelserStatusKodemelding
-        ValidationRules.ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING -> errorFromItDiagnoseOkUtrekkStatusKodemelding
-        ValidationRules.ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING -> errorFromItPasientUtrekkStatusKodemelding
+        ValidationRules.ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING ->
+            errorFromItHouvedStatusKodeMelding
+        ValidationRules.ERROR_FROM_IT_SMHISTORIKK_STATUS_KODEMELDING ->
+            errorFromItSmgistorikkStatusKodemelding
+        ValidationRules.ERROR_FROM_IT_PARALELLYTELSER_STATUS_KODEMELDING ->
+            errorFromItParalellytelserStatusKodemelding
+        ValidationRules.ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING ->
+            errorFromItDiagnoseOkUtrekkStatusKodemelding
+        ValidationRules.ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING ->
+            errorFromItPasientUtrekkStatusKodemelding
         ValidationRules.ARBEIDUFORETOM_MANGLER -> arbeiduforetomMangler
     }
 }

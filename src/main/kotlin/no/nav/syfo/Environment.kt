@@ -14,7 +14,8 @@ data class Environment(
     override val mqGatewayName: String = getEnvVar("MQ_GATEWAY_NAME"),
     override val mqChannelName: String = getEnvVar("MQ_CHANNEL_NAME"),
     val norskHelsenettEndpointURL: String = getEnvVar("HELSENETT_ENDPOINT_URL"),
-    val redisHost: String = getEnvVar("REDIS_HOST", "syfosminfotrygd-redis.teamsykmelding.svc.cluster.local"),
+    val redisHost: String =
+        getEnvVar("REDIS_HOST", "syfosminfotrygd-redis.teamsykmelding.svc.cluster.local"),
     val redisPort: Int = 6379,
     val redisSecret: String = getEnvVar("REDIS_PASSWORD"),
     val pdlGraphqlPath: String = getEnvVar("PDL_GRAPHQL_PATH"),
@@ -29,7 +30,8 @@ data class Environment(
     val behandlingsUtfallTopic: String = "teamsykmelding.sykmelding-behandlingsutfall",
     val produserOppgaveTopic: String = "teamsykmelding.oppgave-produser-oppgave",
     val retryTopic: String = "teamsykmelding.privat-sminfotrygd-retry",
-    val syketilfelleEndpointURL: String = getEnvVar("SYKETILLFELLE_ENDPOINT_URL", "http://flex-syketilfelle.flex"),
+    val syketilfelleEndpointURL: String =
+        getEnvVar("SYKETILLFELLE_ENDPOINT_URL", "http://flex-syketilfelle.flex"),
     val syketilfelleScope: String = getEnvVar("SYKETILLFELLE_SCOPE"),
     val smregisterEndpointURL: String = getEnvVar("SMREGISTER_URL", "http://syfosmregister"),
     val smregisterAudience: String = getEnvVar("SMREGISTER_AUDIENCE"),
@@ -41,4 +43,5 @@ data class ServiceUser(
 )
 
 fun getEnvVar(varName: String, defaultValue: String? = null) =
-    System.getenv(varName) ?: defaultValue ?: throw RuntimeException("Missing required variable \"$varName\"")
+    System.getenv(varName)
+        ?: defaultValue ?: throw RuntimeException("Missing required variable \"$varName\"")

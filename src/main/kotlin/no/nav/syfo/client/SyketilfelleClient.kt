@@ -6,13 +6,13 @@ import io.ktor.client.request.accept
 import io.ktor.client.request.get
 import io.ktor.client.request.headers
 import io.ktor.http.ContentType
+import java.time.LocalDate
 import net.logstash.logback.argument.StructuredArguments.fields
 import no.nav.syfo.log
 import no.nav.syfo.model.Periode
 import no.nav.syfo.services.sortedFOMDate
 import no.nav.syfo.services.sortedTOMDate
 import no.nav.syfo.util.LoggingMeta
-import java.time.LocalDate
 
 class SyketilfelleClient(
     private val endpointUrl: String,
@@ -21,14 +21,22 @@ class SyketilfelleClient(
     private val httpClient: HttpClient,
 ) {
 
-    suspend fun finnStartdatoForSammenhengendeSyketilfelle(fnr: String, periodeliste: List<Periode>, loggingMeta: LoggingMeta): LocalDate? {
+    suspend fun finnStartdatoForSammenhengendeSyketilfelle(
+        fnr: String,
+        periodeliste: List<Periode>,
+        loggingMeta: LoggingMeta
+    ): LocalDate? {
         log.info("Sjekker om nytt syketilfelle mot syfosyketilfelle {}", fields(loggingMeta))
         val sykeforloep = hentSykeforloep(fnr)
 
         return finnStartdato(sykeforloep, periodeliste, loggingMeta)
     }
 
-    fun finnStartdato(sykeforloep: List<Sykeforloep>, periodeliste: List<Periode>, loggingMeta: LoggingMeta): LocalDate? {
+    fun finnStartdato(
+        sykeforloep: List<Sykeforloep>,
+        periodeliste: List<Periode>,
+        loggingMeta: LoggingMeta
+    ): LocalDate? {
         if (sykeforloep.isEmpty()) {
             return null
         }
@@ -39,13 +47,18 @@ class SyketilfelleClient(
             return null
         }
         val periodeRange = forsteFomIMottattSykmelding.rangeTo(sisteTomIMottattSykmelding)
-        val sammeSykeforloep = sykeforloep.firstOrNull {
-            it.sykmeldinger.any { simpleSykmelding -> simpleSykmelding.erSammeOppfolgingstilfelle(periodeRange) }
-        }
+        val sammeSykeforloep =
+            sykeforloep.firstOrNull {
+                it.sykmeldinger.any { simpleSykmelding ->
+                    simpleSykmelding.erSammeOppfolgingstilfelle(periodeRange)
+                }
+            }
         return sammeSykeforloep?.oppfolgingsdato
     }
 
-    private fun SimpleSykmelding.erSammeOppfolgingstilfelle(periodeRange: ClosedRange<LocalDate>): Boolean {
+    private fun SimpleSykmelding.erSammeOppfolgingstilfelle(
+        periodeRange: ClosedRange<LocalDate>
+    ): Boolean {
         val fomRange = fom.minusDays(16).rangeTo(fom)
         val tomRange = tom.rangeTo(tom.plusDays(16))
         if (fom.minusDays(16) in periodeRange || tom.plusDays(16) in periodeRange) {
@@ -57,15 +70,17 @@ class SyketilfelleClient(
     }
 
     private suspend fun hentSykeforloep(fnr: String): List<Sykeforloep> =
-        httpClient.get("$endpointUrl/api/v1/sykeforloep?inkluderPapirsykmelding=true") {
-            accept(ContentType.Application.Json)
-            val accessToken = accessTokenClient.getAccessTokenV2(resourceId)
+        httpClient
+            .get("$endpointUrl/api/v1/sykeforloep?inkluderPapirsykmelding=true") {
+                accept(ContentType.Application.Json)
+                val accessToken = accessTokenClient.getAccessTokenV2(resourceId)
 
-            headers {
-                append("Authorization", "Bearer $accessToken")
-                append("fnr", fnr)
+                headers {
+                    append("Authorization", "Bearer $accessToken")
+                    append("fnr", fnr)
+                }
             }
-        }.body()
+            .body()
 }
 
 data class Sykeforloep(

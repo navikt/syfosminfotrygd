@@ -18,20 +18,25 @@ class Norg2Client(
     private val endpointUrl: String,
     private val norg2RedisService: Norg2RedisService,
 ) {
-    suspend fun getLocalNAVOffice(geografiskOmraade: String?, diskresjonskode: String?, loggingMeta: LoggingMeta): Enhet {
+    suspend fun getLocalNAVOffice(
+        geografiskOmraade: String?,
+        diskresjonskode: String?,
+        loggingMeta: LoggingMeta
+    ): Enhet {
         if (diskresjonskode == null && geografiskOmraade != null) {
             norg2RedisService.getEnhet(geografiskOmraade)?.let {
                 log.debug("Traff cache for GT $geografiskOmraade")
                 return it
             }
         }
-        val httpResponse = httpClient.get("$endpointUrl/enhet/navkontor/$geografiskOmraade") {
-            accept(ContentType.Application.Json)
-            contentType(ContentType.Application.Json)
-            if (!diskresjonskode.isNullOrEmpty()) {
-                parameter("disk", diskresjonskode)
+        val httpResponse =
+            httpClient.get("$endpointUrl/enhet/navkontor/$geografiskOmraade") {
+                accept(ContentType.Application.Json)
+                contentType(ContentType.Application.Json)
+                if (!diskresjonskode.isNullOrEmpty()) {
+                    parameter("disk", diskresjonskode)
+                }
             }
-        }
         when (httpResponse.status) {
             HttpStatusCode.OK -> {
                 val enhet = httpResponse.body<Enhet>()
@@ -52,7 +57,9 @@ class Norg2Client(
                     "Noe gikk galt ved henting av lokalkontor fra norg: ${httpResponse.status}, ${httpResponse.body<String>()}, {}",
                     StructuredArguments.fields(loggingMeta),
                 )
-                throw RuntimeException("Noe gikk galt ved henting av lokalkontor fra norg: ${httpResponse.status}, ${httpResponse.body<String>()}")
+                throw RuntimeException(
+                    "Noe gikk galt ved henting av lokalkontor fra norg: ${httpResponse.status}, ${httpResponse.body<String>()}"
+                )
             }
         }
     }

@@ -18,6 +18,17 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.network.sockets.SocketTimeoutException
 import io.ktor.serialization.jackson.jackson
 import io.prometheus.client.hotspot.DefaultExports
+import java.io.StringReader
+import java.io.StringWriter
+import java.time.Duration
+import java.time.LocalDate
+import java.time.OffsetTime
+import java.time.ZoneId
+import java.time.temporal.ChronoUnit
+import javax.jms.MessageProducer
+import javax.jms.Session
+import javax.xml.bind.Marshaller
+import javax.xml.stream.XMLInputFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
@@ -71,25 +82,15 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import redis.clients.jedis.JedisPool
 import redis.clients.jedis.JedisPoolConfig
-import java.io.StringReader
-import java.io.StringWriter
-import java.time.Duration
-import java.time.LocalDate
-import java.time.OffsetTime
-import java.time.ZoneId
-import java.time.temporal.ChronoUnit
-import javax.jms.MessageProducer
-import javax.jms.Session
-import javax.xml.bind.Marshaller
-import javax.xml.stream.XMLInputFactory
 
 val log: Logger = LoggerFactory.getLogger("no.nav.syfo.sminfotrygd")
-val objectMapper: ObjectMapper = ObjectMapper().apply {
-    registerKotlinModule()
-    registerModule(JavaTimeModule())
-    configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-    configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-}
+val objectMapper: ObjectMapper =
+    ObjectMapper().apply {
+        registerKotlinModule()
+        registerModule(JavaTimeModule())
+        configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+        configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+    }
 
 const val NAV_OPPFOLGING_UTLAND_KONTOR_NR = "0393"
 const val NAV_VIKAFOSSEN_KONTOR_NR = "2103"
@@ -99,12 +100,15 @@ const val UTENLANDSK_SYKEHUS = "9900004"
 fun main() {
     val env = Environment()
     val serviceUser = ServiceUser()
-    MqTlsUtils.getMqTlsConfig().forEach { key, value -> System.setProperty(key as String, value as String) }
+    MqTlsUtils.getMqTlsConfig().forEach { key, value ->
+        System.setProperty(key as String, value as String)
+    }
     val applicationState = ApplicationState()
-    val applicationEngine = createApplicationEngine(
-        env,
-        applicationState,
-    )
+    val applicationEngine =
+        createApplicationEngine(
+            env,
+            applicationState,
+        )
 
     val applicationServer = ApplicationServer(applicationEngine)
 
@@ -112,19 +116,29 @@ fun main() {
 
     val kafkaAivenBaseConfig = KafkaUtils.getAivenKafkaConfig()
     val kafkaAivenProducerProperties =
-        kafkaAivenBaseConfig.toProducerConfig(env.applicationName, valueSerializer = JacksonKafkaSerializer::class)
-    val kafkaAivenProducerReceivedSykmelding = KafkaProducer<String, ReceivedSykmelding>(kafkaAivenProducerProperties)
-    val kafkaAivenProducerBehandlingsutfall = KafkaProducer<String, ValidationResult>(kafkaAivenProducerProperties)
-    val kafkaAivenProducerOppgave = KafkaProducer<String, OpprettOppgaveKafkaMessage>(kafkaAivenProducerProperties)
+        kafkaAivenBaseConfig.toProducerConfig(
+            env.applicationName,
+            valueSerializer = JacksonKafkaSerializer::class
+        )
+    val kafkaAivenProducerReceivedSykmelding =
+        KafkaProducer<String, ReceivedSykmelding>(kafkaAivenProducerProperties)
+    val kafkaAivenProducerBehandlingsutfall =
+        KafkaProducer<String, ValidationResult>(kafkaAivenProducerProperties)
+    val kafkaAivenProducerOppgave =
+        KafkaProducer<String, OpprettOppgaveKafkaMessage>(kafkaAivenProducerProperties)
 
-    val kafkaAivenConsumerReceivedSykmelding = KafkaConsumer<String, String>(
-        kafkaAivenBaseConfig
-            .toConsumerConfig("${env.applicationName}-consumer", valueDeserializer = StringDeserializer::class)
-            .also {
-                it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "none"
-                it[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = 1
-            },
-    )
+    val kafkaAivenConsumerReceivedSykmelding =
+        KafkaConsumer<String, String>(
+            kafkaAivenBaseConfig
+                .toConsumerConfig(
+                    "${env.applicationName}-consumer",
+                    valueDeserializer = StringDeserializer::class
+                )
+                .also {
+                    it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "none"
+                    it[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = 1
+                },
+        )
 
     MQEnvironment.channel = env.mqChannelName
     MQEnvironment.port = env.mqPort
@@ -141,13 +155,12 @@ fun main() {
                 configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
             }
         }
-        install(HttpTimeout) {
-            socketTimeoutMillis = 6000
-        }
+        install(HttpTimeout) { socketTimeoutMillis = 6000 }
         HttpResponseValidator {
             handleResponseExceptionWithRequest { exception, _ ->
                 when (exception) {
-                    is SocketTimeoutException -> throw ServiceUnavailableException(exception.message)
+                    is SocketTimeoutException ->
+                        throw ServiceUnavailableException(exception.message)
                 }
             }
         }
@@ -173,58 +186,83 @@ fun main() {
     val jedisPool = JedisPool(JedisPoolConfig(), env.redisHost, env.redisPort)
     val redisService = RedisService(jedisPool, env.redisSecret)
 
-    val norg2Client = Norg2Client(httpClient, env.norg2V1EndpointURL, Norg2RedisService(jedisPool, env.redisSecret))
+    val norg2Client =
+        Norg2Client(
+            httpClient,
+            env.norg2V1EndpointURL,
+            Norg2RedisService(jedisPool, env.redisSecret)
+        )
 
     val accessTokenClientV2 =
         AccessTokenClientV2(env.aadAccessTokenV2Url, env.clientIdV2, env.clientSecretV2, httpClient)
     val norskHelsenettClient =
-        NorskHelsenettClient(httpClient, env.norskHelsenettEndpointURL, accessTokenClientV2, env.helsenettproxyScope)
-    val pdlPersonService = PdlFactory.getPdlService(env, httpClient, accessTokenClientV2, env.pdlScope)
+        NorskHelsenettClient(
+            httpClient,
+            env.norskHelsenettEndpointURL,
+            accessTokenClientV2,
+            env.helsenettproxyScope
+        )
+    val pdlPersonService =
+        PdlFactory.getPdlService(env, httpClient, accessTokenClientV2, env.pdlScope)
     val finnNAVKontorService = FinnNAVKontorService(pdlPersonService, norg2Client)
 
-    val manuellClient = ManuellClient(httpClient, env.manuellUrl, accessTokenClientV2, env.manuellScope)
-    val syketilfelleClient = SyketilfelleClient(env.syketilfelleEndpointURL, accessTokenClientV2, env.syketilfelleScope, httpClient)
-    val sykmeldingService = SykmeldingService(
-        smregisterClient = SmregisterClient(
-            smregisterEndpointURL = env.smregisterEndpointURL,
-            accessTokenClientV2 = accessTokenClientV2,
-            scope = env.smregisterAudience,
-            httpClient = httpClient,
-        ),
-    )
-    val behandlingsutfallService = BehandlingsutfallService(
-        kafkaAivenProducerBehandlingsutfall = kafkaAivenProducerBehandlingsutfall,
-        behandlingsUtfallTopic = env.behandlingsUtfallTopic,
-    )
+    val manuellClient =
+        ManuellClient(httpClient, env.manuellUrl, accessTokenClientV2, env.manuellScope)
+    val syketilfelleClient =
+        SyketilfelleClient(
+            env.syketilfelleEndpointURL,
+            accessTokenClientV2,
+            env.syketilfelleScope,
+            httpClient
+        )
+    val sykmeldingService =
+        SykmeldingService(
+            smregisterClient =
+                SmregisterClient(
+                    smregisterEndpointURL = env.smregisterEndpointURL,
+                    accessTokenClientV2 = accessTokenClientV2,
+                    scope = env.smregisterAudience,
+                    httpClient = httpClient,
+                ),
+        )
+    val behandlingsutfallService =
+        BehandlingsutfallService(
+            kafkaAivenProducerBehandlingsutfall = kafkaAivenProducerBehandlingsutfall,
+            behandlingsUtfallTopic = env.behandlingsUtfallTopic,
+        )
 
-    val oppgaveService = OppgaveService(
-        kafkaAivenProducerOppgave = kafkaAivenProducerOppgave,
-        produserOppgaveTopic = env.produserOppgaveTopic,
-    )
-    val manuellBehandlingService = ManuellBehandlingService(
-        behandlingsutfallService = behandlingsutfallService,
-        redisService = redisService,
-        oppgaveService = oppgaveService,
-        applicationState = applicationState,
-        sykmeldingService = sykmeldingService,
-    )
+    val oppgaveService =
+        OppgaveService(
+            kafkaAivenProducerOppgave = kafkaAivenProducerOppgave,
+            produserOppgaveTopic = env.produserOppgaveTopic,
+        )
+    val manuellBehandlingService =
+        ManuellBehandlingService(
+            behandlingsutfallService = behandlingsutfallService,
+            redisService = redisService,
+            oppgaveService = oppgaveService,
+            applicationState = applicationState,
+            sykmeldingService = sykmeldingService,
+        )
 
-    val updateInfotrygdService = UpdateInfotrygdService(
-        kafkaAivenProducerReceivedSykmelding = kafkaAivenProducerReceivedSykmelding,
-        retryTopic = env.retryTopic,
-        behandlingsutfallService = behandlingsutfallService,
-        redisService = redisService,
-    )
+    val updateInfotrygdService =
+        UpdateInfotrygdService(
+            kafkaAivenProducerReceivedSykmelding = kafkaAivenProducerReceivedSykmelding,
+            retryTopic = env.retryTopic,
+            behandlingsutfallService = behandlingsutfallService,
+            redisService = redisService,
+        )
 
-    val mottattSykmeldingService = MottattSykmeldingService(
-        updateInfotrygdService = updateInfotrygdService,
-        finnNAVKontorService = finnNAVKontorService,
-        manuellClient = manuellClient,
-        manuellBehandlingService = manuellBehandlingService,
-        behandlingsutfallService = behandlingsutfallService,
-        norskHelsenettClient = norskHelsenettClient,
-        syketilfelleClient = syketilfelleClient,
-    )
+    val mottattSykmeldingService =
+        MottattSykmeldingService(
+            updateInfotrygdService = updateInfotrygdService,
+            finnNAVKontorService = finnNAVKontorService,
+            manuellClient = manuellClient,
+            manuellBehandlingService = manuellBehandlingService,
+            behandlingsutfallService = behandlingsutfallService,
+            norskHelsenettClient = norskHelsenettClient,
+            syketilfelleClient = syketilfelleClient,
+        )
 
     launchListeners(
         applicationState,
@@ -238,12 +276,19 @@ fun main() {
 }
 
 @DelicateCoroutinesApi
-fun createListener(applicationState: ApplicationState, action: suspend CoroutineScope.() -> Unit): Job =
+fun createListener(
+    applicationState: ApplicationState,
+    action: suspend CoroutineScope.() -> Unit
+): Job =
     GlobalScope.launch {
         try {
             action()
         } catch (e: TrackableException) {
-            log.error("En uhåndtert feil oppstod, applikasjonen restarter {}", fields(e.loggingMeta), e.cause)
+            log.error(
+                "En uhåndtert feil oppstod, applikasjonen restarter {}",
+                fields(e.loggingMeta),
+                e.cause
+            )
         } finally {
             applicationState.alive = false
             applicationState.ready = false
@@ -259,14 +304,19 @@ fun launchListeners(
     mottattSykmeldingService: MottattSykmeldingService,
 ) {
     createListener(applicationState) {
-        connectionFactory(env).createConnection(serviceUser.serviceuserUsername, serviceUser.serviceuserPassword)
+        connectionFactory(env)
+            .createConnection(serviceUser.serviceuserUsername, serviceUser.serviceuserPassword)
             .use { connection ->
                 connection.start()
                 val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
                 val infotrygdOppdateringProducer =
-                    session.producerForQueue("queue:///${env.infotrygdOppdateringQueue}?targetClient=1")
+                    session.producerForQueue(
+                        "queue:///${env.infotrygdOppdateringQueue}?targetClient=1"
+                    )
                 val infotrygdSporringProducer =
-                    session.producerForQueue("queue:///${env.infotrygdSporringQueue}?targetClient=1")
+                    session.producerForQueue(
+                        "queue:///${env.infotrygdSporringQueue}?targetClient=1"
+                    )
 
                 blockingApplicationLogic(
                     applicationState,
@@ -322,15 +372,19 @@ private suspend fun runKafkaConsumer(
     mottattSykmeldingService: MottattSykmeldingService,
 ) {
     while (applicationState.ready && shouldRun(getCurrentTime())) {
-        kafkaAivenConsumerReceivedSykmelding.poll(Duration.ofMillis(0)).mapNotNull { it.value() }
+        kafkaAivenConsumerReceivedSykmelding
+            .poll(Duration.ofMillis(0))
+            .mapNotNull { it.value() }
             .forEach { receivedSykmeldingString ->
-                val receivedSykmelding: ReceivedSykmelding = objectMapper.readValue(receivedSykmeldingString)
-                val loggingMeta = LoggingMeta(
-                    mottakId = receivedSykmelding.navLogId,
-                    orgNr = receivedSykmelding.legekontorOrgNr,
-                    msgId = receivedSykmelding.msgId,
-                    sykmeldingId = receivedSykmelding.sykmelding.id,
-                )
+                val receivedSykmelding: ReceivedSykmelding =
+                    objectMapper.readValue(receivedSykmeldingString)
+                val loggingMeta =
+                    LoggingMeta(
+                        mottakId = receivedSykmelding.navLogId,
+                        orgNr = receivedSykmelding.legekontorOrgNr,
+                        msgId = receivedSykmelding.msgId,
+                        sykmeldingId = receivedSykmelding.sykmelding.id,
+                    )
                 log.info("Har mottatt sykmelding, {}", fields(loggingMeta))
                 mottattSykmeldingService.handleMessage(
                     receivedSykmelding = receivedSykmelding,
@@ -352,27 +406,35 @@ fun shouldRun(now: OffsetTime): Boolean {
     return now.hour in 5..20
 }
 
-fun Marshaller.toString(input: Any): String = StringWriter().use {
-    marshal(input, it)
-    it.toString()
-}
+fun Marshaller.toString(input: Any): String =
+    StringWriter().use {
+        marshal(input, it)
+        it.toString()
+    }
 
 fun ReceivedSykmelding.erUtenlandskSykmelding(): Boolean {
     return utenlandskSykmelding != null
 }
 
 fun ReceivedSykmelding.erTilbakedatert(): Boolean {
-    return sykmelding.behandletTidspunkt.toLocalDate() > sykmelding.perioder.sortedPeriodeFOMDate().first().plusDays(8)
+    return sykmelding.behandletTidspunkt.toLocalDate() >
+        sykmelding.perioder.sortedPeriodeFOMDate().first().plusDays(8)
 }
 
 val inputFactory = XMLInputFactory.newInstance()!!
+
 inline fun <reified T> unmarshal(text: String): T =
-    fellesformatUnmarshaller.unmarshal(inputFactory.createXMLEventReader(StringReader(text)), T::class.java).value
+    fellesformatUnmarshaller
+        .unmarshal(inputFactory.createXMLEventReader(StringReader(text)), T::class.java)
+        .value
 
 inline fun <reified T> XMLEIFellesformat.get() = this.any.find { it is T } as T
 
-fun extractHelseOpplysningerArbeidsuforhet(fellesformat: XMLEIFellesformat): HelseOpplysningerArbeidsuforhet =
-    fellesformat.get<XMLMsgHead>().document[0].refDoc.content.any[0] as HelseOpplysningerArbeidsuforhet
+fun extractHelseOpplysningerArbeidsuforhet(
+    fellesformat: XMLEIFellesformat
+): HelseOpplysningerArbeidsuforhet =
+    fellesformat.get<XMLMsgHead>().document[0].refDoc.content.any[0]
+        as HelseOpplysningerArbeidsuforhet
 
 fun ClosedRange<LocalDate>.daysBetween(): Long = ChronoUnit.DAYS.between(start, endInclusive)
 

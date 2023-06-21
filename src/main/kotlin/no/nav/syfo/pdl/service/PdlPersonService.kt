@@ -1,5 +1,6 @@
 package no.nav.syfo.pdl.service
 
+import java.time.LocalDateTime
 import net.logstash.logback.argument.StructuredArguments
 import no.nav.syfo.client.AccessTokenClientV2
 import no.nav.syfo.log
@@ -8,7 +9,6 @@ import no.nav.syfo.pdl.client.model.HentGeografiskTilknytning
 import no.nav.syfo.pdl.client.model.Kontaktadresse
 import no.nav.syfo.pdl.model.PdlPerson
 import no.nav.syfo.util.LoggingMeta
-import java.time.LocalDateTime
 
 class PdlPersonService(
     private val pdlClient: PdlClient,
@@ -21,7 +21,11 @@ class PdlPersonService(
 
         if (pdlResponse.errors != null) {
             pdlResponse.errors.forEach {
-                log.error("PDL returnerte error {}, {}", it, StructuredArguments.fields(loggingMeta))
+                log.error(
+                    "PDL returnerte error {}, {}",
+                    it,
+                    StructuredArguments.fields(loggingMeta)
+                )
             }
         }
         if (pdlResponse.data.hentPerson == null) {
@@ -34,8 +38,10 @@ class PdlPersonService(
 
         return PdlPerson(
             gt = pdlResponse.data.hentGeografiskTilknytning?.finnGT(),
-            adressebeskyttelse = pdlResponse.data.hentPerson.adressebeskyttelse?.firstOrNull()?.gradering,
-            sisteKontaktAdresseIUtlandet = sisteKontaktAdresseIUtlandet(pdlResponse.data.hentPerson.kontaktadresse),
+            adressebeskyttelse =
+                pdlResponse.data.hentPerson.adressebeskyttelse?.firstOrNull()?.gradering,
+            sisteKontaktAdresseIUtlandet =
+                sisteKontaktAdresseIUtlandet(pdlResponse.data.hentPerson.kontaktadresse),
         )
     }
 }
@@ -44,7 +50,11 @@ fun sisteKontaktAdresseIUtlandet(kontaktadresser: List<Kontaktadresse>?): Boolea
     if (kontaktadresser.isNullOrEmpty()) {
         return false
     }
-    val lastKontaktAdresse = kontaktadresser.filter { it.gyldigFraOgMed != null }.sortedByDescending { LocalDateTime.parse(it.gyldigFraOgMed) }.firstOrNull()
+    val lastKontaktAdresse =
+        kontaktadresser
+            .filter { it.gyldigFraOgMed != null }
+            .sortedByDescending { LocalDateTime.parse(it.gyldigFraOgMed) }
+            .firstOrNull()
 
     return if (lastKontaktAdresse != null) {
         lastKontaktAdresse.type == "Utland"
@@ -61,9 +71,15 @@ fun HentGeografiskTilknytning.finnGT(): String? {
     } else if (gtType == "UTLAND" && !gtLand.isNullOrEmpty()) {
         return gtLand
     } else {
-        gtKommune?.let { return it }
-        gtBydel?.let { return it }
-        gtLand?.let { return it }
+        gtKommune?.let {
+            return it
+        }
+        gtBydel?.let {
+            return it
+        }
+        gtLand?.let {
+            return it
+        }
         return null
     }
 }

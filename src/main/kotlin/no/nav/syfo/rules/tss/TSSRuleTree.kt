@@ -5,10 +5,11 @@ import no.nav.syfo.rules.common.RuleResult
 import no.nav.syfo.rules.dsl.RuleNode
 import no.nav.syfo.rules.dsl.tree
 
-val tssRuleTree = tree<TSSRules, RuleResult>(TSSRules.TSS_IDENT_MANGLER) {
-    yes(Status.MANUAL_PROCESSING, TSSRuleHit.TSS_IDENT_MANGLER)
-    no(Status.OK)
-}
+val tssRuleTree =
+    tree<TSSRules, RuleResult>(TSSRules.TSS_IDENT_MANGLER) {
+        yes(Status.MANUAL_PROCESSING, TSSRuleHit.TSS_IDENT_MANGLER)
+        no(Status.OK)
+    }
 
 internal fun RuleNode<TSSRules, RuleResult>.yes(status: Status, ruleHit: TSSRuleHit? = null) {
     yes(RuleResult(status, ruleHit?.ruleHit))

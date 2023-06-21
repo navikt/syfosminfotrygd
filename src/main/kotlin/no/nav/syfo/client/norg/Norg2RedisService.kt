@@ -1,12 +1,12 @@
 package no.nav.syfo.client.norg
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import java.time.Duration
 import no.nav.syfo.objectMapper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import redis.clients.jedis.Jedis
 import redis.clients.jedis.JedisPool
-import java.time.Duration
 
 class Norg2RedisService(
     private val jedisPool: JedisPool,
@@ -23,7 +23,11 @@ class Norg2RedisService(
         try {
             jedis = jedisPool.resource
             jedis.auth(redisSecret)
-            jedis.setex("$prefix$geografiskOmraade", redisTimeoutSeconds, objectMapper.writeValueAsString(enhet))
+            jedis.setex(
+                "$prefix$geografiskOmraade",
+                redisTimeoutSeconds,
+                objectMapper.writeValueAsString(enhet)
+            )
         } catch (ex: Exception) {
             log.error("Could not update redis for GT {}", ex.message)
         } finally {

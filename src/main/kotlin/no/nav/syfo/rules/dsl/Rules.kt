@@ -13,12 +13,14 @@ data class TreeOutput<T, S>(
 )
 
 fun <T, S> TreeOutput<T, S>.printRulePath(): String {
-    return rulePath.joinToString(separator = "->") { "${it.rule}(${if (it.ruleResult) "yes" else "no"})" }
+    return rulePath
+        .joinToString(separator = "->") { "${it.rule}(${if (it.ruleResult) "yes" else "no"})" }
         .plus("->$treeResult")
 }
 
-infix fun <T, S> RuleResult<T>.join(rulesOutput: TreeOutput<T, S>) = TreeOutput(
-    ruleInputs = ruleInputs + rulesOutput.ruleInputs,
-    rulePath = listOf(this) + rulesOutput.rulePath,
-    treeResult = rulesOutput.treeResult,
-)
+infix fun <T, S> RuleResult<T>.join(rulesOutput: TreeOutput<T, S>) =
+    TreeOutput(
+        ruleInputs = ruleInputs + rulesOutput.ruleInputs,
+        rulePath = listOf(this) + rulesOutput.rulePath,
+        treeResult = rulesOutput.treeResult,
+    )

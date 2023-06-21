@@ -1,5 +1,6 @@
 package no.nav.syfo.services
 
+import java.security.MessageDigest
 import net.logstash.logback.argument.StructuredArguments.fields
 import no.nav.helse.sm2013.KontrollsystemBlokkType
 import no.nav.syfo.log
@@ -8,7 +9,6 @@ import no.nav.syfo.util.LoggingMeta
 import redis.clients.jedis.Jedis
 import redis.clients.jedis.JedisPool
 import redis.clients.jedis.params.SetParams
-import java.security.MessageDigest
 
 class RedisService(
     private val jedisPool: JedisPool,
@@ -31,7 +31,12 @@ class RedisService(
         }
     }
 
-    fun oppdaterRedis(redisKey: String, redisValue: String, sekunder: Int, loggingMeta: LoggingMeta): String? {
+    fun oppdaterRedis(
+        redisKey: String,
+        redisValue: String,
+        sekunder: Int,
+        loggingMeta: LoggingMeta
+    ): String? {
         log.info("Prøver å oppdaterer redis {}", fields(loggingMeta))
         var jedis: Jedis? = null
         try {
@@ -68,7 +73,12 @@ class RedisService(
         }
     }
 
-    fun oppdaterAntallErrorIInfotrygd(redisKey: String, redisValue: String, sekunder: Int, loggingMeta: LoggingMeta) {
+    fun oppdaterAntallErrorIInfotrygd(
+        redisKey: String,
+        redisValue: String,
+        sekunder: Int,
+        loggingMeta: LoggingMeta
+    ) {
         when (erIRedis(redisKey)) {
             false -> oppdaterRedis(redisKey, redisValue, sekunder, loggingMeta)
             true -> {
@@ -78,7 +88,10 @@ class RedisService(
                     jedis.auth(redisSecret)
                     jedis.incr(redisKey)
                 } catch (e: Exception) {
-                    log.error("Noe gikk galt ved oppdatering av antall infotrygdfeil i redis", e.message)
+                    log.error(
+                        "Noe gikk galt ved oppdatering av antall infotrygdfeil i redis",
+                        e.message
+                    )
                     throw e
                 } finally {
                     jedis?.close()

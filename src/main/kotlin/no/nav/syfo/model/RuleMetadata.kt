@@ -1,7 +1,7 @@
 package no.nav.syfo.model
 
-import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import java.time.LocalDateTime
+import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 
 data class RuleMetadata(
     val signatureDate: LocalDateTime,

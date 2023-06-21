@@ -1,9 +1,9 @@
 package no.nav.syfo.util
 
-import org.codehaus.stax2.io.EscapingWriterFactory
 import java.io.IOException
 import java.io.OutputStream
 import java.io.Writer
+import org.codehaus.stax2.io.EscapingWriterFactory
 
 object CustomXmlEscapingWriterFactory : EscapingWriterFactory {
     override fun createEscapingWriterFor(writer: Writer, enc: String): Writer {
@@ -14,9 +14,7 @@ object CustomXmlEscapingWriterFactory : EscapingWriterFactory {
                 for (i in off until len) {
                     value += cbuf[i]
                 }
-                val escapetString = value
-                    .replace(">", "&gt;")
-                    .replace("<", "&lt;")
+                val escapetString = value.replace(">", "&gt;").replace("<", "&lt;")
                 writer.write(escapetString)
             }
 

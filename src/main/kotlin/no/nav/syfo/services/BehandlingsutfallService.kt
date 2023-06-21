@@ -18,9 +18,11 @@ class BehandlingsutfallService(
         loggingMeta: LoggingMeta,
     ) {
         try {
-            kafkaAivenProducerBehandlingsutfall.send(
-                ProducerRecord(behandlingsUtfallTopic, sykmeldingId, validationResult),
-            ).get()
+            kafkaAivenProducerBehandlingsutfall
+                .send(
+                    ProducerRecord(behandlingsUtfallTopic, sykmeldingId, validationResult),
+                )
+                .get()
 
             log.info(
                 "Message got outcome {}, {}, {}",

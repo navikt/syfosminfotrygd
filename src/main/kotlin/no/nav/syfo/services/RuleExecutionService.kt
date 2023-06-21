@@ -14,10 +14,11 @@ import no.nav.syfo.rules.validation.validationRuleTree
 
 class RuleExecutionService() {
 
-    private val ruleExecution = sequenceOf(
-        ValidationRulesExecution(validationRuleTree),
-        TSSRulesExecution(tssRuleTree),
-    )
+    private val ruleExecution =
+        sequenceOf(
+            ValidationRulesExecution(validationRuleTree),
+            TSSRulesExecution(tssRuleTree),
+        )
 
     fun runRules(
         sykmelding: Sykmelding,
@@ -25,16 +26,17 @@ class RuleExecutionService() {
         sequence: Sequence<RuleExecution<out Enum<*>>> = ruleExecution,
     ): List<Pair<TreeOutput<out Enum<*>, RuleResult>, Juridisk>> {
         var lastStatus = Status.OK
-        val results = sequence
-            .map { it.runRules(sykmelding, ruleMetadataSykmelding) }
-            .takeWhile {
-                if (lastStatus == Status.OK) {
-                    lastStatus = it.first.treeResult.status
-                    true
-                } else {
-                    false
+        val results =
+            sequence
+                .map { it.runRules(sykmelding, ruleMetadataSykmelding) }
+                .takeWhile {
+                    if (lastStatus == Status.OK) {
+                        lastStatus = it.first.treeResult.status
+                        true
+                    } else {
+                        false
+                    }
                 }
-            }
         return results.toList()
     }
 }

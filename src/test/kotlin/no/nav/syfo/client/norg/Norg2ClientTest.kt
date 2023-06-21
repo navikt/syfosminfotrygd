@@ -22,92 +22,92 @@ import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import java.net.ServerSocket
+import java.util.concurrent.TimeUnit
 import no.nav.syfo.NAV_OPPFOLGING_UTLAND_KONTOR_NR
 import no.nav.syfo.NAV_VIKAFOSSEN_KONTOR_NR
 import no.nav.syfo.util.LoggingMeta
 import org.amshove.kluent.shouldBeEqualTo
-import java.net.ServerSocket
-import java.util.concurrent.TimeUnit
 
-class Norg2ClientTest : FunSpec({
-    val loggingMeta = LoggingMeta("mottakid", "orgnr", "msgid", "sykmeldingid")
-    val norg2RedisService = mockk<Norg2RedisService>(relaxed = true)
-    val httpClient = HttpClient(CIO) {
-        install(ContentNegotiation) {
-            jackson {
-                registerKotlinModule()
-                registerModule(JavaTimeModule())
-                configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-                configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-            }
-        }
-        install(HttpRequestRetry) {
-            maxRetries = 3
-            delayMillis { retry ->
-                retry * 50L
-            }
-        }
-    }
-
-    val mockHttpServerPort = ServerSocket(0).use { it.localPort }
-    val mockHttpServerUrl = "http://localhost:$mockHttpServerPort"
-    val mockServer = embeddedServer(Netty, mockHttpServerPort) {
-        install(io.ktor.server.plugins.contentnegotiation.ContentNegotiation) {
-            jackson {}
-        }
-        routing {
-            get("/norg2/enhet/navkontor/1411") {
-                call.respond(Enhet("1400"))
-            }
-            get("/norg2/enhet/navkontor/POL") {
-                call.respond(HttpStatusCode.NotFound)
-            }
-            get("/norg2/enhet/navkontor/2103") {
-                call.respond(Enhet("2103"))
-            }
-            get("/norg2/enhet/navkontor/null") {
-                when (context.parameters["disk"]) {
-                    "SPSF" -> call.respond(Enhet("2103"))
-                    else -> call.respond(Enhet("0393"))
+class Norg2ClientTest :
+    FunSpec({
+        val loggingMeta = LoggingMeta("mottakid", "orgnr", "msgid", "sykmeldingid")
+        val norg2RedisService = mockk<Norg2RedisService>(relaxed = true)
+        val httpClient =
+            HttpClient(CIO) {
+                install(ContentNegotiation) {
+                    jackson {
+                        registerKotlinModule()
+                        registerModule(JavaTimeModule())
+                        configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+                        configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                    }
+                }
+                install(HttpRequestRetry) {
+                    maxRetries = 3
+                    delayMillis { retry -> retry * 50L }
                 }
             }
-        }
-    }.start()
 
-    val norg2Client = Norg2Client(httpClient, "$mockHttpServerUrl/norg2", norg2RedisService)
+        val mockHttpServerPort = ServerSocket(0).use { it.localPort }
+        val mockHttpServerUrl = "http://localhost:$mockHttpServerPort"
+        val mockServer =
+            embeddedServer(Netty, mockHttpServerPort) {
+                    install(io.ktor.server.plugins.contentnegotiation.ContentNegotiation) {
+                        jackson {}
+                    }
+                    routing {
+                        get("/norg2/enhet/navkontor/1411") { call.respond(Enhet("1400")) }
+                        get("/norg2/enhet/navkontor/POL") { call.respond(HttpStatusCode.NotFound) }
+                        get("/norg2/enhet/navkontor/2103") { call.respond(Enhet("2103")) }
+                        get("/norg2/enhet/navkontor/null") {
+                            when (context.parameters["disk"]) {
+                                "SPSF" -> call.respond(Enhet("2103"))
+                                else -> call.respond(Enhet("0393"))
+                            }
+                        }
+                    }
+                }
+                .start()
 
-    beforeTest {
-        clearMocks(norg2RedisService)
-        coEvery { norg2RedisService.getEnhet(any()) } returns null
-    }
+        val norg2Client = Norg2Client(httpClient, "$mockHttpServerUrl/norg2", norg2RedisService)
 
-    afterSpec {
-        mockServer.stop(TimeUnit.SECONDS.toMillis(1), TimeUnit.SECONDS.toMillis(1))
-    }
+        beforeTest {
+            clearMocks(norg2RedisService)
+            coEvery { norg2RedisService.getEnhet(any()) } returns null
+        }
 
-    context("Norg2Client") {
-        test("Returnerer riktig NAV-kontor") {
-            norg2Client.getLocalNAVOffice("1411", null, loggingMeta) shouldBeEqualTo Enhet("1400")
-        }
-        test("Returnerer NAV Utland hvis vi ikke finner lokalkontor") {
-            norg2Client.getLocalNAVOffice("POL", null, loggingMeta) shouldBeEqualTo Enhet(NAV_OPPFOLGING_UTLAND_KONTOR_NR)
-        }
-        test("Oppdaterer redis") {
-            norg2Client.getLocalNAVOffice("1411", null, loggingMeta) shouldBeEqualTo Enhet("1400")
-            coVerify(exactly = 1) { norg2RedisService.putEnhet("1411", Enhet("1400")) }
-        }
-        test("Oppdaterer ikke redis ved diskresjonskode") {
-            norg2Client.getLocalNAVOffice("1411", "SPSF", loggingMeta) shouldBeEqualTo Enhet("1400")
+        afterSpec { mockServer.stop(TimeUnit.SECONDS.toMillis(1), TimeUnit.SECONDS.toMillis(1)) }
 
-            coVerify(exactly = 0) { norg2RedisService.putEnhet(any(), any()) }
+        context("Norg2Client") {
+            test("Returnerer riktig NAV-kontor") {
+                norg2Client.getLocalNAVOffice("1411", null, loggingMeta) shouldBeEqualTo
+                    Enhet("1400")
+            }
+            test("Returnerer NAV Utland hvis vi ikke finner lokalkontor") {
+                norg2Client.getLocalNAVOffice("POL", null, loggingMeta) shouldBeEqualTo
+                    Enhet(NAV_OPPFOLGING_UTLAND_KONTOR_NR)
+            }
+            test("Oppdaterer redis") {
+                norg2Client.getLocalNAVOffice("1411", null, loggingMeta) shouldBeEqualTo
+                    Enhet("1400")
+                coVerify(exactly = 1) { norg2RedisService.putEnhet("1411", Enhet("1400")) }
+            }
+            test("Oppdaterer ikke redis ved diskresjonskode") {
+                norg2Client.getLocalNAVOffice("1411", "SPSF", loggingMeta) shouldBeEqualTo
+                    Enhet("1400")
+
+                coVerify(exactly = 0) { norg2RedisService.putEnhet(any(), any()) }
+            }
+            test("geografisk tilhørighet er null") {
+                norg2Client.getLocalNAVOffice(null, null, loggingMeta) shouldBeEqualTo
+                    Enhet(NAV_OPPFOLGING_UTLAND_KONTOR_NR)
+                coVerify(exactly = 0) { norg2RedisService.putEnhet(any(), any()) }
+            }
+            test("geografisk tilhørighet er null med diskresjonskode") {
+                norg2Client.getLocalNAVOffice(null, "SPSF", loggingMeta) shouldBeEqualTo
+                    Enhet(NAV_VIKAFOSSEN_KONTOR_NR)
+                coVerify(exactly = 0) { norg2RedisService.putEnhet(any(), any()) }
+            }
         }
-        test("geografisk tilhørighet er null") {
-            norg2Client.getLocalNAVOffice(null, null, loggingMeta) shouldBeEqualTo Enhet(NAV_OPPFOLGING_UTLAND_KONTOR_NR)
-            coVerify(exactly = 0) { norg2RedisService.putEnhet(any(), any()) }
-        }
-        test("geografisk tilhørighet er null med diskresjonskode") {
-            norg2Client.getLocalNAVOffice(null, "SPSF", loggingMeta) shouldBeEqualTo Enhet(NAV_VIKAFOSSEN_KONTOR_NR)
-            coVerify(exactly = 0) { norg2RedisService.putEnhet(any(), any()) }
-        }
-    }
-})
+    })

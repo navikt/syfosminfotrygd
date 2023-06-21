@@ -11,7 +11,10 @@ class FinnNAVKontorService(
 ) {
     suspend fun finnLokaltNavkontor(fnr: String, loggingMeta: LoggingMeta): String {
         val pdlPerson = pdlPersonService.getPerson(fnr, loggingMeta)
-        val enhetNr = norg2Client.getLocalNAVOffice(pdlPerson.gt, pdlPerson.getDiskresjonskode(), loggingMeta).enhetNr
+        val enhetNr =
+            norg2Client
+                .getLocalNAVOffice(pdlPerson.gt, pdlPerson.getDiskresjonskode(), loggingMeta)
+                .enhetNr
         return enhetNr
     }
 }
