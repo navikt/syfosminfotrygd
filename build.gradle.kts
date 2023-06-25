@@ -35,7 +35,7 @@ val testcontainersVersion = "1.18.3"
 val syfoXmlCodegen = "1.0.3"
 val mockkVersion = "1.13.5"
 val kotlinVersion = "1.8.22"
-val commonsCodecVersion = "1.15"
+val commonsCodecVersion = "1.16.0"
 val ktfmtVersion = "0.44"
 
 plugins {
