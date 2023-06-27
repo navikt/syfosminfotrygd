@@ -215,7 +215,7 @@ class CreateInfotrygdInfoSpek :
                 "01" shouldBeEqualTo infotrygdBlokk.first().arbeidsKategori
             }
 
-            test("Should use arbeidsKategori to 030 when employers name is set") {
+            test("Should use arbeidsKategori to 30 when employers name is set") {
                 val healthInformation = createDefaultHealthInformation()
                 healthInformation.kontaktMedPasient =
                     HelseOpplysningerArbeidsuforhet.KontaktMedPasient().apply {
@@ -246,7 +246,7 @@ class CreateInfotrygdInfoSpek :
 
                 val infotrygdBlokk = infotrygdFellesformat.get<KontrollSystemBlokk>().infotrygdBlokk
 
-                "030" shouldBeEqualTo infotrygdBlokk.first().arbeidsKategori
+                "30" shouldBeEqualTo infotrygdBlokk.first().arbeidsKategori
             }
 
             test("Should not contain namespace in InfotrygdBlokk") {
@@ -406,7 +406,7 @@ class CreateInfotrygdInfoSpek :
                 infotrygdBlokk.first().biDiagnose shouldBeEqualTo null
                 infotrygdBlokk.first().biDiagnoseGruppe shouldBeEqualTo null
                 infotrygdBlokk.first().biDiagnoseTekst shouldBeEqualTo null
-                infotrygdBlokk.first().arbeidsKategori shouldBeEqualTo "030"
+                infotrygdBlokk.first().arbeidsKategori shouldBeEqualTo "30"
                 infotrygdBlokk.first().gruppe shouldBeEqualTo "96"
                 infotrygdBlokk.first().saksbehandler shouldBeEqualTo "Auto"
                 infotrygdBlokk.first().arbeidsufoerTOM shouldBeEqualTo LocalDate.now().plusDays(4)
