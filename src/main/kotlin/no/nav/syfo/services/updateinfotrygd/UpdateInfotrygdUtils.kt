@@ -162,7 +162,7 @@ fun createInfotrygdFellesformat(
 
 fun findArbeidsKategori(navnArbeidsgiver: String?): String {
     return if (navnArbeidsgiver.isNullOrBlank() || navnArbeidsgiver.isEmpty()) {
-        "030"
+        "30"
     } else {
         "01"
     }
