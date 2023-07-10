@@ -1,6 +1,17 @@
 package no.nav.syfo.services
 
 import com.ctc.wstx.exc.WstxException
+import java.io.IOException
+import java.io.StringReader
+import java.time.LocalDate
+import java.time.LocalDateTime
+import javax.jms.MessageProducer
+import javax.jms.Session
+import javax.jms.TemporaryQueue
+import javax.jms.TextMessage
+import javax.xml.parsers.SAXParserFactory
+import javax.xml.transform.Source
+import javax.xml.transform.sax.SAXSource
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.syfo.UTENLANDSK_SYKEHUS
@@ -13,17 +24,6 @@ import no.nav.syfo.toString
 import no.nav.syfo.util.infotrygdSporringMarshaller
 import no.nav.syfo.util.infotrygdSporringUnmarshaller
 import org.xml.sax.InputSource
-import java.io.IOException
-import java.io.StringReader
-import java.time.LocalDate
-import java.time.LocalDateTime
-import javax.jms.MessageProducer
-import javax.jms.Session
-import javax.jms.TemporaryQueue
-import javax.jms.TextMessage
-import javax.xml.parsers.SAXParserFactory
-import javax.xml.transform.Source
-import javax.xml.transform.sax.SAXSource
 
 suspend fun fetchInfotrygdForesp(
     receivedSykmelding: ReceivedSykmelding,
@@ -62,7 +62,7 @@ suspend fun fetchInfotrygdForesp(
                                     consumedMessage.jmsType,
                             )
                     }
-                safeUnmarshal(inputMessageText)
+                safeUnmarshal(inputMessageText, receivedSykmelding.sykmelding.id)
             }
         } finally {
             temporaryQueue.delete()
@@ -140,6 +140,7 @@ fun sendInfotrygdSporring(
             jmsReplyTo = temporaryQueue
         },
     )
+
 private fun stripNonValidXMLCharacters(infotrygdString: String): String {
     val out = StringBuffer(infotrygdString)
     for (i in 0 until out.length) {
@@ -149,9 +150,21 @@ private fun stripNonValidXMLCharacters(infotrygdString: String): String {
     }
     return out.toString()
 }
-private fun safeUnmarshal(inputMessageText: String): InfotrygdForesp {
+
+private fun safeUnmarshal(inputMessageText: String, id: String): InfotrygdForesp {
     // Disable XXE
+    try {
+        return infotrygdForesp(inputMessageText)
+    } catch (ex: Exception) {
+        log.warn("Error parsing response for $id", ex)
+        sikkerlogg.warn("error parsing this $inputMessageText for: $id")
+    }
+    log.info("trying again with valid xml, for: $id")
     val validXML = stripNonValidXMLCharacters(inputMessageText)
+    return infotrygdForesp(validXML)
+}
+
+private fun infotrygdForesp(validXML: String): InfotrygdForesp {
     val spf: SAXParserFactory = SAXParserFactory.newInstance()
     spf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true)
     spf.isNamespaceAware = true
