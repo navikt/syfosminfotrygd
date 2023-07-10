@@ -417,7 +417,7 @@ fun ReceivedSykmelding.erUtenlandskSykmelding(): Boolean {
 }
 
 fun ReceivedSykmelding.erTilbakedatert(): Boolean {
-    return sykmelding.behandletTidspunkt.toLocalDate() >
+    return sykmelding.signaturDato.toLocalDate() >
         sykmelding.perioder.sortedPeriodeFOMDate().first().plusDays(8)
 }
 
