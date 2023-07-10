@@ -1,18 +1,6 @@
 package no.nav.syfo.services
 
 import com.ctc.wstx.exc.WstxException
-import java.io.IOException
-import java.io.StringReader
-import java.lang.IllegalStateException
-import java.time.LocalDate
-import java.time.LocalDateTime
-import javax.jms.MessageProducer
-import javax.jms.Session
-import javax.jms.TemporaryQueue
-import javax.jms.TextMessage
-import javax.xml.parsers.SAXParserFactory
-import javax.xml.transform.Source
-import javax.xml.transform.sax.SAXSource
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.syfo.UTENLANDSK_SYKEHUS
@@ -25,6 +13,17 @@ import no.nav.syfo.toString
 import no.nav.syfo.util.infotrygdSporringMarshaller
 import no.nav.syfo.util.infotrygdSporringUnmarshaller
 import org.xml.sax.InputSource
+import java.io.IOException
+import java.io.StringReader
+import java.time.LocalDate
+import java.time.LocalDateTime
+import javax.jms.MessageProducer
+import javax.jms.Session
+import javax.jms.TemporaryQueue
+import javax.jms.TextMessage
+import javax.xml.parsers.SAXParserFactory
+import javax.xml.transform.Source
+import javax.xml.transform.sax.SAXSource
 
 suspend fun fetchInfotrygdForesp(
     receivedSykmelding: ReceivedSykmelding,
@@ -42,7 +41,7 @@ suspend fun fetchInfotrygdForesp(
             createInfotrygdForesp(
                 receivedSykmelding.personNrPasient,
                 healthInformation,
-                finnLegeFnr(receivedSykmelding)
+                finnLegeFnr(receivedSykmelding),
             )
         val temporaryQueue = session.createTemporaryQueue()
         try {
@@ -50,7 +49,7 @@ suspend fun fetchInfotrygdForesp(
                 infotrygdSporringProducer,
                 session,
                 infotrygdForespRequest,
-                temporaryQueue
+                temporaryQueue,
             )
             session.createConsumer(temporaryQueue).use { tmpConsumer ->
                 val consumedMessage = tmpConsumer.receive(20000)
@@ -60,7 +59,7 @@ suspend fun fetchInfotrygdForesp(
                         else ->
                             throw RuntimeException(
                                 "Incoming message needs to be a byte message or text message, JMS type:" +
-                                    consumedMessage.jmsType
+                                    consumedMessage.jmsType,
                             )
                     }
                 safeUnmarshal(inputMessageText)
@@ -116,12 +115,12 @@ fun finnLegeFnr(receivedSykmelding: ReceivedSykmelding): String {
         // Testfamilien Aremark stepper inn som lege for egenmeldte sykmeldinger
         log.info(
             "Setter Aremark som lege for egenmeldt sykmelding med id {}",
-            receivedSykmelding.sykmelding.id
+            receivedSykmelding.sykmelding.id,
         )
         "10108000398"
     } else if (receivedSykmelding.erUtenlandskSykmelding()) {
         log.info(
-            "Setter standardverdi for behandler for utenlandsk sykmelding med id ${receivedSykmelding.sykmelding.id}"
+            "Setter standardverdi for behandler for utenlandsk sykmelding med id ${receivedSykmelding.sykmelding.id}",
         )
         UTENLANDSK_SYKEHUS
     } else {
@@ -141,9 +140,18 @@ fun sendInfotrygdSporring(
             jmsReplyTo = temporaryQueue
         },
     )
-
+private fun stripNonValidXMLCharacters(infotrygdString: String): String {
+    val out = StringBuffer(infotrygdString)
+    for (i in 0 until out.length) {
+        if (out[i].code == 0x1a) {
+            out.setCharAt(i, '-')
+        }
+    }
+    return out.toString()
+}
 private fun safeUnmarshal(inputMessageText: String): InfotrygdForesp {
     // Disable XXE
+    val validXML = stripNonValidXMLCharacters(inputMessageText)
     val spf: SAXParserFactory = SAXParserFactory.newInstance()
     spf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true)
     spf.isNamespaceAware = true
@@ -151,7 +159,7 @@ private fun safeUnmarshal(inputMessageText: String): InfotrygdForesp {
     val xmlSource: Source =
         SAXSource(
             spf.newSAXParser().xmlReader,
-            InputSource(StringReader(inputMessageText)),
+            InputSource(StringReader(validXML)),
         )
     return infotrygdSporringUnmarshaller.unmarshal(xmlSource) as InfotrygdForesp
 }
