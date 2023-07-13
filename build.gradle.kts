@@ -34,7 +34,7 @@ val jaxbTimeAdaptersVersion = "1.1.3"
 val testcontainersVersion = "1.18.3"
 val syfoXmlCodegen = "1.0.3"
 val mockkVersion = "1.13.5"
-val kotlinVersion = "1.8.22"
+val kotlinVersion = "1.9.0"
 val commonsCodecVersion = "1.16.0"
 val ktfmtVersion = "0.44"
 
