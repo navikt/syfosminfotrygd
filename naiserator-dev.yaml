@@ -6,6 +6,9 @@ metadata:
   labels:
     team: teamsykmelding
 spec:
+  redis:
+    - instance: infotrygd
+      access: readwrite
   image: {{ image }}
   replicas:
     min: 1
