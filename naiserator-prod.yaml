@@ -57,6 +57,9 @@ spec:
               protocol: TCP
   kafka:
     pool: nav-prod
+  redis:
+    - instance: infotrygd
+      access: readwrite
   vault:
     enabled: false
   webproxy: false
