@@ -57,9 +57,9 @@ spec:
               protocol: TCP
   kafka:
     pool: nav-dev
-  vault:
-    enabled: false
-  webproxy: false
+  redis:
+    - instance: infotrygd
+      access: readwrite
   envFrom:
     - secret: syfosminfotrygd-redis-password
     - secret: syfosminfotrygd-secrets
