@@ -114,31 +114,17 @@ fun main() {
 
     DefaultExports.initialize()
 
-    val kafkaAivenBaseConfig = KafkaUtils.getAivenKafkaConfig()
-    val kafkaAivenProducerProperties =
-        kafkaAivenBaseConfig.toProducerConfig(
-            env.applicationName,
-            valueSerializer = JacksonKafkaSerializer::class
-        )
     val kafkaAivenProducerReceivedSykmelding =
-        KafkaProducer<String, ReceivedSykmelding>(kafkaAivenProducerProperties)
+        KafkaProducer<String, ReceivedSykmelding>(getkafkaProducerConfig("retry-producer", env))
     val kafkaAivenProducerBehandlingsutfall =
-        KafkaProducer<String, ValidationResult>(kafkaAivenProducerProperties)
+        KafkaProducer<String, ValidationResult>(getkafkaProducerConfig("validation-producer", env))
     val kafkaAivenProducerOppgave =
-        KafkaProducer<String, OpprettOppgaveKafkaMessage>(kafkaAivenProducerProperties)
+        KafkaProducer<String, OpprettOppgaveKafkaMessage>(
+            getkafkaProducerConfig("oppgave-producer", env)
+        )
 
     val kafkaAivenConsumerReceivedSykmelding =
-        KafkaConsumer<String, String>(
-            kafkaAivenBaseConfig
-                .toConsumerConfig(
-                    "${env.applicationName}-consumer",
-                    valueDeserializer = StringDeserializer::class
-                )
-                .also {
-                    it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "none"
-                    it[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = 1
-                },
-        )
+        KafkaConsumer<String, String>(getkafkaConsumerConfig("sykmelding-consumer", env))
 
     MQEnvironment.channel = env.mqChannelName
     MQEnvironment.port = env.mqPort
@@ -274,6 +260,24 @@ fun main() {
 
     applicationServer.start()
 }
+
+private fun getkafkaProducerConfig(producerId: String, env: Environment) =
+    KafkaUtils.getAivenKafkaConfig(producerId)
+        .toProducerConfig(
+            env.applicationName,
+            valueSerializer = JacksonKafkaSerializer::class,
+        )
+
+private fun getkafkaConsumerConfig(consumerId: String, env: Environment) =
+    KafkaUtils.getAivenKafkaConfig(consumerId)
+        .toConsumerConfig(
+            "${env.applicationName}-consumer",
+            valueDeserializer = StringDeserializer::class
+        )
+        .also {
+            it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "none"
+            it[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = 1
+        }
 
 @DelicateCoroutinesApi
 fun createListener(
