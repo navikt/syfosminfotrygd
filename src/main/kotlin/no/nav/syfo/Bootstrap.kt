@@ -73,6 +73,7 @@ import no.nav.syfo.smregister.SmregisterClient
 import no.nav.syfo.util.JacksonKafkaSerializer
 import no.nav.syfo.util.LoggingMeta
 import no.nav.syfo.util.TrackableException
+import no.nav.syfo.util.createJedisPool
 import no.nav.syfo.util.fellesformatUnmarshaller
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
@@ -80,8 +81,6 @@ import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import redis.clients.jedis.JedisPool
-import redis.clients.jedis.JedisPoolConfig
 
 val log: Logger = LoggerFactory.getLogger("no.nav.syfo.sminfotrygd")
 val objectMapper: ObjectMapper =
@@ -168,16 +167,10 @@ fun main() {
     }
 
     val httpClient = HttpClient(Apache, config)
+    val jedisPool = createJedisPool()
+    val redisService = RedisService(jedisPool)
 
-    val jedisPool = JedisPool(JedisPoolConfig(), env.redisHost, env.redisPort)
-    val redisService = RedisService(jedisPool, env.redisSecret)
-
-    val norg2Client =
-        Norg2Client(
-            httpClient,
-            env.norg2V1EndpointURL,
-            Norg2RedisService(jedisPool, env.redisSecret)
-        )
+    val norg2Client = Norg2Client(httpClient, env.norg2V1EndpointURL, Norg2RedisService(jedisPool))
 
     val accessTokenClientV2 =
         AccessTokenClientV2(env.aadAccessTokenV2Url, env.clientIdV2, env.clientSecretV2, httpClient)

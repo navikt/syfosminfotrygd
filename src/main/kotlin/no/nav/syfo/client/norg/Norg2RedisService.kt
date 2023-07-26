@@ -8,10 +8,7 @@ import org.slf4j.LoggerFactory
 import redis.clients.jedis.Jedis
 import redis.clients.jedis.JedisPool
 
-class Norg2RedisService(
-    private val jedisPool: JedisPool,
-    private val redisSecret: String,
-) {
+class Norg2RedisService(private val jedisPool: JedisPool) {
     companion object {
         private val log: Logger = LoggerFactory.getLogger(Norg2RedisService::class.java)
         private val redisTimeoutSeconds: Long = Duration.ofDays(30).toSeconds()
@@ -22,7 +19,6 @@ class Norg2RedisService(
         var jedis: Jedis? = null
         try {
             jedis = jedisPool.resource
-            jedis.auth(redisSecret)
             jedis.setex(
                 "$prefix$geografiskOmraade",
                 redisTimeoutSeconds,
@@ -39,7 +35,6 @@ class Norg2RedisService(
         var jedis: Jedis? = null
         return try {
             jedis = jedisPool.resource
-            jedis.auth(redisSecret)
             when (val stringValue = jedis.get("$prefix$geografiskOmraade")) {
                 null -> null
                 else -> objectMapper.readValue<Enhet>(stringValue)

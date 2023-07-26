@@ -5,7 +5,6 @@ import java.util.concurrent.TimeUnit
 import no.nav.syfo.services.updateinfotrygd.INFOTRYGD
 import no.nav.syfo.util.LoggingMeta
 import org.amshove.kluent.shouldBeEqualTo
-import org.testcontainers.containers.BindMode
 import org.testcontainers.containers.GenericContainer
 import redis.clients.jedis.JedisPool
 import redis.clients.jedis.JedisPoolConfig
@@ -20,24 +19,16 @@ class RedisSpek :
                 sykmeldingId = "0",
             )
 
-        val redisContainer: GenericContainer<Nothing> =
-            GenericContainer("navikt/secure-redis:5.0.3-alpine-2")
+        val redisContainer: GenericContainer<Nothing> = GenericContainer("redis:7.0.12-alpine")
         redisContainer.withExposedPorts(6379)
-        redisContainer.withEnv("REDIS_PASSWORD", "secret")
-        redisContainer.withClasspathResourceMapping(
-            "redis.env",
-            "/var/run/secrets/nais.io/vault/redis.env",
-            BindMode.READ_ONLY,
-        )
 
         redisContainer.start()
         val jedisPool =
             JedisPool(JedisPoolConfig(), redisContainer.host, redisContainer.getMappedPort(6379))
-        val redisService = RedisService(jedisPool, "secret")
+        val redisService = RedisService(jedisPool)
 
         beforeTest {
             val jedis = jedisPool.resource
-            jedis.auth("secret")
             jedis.flushAll()
         }
 
