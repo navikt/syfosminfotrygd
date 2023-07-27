@@ -10,15 +10,11 @@ import redis.clients.jedis.Jedis
 import redis.clients.jedis.JedisPool
 import redis.clients.jedis.params.SetParams
 
-class RedisService(
-    private val jedisPool: JedisPool,
-    private val redisSecret: String,
-) {
+class RedisService(private val jedisPool: JedisPool) {
     fun erIRedis(redisKey: String): Boolean {
         var jedis: Jedis? = null
         return try {
             jedis = jedisPool.resource
-            jedis.auth(redisSecret)
             when (jedis.get(redisKey)) {
                 null -> false
                 else -> true
@@ -41,7 +37,6 @@ class RedisService(
         var jedis: Jedis? = null
         try {
             jedis = jedisPool.resource
-            jedis.auth(redisSecret)
             return jedis.set(
                 redisKey,
                 redisValue,
@@ -63,7 +58,6 @@ class RedisService(
         var jedis: Jedis? = null
         try {
             jedis = jedisPool.resource
-            jedis.auth(redisSecret)
             return jedis.del(redisKey)
         } catch (e: Exception) {
             log.error("Noe gikk galt ved sletting av key i redis", e.message)
@@ -85,7 +79,6 @@ class RedisService(
                 var jedis: Jedis? = null
                 try {
                     jedis = jedisPool.resource
-                    jedis.auth(redisSecret)
                     jedis.incr(redisKey)
                 } catch (e: Exception) {
                     log.error(
@@ -105,7 +98,6 @@ class RedisService(
         var jedis: Jedis? = null
         try {
             jedis = jedisPool.resource
-            jedis.auth(redisSecret)
             return jedis.get(redisKey)?.toInt() ?: 0
         } catch (e: Exception) {
             log.error("Noe gikk galt ved henting av antall infotrygdfeil fra redis", e.message)
