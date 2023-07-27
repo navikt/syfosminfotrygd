@@ -40,7 +40,6 @@ spec:
   accessPolicy:
     outbound:
       rules:
-        - application: syfosminfotrygd-redis
         - application: syfosmmanuell-backend
         - application: syfosmregister
         - application: flex-syketilfelle
@@ -64,7 +63,6 @@ spec:
     enabled: false
   webproxy: false
   envFrom:
-    - secret: syfosminfotrygd-redis-password
     - secret: syfosminfotrygd-secrets
     - secret: syfosminfotrygd-keystore-pwd
   filesFrom:
