@@ -14,10 +14,6 @@ data class Environment(
     override val mqGatewayName: String = getEnvVar("MQ_GATEWAY_NAME"),
     override val mqChannelName: String = getEnvVar("MQ_CHANNEL_NAME"),
     val norskHelsenettEndpointURL: String = getEnvVar("HELSENETT_ENDPOINT_URL"),
-    val redisHost: String =
-        getEnvVar("REDIS_HOST", "syfosminfotrygd-redis.teamsykmelding.svc.cluster.local"),
-    val redisPort: Int = 6379,
-    val redisSecret: String = getEnvVar("REDIS_PASSWORD"),
     val pdlGraphqlPath: String = getEnvVar("PDL_GRAPHQL_PATH"),
     val aadAccessTokenV2Url: String = getEnvVar("AZURE_OPENID_CONFIG_TOKEN_ENDPOINT"),
     val clientIdV2: String = getEnvVar("AZURE_APP_CLIENT_ID"),
