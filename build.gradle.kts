@@ -39,10 +39,18 @@ val commonsCodecVersion = "1.16.0"
 val ktfmtVersion = "0.44"
 
 plugins {
+    id("application")
     kotlin("jvm") version "1.9.0"
-    id("com.diffplug.spotless") version "6.20.0"
     id("com.github.johnrengelman.shadow") version "8.1.1"
     id("org.cyclonedx.bom") version "1.7.4"
+    id("com.diffplug.spotless") version "6.20.0"
+}
+
+application {
+    mainClass.set("no.nav.syfo.ApplicationKt")
+
+    val isDevelopment: Boolean = project.ext.has("development")
+    applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
 }
 
 val githubUser: String by project
@@ -50,7 +58,7 @@ val githubPassword: String by project
 
 repositories {
     mavenCentral()
-    maven (url= "https://packages.confluent.io/maven/")
+    maven(url = "https://packages.confluent.io/maven/")
     maven {
         url = uri("https://maven.pkg.github.com/navikt/syfosm-common")
         credentials {
@@ -68,102 +76,75 @@ repositories {
 }
 
 dependencies {
-    implementation ("org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion")
 
-    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
-    implementation ("io.prometheus:simpleclient_hotspot:$prometheusVersion")
-    implementation ("io.prometheus:simpleclient_common:$prometheusVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
+    implementation("io.prometheus:simpleclient_hotspot:$prometheusVersion")
+    implementation("io.prometheus:simpleclient_common:$prometheusVersion")
 
-    implementation ("io.ktor:ktor-server-core:$ktorVersion")
-    implementation ("io.ktor:ktor-server-netty:$ktorVersion")
-    implementation ("io.ktor:ktor-client-core:$ktorVersion")
-    implementation ("io.ktor:ktor-client-apache:$ktorVersion")
-    implementation ("io.ktor:ktor-client-content-negotiation:$ktorVersion")
-    implementation ("io.ktor:ktor-serialization-jackson:$ktorVersion")
+    implementation("io.ktor:ktor-server-core:$ktorVersion")
+    implementation("io.ktor:ktor-server-netty:$ktorVersion")
+    implementation("io.ktor:ktor-client-core:$ktorVersion")
+    implementation("io.ktor:ktor-client-apache:$ktorVersion")
+    implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
+    implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
 
     implementation("commons-codec:commons-codec:$commonsCodecVersion")
     // override transient version 1.10 from io.ktor:ktor-client-apache
 
-    implementation ("ch.qos.logback:logback-classic:$logbackVersion")
-    implementation ("net.logstash.logback:logstash-logback-encoder:$logstashEncoderVersion")
+    implementation("ch.qos.logback:logback-classic:$logbackVersion")
+    implementation("net.logstash.logback:logstash-logback-encoder:$logstashEncoderVersion")
 
-    implementation ("com.ibm.mq:com.ibm.mq.allclient:$ibmMqVersion")
+    implementation("com.ibm.mq:com.ibm.mq.allclient:$ibmMqVersion")
 
-    implementation ("org.apache.kafka:kafka_2.12:$kafkaVersion")
+    implementation("org.apache.kafka:kafka_2.12:$kafkaVersion")
 
-    implementation ("com.fasterxml.jackson.module:jackson-module-jaxb-annotations:$jacksonVersion")
-    implementation ("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
-    implementation ("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:$jacksonVersion")
-    implementation ("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion")
+    implementation("com.fasterxml.jackson.module:jackson-module-jaxb-annotations:$jacksonVersion")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:$jacksonVersion")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion")
 
-    implementation ("no.nav.helse.xml:sm2013:$syfoXmlCodegen")
-    implementation ("no.nav.helse.xml:xmlfellesformat:$syfoXmlCodegen")
-    implementation ("no.nav.helse.xml:kontrollsystemblokk:$syfoXmlCodegen")
-    implementation ("no.nav.helse.xml:infotrygd-foresp:$syfoXmlCodegen")
-    implementation ("no.nav.helse.xml:kith-hodemelding:$syfoXmlCodegen")
+    implementation("no.nav.helse.xml:sm2013:$syfoXmlCodegen")
+    implementation("no.nav.helse.xml:xmlfellesformat:$syfoXmlCodegen")
+    implementation("no.nav.helse.xml:kontrollsystemblokk:$syfoXmlCodegen")
+    implementation("no.nav.helse.xml:infotrygd-foresp:$syfoXmlCodegen")
+    implementation("no.nav.helse.xml:kith-hodemelding:$syfoXmlCodegen")
 
-    implementation ("no.nav.helse:syfosm-common-models:$smCommonVersion")
-    implementation ("no.nav.helse:syfosm-common-mq:$smCommonVersion")
-    implementation ("no.nav.helse:syfosm-common-kafka:$smCommonVersion")
-    implementation ("no.nav.helse:syfosm-common-networking:$smCommonVersion")
+    implementation("no.nav.helse:syfosm-common-models:$smCommonVersion")
+    implementation("no.nav.helse:syfosm-common-mq:$smCommonVersion")
+    implementation("no.nav.helse:syfosm-common-kafka:$smCommonVersion")
+    implementation("no.nav.helse:syfosm-common-networking:$smCommonVersion")
 
-    implementation ("redis.clients:jedis:$jedisVersion")
+    implementation("redis.clients:jedis:$jedisVersion")
 
-    implementation ("com.migesok:jaxb-java-time-adapters:$jaxbTimeAdaptersVersion")
-    implementation ("javax.xml.ws:jaxws-api:$jaxwsApiVersion")
-    implementation ("javax.annotation:javax.annotation-api:$javaxAnnotationApiVersion")
-    implementation ("javax.xml.bind:jaxb-api:$jaxbApiVersion")
-    implementation ("org.glassfish.jaxb:jaxb-runtime:$jaxbRuntimeVersion")
-    implementation ("javax.activation:activation:$javaxActivationVersion")
-    implementation ("com.sun.xml.ws:jaxws-tools:$jaxwsToolsVersion") {
+    implementation("com.migesok:jaxb-java-time-adapters:$jaxbTimeAdaptersVersion")
+    implementation("javax.xml.ws:jaxws-api:$jaxwsApiVersion")
+    implementation("javax.annotation:javax.annotation-api:$javaxAnnotationApiVersion")
+    implementation("javax.xml.bind:jaxb-api:$jaxbApiVersion")
+    implementation("org.glassfish.jaxb:jaxb-runtime:$jaxbRuntimeVersion")
+    implementation("javax.activation:activation:$javaxActivationVersion")
+    implementation("com.sun.xml.ws:jaxws-tools:$jaxwsToolsVersion") {
         exclude(group = "com.sun.xml.ws", module = "policy")
     }
 
-    testImplementation ("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
-    testImplementation ("org.amshove.kluent:kluent:$kluentVersion")
-    testImplementation ("io.kotest:kotest-runner-junit5:$kotestVersion")
-    testImplementation ("io.ktor:ktor-server-content-negotiation:$ktorVersion")
-    testImplementation ("io.ktor:ktor-server-test-host:$ktorVersion") {
+    testImplementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
+    testImplementation("org.amshove.kluent:kluent:$kluentVersion")
+    testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
+    testImplementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
+    testImplementation("io.ktor:ktor-server-test-host:$ktorVersion") {
         exclude(group = "org.eclipse.jetty")
     }
-    testImplementation ("org.apache.activemq:artemis-server:$artemisVersion") {
+    testImplementation("org.apache.activemq:artemis-server:$artemisVersion") {
         exclude(group = "commons-collections", module = "commons-collections")
         exclude(group = "org.apache.commons", module = "commons-configuration2")
     }
-    testImplementation ("org.apache.activemq:artemis-jms-client:$artemisVersion")
-    testImplementation ("org.testcontainers:testcontainers:$testcontainersVersion")
-    testImplementation ("io.mockk:mockk:$mockkVersion")
+    testImplementation("org.apache.activemq:artemis-jms-client:$artemisVersion")
+    testImplementation("org.testcontainers:testcontainers:$testcontainersVersion")
+    testImplementation("io.mockk:mockk:$mockkVersion")
 }
 
 
 tasks {
-    withType<Jar> {
-        manifest.attributes["Main-Class"] = "no.nav.syfo.BootstrapKt"
-    }
-
-    create("printVersion") {
-        doLast {
-            println(project.version)
-        }
-    }
-
-    withType<ShadowJar> {
-        transform(ServiceFileTransformer::class.java) {
-            setPath("META-INF/cxf")
-            include("bus-extensions.txt")
-        }
-    }
-
-    withType<Test> {
-        useJUnitPlatform {
-        }
-        testLogging {
-            events("skipped", "failed")
-            showStackTraces = true
-            exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
-        }
-    }
-
     register<JavaExec>("generateRuleMermaid") {
         val output = ByteArrayOutputStream()
         mainClass.set("no.nav.syfo.rules.common.GenerateMermaidKt")
@@ -183,17 +164,37 @@ tasks {
 
             val newLines: List<String> =
                 lines.subList(0, start) +
-                        listOf(
-                            starterTag,
-                        ) +
-                        output.toString().split("\n") +
-                        listOf(
-                            endTag,
-                        ) +
-                        lines.subList(end + 1, lines.size)
+                    listOf(
+                        starterTag,
+                    ) +
+                    output.toString().split("\n") +
+                    listOf(
+                        endTag,
+                    ) +
+                    lines.subList(end + 1, lines.size)
             readme.writeText(newLines.joinToString("\n"))
         }
     }
+
+
+    shadowJar {
+        archiveBaseName.set("app")
+        archiveClassifier.set("")
+        isZip64 = true
+        manifest {
+            attributes(
+               mapOf(
+                    "Main-Class" to "no.nav.syfo.ApplicationKt",
+                ),
+            )
+        }
+    }
+
+    test {
+        useJUnitPlatform {}
+        testLogging.showStandardStreams = true
+    }
+
 
     spotless {
         kotlin { ktfmt(ktfmtVersion).kotlinlangStyle() }
