@@ -12,7 +12,7 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "com.sun.xml.ws:jaxws-tools"
         update-types: ["version-update:semver-major"]
-     - dependency-name: "redis.clients:jedis"
+      - dependency-name: "redis.clients:jedis"
         update-types: ["version-update:semver-major"]
              
     groups:
