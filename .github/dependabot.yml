@@ -11,7 +11,7 @@ updates:
       - dependency-name: "org.apache.kafka:kafka_2.12"
         update-types: ["version-update:semver-major"]
       - dependency-name: "com.sun.xml.ws:jaxws-tools"
-        update-types: ["version-update::semver-patch"]
+        update-types: ["version-update:semver-minor"]
       - dependency-name: "redis.clients:jedis"
         update-types: ["version-update:semver-major"]
              
