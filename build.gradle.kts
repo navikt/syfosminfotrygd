@@ -1,6 +1,3 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-import com.github.jengelman.gradle.plugins.shadow.transformers.ServiceFileTransformer
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.io.ByteArrayOutputStream
 
 group = "no.nav.syfo"
@@ -28,11 +25,11 @@ val jaxbBasicAntVersion = "1.11.1"
 val javaxAnnotationApiVersion = "1.3.2"
 val jaxwsToolsVersion = "2.3.1"
 val jaxbRuntimeVersion = "2.4.0-b180830.0438"
-val smCommonVersion = "1.0.11"
+val smCommonVersion = "2.0.0"
 val javaxJaxwsApiVersion = "2.2.1"
 val jaxbTimeAdaptersVersion = "1.1.3"
 val testcontainersVersion = "1.19.0"
-val syfoXmlCodegen = "1.0.3"
+val syfoXmlCodegen = "2.0.1"
 val mockkVersion = "1.13.7"
 val kotlinVersion = "1.9.10"
 val commonsCodecVersion = "1.16.0"
@@ -42,7 +39,6 @@ plugins {
     id("application")
     kotlin("jvm") version "1.9.10"
     id("com.github.johnrengelman.shadow") version "8.1.1"
-    id("org.cyclonedx.bom") version "1.7.4"
     id("com.diffplug.spotless") version "6.21.0"
 }
 
@@ -53,25 +49,11 @@ application {
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
 }
 
-val githubUser: String by project
-val githubPassword: String by project
-
 repositories {
     mavenCentral()
     maven(url = "https://packages.confluent.io/maven/")
     maven {
-        url = uri("https://maven.pkg.github.com/navikt/syfosm-common")
-        credentials {
-            username = githubUser
-            password = githubPassword
-        }
-    }
-    maven {
-        url = uri("https://maven.pkg.github.com/navikt/syfo-xml-codegen")
-        credentials {
-            username = githubUser
-            password = githubPassword
-        }
+        url = uri("https://github-package-registry-mirror.gc.nav.no/cached/maven-release")
     }
 }
 
@@ -89,8 +71,11 @@ dependencies {
     implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
 
-    implementation("commons-codec:commons-codec:$commonsCodecVersion")
-    // override transient version 1.10 from io.ktor:ktor-client-apache
+    constraints {
+        implementation("commons-codec:commons-codec:$commonsCodecVersion") {
+            because("override transient from io.ktor:ktor-client-apache")
+        }
+    }
 
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
     implementation("net.logstash.logback:logstash-logback-encoder:$logstashEncoderVersion")
@@ -130,6 +115,7 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
     testImplementation("org.amshove.kluent:kluent:$kluentVersion")
     testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion") {
         exclude(group = "org.eclipse.jetty")
