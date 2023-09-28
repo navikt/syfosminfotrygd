@@ -34,6 +34,7 @@ val mockkVersion = "1.13.8"
 val kotlinVersion = "1.9.10"
 val commonsCodecVersion = "1.16.0"
 val ktfmtVersion = "0.44"
+val snappyJavaVersion = "1.1.10.5"
 
 plugins {
     id("application")
@@ -98,6 +99,11 @@ dependencies {
     implementation("no.nav.helse:syfosm-common-models:$smCommonVersion")
     implementation("no.nav.helse:syfosm-common-mq:$smCommonVersion")
     implementation("no.nav.helse:syfosm-common-kafka:$smCommonVersion")
+    constraints {
+        implementation("org.xerial.snappy:snappy-java:$snappyJavaVersion") {
+            because("override transient from org.apache.kafka:kafka_2.12")
+        }
+    }
     implementation("no.nav.helse:syfosm-common-networking:$smCommonVersion")
 
     implementation("redis.clients:jedis:$jedisVersion")
