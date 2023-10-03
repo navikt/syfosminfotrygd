@@ -45,10 +45,10 @@ spec:
         - application: flex-syketilfelle
           namespace: flex
           cluster: prod-gcp
+        - application: syfohelsenettproxy
       external:
         - host: pdl-api.prod-fss-pub.nais.io
         - host: norg2.prod-fss-pub.nais.io
-        - host: syfohelsenettproxy.prod-fss-pub
         - host: mpls03.adeo.no
           ports:
             - name: mq
@@ -87,12 +87,10 @@ spec:
       value: https://norg2.prod-fss-pub.nais.io/norg2/api/v1
     - name: PDL_GRAPHQL_PATH
       value: https://pdl-api.prod-fss-pub.nais.io/graphql
-    - name: HELSENETT_ENDPOINT_URL
-      value: https://syfohelsenettproxy.prod-fss-pub.nais.io
     - name: PDL_SCOPE
       value: api://prod-fss.pdl.pdl-api/.default
     - name: HELSENETT_SCOPE
-      value: api://prod-fss.teamsykmelding.syfohelsenettproxy/.default
+      value: api://prod-gcp.teamsykmelding.syfohelsenettproxy/.default
     - name: MANUELL_SCOPE
       value: api://prod-gcp.teamsykmelding.syfosmmanuell-backend/.default
     - name: MQ_KEYSTORE_PATH
