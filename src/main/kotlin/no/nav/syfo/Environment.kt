@@ -13,7 +13,7 @@ data class Environment(
     override val mqPort: Int = getEnvVar("MQ_PORT").toInt(),
     override val mqGatewayName: String = getEnvVar("MQ_GATEWAY_NAME"),
     override val mqChannelName: String = getEnvVar("MQ_CHANNEL_NAME"),
-    val norskHelsenettEndpointURL: String = getEnvVar("http://syfohelsenettproxy"),
+    val norskHelsenettEndpointURL: String = "http://syfohelsenettproxy",
     val pdlGraphqlPath: String = getEnvVar("PDL_GRAPHQL_PATH"),
     val aadAccessTokenV2Url: String = getEnvVar("AZURE_OPENID_CONFIG_TOKEN_ENDPOINT"),
     val clientIdV2: String = getEnvVar("AZURE_APP_CLIENT_ID"),
