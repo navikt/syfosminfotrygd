@@ -51,9 +51,7 @@ spec:
         - host: norg2.prod-fss-pub.nais.io
         - host: mpls03.adeo.no
           ports:
-            - name: mq
-              port: 1414
-              protocol: TCP
+            - port: 1414
   kafka:
     pool: nav-prod
   redis:
