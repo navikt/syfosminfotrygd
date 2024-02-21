@@ -351,7 +351,9 @@ fun skalOppdatereInfotrygd(receivedSykmelding: ReceivedSykmelding): Boolean {
             it.reisetilskudd || (it.gradert?.reisetilskudd == true)
         }
 
-    return merknad && reisetilskudd
+    val clusterIsProd = System.getenv("NAIS_CLUSTER_NAME")?.let { it == "prod-gcp" } ?: true
+
+    return merknad && reisetilskudd && clusterIsProd
 }
 
 fun setHovedDiagnoseToA99IfhovedDiagnoseIsNullAndAnnenFraversArsakIsSet(
