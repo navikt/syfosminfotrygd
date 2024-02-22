@@ -48,6 +48,11 @@ class SkalOppdatereInfotrygdSpek :
                 every { sm.sykmelding.perioder } returns emptyList()
                 skalOppdatereInfotrygd(sm) shouldBeEqualTo false
             }
+            test("Skal ikke oppdatere infotrygd ved merknader DELVIS_GODKJENT") {
+                every { sm.merknader } returns listOf(Merknad("DELVIS_GODKJENT", null))
+                every { sm.sykmelding.perioder } returns emptyList()
+                skalOppdatereInfotrygd(sm) shouldBeEqualTo true
+            }
             test("Skal oppdatere infotrygd ved annen merknader ANNEN_MERKNAD") {
                 every { sm.merknader } returns listOf(Merknad("ANNEN_MERKNAD", null))
                 every { sm.sykmelding.perioder } returns emptyList()
