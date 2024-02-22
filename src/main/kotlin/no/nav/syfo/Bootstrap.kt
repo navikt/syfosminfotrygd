@@ -91,7 +91,7 @@ val objectMapper: ObjectMapper =
         configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     }
 
-const val NAV_OPPFOLGING_UTLAND_KONTOR_NR = "0393"
+const val NAV_OPPFOLGING_UTLAND_KONTOR_NR = "2101"
 const val NAV_VIKAFOSSEN_KONTOR_NR = "2103"
 const val UTENLANDSK_SYKEHUS = "9900004"
 

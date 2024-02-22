@@ -230,7 +230,7 @@ class MottattSykmeldingService(
                     receivedSykmelding.utenlandskSykmelding!!
                         .folkeRegistertAdresseErBrakkeEllerTilsvarende)
         ) {
-            "0393"
+            "2101"
         } else {
             lokaltNavkontor
         }

@@ -577,7 +577,7 @@ class MottattSykmeldingServiceTest :
                 }
             }
 
-            test("Use nav office 0393 when over 12 weeks and utenlandsksykmelding") {
+            test("Use nav office 2101 when over 12 weeks and utenlandsksykmelding") {
                 coEvery { fetchInfotrygdForesp(any(), any(), any(), any()) } returns
                     getInfotrygdForespResponse()
                 val startdato = LocalDate.of(2023, 1, 1)
@@ -627,7 +627,7 @@ class MottattSykmeldingServiceTest :
                         any(),
                         any(),
                         any(),
-                        "0393",
+                        "2101",
                         any(),
                         any(),
                     )
@@ -648,7 +648,7 @@ class MottattSykmeldingServiceTest :
                 }
             }
 
-            test("Use nav office 0393 when sisteKontaktAdresseIUtlandet is true") {
+            test("Use nav office 2101 when sisteKontaktAdresseIUtlandet is true") {
                 coEvery { fetchInfotrygdForesp(any(), any(), any(), any()) } returns
                     getInfotrygdForespResponse()
                 val startdato = LocalDate.of(2023, 1, 1)
@@ -698,7 +698,7 @@ class MottattSykmeldingServiceTest :
                         any(),
                         any(),
                         any(),
-                        "0393",
+                        "2101",
                         any(),
                         any(),
                     )
