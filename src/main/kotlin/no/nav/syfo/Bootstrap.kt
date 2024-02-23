@@ -241,6 +241,7 @@ fun main() {
             behandlingsutfallService = behandlingsutfallService,
             norskHelsenettClient = norskHelsenettClient,
             syketilfelleClient = syketilfelleClient,
+            cluster = env.naiscluster,
         )
 
     launchListeners(
