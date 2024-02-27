@@ -61,7 +61,7 @@ class MottattSykmeldingService(
 
                     val fellesformat =
                         fellesformatUnmarshaller.unmarshal(
-                                StringReader(receivedSykmelding.fellesformat),
+                            StringReader(receivedSykmelding.fellesformat),
                         ) as XMLEIFellesformat
 
                     val healthInformation =
@@ -70,8 +70,8 @@ class MottattSykmeldingService(
                         )
                     val behandletAvManuell =
                         manuellClient.behandletAvManuell(
-                                receivedSykmelding.sykmelding.id,
-                                loggingMeta,
+                            receivedSykmelding.sykmelding.id,
+                            loggingMeta,
                         )
 
                     val receivedSykmeldingCopyTssId =
@@ -113,7 +113,7 @@ class MottattSykmeldingService(
                         sikkerlogg.info(
                             "infotrygdForespResponse: ${
                                 objectMapper.writeValueAsString(
-                                        infotrygdForespResponse,
+                                    infotrygdForespResponse,
                                 )
                             }" +
                                 " for {}",
@@ -122,16 +122,16 @@ class MottattSykmeldingService(
 
                         val validationResult =
                             ruleCheck(
-                                    receivedSykmeldingCopyTssId,
-                                    infotrygdForespResponse,
-                                    loggingMeta,
-                                    RuleExecutionService(),
+                                receivedSykmeldingCopyTssId,
+                                infotrygdForespResponse,
+                                loggingMeta,
+                                RuleExecutionService(),
                             )
 
                         val lokaltNavkontor =
                             finnNAVKontorService.finnLokaltNavkontor(
-                                    receivedSykmeldingCopyTssId.personNrPasient,
-                                    loggingMeta,
+                                receivedSykmeldingCopyTssId.personNrPasient,
+                                loggingMeta,
                             )
 
                         val syketilfelleStartdato =
@@ -147,8 +147,8 @@ class MottattSykmeldingService(
                                 receivedSykmelding = receivedSykmeldingCopyTssId,
                                 itfh =
                                 InfotrygdForespAndHealthInformation(
-                                        infotrygdForespResponse,
-                                        healthInformation,
+                                    infotrygdForespResponse,
+                                    healthInformation,
                                 ),
                                 behandletAvManuell = behandletAvManuell,
                                 loggingMeta = loggingMeta,
@@ -164,8 +164,8 @@ class MottattSykmeldingService(
                                             validationResult,
                                             loggingMeta,
                                             InfotrygdForespAndHealthInformation(
-                                                    infotrygdForespResponse,
-                                                    healthInformation,
+                                                infotrygdForespResponse,
+                                                healthInformation,
                                             ),
                                             helsepersonellKategoriVerdi,
                                             behandletAvManuell,
@@ -230,22 +230,17 @@ class MottattSykmeldingService(
         lokaltNavkontor: String,
     ): String {
 
-        return if(receivedSykmelding.erUtenlandskSykmelding()) {
-            lokaltNavkontor
-        } else {
-            return if (
-                receivedSykmelding.erUtenlandskSykmelding() &&
-                sickLeavePeriodOver12Weeks(receivedSykmelding, syketilfelleStartdato) ||
-                (receivedSykmelding.utenlandskSykmelding != null &&
-                    receivedSykmelding.utenlandskSykmelding!!
-                        .folkeRegistertAdresseErBrakkeEllerTilsvarende)
-            ) {
-                "2101"
-            } else {
-                "0393"
-            }
+        if (receivedSykmelding.utenlandskSykmelding?.folkeRegistertAdresseErBrakkeEllerTilsvarende == true) {
+            return "2101"
         }
-
+        if (receivedSykmelding.erUtenlandskSykmelding() && sickLeavePeriodOver12Weeks(
+                    receivedSykmelding,
+                    syketilfelleStartdato,
+            )) {
+            return "0393"
+        } else {
+            return lokaltNavkontor
+        }
     }
 
     private fun sickLeavePeriodOver12Weeks(
@@ -277,8 +272,8 @@ class MottattSykmeldingService(
             )
         } else {
             norskHelsenettClient.finnBehandler(
-                    receivedSykmelding.personNrLege,
-                    receivedSykmelding.msgId,
+                receivedSykmelding.personNrLege,
+                receivedSykmelding.msgId,
             )
         }
     }
