@@ -12,8 +12,8 @@ import no.nav.syfo.InfotrygdForespAndHealthInformation
 import no.nav.syfo.erUtenlandskSykmelding
 import no.nav.syfo.get
 import no.nav.syfo.log
-import no.nav.syfo.model.ReceivedSykmelding
-import no.nav.syfo.model.ValidationResult
+import no.nav.syfo.model.sykmelding.ReceivedSykmelding
+import no.nav.syfo.model.sykmelding.ValidationResult
 import no.nav.syfo.services.BehandlingsutfallService
 import no.nav.syfo.services.RedisService
 import no.nav.syfo.services.sha256hashstring

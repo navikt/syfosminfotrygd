@@ -5,9 +5,9 @@ import io.ktor.client.HttpClient
 import io.mockk.coEvery
 import io.mockk.mockk
 import java.time.LocalDate
-import no.nav.syfo.model.AktivitetIkkeMulig
-import no.nav.syfo.model.MedisinskArsak
-import no.nav.syfo.model.Periode
+import no.nav.syfo.model.sykmelding.AktivitetIkkeMulig
+import no.nav.syfo.model.sykmelding.MedisinskArsak
+import no.nav.syfo.model.sykmelding.Periode
 import no.nav.syfo.util.LoggingMeta
 import org.amshove.kluent.shouldBeEqualTo
 

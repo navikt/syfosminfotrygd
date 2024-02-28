@@ -1,6 +1,6 @@
 package no.nav.syfo.rules.validation
 
-import no.nav.syfo.model.Status
+import no.nav.syfo.model.sykmelding.Status
 import no.nav.syfo.rules.common.RuleHit
 
 enum class ValidationRuleHit(

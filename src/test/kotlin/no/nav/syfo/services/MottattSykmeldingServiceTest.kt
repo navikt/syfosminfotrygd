@@ -24,10 +24,10 @@ import no.nav.syfo.createDefaultHealthInformation
 import no.nav.syfo.generatePeriode
 import no.nav.syfo.generateSykmelding
 import no.nav.syfo.model.HelsepersonellKategori
-import no.nav.syfo.model.MedisinskVurdering
-import no.nav.syfo.model.Merknad
-import no.nav.syfo.model.Status
-import no.nav.syfo.model.UtenlandskSykmelding
+import no.nav.syfo.model.sykmelding.MedisinskVurdering
+import no.nav.syfo.model.sykmelding.Merknad
+import no.nav.syfo.model.sykmelding.Status
+import no.nav.syfo.model.sykmelding.UtenlandskSykmelding
 import no.nav.syfo.receivedSykmelding
 import no.nav.syfo.services.updateinfotrygd.UpdateInfotrygdService
 import no.nav.syfo.services.updateinfotrygd.createFellesFormat
@@ -537,7 +537,7 @@ class MottattSykmeldingServiceTest :
                                     ),
                             ),
                         fellesformat = fellesformatMarshaller.toString(fellesformat),
-                        utenlandskSykmelding = UtenlandskSykmelding("POL", false),
+                        utenlandskSykmelding = UtenlandskSykmelding("POL", false, false),
                     )
 
                 mottattSykmeldingService.handleMessage(
@@ -577,7 +577,7 @@ class MottattSykmeldingServiceTest :
                 }
             }
 
-            test("Use nav office 0393 when over 12 weeks and utenlandsksykmelding") {
+            test("Use nav office 2101 when over 12 weeks and utenlandsksykmelding") {
                 coEvery { fetchInfotrygdForesp(any(), any(), any(), any()) } returns
                     getInfotrygdForespResponse()
                 val startdato = LocalDate.of(2023, 1, 1)
@@ -608,7 +608,7 @@ class MottattSykmeldingServiceTest :
                                     ),
                             ),
                         fellesformat = fellesformatMarshaller.toString(fellesformat),
-                        utenlandskSykmelding = UtenlandskSykmelding("POL", false),
+                        utenlandskSykmelding = UtenlandskSykmelding("POL", false, true),
                     )
 
                 mottattSykmeldingService.handleMessage(
@@ -627,7 +627,7 @@ class MottattSykmeldingServiceTest :
                         any(),
                         any(),
                         any(),
-                        "0393",
+                        "2101",
                         any(),
                         any(),
                     )
@@ -648,7 +648,7 @@ class MottattSykmeldingServiceTest :
                 }
             }
 
-            test("Use nav office 0393 when sisteKontaktAdresseIUtlandet is true") {
+            test("Use nav office 2101 when sisteKontaktAdresseIUtlandet is true") {
                 coEvery { fetchInfotrygdForesp(any(), any(), any(), any()) } returns
                     getInfotrygdForespResponse()
                 val startdato = LocalDate.of(2023, 1, 1)
@@ -679,7 +679,7 @@ class MottattSykmeldingServiceTest :
                                     ),
                             ),
                         fellesformat = fellesformatMarshaller.toString(fellesformat),
-                        utenlandskSykmelding = UtenlandskSykmelding("POL", true),
+                        utenlandskSykmelding = UtenlandskSykmelding("POL", true, true),
                     )
 
                 mottattSykmeldingService.handleMessage(
@@ -698,7 +698,7 @@ class MottattSykmeldingServiceTest :
                         any(),
                         any(),
                         any(),
-                        "0393",
+                        "2101",
                         any(),
                         any(),
                     )
@@ -750,7 +750,7 @@ class MottattSykmeldingServiceTest :
                                     ),
                             ),
                         fellesformat = fellesformatMarshaller.toString(fellesformat),
-                        utenlandskSykmelding = UtenlandskSykmelding("POL", false),
+                        utenlandskSykmelding = UtenlandskSykmelding("POL", false, false),
                     )
 
                 mottattSykmeldingService.handleMessage(

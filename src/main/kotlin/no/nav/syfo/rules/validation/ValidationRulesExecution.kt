@@ -2,7 +2,7 @@ package no.nav.syfo.rules.validation
 
 import no.nav.syfo.log
 import no.nav.syfo.model.RuleMetadata
-import no.nav.syfo.model.Sykmelding
+import no.nav.syfo.model.sykmelding.Sykmelding
 import no.nav.syfo.rules.common.RuleExecution
 import no.nav.syfo.rules.common.RuleResult
 import no.nav.syfo.rules.common.UtenJuridisk

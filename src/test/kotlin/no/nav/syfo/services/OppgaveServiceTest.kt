@@ -7,14 +7,14 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 import no.nav.syfo.generateSykmelding
-import no.nav.syfo.model.AktivitetIkkeMulig
-import no.nav.syfo.model.MedisinskArsak
 import no.nav.syfo.model.OpprettOppgaveKafkaMessage
-import no.nav.syfo.model.Periode
-import no.nav.syfo.model.RuleInfo
-import no.nav.syfo.model.Status
-import no.nav.syfo.model.UtenlandskSykmelding
-import no.nav.syfo.model.ValidationResult
+import no.nav.syfo.model.sykmelding.AktivitetIkkeMulig
+import no.nav.syfo.model.sykmelding.MedisinskArsak
+import no.nav.syfo.model.sykmelding.Periode
+import no.nav.syfo.model.sykmelding.RuleInfo
+import no.nav.syfo.model.sykmelding.Status
+import no.nav.syfo.model.sykmelding.UtenlandskSykmelding
+import no.nav.syfo.model.sykmelding.ValidationResult
 import no.nav.syfo.receivedSykmelding
 import no.nav.syfo.util.LoggingMeta
 import org.amshove.kluent.shouldBeEqualTo
@@ -171,7 +171,7 @@ class OppgaveServiceTest :
                     )
                 val receivedSykmelding =
                     receivedSykmelding(UUID.randomUUID().toString())
-                        .copy(utenlandskSykmelding = UtenlandskSykmelding("GER", false))
+                        .copy(utenlandskSykmelding = UtenlandskSykmelding("GER", false, false))
 
                 val oppgave =
                     oppgaveService.opprettOpprettOppgaveKafkaMessage(

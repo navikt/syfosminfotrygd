@@ -2,9 +2,9 @@ package no.nav.syfo.rules.validation
 
 import java.time.LocalDate
 import no.nav.helse.infotrygd.foresp.TypeSMinfo
-import no.nav.syfo.model.Periode
 import no.nav.syfo.model.RuleMetadata
-import no.nav.syfo.model.Sykmelding
+import no.nav.syfo.model.sykmelding.Periode
+import no.nav.syfo.model.sykmelding.Sykmelding
 import no.nav.syfo.rules.dsl.RuleResult
 
 typealias Rule<T> = (sykmelding: Sykmelding, ruleMetadata: RuleMetadata) -> RuleResult<T>

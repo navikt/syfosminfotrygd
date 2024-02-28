@@ -1,8 +1,8 @@
 package no.nav.syfo.services
 
 import no.nav.syfo.model.RuleMetadata
-import no.nav.syfo.model.Status
-import no.nav.syfo.model.Sykmelding
+import no.nav.syfo.model.sykmelding.Status
+import no.nav.syfo.model.sykmelding.Sykmelding
 import no.nav.syfo.rules.common.Juridisk
 import no.nav.syfo.rules.common.RuleExecution
 import no.nav.syfo.rules.common.RuleResult

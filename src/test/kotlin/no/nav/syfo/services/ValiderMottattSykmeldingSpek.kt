@@ -3,7 +3,7 @@ package no.nav.syfo.services
 import io.kotest.core.spec.style.FunSpec
 import no.nav.helse.sm2013.CV
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
-import no.nav.syfo.model.Status
+import no.nav.syfo.model.sykmelding.Status
 import org.amshove.kluent.shouldBeEqualTo
 
 class ValiderMottattSykmeldingSpek :

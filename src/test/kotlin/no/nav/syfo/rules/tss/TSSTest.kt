@@ -8,7 +8,7 @@ import no.nav.helse.infotrygd.foresp.StatusType
 import no.nav.syfo.generatePeriode
 import no.nav.syfo.generateSykmelding
 import no.nav.syfo.model.RuleMetadata
-import no.nav.syfo.model.Status
+import no.nav.syfo.model.sykmelding.Status
 import no.nav.syfo.receivedSykmelding
 import org.amshove.kluent.shouldBeEqualTo
 
