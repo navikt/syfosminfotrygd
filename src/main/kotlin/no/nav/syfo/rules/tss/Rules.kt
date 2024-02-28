@@ -1,7 +1,7 @@
 package no.nav.syfo.rules.tss
 
 import no.nav.syfo.model.RuleMetadata
-import no.nav.syfo.model.Sykmelding
+import no.nav.syfo.model.sykmelding.Sykmelding
 import no.nav.syfo.rules.dsl.RuleResult
 
 typealias Rule<T> = (sykmelding: Sykmelding, ruleMetadata: RuleMetadata) -> RuleResult<T>

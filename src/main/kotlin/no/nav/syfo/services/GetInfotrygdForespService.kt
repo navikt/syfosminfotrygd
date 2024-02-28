@@ -19,7 +19,7 @@ import no.nav.syfo.erUtenlandskSykmelding
 import no.nav.syfo.helpers.retry
 import no.nav.syfo.log
 import no.nav.syfo.model.Diagnosekode
-import no.nav.syfo.model.ReceivedSykmelding
+import no.nav.syfo.model.sykmelding.ReceivedSykmelding
 import no.nav.syfo.toString
 import no.nav.syfo.util.infotrygdSporringMarshaller
 import no.nav.syfo.util.infotrygdSporringUnmarshaller

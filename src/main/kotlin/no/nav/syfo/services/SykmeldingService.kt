@@ -2,7 +2,7 @@ package no.nav.syfo.services
 
 import java.time.LocalDate
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
-import no.nav.syfo.model.ReceivedSykmelding
+import no.nav.syfo.model.sykmelding.ReceivedSykmelding
 import no.nav.syfo.smregister.MerknadType
 import no.nav.syfo.smregister.PeriodetypeDTO
 import no.nav.syfo.smregister.RegelStatusDTO

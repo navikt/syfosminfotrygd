@@ -1,6 +1,6 @@
 package no.nav.syfo.rules.common
 
-import no.nav.syfo.model.Status
+import no.nav.syfo.model.sykmelding.Status
 
 data class RuleHit(
     val status: Status,

@@ -11,10 +11,10 @@ import no.nav.syfo.erUtenlandskSykmelding
 import no.nav.syfo.log
 import no.nav.syfo.metrics.OVERLAPPENDE_PERIODER_IKKE_OPPRETT_OPPGAVE
 import no.nav.syfo.metrics.OVERLAPPER_PERIODER_COUNTER
-import no.nav.syfo.model.ReceivedSykmelding
-import no.nav.syfo.model.RuleInfo
-import no.nav.syfo.model.Status
-import no.nav.syfo.model.ValidationResult
+import no.nav.syfo.model.sykmelding.ReceivedSykmelding
+import no.nav.syfo.model.sykmelding.RuleInfo
+import no.nav.syfo.model.sykmelding.Status
+import no.nav.syfo.model.sykmelding.ValidationResult
 import no.nav.syfo.rules.validation.sortedPeriodeFOMDate
 import no.nav.syfo.rules.validation.sortedPeriodeTOMDate
 import no.nav.syfo.services.updateinfotrygd.INFOTRYGD

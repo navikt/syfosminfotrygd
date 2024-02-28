@@ -2,7 +2,7 @@ package no.nav.syfo.services
 
 import net.logstash.logback.argument.StructuredArguments
 import no.nav.syfo.log
-import no.nav.syfo.model.ValidationResult
+import no.nav.syfo.model.sykmelding.ValidationResult
 import no.nav.syfo.util.LoggingMeta
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord

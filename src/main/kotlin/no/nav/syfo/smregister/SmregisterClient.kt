@@ -10,7 +10,7 @@ import io.ktor.http.ContentType
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import no.nav.syfo.client.AccessTokenClientV2
-import no.nav.syfo.model.Periode
+import no.nav.syfo.model.sykmelding.Periode
 
 class SmregisterClient(
     private val smregisterEndpointURL: String,

@@ -1,6 +1,6 @@
 package no.nav.syfo.rules.common
 
-import no.nav.syfo.model.Status
+import no.nav.syfo.model.sykmelding.Status
 import no.nav.syfo.rules.dsl.ResultNode
 import no.nav.syfo.rules.dsl.RuleNode
 import no.nav.syfo.rules.dsl.TreeNode

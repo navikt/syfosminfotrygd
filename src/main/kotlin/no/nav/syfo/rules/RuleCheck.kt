@@ -5,11 +5,11 @@ import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.syfo.log
 import no.nav.syfo.metrics.RULE_NODE_RULE_HIT_COUNTER
 import no.nav.syfo.metrics.RULE_NODE_RULE_PATH_COUNTER
-import no.nav.syfo.model.ReceivedSykmelding
-import no.nav.syfo.model.RuleInfo
 import no.nav.syfo.model.RuleMetadata
-import no.nav.syfo.model.Status
-import no.nav.syfo.model.ValidationResult
+import no.nav.syfo.model.sykmelding.ReceivedSykmelding
+import no.nav.syfo.model.sykmelding.RuleInfo
+import no.nav.syfo.model.sykmelding.Status
+import no.nav.syfo.model.sykmelding.ValidationResult
 import no.nav.syfo.rules.common.RuleResult
 import no.nav.syfo.rules.dsl.TreeOutput
 import no.nav.syfo.rules.dsl.printRulePath

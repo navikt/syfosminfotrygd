@@ -9,9 +9,9 @@ import no.nav.helse.infotrygd.foresp.TypeSMinfo
 import no.nav.syfo.generatePeriode
 import no.nav.syfo.generatePrognose
 import no.nav.syfo.generateSykmelding
-import no.nav.syfo.model.Gradert
 import no.nav.syfo.model.RuleMetadata
-import no.nav.syfo.model.Status
+import no.nav.syfo.model.sykmelding.Gradert
+import no.nav.syfo.model.sykmelding.Status
 import no.nav.syfo.receivedSykmelding
 import org.amshove.kluent.shouldBeEqualTo
 

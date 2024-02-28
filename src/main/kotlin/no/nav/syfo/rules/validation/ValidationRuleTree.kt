@@ -1,7 +1,6 @@
 package no.nav.syfo.rules.validation
 
-import no.nav.syfo.model.Status
-import no.nav.syfo.model.Status.OK
+import no.nav.syfo.model.sykmelding.Status
 import no.nav.syfo.rules.common.RuleResult
 import no.nav.syfo.rules.dsl.RuleNode
 import no.nav.syfo.rules.dsl.tree
@@ -167,7 +166,10 @@ val validationRuleTree =
                                                                                             ValidationRuleHit
                                                                                                 .ARBEIDUFORETOM_MANGLER,
                                                                                         )
-                                                                                        no(OK)
+                                                                                        no(
+                                                                                            Status
+                                                                                                .OK
+                                                                                        )
                                                                                     }
                                                                                 }
                                                                             }

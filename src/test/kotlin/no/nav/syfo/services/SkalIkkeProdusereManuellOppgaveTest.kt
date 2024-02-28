@@ -4,9 +4,9 @@ import io.kotest.core.spec.style.FunSpec
 import java.time.LocalDate
 import no.nav.syfo.generatePeriode
 import no.nav.syfo.generateSykmelding
-import no.nav.syfo.model.RuleInfo
-import no.nav.syfo.model.Status
-import no.nav.syfo.model.ValidationResult
+import no.nav.syfo.model.sykmelding.RuleInfo
+import no.nav.syfo.model.sykmelding.Status
+import no.nav.syfo.model.sykmelding.ValidationResult
 import no.nav.syfo.receivedSykmelding
 import org.amshove.kluent.shouldBeEqualTo
 

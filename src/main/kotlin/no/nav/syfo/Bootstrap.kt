@@ -54,8 +54,8 @@ import no.nav.syfo.kafka.aiven.KafkaUtils
 import no.nav.syfo.kafka.toConsumerConfig
 import no.nav.syfo.kafka.toProducerConfig
 import no.nav.syfo.model.OpprettOppgaveKafkaMessage
-import no.nav.syfo.model.ReceivedSykmelding
-import no.nav.syfo.model.ValidationResult
+import no.nav.syfo.model.sykmelding.ReceivedSykmelding
+import no.nav.syfo.model.sykmelding.ValidationResult
 import no.nav.syfo.mq.MqTlsUtils
 import no.nav.syfo.mq.connectionFactory
 import no.nav.syfo.mq.producerForQueue

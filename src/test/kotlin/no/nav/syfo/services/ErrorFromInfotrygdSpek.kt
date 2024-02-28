@@ -1,8 +1,8 @@
 package no.nav.syfo.services
 
 import io.kotest.core.spec.style.FunSpec
-import no.nav.syfo.model.RuleInfo
-import no.nav.syfo.model.Status
+import no.nav.syfo.model.sykmelding.RuleInfo
+import no.nav.syfo.model.sykmelding.Status
 import org.amshove.kluent.shouldBeEqualTo
 
 class ErrorFromInfotrygdSpek :

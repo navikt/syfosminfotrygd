@@ -9,7 +9,7 @@ import io.ktor.http.ContentType
 import java.time.LocalDate
 import net.logstash.logback.argument.StructuredArguments.fields
 import no.nav.syfo.log
-import no.nav.syfo.model.Periode
+import no.nav.syfo.model.sykmelding.Periode
 import no.nav.syfo.services.sortedFOMDate
 import no.nav.syfo.services.sortedTOMDate
 import no.nav.syfo.util.LoggingMeta

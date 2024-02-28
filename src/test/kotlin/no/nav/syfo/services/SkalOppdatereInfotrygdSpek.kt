@@ -5,9 +5,9 @@ import io.mockk.every
 import io.mockk.mockk
 import no.nav.syfo.generatePeriode
 import no.nav.syfo.generateSykmelding
-import no.nav.syfo.model.Gradert
-import no.nav.syfo.model.Merknad
-import no.nav.syfo.model.ReceivedSykmelding
+import no.nav.syfo.model.sykmelding.Gradert
+import no.nav.syfo.model.sykmelding.Merknad
+import no.nav.syfo.model.sykmelding.ReceivedSykmelding
 import org.amshove.kluent.shouldBeEqualTo
 
 class SkalOppdatereInfotrygdSpek :
