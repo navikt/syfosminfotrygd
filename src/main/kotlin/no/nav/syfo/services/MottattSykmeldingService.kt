@@ -233,6 +233,7 @@ class MottattSykmeldingService(
                 ?.folkeRegistertAdresseErBrakkeEllerTilsvarende == true ||
                 receivedSykmelding.utenlandskSykmelding?.erAdresseUtland == true
         ) {
+            log.info("Sykmelding er utenlandsk med utenlandsk adresse, sender til 2101. SykmeldingsId: ${receivedSykmelding.sykmelding.id}")
             return "2101"
         }
         if (
@@ -242,6 +243,7 @@ class MottattSykmeldingService(
                     syketilfelleStartdato,
                 )
         ) {
+            log.info("Sykmelding er utenlandsk og sykmeldingsperioden er over 12 uker, sender til 0393. SykmeldingsId: ${receivedSykmelding.sykmelding.id}")
             return "0393"
         } else {
             return lokaltNavkontor
