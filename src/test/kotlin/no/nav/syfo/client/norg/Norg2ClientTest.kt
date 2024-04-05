@@ -63,7 +63,7 @@ class Norg2ClientTest :
                         get("/norg2/enhet/navkontor/null") {
                             when (context.parameters["disk"]) {
                                 "SPSF" -> call.respond(Enhet("2103"))
-                                else -> call.respond(Enhet("0393"))
+                                else -> call.respond(Enhet("2101"))
                             }
                         }
                     }
