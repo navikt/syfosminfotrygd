@@ -21,7 +21,7 @@ class FinnNAVKontorServiceTest :
         test("Get utenlands enhetsnr") {
             coEvery { pdlService.getPerson(any(), any()) } returns PdlPerson("gt", null, false)
             coEvery { norg2Client.getLocalNAVOffice(any(), null, loggingMeta) } returns
-                Enhet("0393")
+                Enhet("2101")
             val enhetsnr = navKontorService.finnLokaltNavkontor("1234567890", loggingMeta)
             enhetsnr shouldBeEqualTo NAV_OPPFOLGING_UTLAND_KONTOR_NR
         }
