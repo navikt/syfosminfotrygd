@@ -34,6 +34,7 @@ import no.nav.syfo.util.LoggingMeta
 import no.nav.syfo.util.fellesformatUnmarshaller
 import no.nav.syfo.util.wrapExceptions
 import org.slf4j.LoggerFactory
+import java.util.Objects.isNull
 
 val sikkerlogg = LoggerFactory.getLogger("securelog")
 
@@ -233,7 +234,7 @@ class MottattSykmeldingService(
                 ?.folkeRegistertAdresseErBrakkeEllerTilsvarende == true ||
                 receivedSykmelding.utenlandskSykmelding?.erAdresseUtland == true
         ) {
-            log.info("Sykmelding er utenlandsk med utenlandsk adresse, sender til 2101. SykmeldingsId: ${receivedSykmelding.sykmelding.id}")
+            log.info("Sykmelding er utenlandsk med utenlandsk adresse, sender til 2101. SykmeldingsId: ${receivedSykmelding.sykmelding.id} . Navkontor: $lokaltNavkontor")
             return "2101"
         }
         if (
@@ -243,9 +244,10 @@ class MottattSykmeldingService(
                     syketilfelleStartdato,
                 )
         ) {
-            log.info("Sykmelding er utenlandsk og sykmeldingsperioden er over 12 uker, sender til 2101. SykmeldingsId: ${receivedSykmelding.sykmelding.id}")
+            log.info("Sykmelding er utenlandsk og sykmeldingsperioden er over 12 uker, sender til 2101. SykmeldingsId: ${receivedSykmelding.sykmelding.id} . Navkontor: $lokaltNavkontor")
             return "2101"
         } else {
+            log.info("Sender til lokalt NAV-kontor: $lokaltNavkontor. SykmeldingsId: ${receivedSykmelding.sykmelding.id} . receivedsykmelding.utenlandsksykmelding er null?: ${isNull(receivedSykmelding.utenlandskSykmelding)}")
             return lokaltNavkontor
         }
     }
