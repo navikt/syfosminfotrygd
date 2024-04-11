@@ -228,6 +228,12 @@ class MottattSykmeldingService(
         syketilfelleStartdato: LocalDate?,
         lokaltNavkontor: String,
     ): String {
+        log.info(
+            "folkeRegistertAdresseErBrakkeEllerTilsvarende: {}, og erAdresseUtland: {} \n med sykmeldingsId={}",
+            receivedSykmelding.utenlandskSykmelding?.folkeRegistertAdresseErBrakkeEllerTilsvarende ?: "mangler folkeRegistertAdresseErBrakkeEllerTilsvarende",
+            receivedSykmelding.utenlandskSykmelding?.erAdresseUtland ?: "mangler erAdresseUtland",
+            receivedSykmelding.sykmelding.id,
+        )
 
         if (
             receivedSykmelding.utenlandskSykmelding

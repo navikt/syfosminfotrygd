@@ -62,7 +62,7 @@ class UpdateInfotrygdService(
                     loggingMeta = loggingMeta,
                     navKontorNr = navKontorNr,
                     navnArbeidsgiver =
-                        findArbeidsKategori(itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver),
+                    findArbeidsKategori(itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver),
                     identDato = forsteFravaersDag,
                     behandletAvManuell = behandletAvManuell,
                     utenlandskSykmelding = receivedSykmelding.erUtenlandskSykmelding(),
@@ -92,13 +92,14 @@ class UpdateInfotrygdService(
                     throw ex
                 }
             }
+
             else -> {
                 val duplikatInfotrygdOppdatering =
                     redisService.oppdaterRedis(
-                        sha256String,
-                        sha256String,
-                        TimeUnit.DAYS.toSeconds(60).toInt(),
-                        loggingMeta
+                            sha256String,
+                            sha256String,
+                            TimeUnit.DAYS.toSeconds(60).toInt(),
+                            loggingMeta,
                     )
                 when {
                     duplikatInfotrygdOppdatering == null -> {
@@ -108,12 +109,21 @@ class UpdateInfotrygdService(
                             loggingMeta,
                         )
                         log.warn(
-                            "Melding market som infotrygd duplikat oppdatering {}",
-                            fields(loggingMeta)
+                                "Melding market som infotrygd duplikat oppdatering {}",
+                                fields(loggingMeta),
                         )
                     }
+
                     else ->
                         try {
+                            if(receivedSykmelding.erUtenlandskSykmelding()) {
+                                log.info(
+                                        "Klargjør til å oppdatere infotrygd der navKontorNr er {} og er dette en utenlandsk sykmelding: {}. \n med loggingmetadata: {}",
+                                        navKontorNr,
+                                        receivedSykmelding.erUtenlandskSykmelding(),
+                                        loggingMeta,
+                                )
+                            }
                             sendInfotrygdOppdateringMq(
                                 producer,
                                 session,
@@ -130,7 +140,7 @@ class UpdateInfotrygdService(
                                     identDato = forsteFravaersDag,
                                     behandletAvManuell = behandletAvManuell,
                                     utenlandskSykmelding =
-                                        receivedSykmelding.erUtenlandskSykmelding(),
+                                    receivedSykmelding.erUtenlandskSykmelding(),
                                 ),
                                 loggingMeta,
                             )
@@ -151,7 +161,7 @@ class UpdateInfotrygdService(
                                         identDato = forsteFravaersDag,
                                         behandletAvManuell = behandletAvManuell,
                                         utenlandskSykmelding =
-                                            receivedSykmelding.erUtenlandskSykmelding(),
+                                        receivedSykmelding.erUtenlandskSykmelding(),
                                         operasjonstypeKode = 2,
                                     ),
                                     loggingMeta,
@@ -165,8 +175,8 @@ class UpdateInfotrygdService(
                         } catch (exception: Exception) {
                             redisService.slettRedisKey(sha256String, loggingMeta)
                             log.error(
-                                "Feilet i infotrygd oppdaternings biten, kaster exception",
-                                exception
+                                    "Feilet i infotrygd oppdaternings biten, kaster exception",
+                                    exception,
                             )
                             throw exception
                         }
@@ -184,14 +194,14 @@ class UpdateInfotrygdService(
         producer.send(
             session.createTextMessage().apply {
                 log.info(
-                    "Melding har oprasjonstype: {}, tkNummer: {}, {}",
-                    fellesformat
-                        .get<KontrollsystemBlokkType>()
-                        .infotrygdBlokk
-                        .first()
-                        .operasjonstype,
-                    fellesformat.get<KontrollsystemBlokkType>().infotrygdBlokk.first().tkNummer,
-                    fields(loggingMeta)
+                        "Melding har oprasjonstype: {}, tkNummer: {}, {}",
+                        fellesformat
+                                .get<KontrollsystemBlokkType>()
+                                .infotrygdBlokk
+                                .first()
+                                .operasjonstype,
+                        fellesformat.get<KontrollsystemBlokkType>().infotrygdBlokk.first().tkNummer,
+                        fields(loggingMeta),
                 )
                 text = xmlObjectWriter.writeValueAsString(fellesformat)
                 log.info("Melding er sendt til infotrygd {}", fields(loggingMeta))
