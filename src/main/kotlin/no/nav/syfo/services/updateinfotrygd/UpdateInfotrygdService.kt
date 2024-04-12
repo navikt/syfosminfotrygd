@@ -118,10 +118,11 @@ class UpdateInfotrygdService(
                         try {
                             if(receivedSykmelding.erUtenlandskSykmelding()) {
                                 log.info(
-                                        "Klargjør til å oppdatere infotrygd der navKontorNr er {} og er dette en utenlandsk sykmelding: {}. \n med loggingmetadata: {}",
+                                        "Klargjør til å oppdatere infotrygd der navKontorNr er {} og er dette en utenlandsk sykmelding: {}. \n med loggingmetadata: {} \n erAdresseUtland= {}",
                                         navKontorNr,
                                         receivedSykmelding.erUtenlandskSykmelding(),
                                         loggingMeta,
+                                        receivedSykmelding.utenlandskSykmelding?.erAdresseUtland,
                                 )
                             }
                             sendInfotrygdOppdateringMq(
