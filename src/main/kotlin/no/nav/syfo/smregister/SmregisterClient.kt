@@ -51,6 +51,7 @@ enum class MerknadType {
     UGYLDIG_TILBAKEDATERING,
     TILBAKEDATERING_KREVER_FLERE_OPPLYSNINGER,
     UNDER_BEHANDLING,
+    DELVIS_GODKJENT,
     ;
 
     companion object {
