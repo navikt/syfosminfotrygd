@@ -30,8 +30,8 @@ val javaxJaxwsApiVersion = "2.2.1"
 val jaxbTimeAdaptersVersion = "1.1.3"
 val testcontainersVersion = "1.19.8"
 val syfoXmlCodegen = "2.0.1"
-val mockkVersion = "1.13.10"
-val kotlinVersion = "1.9.24"
+val mockkVersion = "1.13.11"
+val kotlinVersion = "2.0.0"
 val commonsCodecVersion = "1.17.0"
 val ktfmtVersion = "0.44"
 val snappyJavaVersion = "1.1.10.5"
@@ -39,7 +39,7 @@ val jsonVersion = "20240303"
 
 plugins {
     id("application")
-    kotlin("jvm") version "1.9.24"
+    kotlin("jvm") version "2.0.0"
     id("com.github.johnrengelman.shadow") version "8.1.1"
     id("com.diffplug.spotless") version "6.25.0"
 }
