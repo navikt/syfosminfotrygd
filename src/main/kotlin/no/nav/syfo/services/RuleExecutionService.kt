@@ -1,5 +1,6 @@
 package no.nav.syfo.services
 
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import no.nav.syfo.model.RuleMetadata
 import no.nav.syfo.model.sykmelding.Status
 import no.nav.syfo.model.sykmelding.Sykmelding
@@ -20,6 +21,7 @@ class RuleExecutionService() {
             TSSRulesExecution(tssRuleTree),
         )
 
+    @WithSpan
     fun runRules(
         sykmelding: Sykmelding,
         ruleMetadataSykmelding: RuleMetadata,

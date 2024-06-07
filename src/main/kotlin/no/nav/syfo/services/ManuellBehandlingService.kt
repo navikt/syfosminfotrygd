@@ -1,5 +1,6 @@
 package no.nav.syfo.services
 
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import java.time.LocalDate
 import java.util.concurrent.TimeUnit
 import net.logstash.logback.argument.StructuredArguments
@@ -31,6 +32,7 @@ class ManuellBehandlingService(
     private val applicationState: ApplicationState,
     private val sykmeldingService: SykmeldingService,
 ) {
+    @WithSpan
     fun produceManualTaskAndSendValidationResults(
         receivedSykmelding: ReceivedSykmelding,
         validationResult: ValidationResult,
@@ -50,6 +52,7 @@ class ManuellBehandlingService(
         )
     }
 
+    @WithSpan(value = "produceManualTaskAndSendValidationResultsWithHelsepersonellKategori")
     suspend fun produceManualTaskAndSendValidationResults(
         receivedSykmelding: ReceivedSykmelding,
         validationResult: ValidationResult,

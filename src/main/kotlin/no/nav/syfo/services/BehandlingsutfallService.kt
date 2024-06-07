@@ -1,5 +1,6 @@
 package no.nav.syfo.services
 
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import net.logstash.logback.argument.StructuredArguments
 import no.nav.syfo.log
 import no.nav.syfo.model.sykmelding.ValidationResult
@@ -12,6 +13,7 @@ class BehandlingsutfallService(
     private val behandlingsUtfallTopic: String,
 ) {
 
+    @WithSpan
     fun sendRuleCheckValidationResult(
         sykmeldingId: String,
         validationResult: ValidationResult,

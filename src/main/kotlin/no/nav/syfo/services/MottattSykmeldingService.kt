@@ -1,8 +1,10 @@
 package no.nav.syfo.services
 
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import java.io.StringReader
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
+import java.util.Objects.isNull
 import javax.jms.MessageProducer
 import javax.jms.Session
 import net.logstash.logback.argument.StructuredArguments
@@ -34,7 +36,6 @@ import no.nav.syfo.util.LoggingMeta
 import no.nav.syfo.util.fellesformatUnmarshaller
 import no.nav.syfo.util.wrapExceptions
 import org.slf4j.LoggerFactory
-import java.util.Objects.isNull
 
 val sikkerlogg = LoggerFactory.getLogger("securelog")
 
@@ -47,6 +48,7 @@ class MottattSykmeldingService(
     private val norskHelsenettClient: NorskHelsenettClient,
     private val syketilfelleClient: SyketilfelleClient,
 ) {
+    @WithSpan
     suspend fun handleMessage(
         receivedSykmelding: ReceivedSykmelding,
         infotrygdOppdateringProducer: MessageProducer,
@@ -79,11 +81,11 @@ class MottattSykmeldingService(
                         if (receivedSykmelding.tssid.isNullOrBlank()) {
                             receivedSykmelding.copy(
                                 tssid =
-                                if (receivedSykmelding.erUtenlandskSykmelding()) {
-                                    "0"
-                                } else {
-                                    receivedSykmelding.tssid
-                                },
+                                    if (receivedSykmelding.erUtenlandskSykmelding()) {
+                                        "0"
+                                    } else {
+                                        receivedSykmelding.tssid
+                                    },
                             )
                         } else {
                             receivedSykmelding
@@ -147,10 +149,10 @@ class MottattSykmeldingService(
                             handleBehandlerNotInHpr(
                                 receivedSykmelding = receivedSykmeldingCopyTssId,
                                 itfh =
-                                InfotrygdForespAndHealthInformation(
-                                    infotrygdForespResponse,
-                                    healthInformation,
-                                ),
+                                    InfotrygdForespAndHealthInformation(
+                                        infotrygdForespResponse,
+                                        healthInformation,
+                                    ),
                                 behandletAvManuell = behandletAvManuell,
                                 loggingMeta = loggingMeta,
                             )
@@ -171,16 +173,21 @@ class MottattSykmeldingService(
                                             helsepersonellKategoriVerdi,
                                             behandletAvManuell,
                                         )
-
                                 else -> {
-                                    val navKontorNr = setNavKontorNr(
-                                        receivedSykmeldingCopyTssId,
-                                        syketilfelleStartdato,
-                                        lokaltNavkontor,
-                                    )
-                                    if(receivedSykmeldingCopyTssId.utenlandskSykmelding?.erAdresseUtland == true) {
-                                        log.info("Skal gjøre updateInfotrygd() og sjekker lokaltnavkontor der vi forventer 2101. NAV-kontor er: $navKontorNr, " +
-                                            "for sykmelding med sykmeldingsId: ${receivedSykmeldingCopyTssId.sykmelding.id}. \n der erAdresseUtland = ${receivedSykmeldingCopyTssId.utenlandskSykmelding.erAdresseUtland}")
+                                    val navKontorNr =
+                                        setNavKontorNr(
+                                            receivedSykmeldingCopyTssId,
+                                            syketilfelleStartdato,
+                                            lokaltNavkontor,
+                                        )
+                                    if (
+                                        receivedSykmeldingCopyTssId.utenlandskSykmelding
+                                            ?.erAdresseUtland == true
+                                    ) {
+                                        log.info(
+                                            "Skal gjøre updateInfotrygd() og sjekker lokaltnavkontor der vi forventer 2101. NAV-kontor er: $navKontorNr, " +
+                                                "for sykmelding med sykmeldingsId: ${receivedSykmeldingCopyTssId.sykmelding.id}. \n der erAdresseUtland = ${receivedSykmeldingCopyTssId.utenlandskSykmelding.erAdresseUtland}"
+                                        )
                                     }
 
                                     updateInfotrygdService.updateInfotrygd(
@@ -188,10 +195,10 @@ class MottattSykmeldingService(
                                         session = session,
                                         loggingMeta = loggingMeta,
                                         itfh =
-                                        InfotrygdForespAndHealthInformation(
-                                            infotrygdForespResponse,
-                                            healthInformation,
-                                        ),
+                                            InfotrygdForespAndHealthInformation(
+                                                infotrygdForespResponse,
+                                                healthInformation,
+                                            ),
                                         receivedSykmelding = receivedSykmeldingCopyTssId,
                                         behandlerKode = helsepersonellKategoriVerdi,
                                         navKontorNr = navKontorNr,
@@ -219,7 +226,6 @@ class MottattSykmeldingService(
                         StructuredArguments.fields(loggingMeta),
                     )
                 }
-
                 else -> {
                     log.info(
                         "Oppdaterer ikke infotrygd for sykmelding med merknad eller reisetilskudd, {}",
@@ -247,19 +253,23 @@ class MottattSykmeldingService(
         if (
             receivedSykmelding.utenlandskSykmelding
                 ?.folkeRegistertAdresseErBrakkeEllerTilsvarende == true ||
-            receivedSykmelding.utenlandskSykmelding?.erAdresseUtland == true
+                receivedSykmelding.utenlandskSykmelding?.erAdresseUtland == true
         ) {
-            log.info("Sykmelding er utenlandsk med utenlandsk adresse, sender til 2101. SykmeldingsId: ${receivedSykmelding.sykmelding.id} . Navkontor: $lokaltNavkontor")
+            log.info(
+                "Sykmelding er utenlandsk med utenlandsk adresse, sender til 2101. SykmeldingsId: ${receivedSykmelding.sykmelding.id} . Navkontor: $lokaltNavkontor"
+            )
             return "2101"
         }
         if (
             receivedSykmelding.erUtenlandskSykmelding() &&
-            sickLeavePeriodOver12Weeks(
-                receivedSykmelding,
-                syketilfelleStartdato,
-            )
+                sickLeavePeriodOver12Weeks(
+                    receivedSykmelding,
+                    syketilfelleStartdato,
+                )
         ) {
-            log.info("Sykmelding er utenlandsk og sykmeldingsperioden er over 12 uker, sender til 2101. SykmeldingsId: ${receivedSykmelding.sykmelding.id} . Navkontor: $lokaltNavkontor")
+            log.info(
+                "Sykmelding er utenlandsk og sykmeldingsperioden er over 12 uker, sender til 2101. SykmeldingsId: ${receivedSykmelding.sykmelding.id} . Navkontor: $lokaltNavkontor"
+            )
             return "2101"
         } else {
             log.info(
@@ -291,11 +301,11 @@ class MottattSykmeldingService(
                 listOf(
                     Godkjenning(
                         helsepersonellkategori =
-                        Kode(
-                            aktiv = true,
-                            oid = 0,
-                            verdi = HelsepersonellKategori.LEGE.verdi,
-                        ),
+                            Kode(
+                                aktiv = true,
+                                oid = 0,
+                                verdi = HelsepersonellKategori.LEGE.verdi,
+                            ),
                         autorisasjon = Kode(aktiv = true, oid = 0, verdi = ""),
                     ),
                 ),
@@ -318,15 +328,15 @@ class MottattSykmeldingService(
             ValidationResult(
                 status = Status.MANUAL_PROCESSING,
                 ruleHits =
-                listOf(
-                    RuleInfo(
-                        ruleName = "BEHANDLER_NOT_IN_HPR",
-                        messageForSender =
-                        "Den som har skrevet sykmeldingen din har ikke autorisasjon til dette.",
-                        messageForUser = "Behandler er ikke registert i HPR",
-                        ruleStatus = Status.MANUAL_PROCESSING,
+                    listOf(
+                        RuleInfo(
+                            ruleName = "BEHANDLER_NOT_IN_HPR",
+                            messageForSender =
+                                "Den som har skrevet sykmeldingen din har ikke autorisasjon til dette.",
+                            messageForUser = "Behandler er ikke registert i HPR",
+                            ruleStatus = Status.MANUAL_PROCESSING,
+                        ),
                     ),
-                ),
             )
 
         log.warn("Behandler er ikke registert i HPR")
@@ -340,6 +350,7 @@ class MottattSykmeldingService(
         )
     }
 
+    @WithSpan
     private fun handleSkalIkkeOppdatereInfotrygd(
         receivedSykmelding: ReceivedSykmelding,
         loggingMeta: LoggingMeta,
@@ -396,7 +407,7 @@ fun setHovedDiagnoseToA99IfhovedDiagnoseIsNullAndAnnenFraversArsakIsSet(
 ): HelseOpplysningerArbeidsuforhet {
     if (
         helseOpplysningerArbeidsuforhet.medisinskVurdering.hovedDiagnose == null &&
-        helseOpplysningerArbeidsuforhet.medisinskVurdering.annenFraversArsak != null
+            helseOpplysningerArbeidsuforhet.medisinskVurdering.annenFraversArsak != null
     ) {
         helseOpplysningerArbeidsuforhet.medisinskVurdering.hovedDiagnose =
             HelseOpplysningerArbeidsuforhet.MedisinskVurdering.HovedDiagnose().apply {

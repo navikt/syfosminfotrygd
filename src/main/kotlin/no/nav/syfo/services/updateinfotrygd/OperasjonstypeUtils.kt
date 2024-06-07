@@ -1,5 +1,6 @@
 package no.nav.syfo.services.updateinfotrygd
 
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import java.time.DayOfWeek
 import java.time.LocalDate
 import kotlin.math.absoluteValue
@@ -12,6 +13,7 @@ import no.nav.syfo.log
 import no.nav.syfo.rules.validation.sortedSMInfos
 import no.nav.syfo.util.LoggingMeta
 
+@WithSpan
 fun findOperasjonstype(
     periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode,
     itfh: InfotrygdForespAndHealthInformation,
