@@ -3,7 +3,7 @@ import java.io.ByteArrayOutputStream
 group = "no.nav.syfo"
 version = "1.0.0"
 
-val artemisVersion = "2.33.0"
+val artemisVersion = "2.34.0"
 val coroutinesVersion = "1.8.1"
 val infotrygdForespVersion = "1.0.3"
 val fellesformatVersion = "1.0.3"
