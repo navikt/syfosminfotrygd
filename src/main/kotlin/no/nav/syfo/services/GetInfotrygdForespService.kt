@@ -1,6 +1,7 @@
 package no.nav.syfo.services
 
 import com.ctc.wstx.exc.WstxException
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import java.io.IOException
 import java.io.StringReader
 import java.time.LocalDate
@@ -25,6 +26,7 @@ import no.nav.syfo.util.infotrygdSporringMarshaller
 import no.nav.syfo.util.infotrygdSporringUnmarshaller
 import org.xml.sax.InputSource
 
+@WithSpan
 suspend fun fetchInfotrygdForesp(
     receivedSykmelding: ReceivedSykmelding,
     infotrygdSporringProducer: MessageProducer,
@@ -41,7 +43,7 @@ suspend fun fetchInfotrygdForesp(
             createInfotrygdForesp(
                 receivedSykmelding.personNrPasient,
                 healthInformation,
-                finnLegeFnr(receivedSykmelding),
+                finnLegeFnrFra(receivedSykmelding),
             )
         val temporaryQueue = session.createTemporaryQueue()
         try {
@@ -110,7 +112,7 @@ fun createInfotrygdForesp(
         tkNrFraDato = dateMinus1Year
     }
 
-fun finnLegeFnr(receivedSykmelding: ReceivedSykmelding): String {
+fun finnLegeFnrFra(receivedSykmelding: ReceivedSykmelding): String {
     return if (receivedSykmelding.sykmelding.avsenderSystem.navn == "Egenmeldt") {
         // Testfamilien Aremark stepper inn som lege for egenmeldte sykmeldinger
         log.info(

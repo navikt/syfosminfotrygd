@@ -1,5 +1,6 @@
 package no.nav.syfo.services
 
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -19,6 +20,7 @@ class OppgaveService(
     private val kafkaAivenProducerOppgave: KafkaProducer<String, OpprettOppgaveKafkaMessage>,
     private val produserOppgaveTopic: String,
 ) {
+    @WithSpan
     fun opprettOppgave(
         receivedSykmelding: ReceivedSykmelding,
         validationResult: ValidationResult,

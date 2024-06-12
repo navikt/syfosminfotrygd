@@ -1,5 +1,6 @@
 package no.nav.syfo.services
 
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import java.security.MessageDigest
 import net.logstash.logback.argument.StructuredArguments.fields
 import no.nav.helse.sm2013.KontrollsystemBlokkType
@@ -11,6 +12,7 @@ import redis.clients.jedis.JedisPool
 import redis.clients.jedis.params.SetParams
 
 class RedisService(private val jedisPool: JedisPool) {
+    @WithSpan
     fun erIRedis(redisKey: String): Boolean {
         var jedis: Jedis? = null
         return try {
@@ -27,6 +29,7 @@ class RedisService(private val jedisPool: JedisPool) {
         }
     }
 
+    @WithSpan
     fun oppdaterRedis(
         redisKey: String,
         redisValue: String,

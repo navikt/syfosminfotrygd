@@ -1,5 +1,6 @@
 package no.nav.syfo.services.updateinfotrygd
 
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import java.time.LocalDate
 import net.logstash.logback.argument.StructuredArguments
 import no.nav.helse.eiFellesformat.XMLEIFellesformat
@@ -14,6 +15,7 @@ import no.nav.syfo.sortedFOMDate
 import no.nav.syfo.unmarshal
 import no.nav.syfo.util.LoggingMeta
 
+@WithSpan
 fun createInfotrygdBlokk(
     itfh: InfotrygdForespAndHealthInformation,
     periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode,
