@@ -36,7 +36,7 @@ val commonsCodecVersion = "1.17.0"
 val ktfmtVersion = "0.44"
 val snappyJavaVersion = "1.1.10.5"
 val jsonVersion = "20240303"
-val opentelemetryVersion = "2.3.0"
+val opentelemetryVersion = "2.4.0"
 
 plugins {
     id("application")
