@@ -7,7 +7,7 @@ val artemisVersion = "2.35.0"
 val coroutinesVersion = "1.8.1"
 val infotrygdForespVersion = "1.0.3"
 val fellesformatVersion = "1.0.3"
-val ibmMqVersion = "9.3.5.1"
+val ibmMqVersion = "9.4.0.0"
 val javaxActivationVersion = "1.1.1"
 val jacksonVersion = "2.17.1"
 val jaxbApiVersion = "2.4.0-b180830.0359"
@@ -36,7 +36,7 @@ val commonsCodecVersion = "1.17.0"
 val ktfmtVersion = "0.44"
 val snappyJavaVersion = "1.1.10.5"
 val jsonVersion = "20240303"
-val opentelemetryVersion = "2.4.0"
+val opentelemetryVersion = "2.5.0"
 
 plugins {
     id("application")
