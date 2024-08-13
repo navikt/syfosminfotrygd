@@ -25,7 +25,6 @@ val jaxbBasicAntVersion = "1.11.1"
 val javaxAnnotationApiVersion = "1.3.2"
 val jaxwsToolsVersion = "2.3.1"
 val jaxbRuntimeVersion = "2.4.0-b180830.0438"
-val smCommonVersion = "2.0.8"
 val javaxJaxwsApiVersion = "2.2.1"
 val jaxbTimeAdaptersVersion = "1.1.3"
 val testcontainersVersion = "1.20.1"
@@ -37,6 +36,7 @@ val ktfmtVersion = "0.44"
 val snappyJavaVersion = "1.1.10.6"
 val jsonVersion = "20240303"
 val opentelemetryVersion = "2.6.0"
+val commonsCompressVersion = "1.27.0"
 
 plugins {
     id("application")
@@ -92,6 +92,7 @@ dependencies {
     }
 
     implementation("org.apache.kafka:kafka_2.12:$kafkaVersion")
+    implementation("org.apache.kafka:kafka-streams:$kafkaVersion")
 
     implementation("com.fasterxml.jackson.module:jackson-module-jaxb-annotations:$jacksonVersion")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
@@ -104,15 +105,6 @@ dependencies {
     implementation("no.nav.helse.xml:infotrygd-foresp:$syfoXmlCodegen")
     implementation("no.nav.helse.xml:kith-hodemelding:$syfoXmlCodegen")
 
-//    implementation("no.nav.helse:syfosm-common-models:$smCommonVersion")
-    implementation("no.nav.helse:syfosm-common-mq:$smCommonVersion")
-    implementation("no.nav.helse:syfosm-common-kafka:$smCommonVersion")
-    constraints {
-        implementation("org.xerial.snappy:snappy-java:$snappyJavaVersion") {
-            because("override transient from org.apache.kafka:kafka_2.12")
-        }
-    }
-    implementation("no.nav.helse:syfosm-common-networking:$smCommonVersion")
 
     implementation("redis.clients:jedis:$jedisVersion")
 
@@ -140,6 +132,11 @@ dependencies {
     }
     testImplementation("org.apache.activemq:artemis-jms-client:$artemisVersion")
     testImplementation("org.testcontainers:testcontainers:$testcontainersVersion")
+    constraints {
+        implementation("org.apache.commons:commons-compress:$commonsCompressVersion") {
+            because("Due to vulnerabilities, see CVE-2024-26308")
+        }
+    }
     testImplementation("io.mockk:mockk:$mockkVersion")
 }
 
@@ -183,7 +180,7 @@ tasks {
         isZip64 = true
         manifest {
             attributes(
-               mapOf(
+                mapOf(
                     "Main-Class" to "no.nav.syfo.BootstrapKt",
                 ),
             )
