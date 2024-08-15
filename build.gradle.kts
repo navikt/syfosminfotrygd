@@ -92,7 +92,6 @@ dependencies {
     }
 
     implementation("org.apache.kafka:kafka_2.12:$kafkaVersion")
-    implementation("org.apache.kafka:kafka-streams:$kafkaVersion")
 
     implementation("com.fasterxml.jackson.module:jackson-module-jaxb-annotations:$jacksonVersion")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")

@@ -8,7 +8,6 @@ import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.config.SslConfigs
 import org.apache.kafka.common.serialization.*
-import org.apache.kafka.streams.StreamsConfig
 
 interface KafkaConfig {
     val kafkaBootstrapServers: String
@@ -57,21 +56,6 @@ fun Properties.toConsumerConfig(
         it[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = keyDeserializer.java
         it[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = valueDeserializer.java
         it[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = "1"
-    }
-
-fun Properties.toStreamsConfig(
-    applicationName: String,
-    valueSerde: KClass<out Serde<out Any>>,
-    keySerde: KClass<out Serde<out Any>> = Serdes.String()::class
-): Properties =
-    Properties().also {
-        it.putAll(this)
-        // TODO hacky workaround for kafka streams issues
-        it.setProperty("acks", "1")
-        it.remove("enable.idempotence")
-        it[StreamsConfig.APPLICATION_ID_CONFIG] = applicationName
-        it[StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG] = keySerde.java
-        it[StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG] = valueSerde.java
     }
 
 fun Properties.toProducerConfig(
