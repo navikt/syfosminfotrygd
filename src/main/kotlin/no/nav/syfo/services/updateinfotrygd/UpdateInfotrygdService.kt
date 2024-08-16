@@ -1,10 +1,10 @@
 package no.nav.syfo.services.updateinfotrygd
 
 import io.opentelemetry.instrumentation.annotations.WithSpan
+import jakarta.jms.MessageProducer
+import jakarta.jms.Session
 import java.time.LocalDate
 import java.util.concurrent.TimeUnit
-import javax.jms.MessageProducer
-import javax.jms.Session
 import kotlinx.coroutines.delay
 import net.logstash.logback.argument.StructuredArguments.fields
 import no.nav.helse.eiFellesformat.XMLEIFellesformat

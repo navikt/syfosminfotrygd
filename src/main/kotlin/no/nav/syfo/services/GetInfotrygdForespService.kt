@@ -2,14 +2,14 @@ package no.nav.syfo.services
 
 import com.ctc.wstx.exc.WstxException
 import io.opentelemetry.instrumentation.annotations.WithSpan
+import jakarta.jms.MessageProducer
+import jakarta.jms.Session
+import jakarta.jms.TemporaryQueue
+import jakarta.jms.TextMessage
 import java.io.IOException
 import java.io.StringReader
 import java.time.LocalDate
 import java.time.LocalDateTime
-import javax.jms.MessageProducer
-import javax.jms.Session
-import javax.jms.TemporaryQueue
-import javax.jms.TextMessage
 import javax.xml.parsers.SAXParserFactory
 import javax.xml.transform.Source
 import javax.xml.transform.sax.SAXSource

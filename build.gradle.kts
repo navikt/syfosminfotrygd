@@ -41,7 +41,7 @@ val commonsCompressVersion = "1.27.0"
 plugins {
     id("application")
     kotlin("jvm") version "2.0.10"
-    id("com.github.johnrengelman.shadow") version "8.1.1"
+    id("com.gradleup.shadow") version "8.3.0"
     id("com.diffplug.spotless") version "6.25.0"
 }
 
@@ -84,12 +84,7 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
     implementation("net.logstash.logback:logstash-logback-encoder:$logstashEncoderVersion")
 
-    implementation("com.ibm.mq:com.ibm.mq.allclient:$ibmMqVersion")
-    constraints {
-        implementation("org.json:json:$jsonVersion") {
-            because("override transient from com.ibm.mq:com.ibm.mq.allclient and redis.clients:jedis")
-        }
-    }
+    implementation("com.ibm.mq:com.ibm.mq.jakarta.client:$ibmMqVersion")
 
     implementation("org.apache.kafka:kafka_2.12:$kafkaVersion")
 
@@ -125,11 +120,8 @@ dependencies {
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion") {
         exclude(group = "org.eclipse.jetty")
     }
-    testImplementation("org.apache.activemq:artemis-server:$artemisVersion") {
-        exclude(group = "commons-collections", module = "commons-collections")
-        exclude(group = "org.apache.commons", module = "commons-configuration2")
-    }
-    testImplementation("org.apache.activemq:artemis-jms-client:$artemisVersion")
+    testImplementation("org.apache.activemq:artemis-jakarta-server:$artemisVersion")
+    testImplementation("org.apache.activemq:artemis-jakarta-client:$artemisVersion")
     testImplementation("org.testcontainers:testcontainers:$testcontainersVersion")
     constraints {
         implementation("org.apache.commons:commons-compress:$commonsCompressVersion") {
