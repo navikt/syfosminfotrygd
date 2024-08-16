@@ -18,6 +18,8 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.network.sockets.SocketTimeoutException
 import io.ktor.serialization.jackson.jackson
 import io.prometheus.client.hotspot.DefaultExports
+import jakarta.jms.MessageProducer
+import jakarta.jms.Session
 import java.io.StringReader
 import java.io.StringWriter
 import java.time.Duration
@@ -25,8 +27,6 @@ import java.time.LocalDate
 import java.time.OffsetTime
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
-import javax.jms.MessageProducer
-import javax.jms.Session
 import javax.xml.bind.Marshaller
 import javax.xml.stream.XMLInputFactory
 import kotlinx.coroutines.CoroutineScope

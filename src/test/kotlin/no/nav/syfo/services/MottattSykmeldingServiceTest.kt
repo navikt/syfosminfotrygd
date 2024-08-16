@@ -6,10 +6,10 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import jakarta.jms.MessageProducer
+import jakarta.jms.Session
 import java.time.LocalDate
 import java.util.UUID
-import javax.jms.MessageProducer
-import javax.jms.Session
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.infotrygd.foresp.StatusType
 import no.nav.helse.infotrygd.foresp.TypeSMinfo

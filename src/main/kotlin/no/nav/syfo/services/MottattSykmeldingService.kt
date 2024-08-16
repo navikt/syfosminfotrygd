@@ -1,12 +1,12 @@
 package no.nav.syfo.services
 
 import io.opentelemetry.instrumentation.annotations.WithSpan
+import jakarta.jms.MessageProducer
+import jakarta.jms.Session
 import java.io.StringReader
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 import java.util.Objects.isNull
-import javax.jms.MessageProducer
-import javax.jms.Session
 import net.logstash.logback.argument.StructuredArguments
 import no.nav.helse.eiFellesformat.XMLEIFellesformat
 import no.nav.helse.sm2013.CV

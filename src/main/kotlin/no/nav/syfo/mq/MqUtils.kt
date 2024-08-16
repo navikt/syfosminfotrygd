@@ -1,12 +1,12 @@
 package no.nav.syfo.mq
 
-import com.ibm.mq.jms.MQConnectionFactory
-import com.ibm.msg.client.wmq.WMQConstants
-import com.ibm.msg.client.wmq.compat.base.internal.MQC
-import javax.jms.MessageConsumer
-import javax.jms.MessageProducer
-import javax.jms.QueueBrowser
-import javax.jms.Session
+import com.ibm.mq.jakarta.jms.MQConnectionFactory
+import com.ibm.msg.client.jakarta.wmq.WMQConstants
+import com.ibm.msg.client.jakarta.wmq.compat.base.internal.MQC
+import jakarta.jms.MessageConsumer
+import jakarta.jms.MessageProducer
+import jakarta.jms.QueueBrowser
+import jakarta.jms.Session
 import javax.net.ssl.SSLSocketFactory
 
 interface MqConfig {

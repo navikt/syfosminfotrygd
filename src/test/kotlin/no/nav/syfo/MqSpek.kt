@@ -1,11 +1,11 @@
 package no.nav.syfo
 
 import io.kotest.core.spec.style.FunSpec
+import jakarta.jms.ConnectionFactory
+import jakarta.jms.Session
+import jakarta.jms.TextMessage
 import java.io.StringReader
 import java.time.LocalDate
-import javax.jms.ConnectionFactory
-import javax.jms.Session
-import javax.jms.TextMessage
 import javax.naming.InitialContext
 import net.logstash.logback.argument.StructuredArguments
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
