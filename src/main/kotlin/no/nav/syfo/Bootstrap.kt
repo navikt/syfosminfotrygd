@@ -119,7 +119,7 @@ fun main() {
         KafkaProducer<String, ValidationResult>(getkafkaProducerConfig("validation-producer", env))
     val kafkaAivenProducerOppgave =
         KafkaProducer<String, OpprettOppgaveKafkaMessage>(
-            getkafkaProducerConfig("oppgave-producer", env)
+            getkafkaProducerConfig("oppgave-producer", env),
         )
 
     val kafkaAivenConsumerReceivedSykmelding =
@@ -179,7 +179,7 @@ fun main() {
             httpClient,
             env.norskHelsenettEndpointURL,
             accessTokenClientV2,
-            env.helsenettproxyScope
+            env.helsenettproxyScope,
         )
     val pdlPersonService =
         PdlFactory.getPdlService(env, httpClient, accessTokenClientV2, env.pdlScope)
@@ -192,7 +192,7 @@ fun main() {
             env.syketilfelleEndpointURL,
             accessTokenClientV2,
             env.syketilfelleScope,
-            httpClient
+            httpClient,
         )
     val sykmeldingService =
         SykmeldingService(
@@ -265,7 +265,7 @@ private fun getkafkaConsumerConfig(consumerId: String, env: Environment) =
     KafkaUtils.getAivenKafkaConfig(consumerId)
         .toConsumerConfig(
             "${env.applicationName}-consumer",
-            valueDeserializer = StringDeserializer::class
+            valueDeserializer = StringDeserializer::class,
         )
         .also {
             it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "none"
@@ -284,7 +284,7 @@ fun createListener(
             log.error(
                 "En uhåndtert feil oppstod, applikasjonen restarter {}",
                 fields(e.loggingMeta),
-                e.cause
+                e.cause,
             )
         } finally {
             applicationState.alive = false
@@ -308,11 +308,11 @@ fun launchListeners(
                 val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
                 val infotrygdOppdateringProducer =
                     session.producerForQueue(
-                        "queue:///${env.infotrygdOppdateringQueue}?targetClient=1"
+                        "queue:///${env.infotrygdOppdateringQueue}?targetClient=1",
                     )
                 val infotrygdSporringProducer =
                     session.producerForQueue(
-                        "queue:///${env.infotrygdSporringQueue}?targetClient=1"
+                        "queue:///${env.infotrygdSporringQueue}?targetClient=1",
                     )
 
                 blockingApplicationLogic(
@@ -382,14 +382,19 @@ private suspend fun runKafkaConsumer(
                         msgId = receivedSykmelding.msgId,
                         sykmeldingId = receivedSykmelding.sykmelding.id,
                     )
+
                 log.info("Har mottatt sykmelding, {}", fields(loggingMeta))
-                mottattSykmeldingService.handleMessage(
-                    receivedSykmelding = receivedSykmelding,
-                    infotrygdOppdateringProducer = infotrygdOppdateringProducer,
-                    infotrygdSporringProducer = infotrygdSporringProducer,
-                    session = session,
-                    loggingMeta = loggingMeta,
-                )
+                try {
+                    mottattSykmeldingService.handleMessage(
+                        receivedSykmelding = receivedSykmelding,
+                        infotrygdOppdateringProducer = infotrygdOppdateringProducer,
+                        infotrygdSporringProducer = infotrygdSporringProducer,
+                        session = session,
+                        loggingMeta = loggingMeta,
+                    )
+                } catch (e: Exception) {
+                    throw TrackableException(e, loggingMeta)
+                }
             }
         delay(100)
     }
