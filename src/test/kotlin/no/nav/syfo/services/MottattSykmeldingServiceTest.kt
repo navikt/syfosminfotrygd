@@ -57,6 +57,7 @@ class MottattSykmeldingServiceTest :
                 behandlingsutfallService,
                 norskHelsenettClient,
                 syketilfelleClient,
+                "localhost"
             )
 
         beforeTest { mockkStatic("no.nav.syfo.services.GetInfotrygdForespServiceKt") }

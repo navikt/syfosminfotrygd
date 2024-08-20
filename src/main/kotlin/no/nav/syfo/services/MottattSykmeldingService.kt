@@ -46,6 +46,7 @@ class MottattSykmeldingService(
     private val behandlingsutfallService: BehandlingsutfallService,
     private val norskHelsenettClient: NorskHelsenettClient,
     private val syketilfelleClient: SyketilfelleClient,
+    private val cluster: String,
 ) {
 
     @WithSpan
