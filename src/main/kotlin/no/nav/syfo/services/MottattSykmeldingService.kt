@@ -405,7 +405,7 @@ fun skalOppdatereInfotrygd(receivedSykmelding: ReceivedSykmelding, cluster: Stri
             healthInformation.medisinskVurdering.biDiagnoser.diagnosekode.firstOrNull()?.s ==
                 "idc10"
         ) {
-            return true
+            return false
         }
     }
     // Vi skal ikke oppdatere Infotrygd hvis sykmeldingen inneholder en av de angitte merknadene
