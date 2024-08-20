@@ -57,7 +57,7 @@ class MottattSykmeldingService(
         session: Session,
         loggingMeta: LoggingMeta,
     ) {
-        when (skalOppdatereInfotrygd(receivedSykmelding)) {
+        when (skalOppdatereInfotrygd(receivedSykmelding, cluster)) {
             true -> {
                 log.info("Received a SM2013, {}", StructuredArguments.fields(loggingMeta))
                 val requestLatency = REQUEST_TIME.startTimer()
@@ -103,6 +103,16 @@ class MottattSykmeldingService(
                         validationResult = validationResultForMottattSykmelding,
                         behandletAvManuell = behandletAvManuell,
                         loggingMeta = loggingMeta,
+                    )
+                } else if (
+                    cluster == "dev-gcp" &&
+                        healthInformation.medisinskVurdering.biDiagnoser.diagnosekode
+                            .firstOrNull()
+                            ?.s == "idc10"
+                ) {
+                    log.info(
+                        "Mottatt sykmelding kan ikke legges inn i infotrygd mangler s, {}",
+                        StructuredArguments.fields(loggingMeta),
                     )
                 } else {
                     val infotrygdForespResponse =
@@ -380,7 +390,24 @@ class MottattSykmeldingService(
         receivedSykmelding.sykmelding.avsenderSystem.navn == "Egenmeldt"
 }
 
-fun skalOppdatereInfotrygd(receivedSykmelding: ReceivedSykmelding): Boolean {
+fun skalOppdatereInfotrygd(receivedSykmelding: ReceivedSykmelding, cluster: String): Boolean {
+    if (cluster == "dev-gcp") {
+        val fellesformat =
+            fellesformatUnmarshaller.unmarshal(
+                StringReader(receivedSykmelding.fellesformat),
+            ) as XMLEIFellesformat
+
+        val healthInformation =
+            setHovedDiagnoseToA99IfhovedDiagnoseIsNullAndAnnenFraversArsakIsSet(
+                extractHelseOpplysningerArbeidsuforhet(fellesformat),
+            )
+        if (
+            healthInformation.medisinskVurdering.biDiagnoser.diagnosekode.firstOrNull()?.s ==
+                "idc10"
+        ) {
+            return true
+        }
+    }
     // Vi skal ikke oppdatere Infotrygd hvis sykmeldingen inneholder en av de angitte merknadene
     val merknad =
         receivedSykmelding.merknader?.none {

@@ -21,7 +21,6 @@ import no.nav.syfo.helpers.retry
 import no.nav.syfo.log
 import no.nav.syfo.model.Diagnosekode
 import no.nav.syfo.model.sykmelding.ReceivedSykmelding
-import no.nav.syfo.objectMapper
 import no.nav.syfo.toString
 import no.nav.syfo.util.infotrygdSporringMarshaller
 import no.nav.syfo.util.infotrygdSporringUnmarshaller
@@ -40,7 +39,6 @@ suspend fun fetchInfotrygdForesp(
         legalExceptions =
             arrayOf(IOException::class, WstxException::class, IllegalStateException::class),
     ) {
-        log.info("healthInformation: ${objectMapper.writeValueAsString(healthInformation)}")
         val infotrygdForespRequest =
             createInfotrygdForesp(
                 receivedSykmelding.personNrPasient,
