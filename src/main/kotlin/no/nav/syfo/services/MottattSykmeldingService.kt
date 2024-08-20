@@ -46,6 +46,7 @@ class MottattSykmeldingService(
     private val behandlingsutfallService: BehandlingsutfallService,
     private val norskHelsenettClient: NorskHelsenettClient,
     private val syketilfelleClient: SyketilfelleClient,
+    private val cluster: String,
 ) {
 
     @WithSpan
@@ -56,7 +57,7 @@ class MottattSykmeldingService(
         session: Session,
         loggingMeta: LoggingMeta,
     ) {
-        when (skalOppdatereInfotrygd(receivedSykmelding)) {
+        when (skalOppdatereInfotrygd(receivedSykmelding, cluster)) {
             true -> {
                 log.info("Received a SM2013, {}", StructuredArguments.fields(loggingMeta))
                 val requestLatency = REQUEST_TIME.startTimer()
@@ -379,7 +380,29 @@ class MottattSykmeldingService(
         receivedSykmelding.sykmelding.avsenderSystem.navn == "Egenmeldt"
 }
 
-fun skalOppdatereInfotrygd(receivedSykmelding: ReceivedSykmelding): Boolean {
+fun skalOppdatereInfotrygd(receivedSykmelding: ReceivedSykmelding, cluster: String): Boolean {
+    if (cluster == "dev-gcp") {
+        try {
+            val fellesformat =
+                fellesformatUnmarshaller.unmarshal(
+                    StringReader(receivedSykmelding.fellesformat),
+                ) as XMLEIFellesformat
+
+            val healthInformation =
+                setHovedDiagnoseToA99IfhovedDiagnoseIsNullAndAnnenFraversArsakIsSet(
+                    extractHelseOpplysningerArbeidsuforhet(fellesformat),
+                )
+            if (
+                healthInformation.medisinskVurdering.biDiagnoser.diagnosekode.firstOrNull()?.s ==
+                "icd10"
+            ) {
+                return false
+            }
+        }
+        catch (exception: Exception) {
+            return false
+        }
+    }
     // Vi skal ikke oppdatere Infotrygd hvis sykmeldingen inneholder en av de angitte merknadene
     val merknad =
         receivedSykmelding.merknader?.none {

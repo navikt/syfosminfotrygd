@@ -1,0 +1,205 @@
+{
+  "regelSettVersjon": "3",
+  "syketilfelleStartDato": "2024-08-12",
+  "pasient": {
+    "navn": {
+      "etternavn": "SØSTER",
+      "mellomnavn": null,
+      "fornavn": "SMIGRENDE"
+    },
+    "fodselsnummer": {
+      "id": "56846400724",
+      "typeId": {
+        "v": "FNR",
+        "s": "2.16.578.1.12.4.1.1.8116",
+        "dn": "Fødselsnummer",
+        "ot": null
+      }
+    },
+    "kontaktInfo": [],
+    "navnFastlege": null,
+    "navkontor": null
+  },
+  "arbeidsgiver": {
+    "harArbeidsgiver": {
+      "v": "1",
+      "dn": "Én arbeidsgiver"
+    },
+    "navnArbeidsgiver": "Eksempel Arbeidsgiversen AS",
+    "yrkesbetegnelse": "Utvikler",
+    "stillingsprosent": 100
+  },
+  "medisinskVurdering": {
+    "hovedDiagnose": {
+      "diagnosekode": {
+        "v": "S1201",
+        "s": "2.16.578.1.12.4.1.1.7110",
+        "dn": "Brudd i 1. cervikalvirvel;åpent",
+        "ot": null
+      }
+    },
+    "biDiagnoser": {
+      "diagnosekode": [
+        {
+          "v": "S1200",
+          "s": "icd10",
+          "dn": "Brudd i 1. cervikalvirvel;lukket",
+          "ot": null
+        }
+      ]
+    },
+    "annenFraversArsak": null,
+    "svangerskap": false,
+    "yrkesskade": false,
+    "yrkesskadeDato": null,
+    "skjermesForPasient": false
+  },
+  "aktivitet": {
+    "periode": [
+      {
+        "periodeFOMDato": "2024-08-01",
+        "periodeTOMDato": "2024-08-09",
+        "avventendeSykmelding": null,
+        "gradertSykmelding": null,
+        "aktivitetIkkeMulig": {
+          "medisinskeArsaker": {
+            "arsakskode": [
+              {
+                "v": "3",
+                "dn": "Annet"
+              }
+            ],
+            "beskriv": "medisinske årsaker til sykefravær"
+          },
+          "arbeidsplassen": {
+            "arsakskode": [
+              {
+                "v": "9",
+                "dn": "Annet"
+              }
+            ],
+            "beskriv": "andre årsaker til sykefravær"
+          }
+        },
+        "behandlingsdager": null,
+        "reisetilskudd": false
+      }
+    ]
+  },
+  "prognose": {
+    "arbeidsforEtterEndtPeriode": true,
+    "beskrivHensynArbeidsplassen": "Må ta det pent",
+    "erIArbeid": null,
+    "erIkkeIArbeid": null
+  },
+  "utdypendeOpplysninger": {
+    "spmGruppe": [
+      {
+        "spmGruppeId": "6.5",
+        "spmGruppeTekst": "Helseopplysninger til NAVs videre vurdering av oppfølging",
+        "spmSvar": [
+          {
+            "spmId": "6.5.1",
+            "spmTekst": "Beskriv kort sykdomsutviklingen, symptomer og funn. Hvordan påvirker helsetilstanden funksjonen i arbeid og dagligliv?",
+            "restriksjon": {
+              "restriksjonskode": [
+                {
+                  "v": "A",
+                  "dn": "Informasjonen skal ikke vises arbeidsgiver"
+                }
+              ]
+            },
+            "svarTekst": "Har ikke blitt noe bedre. Klarer ikke å jobbe eller drive med aktiviteter"
+          },
+          {
+            "spmId": "6.5.2",
+            "spmTekst": "Beskriv pågående og planlagt utredning og/eller behandling. Lar dette seg kombinere med delvis arbeid?",
+            "restriksjon": {
+              "restriksjonskode": [
+                {
+                  "v": "A",
+                  "dn": "Informasjonen skal ikke vises arbeidsgiver"
+                }
+              ]
+            },
+            "svarTekst": "Henvist til fysio. Duplikatbuster: c1d745d8-de85-47f7-87a9-9621a3031685"
+          },
+          {
+            "spmId": "6.5.3",
+            "spmTekst": "Kan arbeidsevnen bedres gjennom medisinsk behandling og/eller arbeidsrelatert aktivitet? I så fall hvordan? Angi tidsperspektiv",
+            "restriksjon": {
+              "restriksjonskode": [
+                {
+                  "v": "A",
+                  "dn": "Informasjonen skal ikke vises arbeidsgiver"
+                }
+              ]
+            },
+            "svarTekst": "Nei"
+          }
+        ]
+      }
+    ]
+  },
+  "tiltak": null,
+  "oppfolgingsplan": null,
+  "meldingTilNav": null,
+  "meldingTilArbeidsgiver": null,
+  "kontaktMedPasient": {
+    "behandletDato": "2024-08-11T22:00:00",
+    "kontaktDato": null,
+    "begrunnIkkeKontakt": null
+  },
+  "behandler": {
+    "navn": {
+      "etternavn": "STAUDE",
+      "mellomnavn": "SLØVENDE",
+      "fornavn": "VAKKER"
+    },
+    "id": [
+      {
+        "id": "04056600324",
+        "typeId": {
+          "v": "FNR",
+          "s": "2.16.578.1.12.4.1.1.8327",
+          "dn": "Fødselsnummer",
+          "ot": null
+        }
+      },
+      {
+        "id": "9144889",
+        "typeId": {
+          "v": "HPR",
+          "s": "2.16.578.1.12.4.1.1.8116",
+          "dn": "HPR-nummer",
+          "ot": null
+        }
+      }
+    ],
+    "adresse": {
+      "type": null,
+      "streetAdr": null,
+      "postalCode": null,
+      "city": null,
+      "postbox": null,
+      "county": null,
+      "country": null
+    },
+    "kontaktInfo": [
+      {
+        "typeTelecom": {
+          "v": "HP",
+          "dn": "Hovedtelefon"
+        },
+        "teleAddress": {
+          "v": "tel: 90909090"
+        }
+      }
+    ]
+  },
+  "avsenderSystem": {
+    "systemNavn": "System X",
+    "systemVersjon": "2015 R1 (4835)"
+  },
+  "strekkode": "00170272416462604201615322390000011"
+}
