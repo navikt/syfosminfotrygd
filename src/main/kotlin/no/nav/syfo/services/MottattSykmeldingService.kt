@@ -396,7 +396,7 @@ fun skalOppdatereInfotrygd(receivedSykmelding: ReceivedSykmelding, cluster: Stri
         log.info("healthInformation ${objectMapper.writeValueAsString(healthInformation)}")
         if (
             healthInformation.medisinskVurdering.biDiagnoser.diagnosekode.firstOrNull()?.s ==
-                "idc10"
+                "icd10"
         ) {
             return false
         }
