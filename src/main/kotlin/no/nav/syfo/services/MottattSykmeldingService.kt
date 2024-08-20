@@ -383,21 +383,25 @@ class MottattSykmeldingService(
 fun skalOppdatereInfotrygd(receivedSykmelding: ReceivedSykmelding, cluster: String): Boolean {
     log.info("cluster $cluster")
     if (cluster == "dev-gcp") {
-        val fellesformat =
-            fellesformatUnmarshaller.unmarshal(
-                StringReader(receivedSykmelding.fellesformat),
-            ) as XMLEIFellesformat
+        try {
+            val fellesformat =
+                fellesformatUnmarshaller.unmarshal(
+                    StringReader(receivedSykmelding.fellesformat),
+                ) as XMLEIFellesformat
 
-        val healthInformation =
-            setHovedDiagnoseToA99IfhovedDiagnoseIsNullAndAnnenFraversArsakIsSet(
-                extractHelseOpplysningerArbeidsuforhet(fellesformat),
-            )
-
-        log.info("healthInformation ${objectMapper.writeValueAsString(healthInformation)}")
-        if (
-            healthInformation.medisinskVurdering.biDiagnoser.diagnosekode.firstOrNull()?.s ==
+            val healthInformation =
+                setHovedDiagnoseToA99IfhovedDiagnoseIsNullAndAnnenFraversArsakIsSet(
+                    extractHelseOpplysningerArbeidsuforhet(fellesformat),
+                )
+            log.info("healthInformation ${objectMapper.writeValueAsString(healthInformation)}")
+            if (
+                healthInformation.medisinskVurdering.biDiagnoser.diagnosekode.firstOrNull()?.s ==
                 "icd10"
-        ) {
+            ) {
+                return false
+            }
+        }
+        catch (exception: Exception) {
             return false
         }
     }
