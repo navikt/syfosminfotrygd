@@ -104,16 +104,6 @@ class MottattSykmeldingService(
                         behandletAvManuell = behandletAvManuell,
                         loggingMeta = loggingMeta,
                     )
-                } else if (
-                    cluster == "dev-gcp" &&
-                        healthInformation.medisinskVurdering.biDiagnoser.diagnosekode
-                            .firstOrNull()
-                            ?.s == "idc10"
-                ) {
-                    log.info(
-                        "Mottatt sykmelding kan ikke legges inn i infotrygd mangler s, {}",
-                        StructuredArguments.fields(loggingMeta),
-                    )
                 } else {
                     val infotrygdForespResponse =
                         fetchInfotrygdForesp(
@@ -391,6 +381,7 @@ class MottattSykmeldingService(
 }
 
 fun skalOppdatereInfotrygd(receivedSykmelding: ReceivedSykmelding, cluster: String): Boolean {
+    log.info("cluster $cluster")
     if (cluster == "dev-gcp") {
         val fellesformat =
             fellesformatUnmarshaller.unmarshal(
@@ -401,6 +392,8 @@ fun skalOppdatereInfotrygd(receivedSykmelding: ReceivedSykmelding, cluster: Stri
             setHovedDiagnoseToA99IfhovedDiagnoseIsNullAndAnnenFraversArsakIsSet(
                 extractHelseOpplysningerArbeidsuforhet(fellesformat),
             )
+
+        log.info("healthInformation ${objectMapper.writeValueAsString(healthInformation)}")
         if (
             healthInformation.medisinskVurdering.biDiagnoser.diagnosekode.firstOrNull()?.s ==
                 "idc10"
