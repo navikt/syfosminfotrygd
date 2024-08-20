@@ -381,7 +381,6 @@ class MottattSykmeldingService(
 }
 
 fun skalOppdatereInfotrygd(receivedSykmelding: ReceivedSykmelding, cluster: String): Boolean {
-    log.info("cluster $cluster")
     if (cluster == "dev-gcp") {
         try {
             val fellesformat =
@@ -393,7 +392,6 @@ fun skalOppdatereInfotrygd(receivedSykmelding: ReceivedSykmelding, cluster: Stri
                 setHovedDiagnoseToA99IfhovedDiagnoseIsNullAndAnnenFraversArsakIsSet(
                     extractHelseOpplysningerArbeidsuforhet(fellesformat),
                 )
-            log.info("healthInformation ${objectMapper.writeValueAsString(healthInformation)}")
             if (
                 healthInformation.medisinskVurdering.biDiagnoser.diagnosekode.firstOrNull()?.s ==
                 "icd10"
