@@ -3,7 +3,7 @@ import java.io.ByteArrayOutputStream
 group = "no.nav.syfo"
 version = "1.0.0"
 
-val artemisVersion = "2.36.0"
+val artemisVersion = "2.37.0"
 val coroutinesVersion = "1.8.1"
 val infotrygdForespVersion = "1.0.3"
 val fellesformatVersion = "1.0.3"
@@ -30,7 +30,7 @@ val jaxbTimeAdaptersVersion = "1.1.3"
 val testcontainersVersion = "1.20.1"
 val syfoXmlCodegen = "2.0.1"
 val mockkVersion = "1.13.12"
-val kotlinVersion = "2.0.10"
+val kotlinVersion = "2.0.20"
 val commonsCodecVersion = "1.17.1"
 val ktfmtVersion = "0.44"
 val snappyJavaVersion = "1.1.10.6"
@@ -40,7 +40,7 @@ val commonsCompressVersion = "1.27.1"
 
 plugins {
     id("application")
-    kotlin("jvm") version "2.0.10"
+    kotlin("jvm") version "2.0.20"
     id("com.gradleup.shadow") version "8.3.0"
     id("com.diffplug.spotless") version "6.25.0"
 }
