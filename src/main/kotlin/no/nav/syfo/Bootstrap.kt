@@ -124,6 +124,8 @@ fun main() {
 
     val kafkaAivenConsumerReceivedSykmelding =
         KafkaConsumer<String, String>(getkafkaConsumerConfig("sykmelding-consumer", env))
+    val kafkaAivenConsumerReceivedSykmeldingRetry =
+        KafkaConsumer<String, String>(getkafkaConsumerConfig("sykmelding-consumer", env))
 
     MQEnvironment.channel = env.mqChannelName
     MQEnvironment.port = env.mqPort
@@ -241,7 +243,7 @@ fun main() {
             behandlingsutfallService = behandlingsutfallService,
             norskHelsenettClient = norskHelsenettClient,
             syketilfelleClient = syketilfelleClient,
-            cluster = env.naiscluster
+            cluster = env.naiscluster,
         )
 
     launchListeners(
@@ -249,6 +251,7 @@ fun main() {
         env,
         serviceUser,
         kafkaAivenConsumerReceivedSykmelding,
+        kafkaAivenConsumerReceivedSykmeldingRetry,
         mottattSykmeldingService,
     )
 
@@ -299,6 +302,7 @@ fun launchListeners(
     env: Environment,
     serviceUser: ServiceUser,
     kafkaAivenConsumerReceivedSykmelding: KafkaConsumer<String, String>,
+    kafkaAivenConsumerReceivedSykmeldingRetry: KafkaConsumer<String, String>,
     mottattSykmeldingService: MottattSykmeldingService,
 ) {
     createListener(applicationState) {
@@ -323,6 +327,7 @@ fun launchListeners(
                     session,
                     env,
                     kafkaAivenConsumerReceivedSykmelding,
+                    kafkaAivenConsumerReceivedSykmeldingRetry,
                     mottattSykmeldingService,
                 )
             }
@@ -338,13 +343,17 @@ suspend fun blockingApplicationLogic(
     session: Session,
     env: Environment,
     kafkaAivenConsumerReceivedSykmelding: KafkaConsumer<String, String>,
+    kafkaAivenConsumerReceivedSykmeldingRetry: KafkaConsumer<String, String>,
     mottattSykmeldingService: MottattSykmeldingService,
 ) {
     while (applicationState.ready) {
         if (shouldRun(getCurrentTime())) {
-            log.info("Starter kafkaconsumer")
+            log.info("Starter kafkaconsumere")
             kafkaAivenConsumerReceivedSykmelding.subscribe(
-                listOf(env.okSykmeldingTopic, env.retryTopic),
+                listOf(env.okSykmeldingTopic),
+            )
+            kafkaAivenConsumerReceivedSykmeldingRetry.subscribe(
+                listOf(env.retryTopic),
             )
             runKafkaConsumer(
                 infotrygdOppdateringProducer,
@@ -353,9 +362,22 @@ suspend fun blockingApplicationLogic(
                 applicationState,
                 kafkaAivenConsumerReceivedSykmelding,
                 mottattSykmeldingService,
+                0
             )
             kafkaAivenConsumerReceivedSykmelding.unsubscribe()
-            log.info("Stopper KafkaConsumer")
+            log.info("Stopper kafkaAivenConsumerReceivedSykmelding KafkaConsumer")
+
+            runKafkaConsumer(
+                infotrygdOppdateringProducer,
+                infotrygdSporringProducer,
+                session,
+                applicationState,
+                kafkaAivenConsumerReceivedSykmeldingRetry,
+                mottattSykmeldingService,
+                10000
+            )
+            kafkaAivenConsumerReceivedSykmeldingRetry.unsubscribe()
+            log.info("Stopper kafkaAivenConsumerReceivedSykmeldingRetry KafkaConsumer")
         }
         delay(100)
     }
@@ -368,36 +390,52 @@ private suspend fun runKafkaConsumer(
     applicationState: ApplicationState,
     kafkaAivenConsumerReceivedSykmelding: KafkaConsumer<String, String>,
     mottattSykmeldingService: MottattSykmeldingService,
+    pollTimeMs: Long,
 ) {
     while (applicationState.ready && shouldRun(getCurrentTime())) {
         kafkaAivenConsumerReceivedSykmelding
-            .poll(Duration.ofMillis(0))
+            .poll(Duration.ofMillis(pollTimeMs))
             .mapNotNull { it.value() }
             .forEach { receivedSykmeldingString ->
-                val receivedSykmelding: ReceivedSykmelding =
-                    objectMapper.readValue(receivedSykmeldingString)
-                val loggingMeta =
-                    LoggingMeta(
-                        mottakId = receivedSykmelding.navLogId,
-                        orgNr = receivedSykmelding.legekontorOrgNr,
-                        msgId = receivedSykmelding.msgId,
-                        sykmeldingId = receivedSykmelding.sykmelding.id,
-                    )
-
-                log.info("Har mottatt sykmelding, {}", fields(loggingMeta))
-                try {
-                    mottattSykmeldingService.handleMessage(
-                        receivedSykmelding = receivedSykmelding,
-                        infotrygdOppdateringProducer = infotrygdOppdateringProducer,
-                        infotrygdSporringProducer = infotrygdSporringProducer,
-                        session = session,
-                        loggingMeta = loggingMeta,
-                    )
-                } catch (e: Exception) {
-                    throw TrackableException(e, loggingMeta)
-                }
+                handleRecords(
+                    session,
+                    infotrygdOppdateringProducer,
+                    infotrygdSporringProducer,
+                    mottattSykmeldingService,
+                    receivedSykmeldingString,
+                )
             }
         delay(100)
+    }
+}
+
+private suspend fun handleRecords(
+    session: Session,
+    infotrygdOppdateringProducer: MessageProducer,
+    infotrygdSporringProducer: MessageProducer,
+    mottattSykmeldingService: MottattSykmeldingService,
+    receivedSykmeldingString: String
+) {
+    val receivedSykmelding: ReceivedSykmelding = objectMapper.readValue(receivedSykmeldingString)
+    val loggingMeta =
+        LoggingMeta(
+            mottakId = receivedSykmelding.navLogId,
+            orgNr = receivedSykmelding.legekontorOrgNr,
+            msgId = receivedSykmelding.msgId,
+            sykmeldingId = receivedSykmelding.sykmelding.id,
+        )
+
+    log.info("Har mottatt sykmelding, {}", fields(loggingMeta))
+    try {
+        mottattSykmeldingService.handleMessage(
+            receivedSykmelding = receivedSykmelding,
+            infotrygdOppdateringProducer = infotrygdOppdateringProducer,
+            infotrygdSporringProducer = infotrygdSporringProducer,
+            session = session,
+            loggingMeta = loggingMeta,
+        )
+    } catch (e: Exception) {
+        throw TrackableException(e, loggingMeta)
     }
 }
 

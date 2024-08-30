@@ -394,12 +394,11 @@ fun skalOppdatereInfotrygd(receivedSykmelding: ReceivedSykmelding, cluster: Stri
                 )
             if (
                 healthInformation.medisinskVurdering.biDiagnoser.diagnosekode.firstOrNull()?.s ==
-                "icd10"
+                    "icd10"
             ) {
                 return false
             }
-        }
-        catch (exception: Exception) {
+        } catch (exception: Exception) {
             return false
         }
     }

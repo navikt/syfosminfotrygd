@@ -77,7 +77,6 @@ class UpdateInfotrygdService(
 
         when {
             nyligInfotrygdOppdatering == null -> {
-                delay(10_000)
                 try {
                     kafkaAivenProducerReceivedSykmelding
                         .send(
