@@ -17,6 +17,7 @@ import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.network.sockets.SocketTimeoutException
 import io.ktor.serialization.jackson.jackson
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import io.prometheus.client.hotspot.DefaultExports
 import jakarta.jms.MessageProducer
 import jakarta.jms.Session
@@ -409,6 +410,7 @@ private suspend fun runKafkaConsumer(
     }
 }
 
+@WithSpan
 private suspend fun handleRecords(
     session: Session,
     infotrygdOppdateringProducer: MessageProducer,
