@@ -103,5 +103,3 @@ spec:
       value: api://prod-gcp.flex.flex-syketilfelle/.default
     - name: SMREGISTER_AUDIENCE
       value: api://prod-gcp.teamsykmelding.syfosmregister/.default
-    - name: NORG2_V1_ENDPOINT_URL
-      value: https://norg2.intern.nav.no/norg2/api/v1
