@@ -86,8 +86,6 @@ spec:
       value: MQLS03
     - name: MQ_CHANNEL_NAME
       value: Q1_SYFOSMINFOTRYGD
-    - name: NORG2_V1_ENDPOINT_URL
-      value: https://norg2.dev-fss-pub.nais.io/norg2/api/v1
     - name: PDL_GRAPHQL_PATH
       value: https://pdl-api.dev-fss-pub.nais.io/graphql
     - name: PDL_SCOPE
