@@ -8,7 +8,7 @@ data class Environment(
     val naiscluster: String = getEnvVar("NAIS_CLUSTER_NAME"),
     val infotrygdSporringQueue: String = getEnvVar("INFOTRYGD_SPORRING_QUEUE"),
     val infotrygdOppdateringQueue: String = getEnvVar("INFOTRYGD_OPPDATERING_QUEUE"),
-    val norg2V1EndpointURL: String = getEnvVar("NORG2_V1_ENDPOINT_URL", "http://norg2/norg2/api/v1"),
+    val norg2V1EndpointURL: String = getEnvVar("NORG2_V1_ENDPOINT_URL", "http://norg2.org/norg2/api/v1"),
     override val mqHostname: String = getEnvVar("MQ_HOST_NAME"),
     override val mqPort: Int = getEnvVar("MQ_PORT").toInt(),
     override val mqGatewayName: String = getEnvVar("MQ_GATEWAY_NAME"),
