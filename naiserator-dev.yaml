@@ -54,6 +54,9 @@ spec:
           namespace: flex
           cluster: dev-gcp
         - application: syfohelsenettproxy
+        - application: norg2
+          namespace: org
+          cluster: dev-gcp
       external:
         - host: pdl-api.dev-fss-pub.nais.io
         - host: norg2.dev-fss-pub.nais.io
