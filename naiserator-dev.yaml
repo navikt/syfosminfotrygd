@@ -68,6 +68,8 @@ spec:
   redis:
     - instance: infotrygd
       access: readwrite
+  envFrom:
+    - secret: syfosminfotrygd-secrets
   secureLogs:
     enabled: true
   env:
