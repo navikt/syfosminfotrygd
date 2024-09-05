@@ -68,12 +68,6 @@ spec:
   redis:
     - instance: infotrygd
       access: readwrite
-  envFrom:
-    - secret: syfosminfotrygd-secrets
-    - secret: syfosminfotrygd-keystore-pwd
-  filesFrom:
-    - mountPath: /var/run/keystore
-      secret: syfosminfotrygd-keystore
   secureLogs:
     enabled: true
   env:
@@ -97,8 +91,6 @@ spec:
       value: api://dev-gcp.teamsykmelding.syfohelsenettproxy/.default
     - name: MANUELL_SCOPE
       value: api://dev-gcp.teamsykmelding.syfosmmanuell-backend/.default
-    - name: MQ_KEYSTORE_PATH
-      value: /var/run/keystore/syfosminfotrygd-keystore.jks
     - name: SYKETILLFELLE_SCOPE
       value: api://dev-gcp.flex.flex-syketilfelle/.default
     - name: SMREGISTER_AUDIENCE
