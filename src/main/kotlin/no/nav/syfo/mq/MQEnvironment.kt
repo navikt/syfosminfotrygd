@@ -1,8 +1,8 @@
 package no.nav.syfo.mq
 
 data class MQEnvironment(
-    val MQ_KEYSTORE_PASSWORD: String = getEnvVar("MQ_KEYSTORE_PASSWORD"),
-    val MQ_KEYSTORE_PATH: String = getEnvVar("MQ_KEYSTORE_PATH")
+    val NAV_TRUSTSTORE_PASSWORD: String = getEnvVar("NAV_TRUSTSTORE_PASSWORD"),
+    val NAV_TRUSTSTORE_PATH: String = getEnvVar("NAV_TRUSTSTORE_PATH")
 ) {
     companion object {
         fun getEnvVar(varName: String, defaultValue: String? = null) =

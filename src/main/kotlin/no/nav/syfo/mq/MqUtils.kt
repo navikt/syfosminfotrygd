@@ -3,9 +3,7 @@ package no.nav.syfo.mq
 import com.ibm.mq.jakarta.jms.MQConnectionFactory
 import com.ibm.msg.client.jakarta.wmq.WMQConstants
 import com.ibm.msg.client.jakarta.wmq.compat.base.internal.MQC
-import jakarta.jms.MessageConsumer
 import jakarta.jms.MessageProducer
-import jakarta.jms.QueueBrowser
 import jakarta.jms.Session
 import javax.net.ssl.SSLSocketFactory
 
@@ -30,11 +28,7 @@ fun connectionFactory(config: MqConfig) =
         setIntProperty(WMQConstants.JMS_IBM_CHARACTER_SET, 1208)
     }
 
-fun Session.consumerForQueue(queueName: String): MessageConsumer =
-    createConsumer(createQueue(queueName))
 
 fun Session.producerForQueue(queueName: String): MessageProducer =
     createProducer(createQueue(queueName))
 
-fun Session.createBrowserForQueue(queueName: String): QueueBrowser =
-    createBrowser(createQueue(queueName))
