@@ -70,7 +70,6 @@ spec:
       access: readwrite
   vault:
     enabled: false
-  webproxy: false
   envFrom:
     - secret: syfosminfotrygd-secrets
   secureLogs:
