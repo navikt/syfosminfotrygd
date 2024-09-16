@@ -4,7 +4,7 @@ group = "no.nav.syfo"
 version = "1.0.0"
 
 val artemisVersion = "2.37.0"
-val coroutinesVersion = "1.8.1"
+val coroutinesVersion = "1.9.0"
 val infotrygdForespVersion = "1.0.3"
 val fellesformatVersion = "1.0.3"
 val ibmMqVersion = "9.4.0.5"
@@ -35,7 +35,7 @@ val commonsCodecVersion = "1.17.1"
 val ktfmtVersion = "0.44"
 val snappyJavaVersion = "1.1.10.6"
 val jsonVersion = "20240303"
-val opentelemetryVersion = "2.7.0"
+val opentelemetryVersion = "2.8.0"
 val commonsCompressVersion = "1.27.1"
 
 plugins {
