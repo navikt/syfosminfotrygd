@@ -28,7 +28,5 @@ fun connectionFactory(config: MqConfig) =
         setIntProperty(WMQConstants.JMS_IBM_CHARACTER_SET, 1208)
     }
 
-
 fun Session.producerForQueue(queueName: String): MessageProducer =
     createProducer(createQueue(queueName))
-
