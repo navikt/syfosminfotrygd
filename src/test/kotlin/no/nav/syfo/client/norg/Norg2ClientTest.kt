@@ -61,7 +61,7 @@ class Norg2ClientTest :
                         get("/norg2/enhet/navkontor/POL") { call.respond(HttpStatusCode.NotFound) }
                         get("/norg2/enhet/navkontor/2103") { call.respond(Enhet("2103")) }
                         get("/norg2/enhet/navkontor/null") {
-                            when (context.parameters["disk"]) {
+                            when (call.parameters["disk"]) {
                                 "SPSF" -> call.respond(Enhet("2103"))
                                 else -> call.respond(Enhet("2101"))
                             }

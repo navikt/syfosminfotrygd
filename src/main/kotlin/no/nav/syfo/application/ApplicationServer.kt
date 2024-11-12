@@ -1,9 +1,13 @@
 package no.nav.syfo.application
 
-import io.ktor.server.engine.ApplicationEngine
+import io.ktor.server.engine.*
+import io.ktor.server.netty.*
 import java.util.concurrent.TimeUnit
 
-class ApplicationServer(private val applicationServer: ApplicationEngine) {
+class ApplicationServer(
+    private val applicationServer:
+        EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration>
+) {
     private val applicationState = ApplicationState()
 
     init {
