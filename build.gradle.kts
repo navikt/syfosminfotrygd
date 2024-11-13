@@ -31,7 +31,6 @@ val testcontainersVersion = "1.20.3"
 val syfoXmlCodegen = "2.0.1"
 val mockkVersion = "1.13.13"
 val kotlinVersion = "2.0.21"
-val commonsCodecVersion = "1.17.1"
 val ktfmtVersion = "0.44"
 val snappyJavaVersion = "1.1.10.6"
 val jsonVersion = "20240303"
@@ -74,12 +73,6 @@ dependencies {
     implementation("io.ktor:ktor-client-apache:$ktorVersion")
     implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
-
-    constraints {
-        implementation("commons-codec:commons-codec:$commonsCodecVersion") {
-            because("override transient from io.ktor:ktor-client-apache")
-        }
-    }
 
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
     implementation("net.logstash.logback:logstash-logback-encoder:$logstashEncoderVersion")
