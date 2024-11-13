@@ -34,7 +34,7 @@ val kotlinVersion = "2.0.21"
 val ktfmtVersion = "0.44"
 val snappyJavaVersion = "1.1.10.6"
 val jsonVersion = "20240303"
-val opentelemetryVersion = "2.9.0"
+val opentelemetryVersion = "2.10.0"
 val commonsCompressVersion = "1.27.1"
 
 plugins {
