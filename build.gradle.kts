@@ -5,13 +5,10 @@ version = "1.0.0"
 
 val artemisVersion = "2.38.0"
 val coroutinesVersion = "1.9.0"
-val infotrygdForespVersion = "1.0.3"
-val fellesformatVersion = "1.0.3"
 val ibmMqVersion = "9.4.1.0"
 val javaxActivationVersion = "1.1.1"
 val jacksonVersion = "2.18.1"
 val jaxbApiVersion = "2.4.0-b180830.0359"
-val jaxbVersion = "2.3.0.1"
 val jedisVersion = "4.4.8"
 val kafkaVersion = "3.9.0"
 val kluentVersion = "1.73"
@@ -21,20 +18,19 @@ val logstashEncoderVersion = "8.0"
 val prometheusVersion = "0.16.0"
 val kotestVersion = "5.9.1"
 val jaxwsApiVersion = "2.3.1"
-val jaxbBasicAntVersion = "1.11.1"
 val javaxAnnotationApiVersion = "1.3.2"
 val jaxwsToolsVersion = "2.3.1"
 val jaxbRuntimeVersion = "2.4.0-b180830.0438"
-val javaxJaxwsApiVersion = "2.2.1"
 val jaxbTimeAdaptersVersion = "1.1.3"
 val testcontainersVersion = "1.20.3"
 val syfoXmlCodegen = "2.0.1"
 val mockkVersion = "1.13.13"
 val kotlinVersion = "2.0.21"
 val ktfmtVersion = "0.44"
-val snappyJavaVersion = "1.1.10.6"
-val jsonVersion = "20240303"
 val opentelemetryVersion = "2.9.0"
+
+//Added due to vulnerabilities
+val nettycommonVersion = "4.1.115.Final"
 val commonsCompressVersion = "1.27.1"
 
 plugins {
@@ -69,6 +65,11 @@ dependencies {
 
     implementation("io.ktor:ktor-server-core:$ktorVersion")
     implementation("io.ktor:ktor-server-netty:$ktorVersion")
+    constraints {
+        implementation("io.netty:netty-common:$nettycommonVersion") {
+            because("Due to vulnerabilities in io.ktor:ktor-server-netty")
+        }
+    }
     implementation("io.ktor:ktor-client-core:$ktorVersion")
     implementation("io.ktor:ktor-client-apache:$ktorVersion")
     implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
