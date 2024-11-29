@@ -7,7 +7,7 @@ val artemisVersion = "2.38.0"
 val coroutinesVersion = "1.9.0"
 val ibmMqVersion = "9.4.1.0"
 val javaxActivationVersion = "1.1.1"
-val jacksonVersion = "2.18.1"
+val jacksonVersion = "2.18.2"
 val jaxbApiVersion = "2.4.0-b180830.0359"
 val jedisVersion = "4.4.8"
 val kafkaVersion = "3.9.0"
@@ -22,12 +22,12 @@ val javaxAnnotationApiVersion = "1.3.2"
 val jaxwsToolsVersion = "2.3.1"
 val jaxbRuntimeVersion = "2.4.0-b180830.0438"
 val jaxbTimeAdaptersVersion = "1.1.3"
-val testcontainersVersion = "1.20.3"
+val testcontainersVersion = "1.20.4"
 val syfoXmlCodegen = "2.0.1"
 val mockkVersion = "1.13.13"
-val kotlinVersion = "2.0.21"
+val kotlinVersion = "2.1.0"
 val ktfmtVersion = "0.44"
-val opentelemetryVersion = "2.9.0"
+val opentelemetryVersion = "2.10.0"
 
 //Added due to vulnerabilities
 val nettycommonVersion = "4.1.115.Final"
@@ -35,7 +35,7 @@ val commonsCompressVersion = "1.27.1"
 
 plugins {
     id("application")
-    kotlin("jvm") version "2.0.21"
+    kotlin("jvm") version "2.1.0"
     id("com.gradleup.shadow") version "8.3.5"
     id("com.diffplug.spotless") version "6.25.0"
 }
