@@ -361,6 +361,10 @@ suspend fun blockingApplicationLogic(
     }
 }
 
+data class TSSident(
+    val tssid: String,
+)
+
 private suspend fun runKafkaConsumer(
     infotrygdOppdateringProducer: MessageProducer,
     infotrygdSporringProducer: MessageProducer,
@@ -374,8 +378,18 @@ private suspend fun runKafkaConsumer(
             .poll(Duration.ofMillis(0))
             .mapNotNull { it.value() }
             .forEach { receivedSykmeldingString ->
-                val receivedSykmelding: ReceivedSykmelding =
+                val tempReceivedSykmelding: ReceivedSykmelding =
                     objectMapper.readValue(receivedSykmeldingString)
+
+                val receivedSykmelding =
+                    if (tempReceivedSykmelding.tssid?.contains("{") == true) {
+                        log.info("tss id is object, trying to convert")
+                        val tssIdent =
+                            objectMapper.readValue<TSSident>(tempReceivedSykmelding.tssid).tssid
+                        tempReceivedSykmelding.copy(tssid = tssIdent)
+                    } else {
+                        tempReceivedSykmelding
+                    }
                 val loggingMeta =
                     LoggingMeta(
                         mottakId = receivedSykmelding.navLogId,
