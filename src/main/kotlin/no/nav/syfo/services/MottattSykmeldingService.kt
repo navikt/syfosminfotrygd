@@ -413,13 +413,13 @@ fun skalOppdatereInfotrygd(receivedSykmelding: ReceivedSykmelding, cluster: Stri
                 it.type == "UNDER_BEHANDLING"
         }
             ?: true
-
+    log.info("Merknader! " + merknad)
     // Vi skal ikke oppdatere infotrygd hvis sykmeldingen inneholder reisetilskudd
     val reisetilskudd =
         receivedSykmelding.sykmelding.perioder.none {
             it.reisetilskudd || (it.gradert?.reisetilskudd == true)
         }
-
+    log.info("Reisetilskudd! " + reisetilskudd)
     return merknad && reisetilskudd
 }
 
