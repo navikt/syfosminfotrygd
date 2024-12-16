@@ -393,12 +393,13 @@ fun skalOppdatereInfotrygd(receivedSykmelding: ReceivedSykmelding, cluster: Stri
                     extractHelseOpplysningerArbeidsuforhet(fellesformat),
                 )
             if (
-                healthInformation.medisinskVurdering.biDiagnoser.diagnosekode.firstOrNull()?.s ==
+                healthInformation.medisinskVurdering.biDiagnoser?.diagnosekode?.firstOrNull()?.s ==
                     "icd10"
             ) {
                 return false
             }
         } catch (exception: Exception) {
+            log.error("Throwing exception $exception.message")
             return false
         }
     }
