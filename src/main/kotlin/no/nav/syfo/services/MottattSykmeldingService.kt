@@ -231,6 +231,11 @@ class MottattSykmeldingService(
                     StructuredArguments.fields(loggingMeta),
                 )
                 log.info("Merknadene er " + receivedSykmelding.merknader )
+                val reisetilskudd =
+                    receivedSykmelding.sykmelding.perioder.none {
+                        it.reisetilskudd || (it.gradert?.reisetilskudd == true)
+                    }
+                log.info("Reisetilskudd er " + reisetilskudd)
                 handleSkalIkkeOppdatereInfotrygd(receivedSykmelding, loggingMeta)
             }
         }
