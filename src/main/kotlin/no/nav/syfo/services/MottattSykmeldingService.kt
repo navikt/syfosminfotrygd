@@ -236,6 +236,7 @@ class MottattSykmeldingService(
                         it.reisetilskudd || (it.gradert?.reisetilskudd == true)
                     }
                 log.info("Reisetilskudd er " + reisetilskudd)
+                log.info("Reisetilskudd: " + receivedSykmelding.sykmelding.perioder.toString())
                 handleSkalIkkeOppdatereInfotrygd(receivedSykmelding, loggingMeta)
             }
         }
@@ -400,7 +401,7 @@ fun skalOppdatereInfotrygd(receivedSykmelding: ReceivedSykmelding, cluster: Stri
                     extractHelseOpplysningerArbeidsuforhet(fellesformat),
                 )
             if (
-                healthInformation.medisinskVurdering.biDiagnoser.diagnosekode.firstOrNull()?.s ==
+                healthInformation.medisinskVurdering.biDiagnoser?.diagnosekode?.firstOrNull()?.s ==
                     "icd10"
             ) {
                 log.info("Returning from icd10")
