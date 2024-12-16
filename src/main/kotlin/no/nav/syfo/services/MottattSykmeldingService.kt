@@ -387,6 +387,7 @@ class MottattSykmeldingService(
 }
 
 fun skalOppdatereInfotrygd(receivedSykmelding: ReceivedSykmelding, cluster: String): Boolean {
+    log.info("Cluster er " + cluster)
     if (cluster == "dev-gcp") {
         try {
             val fellesformat =
@@ -402,9 +403,11 @@ fun skalOppdatereInfotrygd(receivedSykmelding: ReceivedSykmelding, cluster: Stri
                 healthInformation.medisinskVurdering.biDiagnoser.diagnosekode.firstOrNull()?.s ==
                     "icd10"
             ) {
+                log.info("Returning from icd10")
                 return false
             }
         } catch (exception: Exception) {
+            log.info("exception " + exception.message)
             return false
         }
     }
@@ -422,6 +425,7 @@ fun skalOppdatereInfotrygd(receivedSykmelding: ReceivedSykmelding, cluster: Stri
         receivedSykmelding.sykmelding.perioder.none {
             it.reisetilskudd || (it.gradert?.reisetilskudd == true)
         }
+    log.info("Returverdi " + merknad + "" + reisetilskudd)
     return merknad && reisetilskudd
 }
 
