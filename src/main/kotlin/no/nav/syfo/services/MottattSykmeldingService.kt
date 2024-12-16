@@ -396,6 +396,7 @@ fun skalOppdatereInfotrygd(receivedSykmelding: ReceivedSykmelding, cluster: Stri
                 healthInformation.medisinskVurdering.biDiagnoser?.diagnosekode?.firstOrNull()?.s ==
                     "icd10"
             ) {
+                log.info("icd10 " + healthInformation.medisinskVurdering.biDiagnoser)
                 return false
             }
         } catch (exception: Exception) {
