@@ -399,6 +399,7 @@ fun skalOppdatereInfotrygd(receivedSykmelding: ReceivedSykmelding, cluster: Stri
                 return false
             }
         } catch (exception: Exception) {
+            log.info("exception " + exception.message)
             return false
         }
     }
