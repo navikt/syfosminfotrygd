@@ -227,7 +227,7 @@ class MottattSykmeldingService(
             }
             else -> {
                 log.info(
-                    "Oppdaterer ikke infotrygd for sykmelding med merknad eller reisetilskudd, {}",
+                    "Oppdaterer ikke infotrygd for sykmelding som har merknad eller reisetilskudd, {}",
                     StructuredArguments.fields(loggingMeta),
                 )
                 handleSkalIkkeOppdatereInfotrygd(receivedSykmelding, loggingMeta)
