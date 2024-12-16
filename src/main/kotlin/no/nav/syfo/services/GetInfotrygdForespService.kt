@@ -61,7 +61,7 @@ suspend fun fetchInfotrygdForesp(
                         else ->
                             throw RuntimeException(
                                 "Incoming message needs to be a byte message or text message, JMS type:" +
-                                    consumedMessage.jmsType,
+                                    consumedMessage?.jmsType,
                             )
                     }
                 safeUnmarshal(inputMessageText, receivedSykmelding.sykmelding.id)
