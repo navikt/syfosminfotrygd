@@ -230,6 +230,7 @@ class MottattSykmeldingService(
                     "Oppdaterer ikke infotrygd for sykmelding med merknad eller reisetilskudd, {}",
                     StructuredArguments.fields(loggingMeta),
                 )
+                log.info("Merknadene er " + receivedSykmelding.merknader )
                 handleSkalIkkeOppdatereInfotrygd(receivedSykmelding, loggingMeta)
             }
         }
@@ -411,13 +412,11 @@ fun skalOppdatereInfotrygd(receivedSykmelding: ReceivedSykmelding, cluster: Stri
                 it.type == "UNDER_BEHANDLING"
         }
             ?: true
-    log.info("Merknadene er " + receivedSykmelding.merknader )
     // Vi skal ikke oppdatere infotrygd hvis sykmeldingen inneholder reisetilskudd
     val reisetilskudd =
         receivedSykmelding.sykmelding.perioder.none {
             it.reisetilskudd || (it.gradert?.reisetilskudd == true)
         }
-    log.info("Reisetilskudd er " + reisetilskudd )
     return merknad && reisetilskudd
 }
 
