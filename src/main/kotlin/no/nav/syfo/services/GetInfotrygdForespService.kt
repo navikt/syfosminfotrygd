@@ -56,15 +56,14 @@ suspend fun fetchInfotrygdForesp(
             session.createConsumer(temporaryQueue).use { tmpConsumer ->
                 val consumedMessage = tmpConsumer.receive(20000)
                 val inputMessageText =
-                    when {
-                        consumedMessage == null ->
-                            throw RuntimeException("Consumed message is null")
-                        consumedMessage is TextMessage -> consumedMessage.text
-                        else ->
-                            throw RuntimeException(
-                                "Incoming message needs to be a byte message or text message, JMS type: " +
-                                    consumedMessage.jmsType,
-                            )
+                    when (consumedMessage) {
+                        null ->
+                            throw RuntimeException("Incoming message is null")
+                        is TextMessage -> consumedMessage.text
+                        else -> throw RuntimeException(
+                            "Incoming message needs to be a byte message or text message, JMS type: " +
+                                consumedMessage.jmsType,
+                        )
                     }
                 safeUnmarshal(inputMessageText, receivedSykmelding.sykmelding.id)
             }
