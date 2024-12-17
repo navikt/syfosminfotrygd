@@ -30,7 +30,7 @@ val ktfmtVersion = "0.44"
 val opentelemetryVersion = "2.10.0"
 
 //Added due to vulnerabilities
-val nettycommonVersion = "4.1.115.Final"
+val nettycommonVersion = "4.1.116.Final"
 val commonsCompressVersion = "1.27.1"
 
 plugins {
