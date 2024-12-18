@@ -5,7 +5,7 @@ version = "1.0.0"
 
 val artemisVersion = "2.38.0"
 val coroutinesVersion = "1.9.0"
-val ibmMqVersion = "9.4.1.0"
+val ibmMqVersion = "9.4.1.1"
 val javaxActivationVersion = "1.1.1"
 val jacksonVersion = "2.18.2"
 val jaxbApiVersion = "2.4.0-b180830.0359"
@@ -30,7 +30,7 @@ val ktfmtVersion = "0.44"
 val opentelemetryVersion = "2.10.0"
 
 //Added due to vulnerabilities
-val nettycommonVersion = "4.1.115.Final"
+val nettycommonVersion = "4.1.116.Final"
 val commonsCompressVersion = "1.27.1"
 
 plugins {
