@@ -176,7 +176,6 @@ class MottattSykmeldingService(
                                 val navKontorNr =
                                     setNavKontorNr(
                                         receivedSykmeldingCopyTssId,
-                                        syketilfelleStartdato,
                                         lokaltNavkontor,
                                     )
                                 if (
@@ -237,7 +236,6 @@ class MottattSykmeldingService(
 
     private fun setNavKontorNr(
         receivedSykmelding: ReceivedSykmelding,
-        syketilfelleStartdato: LocalDate?,
         lokaltNavkontor: String,
     ): String {
         log.info(
@@ -257,18 +255,6 @@ class MottattSykmeldingService(
                 "Sykmelding er utenlandsk med utenlandsk adresse, sender til 2101. SykmeldingsId: ${receivedSykmelding.sykmelding.id} . Navkontor: $lokaltNavkontor",
             )
             return "2101"
-        }
-        if (
-            receivedSykmelding.erUtenlandskSykmelding() &&
-                sickLeavePeriodOver12Weeks(
-                    receivedSykmelding,
-                    syketilfelleStartdato,
-                )
-        ) {
-            log.info(
-                "Sykmelding er utenlandsk og sykmeldingsperioden er over 12 uker, sender til 2101. SykmeldingsId: ${receivedSykmelding.sykmelding.id} . Navkontor: $lokaltNavkontor",
-            )
-            return "2101"
         } else {
             log.info(
                 "Sender til lokalt NAV-kontor: $lokaltNavkontor. SykmeldingsId: ${receivedSykmelding.sykmelding.id} . receivedsykmelding.utenlandsksykmelding er null?: ${
@@ -279,18 +265,6 @@ class MottattSykmeldingService(
             )
             return lokaltNavkontor
         }
-    }
-
-    private fun sickLeavePeriodOver12Weeks(
-        receivedSykmelding: ReceivedSykmelding,
-        syketilfelleStartdato: LocalDate?,
-    ): Boolean {
-        val forsteFomDato = receivedSykmelding.sykmelding.perioder.sortedFOMDate().first()
-        val sisteTomDato = receivedSykmelding.sykmelding.perioder.sortedTOMDate().last()
-
-        return ((forsteFomDato..sisteTomDato).daysBetween() > 84 ||
-            (syketilfelleStartdato != null &&
-                (syketilfelleStartdato..sisteTomDato).daysBetween() > 84))
     }
 
     private suspend fun getHelsepersonell(receivedSykmelding: ReceivedSykmelding): Behandler? {
