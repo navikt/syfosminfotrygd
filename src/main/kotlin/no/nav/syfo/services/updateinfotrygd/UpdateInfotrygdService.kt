@@ -51,7 +51,7 @@ class UpdateInfotrygdService(
         val tssid = receivedSykmelding.tssid
 
         val forsteFravaersDag = finnForsteFravaersDag(itfh, perioder.first(), loggingMeta)
-
+        log.info("Fant første fraværsdag for sykmelding id ${receivedSykmelding.sykmelding.id} til $forsteFravaersDag")
         val sha256String =
             sha256hashstring(
                 createInfotrygdBlokk(
