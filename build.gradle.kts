@@ -36,7 +36,7 @@ val javaVersion = JvmTarget.JVM_21
 //Added due to vulnerabilities
 val nettycommonVersion = "4.1.117.Final"
 val commonsCompressVersion = "1.27.1"
-val commonsCodecVersion = "1.17.2"
+val commonsCodecVersion = "1.18.0"
 
 plugins {
     id("application")
