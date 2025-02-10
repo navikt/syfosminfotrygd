@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory
 class Norg2ValkeyService(private val jedisPool: JedisPool) {
     companion object {
         private val log: Logger = LoggerFactory.getLogger(Norg2ValkeyService::class.java)
-        private val redisTimeoutSeconds: Long = Duration.ofDays(30).toSeconds()
+        private val valkeyTimeoutSeconds: Long = Duration.ofDays(30).toSeconds()
         private const val prefix = "NORG"
     }
 
@@ -21,7 +21,7 @@ class Norg2ValkeyService(private val jedisPool: JedisPool) {
             jedis = jedisPool.resource
             jedis.setex(
                 "$prefix$geografiskOmraade",
-                redisTimeoutSeconds,
+                valkeyTimeoutSeconds,
                 objectMapper.writeValueAsString(enhet)
             )
         } catch (ex: Exception) {

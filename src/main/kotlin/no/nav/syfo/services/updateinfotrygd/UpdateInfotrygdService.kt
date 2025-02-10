@@ -176,7 +176,7 @@ class UpdateInfotrygdService(
                                 loggingMeta,
                             )
                         } catch (exception: Exception) {
-                            valkeyService.slettRedisKey(sha256String, loggingMeta)
+                            valkeyService.slettValkeyKey(sha256String, loggingMeta)
                             log.error(
                                 "Feilet i infotrygd oppdaternings biten, kaster exception",
                                 exception,

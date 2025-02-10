@@ -92,7 +92,7 @@ class ManuellBehandlingService(
                     ),
                 )
 
-            val duplikatInfotrygdOppdatering = valkeyService.erIRedis(sha256String)
+            val duplikatInfotrygdOppdatering = valkeyService.erIValkey(sha256String)
 
             if (errorFromInfotrygd(validationResult.ruleHits)) {
                 valkeyService.oppdaterAntallErrorIInfotrygd(
@@ -169,7 +169,7 @@ class ManuellBehandlingService(
             }
         } catch (connectionException: JedisConnectionException) {
             log.error(
-                "Fikk ikkje opprettet kontakt med redis, kaster exception",
+                "Fikk ikkje opprettet kontakt med valkey, kaster exception",
                 connectionException
             )
             throw connectionException

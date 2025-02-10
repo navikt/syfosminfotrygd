@@ -87,12 +87,12 @@ class Norg2ClientTest :
                 norg2Client.getLocalNAVOffice("POL", null, loggingMeta) shouldBeEqualTo
                     Enhet(NAV_OPPFOLGING_UTLAND_KONTOR_NR)
             }
-            test("Oppdaterer redis") {
+            test("Oppdaterer valkey") {
                 norg2Client.getLocalNAVOffice("1411", null, loggingMeta) shouldBeEqualTo
                     Enhet("1400")
                 coVerify(exactly = 1) { norg2ValkeyService.putEnhet("1411", Enhet("1400")) }
             }
-            test("Oppdaterer ikke redis ved diskresjonskode") {
+            test("Oppdaterer ikke valkey ved diskresjonskode") {
                 norg2Client.getLocalNAVOffice("1411", "SPSF", loggingMeta) shouldBeEqualTo
                     Enhet("1400")
 

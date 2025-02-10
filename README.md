@@ -14,7 +14,7 @@ This the high level flow of the application
      
       A[\teamsykmelding.ok-sykmelding/] --- syfosminfotrygd;
       B[\teamsykmelding.privat-sminfotrygd-retry/] --- syfosminfotrygd; 
-      syfosminfotrygd --- redis; 
+      syfosminfotrygd --- valkey; 
       syfosminfotrygd --- C[\teamsykmelding.sykmelding-behandlingsutfall/];
       syfosminfotrygd --- syfohelsenettproxy;
       syfosminfotrygd --- NORG2;
@@ -31,7 +31,6 @@ This the high level flow of the application
 ```
 
 ## Technologies used
-
 * Kotlin
 * Ktor
 * Gradle

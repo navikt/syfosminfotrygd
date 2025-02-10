@@ -9,7 +9,7 @@ import no.nav.syfo.util.LoggingMeta
 import org.amshove.kluent.shouldBeEqualTo
 import org.testcontainers.containers.GenericContainer
 
-class RedisSpek :
+class ValkeySpek :
     FunSpec({
         val loggingMeta =
             LoggingMeta(
@@ -35,7 +35,7 @@ class RedisSpek :
 
         afterSpec { valkeyContainer.stop() }
 
-        context("Testing the redis functions") {
+        context("Testing the valkey functions") {
             test("Should set errorFromInfotrygd count to 2") {
                 valkeyService.oppdaterAntallErrorIInfotrygd(
                     INFOTRYGD,
@@ -65,7 +65,7 @@ class RedisSpek :
             }
 
             test("Oppdatering returnerer OK når key ikke finnes") {
-                val oppdaterRedis =
+                val oppdaterValkey =
                     valkeyService.oppdaterValkey(
                         INFOTRYGD,
                         "1",
@@ -73,7 +73,7 @@ class RedisSpek :
                         loggingMeta
                     )
 
-                oppdaterRedis shouldBeEqualTo "OK"
+                oppdaterValkey shouldBeEqualTo "OK"
             }
 
             test("Oppdatering returnerer null når key finnes fra før") {
@@ -83,7 +83,7 @@ class RedisSpek :
                     TimeUnit.MINUTES.toSeconds(5).toInt(),
                     loggingMeta
                 )
-                val oppdaterRedisFAIL =
+                val oppdaterValkeyFAIL =
                     valkeyService.oppdaterValkey(
                         INFOTRYGD,
                         "1",
@@ -91,7 +91,7 @@ class RedisSpek :
                         loggingMeta
                     )
 
-                oppdaterRedisFAIL shouldBeEqualTo null
+                oppdaterValkeyFAIL shouldBeEqualTo null
             }
 
             test("Should delete 1 key") {
@@ -101,7 +101,7 @@ class RedisSpek :
                     TimeUnit.MINUTES.toSeconds(10).toInt(),
                     loggingMeta
                 )
-                val antallSlettede = valkeyService.slettRedisKey(INFOTRYGD, loggingMeta)
+                val antallSlettede = valkeyService.slettValkeyKey(INFOTRYGD, loggingMeta)
                 antallSlettede shouldBeEqualTo 1L
             }
         }

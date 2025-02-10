@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.io.ByteArrayOutputStream
 
 group = "no.nav.syfo"
@@ -28,6 +29,9 @@ val mockkVersion = "1.13.16"
 val kotlinVersion = "2.1.10"
 val ktfmtVersion = "0.44"
 val opentelemetryVersion = "2.12.0"
+
+val javaVersion = JvmTarget.JVM_21
+
 
 //Added due to vulnerabilities
 val nettycommonVersion = "4.1.117.Final"
@@ -131,6 +135,12 @@ dependencies {
     testImplementation("io.mockk:mockk:$mockkVersion")
 }
 
+kotlin {
+    compilerOptions {
+        jvmTarget = javaVersion
+    }
+}
+
 
 tasks {
     register<JavaExec>("generateRuleMermaid") {
@@ -180,7 +190,11 @@ tasks {
 
     test {
         useJUnitPlatform {}
-        testLogging.showStandardStreams = true
+        testLogging {
+            events("skipped", "failed")
+            showStackTraces = true
+            exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+        }
     }
 
 
