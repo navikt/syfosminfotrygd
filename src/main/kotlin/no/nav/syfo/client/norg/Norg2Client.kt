@@ -16,7 +16,7 @@ import no.nav.syfo.util.LoggingMeta
 class Norg2Client(
     private val httpClient: HttpClient,
     private val endpointUrl: String,
-    private val norg2RedisService: Norg2RedisService,
+    private val norg2ValkeyService: Norg2ValkeyService,
 ) {
     suspend fun getLocalNAVOffice(
         geografiskOmraade: String?,
@@ -24,7 +24,7 @@ class Norg2Client(
         loggingMeta: LoggingMeta
     ): Enhet {
         if (diskresjonskode == null && geografiskOmraade != null) {
-            norg2RedisService.getEnhet(geografiskOmraade)?.let {
+            norg2ValkeyService.getEnhet(geografiskOmraade)?.let {
                 log.debug("Traff cache for GT $geografiskOmraade")
                 return it
             }
@@ -41,7 +41,7 @@ class Norg2Client(
             HttpStatusCode.OK -> {
                 val enhet = httpResponse.body<Enhet>()
                 if (diskresjonskode == null && geografiskOmraade != null) {
-                    norg2RedisService.putEnhet(geografiskOmraade, enhet)
+                    norg2ValkeyService.putEnhet(geografiskOmraade, enhet)
                 }
                 return enhet
             }

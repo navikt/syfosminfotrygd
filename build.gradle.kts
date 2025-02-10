@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.io.ByteArrayOutputStream
 
 group = "no.nav.syfo"
@@ -9,7 +10,7 @@ val ibmMqVersion = "9.4.1.1"
 val javaxActivationVersion = "1.1.1"
 val jacksonVersion = "2.18.2"
 val jaxbApiVersion = "2.4.0-b180830.0359"
-val jedisVersion = "4.4.8"
+val valkeyVersion = "5.3.0"
 val kafkaVersion = "3.9.0"
 val kluentVersion = "1.73"
 val ktorVersion = "3.0.3"
@@ -29,9 +30,13 @@ val kotlinVersion = "2.1.10"
 val ktfmtVersion = "0.44"
 val opentelemetryVersion = "2.12.0"
 
+val javaVersion = JvmTarget.JVM_21
+
+
 //Added due to vulnerabilities
 val nettycommonVersion = "4.1.117.Final"
 val commonsCompressVersion = "1.27.1"
+val commonsCodecVersion = "1.17.2"
 
 plugins {
     id("application")
@@ -72,6 +77,11 @@ dependencies {
     }
     implementation("io.ktor:ktor-client-core:$ktorVersion")
     implementation("io.ktor:ktor-client-apache:$ktorVersion")
+    constraints {
+        implementation("commons-codec:commons-codec:$commonsCodecVersion") {
+            because("override transient from io.ktor:ktor-client-apache")
+        }
+    }
     implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
 
@@ -94,7 +104,7 @@ dependencies {
     implementation("no.nav.helse.xml:kith-hodemelding:$syfoXmlCodegen")
 
 
-    implementation("redis.clients:jedis:$jedisVersion")
+    implementation("io.valkey:valkey-java:$valkeyVersion")
 
     implementation("com.migesok:jaxb-java-time-adapters:$jaxbTimeAdaptersVersion")
     implementation("javax.xml.ws:jaxws-api:$jaxwsApiVersion")
@@ -123,6 +133,12 @@ dependencies {
         }
     }
     testImplementation("io.mockk:mockk:$mockkVersion")
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = javaVersion
+    }
 }
 
 
@@ -174,7 +190,11 @@ tasks {
 
     test {
         useJUnitPlatform {}
-        testLogging.showStandardStreams = true
+        testLogging {
+            events("skipped", "failed")
+            showStackTraces = true
+            exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+        }
     }
 
 

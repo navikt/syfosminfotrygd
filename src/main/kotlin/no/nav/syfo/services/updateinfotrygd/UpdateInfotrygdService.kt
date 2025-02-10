@@ -16,7 +16,7 @@ import no.nav.syfo.log
 import no.nav.syfo.model.sykmelding.ReceivedSykmelding
 import no.nav.syfo.model.sykmelding.ValidationResult
 import no.nav.syfo.services.BehandlingsutfallService
-import no.nav.syfo.services.RedisService
+import no.nav.syfo.services.ValkeyService
 import no.nav.syfo.services.sha256hashstring
 import no.nav.syfo.util.LoggingMeta
 import no.nav.syfo.util.xmlObjectWriter
@@ -29,7 +29,7 @@ class UpdateInfotrygdService(
     private val kafkaAivenProducerReceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
     private val retryTopic: String,
     private val behandlingsutfallService: BehandlingsutfallService,
-    private val redisService: RedisService,
+    private val valkeyService: ValkeyService,
 ) {
 
     @WithSpan
@@ -75,7 +75,7 @@ class UpdateInfotrygdService(
 
         delay(100)
         val nyligInfotrygdOppdatering =
-            redisService.oppdaterRedis(personNrPasient, personNrPasient, 4, loggingMeta)
+            valkeyService.oppdaterValkey(personNrPasient, personNrPasient, 4, loggingMeta)
 
         when {
             nyligInfotrygdOppdatering == null -> {
@@ -98,7 +98,7 @@ class UpdateInfotrygdService(
             }
             else -> {
                 val duplikatInfotrygdOppdatering =
-                    redisService.oppdaterRedis(
+                    valkeyService.oppdaterValkey(
                         sha256String,
                         sha256String,
                         TimeUnit.DAYS.toSeconds(60).toInt(),
@@ -176,7 +176,7 @@ class UpdateInfotrygdService(
                                 loggingMeta,
                             )
                         } catch (exception: Exception) {
-                            redisService.slettRedisKey(sha256String, loggingMeta)
+                            valkeyService.slettValkeyKey(sha256String, loggingMeta)
                             log.error(
                                 "Feilet i infotrygd oppdaternings biten, kaster exception",
                                 exception,

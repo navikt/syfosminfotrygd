@@ -295,7 +295,6 @@ class CreateInfotrygdInfoSpek :
                         .writeValueAsString(infotrygdFellesformat)
                         .contains(":InfotrygdBlokk")
                         .shouldBeFalse()
-                    println(xmlObjectWriter.writeValueAsString(infotrygdFellesformat))
                 }
 
                 test("Should NOT set arbeidsKategori") {

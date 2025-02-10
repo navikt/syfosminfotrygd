@@ -11,7 +11,6 @@ import io.ktor.client.plugins.HttpRequestRetry
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.jackson.jackson
-import io.ktor.server.application.call
 import io.ktor.server.application.install
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
@@ -32,7 +31,7 @@ import org.amshove.kluent.shouldBeEqualTo
 class Norg2ClientTest :
     FunSpec({
         val loggingMeta = LoggingMeta("mottakid", "orgnr", "msgid", "sykmeldingid")
-        val norg2RedisService = mockk<Norg2RedisService>(relaxed = true)
+        val norg2ValkeyService = mockk<Norg2ValkeyService>(relaxed = true)
         val httpClient =
             HttpClient(CIO) {
                 install(ContentNegotiation) {
@@ -70,11 +69,11 @@ class Norg2ClientTest :
                 }
                 .start()
 
-        val norg2Client = Norg2Client(httpClient, "$mockHttpServerUrl/norg2", norg2RedisService)
+        val norg2Client = Norg2Client(httpClient, "$mockHttpServerUrl/norg2", norg2ValkeyService)
 
         beforeTest {
-            clearMocks(norg2RedisService)
-            coEvery { norg2RedisService.getEnhet(any()) } returns null
+            clearMocks(norg2ValkeyService)
+            coEvery { norg2ValkeyService.getEnhet(any()) } returns null
         }
 
         afterSpec { mockServer.stop(TimeUnit.SECONDS.toMillis(1), TimeUnit.SECONDS.toMillis(1)) }
@@ -88,26 +87,26 @@ class Norg2ClientTest :
                 norg2Client.getLocalNAVOffice("POL", null, loggingMeta) shouldBeEqualTo
                     Enhet(NAV_OPPFOLGING_UTLAND_KONTOR_NR)
             }
-            test("Oppdaterer redis") {
+            test("Oppdaterer valkey") {
                 norg2Client.getLocalNAVOffice("1411", null, loggingMeta) shouldBeEqualTo
                     Enhet("1400")
-                coVerify(exactly = 1) { norg2RedisService.putEnhet("1411", Enhet("1400")) }
+                coVerify(exactly = 1) { norg2ValkeyService.putEnhet("1411", Enhet("1400")) }
             }
-            test("Oppdaterer ikke redis ved diskresjonskode") {
+            test("Oppdaterer ikke valkey ved diskresjonskode") {
                 norg2Client.getLocalNAVOffice("1411", "SPSF", loggingMeta) shouldBeEqualTo
                     Enhet("1400")
 
-                coVerify(exactly = 0) { norg2RedisService.putEnhet(any(), any()) }
+                coVerify(exactly = 0) { norg2ValkeyService.putEnhet(any(), any()) }
             }
             test("geografisk tilhørighet er null") {
                 norg2Client.getLocalNAVOffice(null, null, loggingMeta) shouldBeEqualTo
                     Enhet(NAV_OPPFOLGING_UTLAND_KONTOR_NR)
-                coVerify(exactly = 0) { norg2RedisService.putEnhet(any(), any()) }
+                coVerify(exactly = 0) { norg2ValkeyService.putEnhet(any(), any()) }
             }
             test("geografisk tilhørighet er null med diskresjonskode") {
                 norg2Client.getLocalNAVOffice(null, "SPSF", loggingMeta) shouldBeEqualTo
                     Enhet(NAV_VIKAFOSSEN_KONTOR_NR)
-                coVerify(exactly = 0) { norg2RedisService.putEnhet(any(), any()) }
+                coVerify(exactly = 0) { norg2ValkeyService.putEnhet(any(), any()) }
             }
         }
     })

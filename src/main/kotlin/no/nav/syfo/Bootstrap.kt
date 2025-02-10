@@ -49,7 +49,7 @@ import no.nav.syfo.client.ManuellClient
 import no.nav.syfo.client.NorskHelsenettClient
 import no.nav.syfo.client.SyketilfelleClient
 import no.nav.syfo.client.norg.Norg2Client
-import no.nav.syfo.client.norg.Norg2RedisService
+import no.nav.syfo.client.norg.Norg2ValkeyService
 import no.nav.syfo.kafka.aiven.KafkaUtils
 import no.nav.syfo.kafka.toConsumerConfig
 import no.nav.syfo.kafka.toProducerConfig
@@ -66,8 +66,8 @@ import no.nav.syfo.services.FinnNAVKontorService
 import no.nav.syfo.services.ManuellBehandlingService
 import no.nav.syfo.services.MottattSykmeldingService
 import no.nav.syfo.services.OppgaveService
-import no.nav.syfo.services.RedisService
 import no.nav.syfo.services.SykmeldingService
+import no.nav.syfo.services.ValkeyService
 import no.nav.syfo.services.updateinfotrygd.UpdateInfotrygdService
 import no.nav.syfo.smregister.SmregisterClient
 import no.nav.syfo.util.JacksonKafkaSerializer
@@ -168,9 +168,9 @@ fun main() {
 
     val httpClient = HttpClient(Apache, config)
     val jedisPool = createJedisPool()
-    val redisService = RedisService(jedisPool)
+    val valkeyService = ValkeyService(jedisPool)
 
-    val norg2Client = Norg2Client(httpClient, env.norg2V1EndpointURL, Norg2RedisService(jedisPool))
+    val norg2Client = Norg2Client(httpClient, env.norg2V1EndpointURL, Norg2ValkeyService(jedisPool))
 
     val accessTokenClientV2 =
         AccessTokenClientV2(env.aadAccessTokenV2Url, env.clientIdV2, env.clientSecretV2, httpClient)
@@ -218,7 +218,7 @@ fun main() {
     val manuellBehandlingService =
         ManuellBehandlingService(
             behandlingsutfallService = behandlingsutfallService,
-            redisService = redisService,
+            valkeyService = valkeyService,
             oppgaveService = oppgaveService,
             applicationState = applicationState,
             sykmeldingService = sykmeldingService,
@@ -229,7 +229,7 @@ fun main() {
             kafkaAivenProducerReceivedSykmelding = kafkaAivenProducerReceivedSykmelding,
             retryTopic = env.retryTopic,
             behandlingsutfallService = behandlingsutfallService,
-            redisService = redisService,
+            valkeyService = valkeyService,
         )
 
     val mottattSykmeldingService =

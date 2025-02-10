@@ -14,7 +14,7 @@ import org.amshove.kluent.shouldBeEqualTo
 
 class Duplikatsjekk :
     FunSpec({
-        context("Tester duplikat hånderingen med redis") {
+        context("Tester duplikat hånderingen med valkey") {
             test("Skal plukke meldingen som duplikat") {
                 val healthInformationForstemelding =
                     HelseOpplysningerArbeidsuforhet().apply {

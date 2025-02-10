@@ -1,15 +1,15 @@
 package no.nav.syfo.services
 
 import io.kotest.core.spec.style.FunSpec
+import io.valkey.JedisPool
+import io.valkey.JedisPoolConfig
 import java.util.concurrent.TimeUnit
 import no.nav.syfo.services.updateinfotrygd.INFOTRYGD
 import no.nav.syfo.util.LoggingMeta
 import org.amshove.kluent.shouldBeEqualTo
 import org.testcontainers.containers.GenericContainer
-import redis.clients.jedis.JedisPool
-import redis.clients.jedis.JedisPoolConfig
 
-class RedisSpek :
+class ValkeySpek :
     FunSpec({
         val loggingMeta =
             LoggingMeta(
@@ -19,88 +19,89 @@ class RedisSpek :
                 sykmeldingId = "0",
             )
 
-        val redisContainer: GenericContainer<Nothing> = GenericContainer("redis:7.0.12-alpine")
-        redisContainer.withExposedPorts(6379)
+        val valkeyContainer: GenericContainer<Nothing> =
+            GenericContainer("valkey/valkey:8.0.2-alpine")
+        valkeyContainer.withExposedPorts(6379)
 
-        redisContainer.start()
+        valkeyContainer.start()
         val jedisPool =
-            JedisPool(JedisPoolConfig(), redisContainer.host, redisContainer.getMappedPort(6379))
-        val redisService = RedisService(jedisPool)
+            JedisPool(JedisPoolConfig(), valkeyContainer.host, valkeyContainer.getMappedPort(6379))
+        val valkeyService = ValkeyService(jedisPool)
 
         beforeTest {
             val jedis = jedisPool.resource
             jedis.flushAll()
         }
 
-        afterSpec { redisContainer.stop() }
+        afterSpec { valkeyContainer.stop() }
 
-        context("Testing the redis functions") {
+        context("Testing the valkey functions") {
             test("Should set errorFromInfotrygd count to 2") {
-                redisService.oppdaterAntallErrorIInfotrygd(
+                valkeyService.oppdaterAntallErrorIInfotrygd(
                     INFOTRYGD,
                     "1",
                     TimeUnit.MINUTES.toSeconds(5).toInt(),
                     loggingMeta
                 )
-                redisService.oppdaterAntallErrorIInfotrygd(
+                valkeyService.oppdaterAntallErrorIInfotrygd(
                     INFOTRYGD,
                     "1",
                     TimeUnit.MINUTES.toSeconds(5).toInt(),
                     loggingMeta
                 )
 
-                redisService.antallErrorIInfotrygd(INFOTRYGD, loggingMeta) shouldBeEqualTo 2
+                valkeyService.antallErrorIInfotrygd(INFOTRYGD, loggingMeta) shouldBeEqualTo 2
             }
 
             test("Should set errorFromInfotrygd count to 1") {
-                redisService.oppdaterAntallErrorIInfotrygd(
+                valkeyService.oppdaterAntallErrorIInfotrygd(
                     INFOTRYGD,
                     "1",
                     TimeUnit.MINUTES.toSeconds(5).toInt(),
                     loggingMeta
                 )
 
-                redisService.antallErrorIInfotrygd(INFOTRYGD, loggingMeta) shouldBeEqualTo 1
+                valkeyService.antallErrorIInfotrygd(INFOTRYGD, loggingMeta) shouldBeEqualTo 1
             }
 
             test("Oppdatering returnerer OK når key ikke finnes") {
-                val oppdaterRedis =
-                    redisService.oppdaterRedis(
+                val oppdaterValkey =
+                    valkeyService.oppdaterValkey(
                         INFOTRYGD,
                         "1",
                         TimeUnit.MINUTES.toSeconds(5).toInt(),
                         loggingMeta
                     )
 
-                oppdaterRedis shouldBeEqualTo "OK"
+                oppdaterValkey shouldBeEqualTo "OK"
             }
 
             test("Oppdatering returnerer null når key finnes fra før") {
-                redisService.oppdaterRedis(
+                valkeyService.oppdaterValkey(
                     INFOTRYGD,
                     "1",
                     TimeUnit.MINUTES.toSeconds(5).toInt(),
                     loggingMeta
                 )
-                val oppdaterRedisFAIL =
-                    redisService.oppdaterRedis(
+                val oppdaterValkeyFAIL =
+                    valkeyService.oppdaterValkey(
                         INFOTRYGD,
                         "1",
                         TimeUnit.MINUTES.toSeconds(5).toInt(),
                         loggingMeta
                     )
 
-                oppdaterRedisFAIL shouldBeEqualTo null
+                oppdaterValkeyFAIL shouldBeEqualTo null
             }
 
             test("Should delete 1 key") {
-                redisService.oppdaterRedis(
+                valkeyService.oppdaterValkey(
                     INFOTRYGD,
                     "1",
                     TimeUnit.MINUTES.toSeconds(10).toInt(),
                     loggingMeta
                 )
-                val antallSlettede = redisService.slettRedisKey(INFOTRYGD, loggingMeta)
+                val antallSlettede = valkeyService.slettValkeyKey(INFOTRYGD, loggingMeta)
                 antallSlettede shouldBeEqualTo 1L
             }
         }
