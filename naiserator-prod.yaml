@@ -64,7 +64,7 @@ spec:
             - port: 1414
   kafka:
     pool: nav-prod
-  redis:
+  valkey:
     - instance: infotrygd
       access: readwrite
   envFrom:

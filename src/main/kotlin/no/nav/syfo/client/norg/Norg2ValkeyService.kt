@@ -1,16 +1,16 @@
 package no.nav.syfo.client.norg
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import io.valkey.Jedis
+import io.valkey.JedisPool
 import java.time.Duration
 import no.nav.syfo.objectMapper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import redis.clients.jedis.Jedis
-import redis.clients.jedis.JedisPool
 
-class Norg2RedisService(private val jedisPool: JedisPool) {
+class Norg2ValkeyService(private val jedisPool: JedisPool) {
     companion object {
-        private val log: Logger = LoggerFactory.getLogger(Norg2RedisService::class.java)
+        private val log: Logger = LoggerFactory.getLogger(Norg2ValkeyService::class.java)
         private val redisTimeoutSeconds: Long = Duration.ofDays(30).toSeconds()
         private const val prefix = "NORG"
     }
@@ -25,7 +25,7 @@ class Norg2RedisService(private val jedisPool: JedisPool) {
                 objectMapper.writeValueAsString(enhet)
             )
         } catch (ex: Exception) {
-            log.error("Could not update redis for GT {}", ex.message)
+            log.error("Could not update valkey for GT {}", ex.message)
         } finally {
             jedis?.close()
         }
@@ -40,7 +40,7 @@ class Norg2RedisService(private val jedisPool: JedisPool) {
                 else -> objectMapper.readValue<Enhet>(stringValue)
             }
         } catch (ex: Exception) {
-            log.error("Could not get redis for GT {}", ex.message)
+            log.error("Could not get valkey for GT {}", ex.message)
             null
         } finally {
             jedis?.close()

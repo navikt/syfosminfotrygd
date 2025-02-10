@@ -1,6 +1,7 @@
 package no.nav.syfo.services
 
 import io.opentelemetry.instrumentation.annotations.WithSpan
+import io.valkey.exceptions.JedisConnectionException
 import java.time.LocalDate
 import java.util.concurrent.TimeUnit
 import net.logstash.logback.argument.StructuredArguments
@@ -23,11 +24,10 @@ import no.nav.syfo.services.updateinfotrygd.createInfotrygdBlokk
 import no.nav.syfo.services.updateinfotrygd.findArbeidsKategori
 import no.nav.syfo.sortedFOMDate
 import no.nav.syfo.util.LoggingMeta
-import redis.clients.jedis.exceptions.JedisConnectionException
 
 class ManuellBehandlingService(
     private val behandlingsutfallService: BehandlingsutfallService,
-    private val redisService: RedisService,
+    private val valkeyService: ValkeyService,
     private val oppgaveService: OppgaveService,
     private val applicationState: ApplicationState,
     private val sykmeldingService: SykmeldingService,
@@ -92,10 +92,10 @@ class ManuellBehandlingService(
                     ),
                 )
 
-            val duplikatInfotrygdOppdatering = redisService.erIRedis(sha256String)
+            val duplikatInfotrygdOppdatering = valkeyService.erIRedis(sha256String)
 
             if (errorFromInfotrygd(validationResult.ruleHits)) {
-                redisService.oppdaterAntallErrorIInfotrygd(
+                valkeyService.oppdaterAntallErrorIInfotrygd(
                     INFOTRYGD,
                     "1",
                     TimeUnit.MINUTES.toSeconds(1).toInt(),
@@ -103,7 +103,8 @@ class ManuellBehandlingService(
                 )
             }
 
-            val antallErrorFraInfotrygd = redisService.antallErrorIInfotrygd(INFOTRYGD, loggingMeta)
+            val antallErrorFraInfotrygd =
+                valkeyService.antallErrorIInfotrygd(INFOTRYGD, loggingMeta)
 
             if (antallErrorFraInfotrygd > 50) {
                 log.error("Setter applicationState.ready til false")
@@ -158,7 +159,7 @@ class ManuellBehandlingService(
                         behandletAvManuell,
                         loggingMeta
                     )
-                    redisService.oppdaterRedis(
+                    valkeyService.oppdaterValkey(
                         sha256String,
                         sha256String,
                         TimeUnit.DAYS.toSeconds(60).toInt(),
