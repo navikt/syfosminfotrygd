@@ -34,7 +34,7 @@ val javaVersion = JvmTarget.JVM_21
 
 
 //Added due to vulnerabilities
-val nettycommonVersion = "4.1.117.Final"
+val nettycommonVersion = "4.1.118.Final"
 val commonsCompressVersion = "1.27.1"
 val commonsCodecVersion = "1.18.0"
 
