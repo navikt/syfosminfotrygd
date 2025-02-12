@@ -13,7 +13,7 @@ val jaxbApiVersion = "2.4.0-b180830.0359"
 val valkeyVersion = "5.3.0"
 val kafkaVersion = "3.9.0"
 val kluentVersion = "1.73"
-val ktorVersion = "3.0.3"
+val ktorVersion = "3.1.0"
 val logbackVersion = "1.5.16"
 val logstashEncoderVersion = "8.0"
 val prometheusVersion = "0.16.0"
@@ -34,7 +34,7 @@ val javaVersion = JvmTarget.JVM_21
 
 
 //Added due to vulnerabilities
-val nettycommonVersion = "4.1.117.Final"
+val nettycommonVersion = "4.1.118.Final"
 val commonsCompressVersion = "1.27.1"
 val commonsCodecVersion = "1.18.0"
 
