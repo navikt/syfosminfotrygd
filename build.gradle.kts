@@ -28,7 +28,7 @@ val syfoXmlCodegen = "2.0.1"
 val mockkVersion = "1.13.16"
 val kotlinVersion = "2.1.10"
 val ktfmtVersion = "0.44"
-val opentelemetryVersion = "2.12.0"
+val opentelemetryVersion = "2.13.0"
 
 val javaVersion = JvmTarget.JVM_21
 
