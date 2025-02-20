@@ -23,12 +23,12 @@ val javaxAnnotationApiVersion = "1.3.2"
 val jaxwsToolsVersion = "2.3.1"
 val jaxbRuntimeVersion = "2.4.0-b180830.0438"
 val jaxbTimeAdaptersVersion = "1.1.3"
-val testcontainersVersion = "1.20.4"
+val testcontainersVersion = "1.20.5"
 val syfoXmlCodegen = "2.0.1"
 val mockkVersion = "1.13.16"
 val kotlinVersion = "2.1.10"
 val ktfmtVersion = "0.44"
-val opentelemetryVersion = "2.12.0"
+val opentelemetryVersion = "2.13.1"
 
 val javaVersion = JvmTarget.JVM_21
 
