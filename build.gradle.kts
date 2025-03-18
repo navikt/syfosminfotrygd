@@ -4,7 +4,7 @@ import java.io.ByteArrayOutputStream
 group = "no.nav.syfo"
 version = "1.0.0"
 
-val artemisVersion = "2.39.0"
+val artemisVersion = "2.40.0"
 val coroutinesVersion = "1.10.1"
 val ibmMqVersion = "9.4.2.0"
 val javaxActivationVersion = "1.1.1"
@@ -28,7 +28,7 @@ val syfoXmlCodegen = "2.0.1"
 val mockkVersion = "1.13.17"
 val kotlinVersion = "2.1.10"
 val ktfmtVersion = "0.44"
-val opentelemetryVersion = "2.13.3"
+val opentelemetryVersion = "2.14.0"
 
 val javaVersion = JvmTarget.JVM_21
 
