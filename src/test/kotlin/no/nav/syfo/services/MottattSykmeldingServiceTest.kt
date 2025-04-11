@@ -77,7 +77,7 @@ class MottattSykmeldingServiceTest :
 
         context("handleMessage") {
             test("Happy case") {
-                coEvery { fetchInfotrygdForesp(any(), any(), any(), any()) } returns
+                coEvery { fetchInfotrygdForesp(any(), any(), any(), any(), any()) } returns
                     getInfotrygdForespResponse()
                 val healthInformation = createDefaultHealthInformation()
                 val fellesformat = createFellesFormat(healthInformation)
@@ -240,7 +240,7 @@ class MottattSykmeldingServiceTest :
             }
             test("Går til manuell behandling hvis vi mangler behandler") {
                 coEvery { norskHelsenettClient.finnBehandler(any(), any()) } returns null
-                coEvery { fetchInfotrygdForesp(any(), any(), any(), any()) } returns
+                coEvery { fetchInfotrygdForesp(any(), any(), any(), any(), any()) } returns
                     getInfotrygdForespResponse()
                 val healthInformation = createDefaultHealthInformation()
                 val fellesformat = createFellesFormat(healthInformation)
@@ -305,7 +305,7 @@ class MottattSykmeldingServiceTest :
                 }
             }
             test("Går til manuell behandling hvis infotrygd-regler slår ut") {
-                coEvery { fetchInfotrygdForesp(any(), any(), any(), any()) } returns
+                coEvery { fetchInfotrygdForesp(any(), any(), any(), any(), any()) } returns
                     getInfotrygdForespResponse()
                 val healthInformation = createDefaultHealthInformation()
                 val fellesformat = createFellesFormat(healthInformation)
@@ -372,7 +372,7 @@ class MottattSykmeldingServiceTest :
             }
 
             test("Use local nav office when under 12 weeks and not utenlandsksykmelding") {
-                coEvery { fetchInfotrygdForesp(any(), any(), any(), any()) } returns
+                coEvery { fetchInfotrygdForesp(any(), any(), any(), any(), any()) } returns
                     getInfotrygdForespResponse()
                 val healthInformation = createDefaultHealthInformation()
                 val fellesformat = createFellesFormat(healthInformation)
@@ -440,7 +440,7 @@ class MottattSykmeldingServiceTest :
             }
 
             test("Use local nav office when over 12 weeks and not utenlandsksykmelding") {
-                coEvery { fetchInfotrygdForesp(any(), any(), any(), any()) } returns
+                coEvery { fetchInfotrygdForesp(any(), any(), any(), any(), any()) } returns
                     getInfotrygdForespResponse()
                 val healthInformation = createDefaultHealthInformation()
                 val fellesformat = createFellesFormat(healthInformation)
@@ -508,7 +508,7 @@ class MottattSykmeldingServiceTest :
             }
 
             test("Use local nav office when under 12 weeks and utenlandsksykmelding") {
-                coEvery { fetchInfotrygdForesp(any(), any(), any(), any()) } returns
+                coEvery { fetchInfotrygdForesp(any(), any(), any(), any(), any()) } returns
                     getInfotrygdForespResponse()
                 val startdato = LocalDate.of(2023, 1, 1)
                 coEvery { syketilfelleClient.finnStartdato(any(), any(), any()) } returns startdato
@@ -579,7 +579,7 @@ class MottattSykmeldingServiceTest :
             }
 
             test("Use nav office 2101 when over 12 weeks and utenlandsksykmelding") {
-                coEvery { fetchInfotrygdForesp(any(), any(), any(), any()) } returns
+                coEvery { fetchInfotrygdForesp(any(), any(), any(), any(), any()) } returns
                     getInfotrygdForespResponse()
                 val startdato = LocalDate.of(2023, 1, 1)
                 coEvery { syketilfelleClient.finnStartdato(any(), any(), any()) } returns startdato
@@ -650,7 +650,7 @@ class MottattSykmeldingServiceTest :
             }
 
             test("Use nav office 2101 when sisteKontaktAdresseIUtlandet is true") {
-                coEvery { fetchInfotrygdForesp(any(), any(), any(), any()) } returns
+                coEvery { fetchInfotrygdForesp(any(), any(), any(), any(), any()) } returns
                     getInfotrygdForespResponse()
                 val startdato = LocalDate.of(2023, 1, 1)
                 coEvery { syketilfelleClient.finnStartdato(any(), any(), any()) } returns startdato
@@ -721,7 +721,7 @@ class MottattSykmeldingServiceTest :
             }
 
             test("Use nav office 0101 when sisteKontaktAdresseIUtlandet is false") {
-                coEvery { fetchInfotrygdForesp(any(), any(), any(), any()) } returns
+                coEvery { fetchInfotrygdForesp(any(), any(), any(), any(), any()) } returns
                     getInfotrygdForespResponse()
                 val startdato = LocalDate.of(2023, 1, 1)
                 coEvery { syketilfelleClient.finnStartdato(any(), any(), any()) } returns startdato

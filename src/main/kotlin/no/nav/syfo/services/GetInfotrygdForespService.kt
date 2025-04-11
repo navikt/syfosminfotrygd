@@ -15,6 +15,7 @@ import javax.xml.transform.Source
 import javax.xml.transform.sax.SAXSource
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
+import no.nav.syfo.NAV_OPPFOLGING_UTLAND_KONTOR_NR
 import no.nav.syfo.UTENLANDSK_SYKEHUS
 import no.nav.syfo.erUtenlandskSykmelding
 import no.nav.syfo.helpers.retry
@@ -32,6 +33,7 @@ suspend fun fetchInfotrygdForesp(
     infotrygdSporringProducer: MessageProducer,
     session: Session,
     healthInformation: HelseOpplysningerArbeidsuforhet,
+    navkontor: String,
 ): InfotrygdForesp =
     retry(
         callName = "it_hent_infotrygdForesp",
@@ -44,6 +46,7 @@ suspend fun fetchInfotrygdForesp(
                 receivedSykmelding.personNrPasient,
                 healthInformation,
                 finnLegeFnrFra(receivedSykmelding),
+                navkontor
             )
         val temporaryQueue = session.createTemporaryQueue()
         try {
@@ -74,12 +77,15 @@ suspend fun fetchInfotrygdForesp(
 fun createInfotrygdForesp(
     personNrPasient: String,
     healthInformation: HelseOpplysningerArbeidsuforhet,
-    doctorFnr: String
+    doctorFnr: String,
+    navKontor: String,
 ) =
     InfotrygdForesp().apply {
         val dateMinus1Year = LocalDate.now().minusYears(1)
         val dateMinus4Years = LocalDate.now().minusYears(4)
-
+        if (navKontor == NAV_OPPFOLGING_UTLAND_KONTOR_NR) {
+            tkNummer = navKontor
+        }
         fodselsnummer = personNrPasient
         tkNrFraDato = dateMinus1Year
         forespNr = 1.toBigInteger()

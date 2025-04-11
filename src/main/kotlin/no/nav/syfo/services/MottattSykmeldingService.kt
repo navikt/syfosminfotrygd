@@ -105,12 +105,18 @@ class MottattSykmeldingService(
                         loggingMeta = loggingMeta,
                     )
                 } else {
+                    val lokaltNavkontor =
+                        finnNAVKontorService.finnLokaltNavkontor(
+                            receivedSykmeldingCopyTssId.personNrPasient,
+                            loggingMeta,
+                        )
                     val infotrygdForespResponse =
                         fetchInfotrygdForesp(
                             receivedSykmeldingCopyTssId,
                             infotrygdSporringProducer,
                             session,
                             healthInformation,
+                            lokaltNavkontor
                         )
 
                     sikkerlogg.info(
@@ -129,12 +135,6 @@ class MottattSykmeldingService(
                             infotrygdForespResponse,
                             loggingMeta,
                             RuleExecutionService(),
-                        )
-
-                    val lokaltNavkontor =
-                        finnNAVKontorService.finnLokaltNavkontor(
-                            receivedSykmeldingCopyTssId.personNrPasient,
-                            loggingMeta,
                         )
 
                     val syketilfelleStartdato =
