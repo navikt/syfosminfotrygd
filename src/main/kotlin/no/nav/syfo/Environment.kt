@@ -32,6 +32,8 @@ data class Environment(
     val syketilfelleScope: String = getEnvVar("SYKETILLFELLE_SCOPE"),
     val smregisterEndpointURL: String = getEnvVar("SMREGISTER_URL", "http://syfosmregister"),
     val smregisterAudience: String = getEnvVar("SMREGISTER_AUDIENCE"),
+    val jwkKeysUrlV2: String = getEnvVar("AZURE_OPENID_CONFIG_JWKS_URI"),
+    val jwtIssuerV2: String = getEnvVar("AZURE_OPENID_CONFIG_ISSUER"),
 ) : MqConfig
 
 data class ServiceUser(

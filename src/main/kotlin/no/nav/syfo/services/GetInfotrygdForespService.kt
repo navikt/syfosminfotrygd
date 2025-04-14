@@ -22,9 +22,9 @@ import no.nav.syfo.helpers.retry
 import no.nav.syfo.log
 import no.nav.syfo.model.Diagnosekode
 import no.nav.syfo.model.sykmelding.ReceivedSykmelding
+import no.nav.syfo.objectMapper
 import no.nav.syfo.toString
-import no.nav.syfo.util.infotrygdSporringMarshaller
-import no.nav.syfo.util.infotrygdSporringUnmarshaller
+import no.nav.syfo.util.infotrygdSporringJaxBContext
 import org.xml.sax.InputSource
 
 @WithSpan
@@ -41,79 +41,114 @@ suspend fun fetchInfotrygdForesp(
         legalExceptions =
             arrayOf(IOException::class, WstxException::class, IllegalStateException::class),
     ) {
+        val utlandKontor =
+            if (navkontor == NAV_OPPFOLGING_UTLAND_KONTOR_NR) {
+                navkontor
+            } else null
+
         val infotrygdForespRequest =
             createInfotrygdForesp(
                 receivedSykmelding.personNrPasient,
-                healthInformation,
+                healthInformation.toInfotrygdForespValues(),
                 finnLegeFnrFra(receivedSykmelding),
-                navkontor
+                utlandKontor
             )
-        val temporaryQueue = session.createTemporaryQueue()
-        try {
-            sendInfotrygdSporring(
-                infotrygdSporringProducer,
-                session,
-                infotrygdForespRequest,
-                temporaryQueue,
-            )
-            session.createConsumer(temporaryQueue).use { tmpConsumer ->
-                val consumedMessage = tmpConsumer.receive(20000)
-                val inputMessageText =
-                    when (consumedMessage) {
-                        null -> throw RuntimeException("Incoming message is null")
-                        is TextMessage -> consumedMessage.text
-                        else ->
-                            throw RuntimeException(
-                                "Incoming message needs to be a byte message or text message, JMS type: $consumedMessage.jmsType",
-                            )
-                    }
-                safeUnmarshal(inputMessageText, receivedSykmelding.sykmelding.id)
-            }
-        } finally {
-            temporaryQueue.delete()
-        }
+        sendInfotrygdForesporsel(
+            session,
+            infotrygdSporringProducer,
+            infotrygdForespRequest,
+            receivedSykmelding.sykmelding.id
+        )
     }
+
+fun sendInfotrygdForesporsel(
+    session: Session,
+    infotrygdSporringProducer: MessageProducer,
+    infotrygdForespRequest: InfotrygdForesp,
+    id: String,
+): InfotrygdForesp {
+    val temporaryQueue = session.createTemporaryQueue()
+    return try {
+        sendInfotrygdSporring(
+            infotrygdSporringProducer,
+            session,
+            infotrygdForespRequest,
+            temporaryQueue,
+        )
+        session.createConsumer(temporaryQueue).use { tmpConsumer ->
+            val consumedMessage = tmpConsumer.receive(20000)
+            val inputMessageText =
+                when (consumedMessage) {
+                    null -> throw RuntimeException("Incoming message is null")
+                    is TextMessage -> consumedMessage.text
+                    else ->
+                        throw RuntimeException(
+                            "Incoming message needs to be a byte message or text message, JMS type: $consumedMessage.jmsType",
+                        )
+                }
+            safeUnmarshal(inputMessageText, id).also {
+                sikkerlogg.info(
+                    "infotrygdForespResponse: ${
+                        objectMapper.writeValueAsString(
+                            it,
+                        )
+                    }" +
+                        " for $id",
+                )
+            }
+        }
+    } finally {
+        temporaryQueue.delete()
+    }
+}
+
+class InfotrygdForespValues(
+    val hovedDiagnosekode: String?,
+    val hovedDiagnosekodeverk: String?,
+    val biDiagnoseKode: String?,
+    val biDiagnosekodeverk: String?,
+)
+
+fun HelseOpplysningerArbeidsuforhet.toInfotrygdForespValues(): InfotrygdForespValues {
+    return InfotrygdForespValues(
+        hovedDiagnosekode = medisinskVurdering.hovedDiagnose.diagnosekode.v,
+        hovedDiagnosekodeverk =
+            Diagnosekode.entries
+                .first { it.kithCode == medisinskVurdering.hovedDiagnose.diagnosekode.s }
+                .infotrygdCode,
+        biDiagnoseKode = medisinskVurdering.biDiagnoser?.diagnosekode?.firstOrNull()?.v,
+        biDiagnosekodeverk =
+            medisinskVurdering.biDiagnoser?.diagnosekode?.firstOrNull()?.s?.let { system ->
+                Diagnosekode.entries.first { it.kithCode == system }.infotrygdCode
+            }
+    )
+}
 
 fun createInfotrygdForesp(
     personNrPasient: String,
-    healthInformation: HelseOpplysningerArbeidsuforhet,
-    doctorFnr: String,
-    navKontor: String,
+    infotrygdForespValues: InfotrygdForespValues,
+    doctorFnr: String?,
+    navKontor: String?,
 ) =
     InfotrygdForesp().apply {
         val dateMinus1Year = LocalDate.now().minusYears(1)
         val dateMinus4Years = LocalDate.now().minusYears(4)
-        if (navKontor == NAV_OPPFOLGING_UTLAND_KONTOR_NR) {
-            tkNummer = navKontor
-        }
+        tkNummer = navKontor
         fodselsnummer = personNrPasient
         tkNrFraDato = dateMinus1Year
         forespNr = 1.toBigInteger()
         forespTidsStempel = LocalDateTime.now()
         fraDato = dateMinus1Year
         eldsteFraDato = dateMinus4Years
-        hovedDiagnosekode = healthInformation.medisinskVurdering.hovedDiagnose.diagnosekode.v
-        hovedDiagnosekodeverk =
-            Diagnosekode.values()
-                .first {
-                    it.kithCode == healthInformation.medisinskVurdering.hovedDiagnose.diagnosekode.s
-                }
-                .infotrygdCode
+        hovedDiagnosekode = infotrygdForespValues.hovedDiagnosekode
+        hovedDiagnosekodeverk = infotrygdForespValues.hovedDiagnosekodeverk
         fodselsnrBehandler = doctorFnr
         if (
-            healthInformation.medisinskVurdering.biDiagnoser?.diagnosekode?.firstOrNull()?.v !=
-                null &&
-                healthInformation.medisinskVurdering.biDiagnoser?.diagnosekode?.firstOrNull()?.s !=
-                    null
+            infotrygdForespValues.biDiagnoseKode != null &&
+                infotrygdForespValues.biDiagnosekodeverk != null
         ) {
-            biDiagnoseKode = healthInformation.medisinskVurdering.biDiagnoser.diagnosekode.first().v
-            biDiagnosekodeverk =
-                Diagnosekode.values()
-                    .first {
-                        it.kithCode ==
-                            healthInformation.medisinskVurdering.biDiagnoser.diagnosekode.first().s
-                    }
-                    .infotrygdCode
+            biDiagnoseKode = infotrygdForespValues.biDiagnoseKode
+            biDiagnosekodeverk = infotrygdForespValues.biDiagnosekodeverk
         }
         tkNrFraDato = dateMinus1Year
     }
@@ -141,13 +176,20 @@ fun sendInfotrygdSporring(
     session: Session,
     infotrygdForesp: InfotrygdForesp,
     temporaryQueue: TemporaryQueue,
-) =
+) {
+    val infotrygdForespJson = objectMapper.writeValueAsString(infotrygdForesp)
+    sikkerlogg.info("sending infotrygdforsp json: $infotrygdForespJson")
+    val infotrygdForespXml =
+        infotrygdSporringJaxBContext.createMarshaller().toString(infotrygdForesp)
+    sikkerlogg.info("sending infotrygdforsp xml: $infotrygdForespXml")
+
     producer.send(
         session.createTextMessage().apply {
-            text = infotrygdSporringMarshaller.toString(infotrygdForesp)
+            text = infotrygdForespXml
             jmsReplyTo = temporaryQueue
         },
     )
+}
 
 private fun stripNonValidXMLCharacters(infotrygdString: String): String {
     val out = StringBuffer(infotrygdString)
@@ -169,7 +211,10 @@ private fun safeUnmarshal(inputMessageText: String, id: String): InfotrygdForesp
     }
     log.info("trying again with valid xml, for: $id")
     val validXML = stripNonValidXMLCharacters(inputMessageText)
-    return infotrygdForesp(validXML)
+
+    val result = infotrygdForesp(validXML)
+
+    return result
 }
 
 private fun infotrygdForesp(validXML: String): InfotrygdForesp {
@@ -182,5 +227,5 @@ private fun infotrygdForesp(validXML: String): InfotrygdForesp {
             spf.newSAXParser().xmlReader,
             InputSource(StringReader(validXML)),
         )
-    return infotrygdSporringUnmarshaller.unmarshal(xmlSource) as InfotrygdForesp
+    return infotrygdSporringJaxBContext.createUnmarshaller().unmarshal(xmlSource) as InfotrygdForesp
 }

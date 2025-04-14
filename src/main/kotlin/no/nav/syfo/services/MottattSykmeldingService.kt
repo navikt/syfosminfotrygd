@@ -29,7 +29,6 @@ import no.nav.syfo.model.sykmelding.ReceivedSykmelding
 import no.nav.syfo.model.sykmelding.RuleInfo
 import no.nav.syfo.model.sykmelding.Status
 import no.nav.syfo.model.sykmelding.ValidationResult
-import no.nav.syfo.objectMapper
 import no.nav.syfo.rules.ruleCheck
 import no.nav.syfo.services.updateinfotrygd.UpdateInfotrygdService
 import no.nav.syfo.util.LoggingMeta
@@ -119,29 +118,12 @@ class MottattSykmeldingService(
                             lokaltNavkontor
                         )
 
-                    sikkerlogg.info(
-                        "infotrygdForespResponse: ${
-                            objectMapper.writeValueAsString(
-                                infotrygdForespResponse,
-                            )
-                        }" +
-                            " for {}",
-                        StructuredArguments.fields(loggingMeta),
-                    )
-
                     val validationResult =
                         ruleCheck(
                             receivedSykmeldingCopyTssId,
                             infotrygdForespResponse,
                             loggingMeta,
                             RuleExecutionService(),
-                        )
-
-                    val syketilfelleStartdato =
-                        syketilfelleClient.finnStartdatoForSammenhengendeSyketilfelle(
-                            receivedSykmeldingCopyTssId.personNrPasient,
-                            receivedSykmeldingCopyTssId.sykmelding.perioder,
-                            loggingMeta,
                         )
 
                     val helsepersonell = getHelsepersonell(receivedSykmeldingCopyTssId)

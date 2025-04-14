@@ -22,8 +22,6 @@ import no.nav.helse.sm2013.KontrollsystemBlokkType
 import org.codehaus.stax2.XMLOutputFactory2
 
 val infotrygdSporringJaxBContext: JAXBContext = JAXBContext.newInstance(InfotrygdForesp::class.java)
-val infotrygdSporringMarshaller: Marshaller = infotrygdSporringJaxBContext.createMarshaller()
-val infotrygdSporringUnmarshaller: Unmarshaller = infotrygdSporringJaxBContext.createUnmarshaller()
 
 val fellesformatJaxBContext: JAXBContext =
     JAXBContext.newInstance(

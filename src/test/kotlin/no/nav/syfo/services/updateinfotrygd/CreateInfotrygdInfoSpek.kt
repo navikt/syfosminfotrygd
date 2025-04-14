@@ -23,6 +23,7 @@ import no.nav.syfo.getFileAsString
 import no.nav.syfo.model.HelsepersonellKategori
 import no.nav.syfo.objectMapper
 import no.nav.syfo.services.createInfotrygdForesp
+import no.nav.syfo.services.toInfotrygdForespValues
 import no.nav.syfo.toString
 import no.nav.syfo.util.LoggingMeta
 import no.nav.syfo.util.fellesformatMarshaller
@@ -44,7 +45,12 @@ class CreateInfotrygdInfoSpek :
                         }
                     val fellesFormat = createFellesFormat(healthInformation)
                     val infotrygdForesp =
-                        createInfotrygdForesp("1231234", healthInformation, "135153245", "")
+                        createInfotrygdForesp(
+                            "1231234",
+                            healthInformation.toInfotrygdForespValues(),
+                            "135153245",
+                            ""
+                        )
                     val fellesFormatString = fellesformatMarshaller.toString(fellesFormat)
                     val itfh =
                         InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
@@ -79,7 +85,12 @@ class CreateInfotrygdInfoSpek :
                         }
                     val fellesFormat = createFellesFormat(healthInformation)
                     val infotrygdForesp =
-                        createInfotrygdForesp("1231234", healthInformation, "135153245", "")
+                        createInfotrygdForesp(
+                            "1231234",
+                            healthInformation.toInfotrygdForespValues(),
+                            "135153245",
+                            ""
+                        )
                     val fellesFormatString = fellesformatMarshaller.toString(fellesFormat)
                     val itfh =
                         InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
@@ -121,7 +132,12 @@ class CreateInfotrygdInfoSpek :
                         }
                     val fellesFormat = createFellesFormat(healthInformation)
                     val infotrygdForesp =
-                        createInfotrygdForesp("1231234", healthInformation, "135153245", "")
+                        createInfotrygdForesp(
+                            "1231234",
+                            healthInformation.toInfotrygdForespValues(),
+                            "135153245",
+                            ""
+                        )
                     val fellesFormatString = fellesformatMarshaller.toString(fellesFormat)
                     val itfh =
                         InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
@@ -158,7 +174,12 @@ class CreateInfotrygdInfoSpek :
                         }
                     val fellesFormat = createFellesFormat(healthInformation)
                     val infotrygdForesp =
-                        createInfotrygdForesp("1231234", healthInformation, "135153245", "")
+                        createInfotrygdForesp(
+                            "1231234",
+                            healthInformation.toInfotrygdForespValues(),
+                            "135153245",
+                            ""
+                        )
                     val fellesFormatString = fellesformatMarshaller.toString(fellesFormat)
                     val itfh =
                         InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
@@ -199,7 +220,12 @@ class CreateInfotrygdInfoSpek :
                         }
                     val fellesFormat = createFellesFormat(healthInformation)
                     val infotrygdForesp =
-                        createInfotrygdForesp("1231234", healthInformation, "135153245", "")
+                        createInfotrygdForesp(
+                            "1231234",
+                            healthInformation.toInfotrygdForespValues(),
+                            "135153245",
+                            ""
+                        )
                     val fellesFormatString = fellesformatMarshaller.toString(fellesFormat)
                     val itfh =
                         InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
@@ -235,7 +261,12 @@ class CreateInfotrygdInfoSpek :
                         }
                     val fellesFormat = createFellesFormat(healthInformation)
                     val infotrygdForesp =
-                        createInfotrygdForesp("1231234", healthInformation, "135153245", "")
+                        createInfotrygdForesp(
+                            "1231234",
+                            healthInformation.toInfotrygdForespValues(),
+                            "135153245",
+                            ""
+                        )
                     val fellesFormatString = fellesformatMarshaller.toString(fellesFormat)
                     val itfh =
                         InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
@@ -270,7 +301,12 @@ class CreateInfotrygdInfoSpek :
                             as XMLEIFellesformat
                     val healthInformation = extractHelseOpplysningerArbeidsuforhet(fellesformat)
                     val infotrygdForesp =
-                        createInfotrygdForesp("1231234", healthInformation, "135153245", "")
+                        createInfotrygdForesp(
+                            "1231234",
+                            healthInformation.toInfotrygdForespValues(),
+                            "135153245",
+                            ""
+                        )
                     val fellesFormatString = fellesformatMarshaller.toString(fellesformat)
                     val itfh =
                         InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
@@ -316,7 +352,12 @@ class CreateInfotrygdInfoSpek :
                     )
                     val fellesFormat = createFellesFormat(healthInformation)
                     val infotrygdForesp =
-                        createInfotrygdForesp("1231234", healthInformation, "135153245", "")
+                        createInfotrygdForesp(
+                            "1231234",
+                            healthInformation.toInfotrygdForespValues(),
+                            "135153245",
+                            ""
+                        )
                     val fellesFormatString = fellesformatMarshaller.toString(fellesFormat)
                     infotrygdForesp.sMhistorikk =
                         InfotrygdForesp.SMhistorikk().apply {
@@ -385,7 +426,12 @@ class CreateInfotrygdInfoSpek :
                         }
                     val fellesFormat = createFellesFormat(healthInformation)
                     val infotrygdForesp =
-                        createInfotrygdForesp("1231234", healthInformation, "135153245", "")
+                        createInfotrygdForesp(
+                            "1231234",
+                            healthInformation.toInfotrygdForespValues(),
+                            "135153245",
+                            ""
+                        )
                     infotrygdForesp.diagnosekodeOK =
                         InfotrygdForesp.DiagnosekodeOK().apply {
                             diagnoseTekst =
@@ -467,7 +513,12 @@ class CreateInfotrygdInfoSpek :
                         }
                     val fellesFormat = createFellesFormat(healthInformation)
                     val infotrygdForesp =
-                        createInfotrygdForesp("1231234", healthInformation, "135153245", "")
+                        createInfotrygdForesp(
+                            "1231234",
+                            healthInformation.toInfotrygdForespValues(),
+                            "135153245",
+                            ""
+                        )
                     val fellesFormatString = fellesformatMarshaller.toString(fellesFormat)
                     infotrygdForesp.sMhistorikk =
                         InfotrygdForesp.SMhistorikk().apply {
@@ -527,10 +578,15 @@ class CreateInfotrygdInfoSpek :
                     val healthInformation: HelseOpplysningerArbeidsuforhet =
                         objectMapper.readValue(healthInformationString)
                     try {
-                        createInfotrygdForesp("1231234", healthInformation, "135153245", "")
+                        createInfotrygdForesp(
+                            "1231234",
+                            healthInformation.toInfotrygdForespValues(),
+                            "135153245",
+                            ""
+                        )
                     } catch (exception: Exception) {
                         exception.message shouldBeEqualTo
-                            "Array contains no element matching the predicate."
+                            "Collection contains no element matching the predicate."
                     }
                 }
             }

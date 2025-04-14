@@ -62,6 +62,9 @@ spec:
         - host: mpls03.adeo.no
           ports:
             - port: 1414
+    inbound:
+      rules:
+        - application: macgyver
   kafka:
     pool: nav-prod
   valkey:

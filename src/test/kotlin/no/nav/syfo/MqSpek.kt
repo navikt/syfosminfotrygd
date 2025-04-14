@@ -11,8 +11,7 @@ import net.logstash.logback.argument.StructuredArguments
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.infotrygd.foresp.StatusType
 import no.nav.helse.infotrygd.foresp.TypeSMinfo
-import no.nav.syfo.util.infotrygdSporringMarshaller
-import no.nav.syfo.util.infotrygdSporringUnmarshaller
+import no.nav.syfo.util.infotrygdSporringJaxBContext
 import org.amshove.kluent.shouldBeEqualTo
 import org.apache.activemq.artemis.core.config.impl.ConfigurationImpl
 import org.apache.activemq.artemis.core.server.ActiveMQServers
@@ -65,7 +64,10 @@ class MqSpek :
 
                     producer.send(
                         session.createTextMessage().apply {
-                            text = infotrygdSporringMarshaller.toString(infotrygdForesp)
+                            text =
+                                infotrygdSporringJaxBContext
+                                    .createMarshaller()
+                                    .toString(infotrygdForesp)
                             log.info("Sending: {}", StructuredArguments.keyValue("message", text))
                             log.info("Pushed message to queue")
                         },
@@ -82,8 +84,9 @@ class MqSpek :
                         }
 
                     val infotrygdForespResponse =
-                        infotrygdSporringUnmarshaller.unmarshal(StringReader(inputMessageText))
-                            as InfotrygdForesp
+                        infotrygdSporringJaxBContext
+                            .createUnmarshaller()
+                            .unmarshal(StringReader(inputMessageText)) as InfotrygdForesp
                     infotrygdForespResponse.fodselsnummer shouldBeEqualTo null
                 }
             }

@@ -62,6 +62,9 @@ spec:
         - host: b27apvl221.preprod.local
           ports:
             - port: 1413
+    inbound:
+      rules:
+        - application: macgyver
   kafka:
     pool: nav-dev
   valkey:
