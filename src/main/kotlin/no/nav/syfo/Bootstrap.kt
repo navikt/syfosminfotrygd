@@ -1,5 +1,6 @@
 package no.nav.syfo
 
+import com.auth0.jwk.JwkProviderBuilder
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
@@ -17,16 +18,25 @@ import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.network.sockets.SocketTimeoutException
 import io.ktor.serialization.jackson.jackson
+import io.ktor.server.application.Application
+import io.ktor.server.application.install
+import io.ktor.server.auth.authenticate
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.netty.Netty
+import io.ktor.server.routing.routing
 import io.prometheus.client.hotspot.DefaultExports
+import jakarta.jms.Connection
 import jakarta.jms.MessageProducer
 import jakarta.jms.Session
 import java.io.StringReader
 import java.io.StringWriter
+import java.net.URI
 import java.time.Duration
 import java.time.LocalDate
 import java.time.OffsetTime
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
+import java.util.concurrent.TimeUnit
 import javax.xml.bind.Marshaller
 import javax.xml.stream.XMLInputFactory
 import kotlinx.coroutines.CoroutineScope
@@ -40,16 +50,18 @@ import no.nav.helse.eiFellesformat.XMLEIFellesformat
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.msgHead.XMLMsgHead
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
-import no.nav.syfo.application.ApplicationServer
 import no.nav.syfo.application.ApplicationState
-import no.nav.syfo.application.createApplicationEngine
+import no.nav.syfo.application.api.registerNaisApi
 import no.nav.syfo.application.exception.ServiceUnavailableException
+import no.nav.syfo.application.setupAuth
 import no.nav.syfo.client.AccessTokenClientV2
 import no.nav.syfo.client.ManuellClient
 import no.nav.syfo.client.NorskHelsenettClient
 import no.nav.syfo.client.SyketilfelleClient
 import no.nav.syfo.client.norg.Norg2Client
 import no.nav.syfo.client.norg.Norg2ValkeyService
+import no.nav.syfo.infotrygd.InfotrygdService
+import no.nav.syfo.infotrygd.registerInfotrygdApi
 import no.nav.syfo.kafka.aiven.KafkaUtils
 import no.nav.syfo.kafka.toConsumerConfig
 import no.nav.syfo.kafka.toProducerConfig
@@ -97,19 +109,47 @@ const val UTENLANDSK_SYKEHUS = "9900004"
 
 @DelicateCoroutinesApi
 fun main() {
-    val env = Environment()
-    val serviceUser = ServiceUser()
+
+    val embeddedServer =
+        embeddedServer(
+            Netty,
+            port = Environment().applicationPort,
+            module = Application::module,
+        )
+    Runtime.getRuntime()
+        .addShutdownHook(
+            Thread {
+                log.info("Shutting down application from shutdown hook")
+                embeddedServer.stop(TimeUnit.SECONDS.toMillis(10), TimeUnit.SECONDS.toMillis(10))
+            },
+        )
+    embeddedServer.start(true)
+}
+
+@OptIn(DelicateCoroutinesApi::class)
+fun Application.module() {
     MqTlsUtils.getMqTlsConfig().forEach { key, value ->
         System.setProperty(key as String, value as String)
     }
+    val env = Environment()
+    val serviceUser = ServiceUser()
     val applicationState = ApplicationState()
-    val applicationEngine =
-        createApplicationEngine(
-            env,
-            applicationState,
-        )
+    install(io.ktor.server.plugins.contentnegotiation.ContentNegotiation) {
+        jackson {
+            registerKotlinModule()
+            registerModule(JavaTimeModule())
+            configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+            configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+        }
+    }
 
-    val applicationServer = ApplicationServer(applicationEngine)
+    setupAuth(
+        JwkProviderBuilder(URI.create(env.jwkKeysUrlV2).toURL())
+            .cached(10, java.time.Duration.ofHours(24))
+            .rateLimited(10, 1, TimeUnit.MINUTES)
+            .build(),
+        env
+    )
 
     DefaultExports.initialize()
 
@@ -243,16 +283,24 @@ fun main() {
             syketilfelleClient = syketilfelleClient,
             cluster = env.naiscluster
         )
+    val connection =
+        connectionFactory(env)
+            .createConnection(serviceUser.serviceuserUsername, serviceUser.serviceuserPassword)
+    connection.start()
+    routing {
+        registerNaisApi(applicationState)
+        authenticate("servicebrukerAAD") {
+            registerInfotrygdApi(InfotrygdService(connection, env.infotrygdSporringQueue))
+        }
+    }
 
     launchListeners(
         applicationState,
         env,
-        serviceUser,
         kafkaAivenConsumerReceivedSykmelding,
         mottattSykmeldingService,
+        connection
     )
-
-    applicationServer.start()
 }
 
 private fun getkafkaProducerConfig(producerId: String, env: Environment) =
@@ -297,35 +345,30 @@ fun createListener(
 fun launchListeners(
     applicationState: ApplicationState,
     env: Environment,
-    serviceUser: ServiceUser,
     kafkaAivenConsumerReceivedSykmelding: KafkaConsumer<String, String>,
     mottattSykmeldingService: MottattSykmeldingService,
+    connection: Connection
 ) {
     createListener(applicationState) {
-        connectionFactory(env)
-            .createConnection(serviceUser.serviceuserUsername, serviceUser.serviceuserPassword)
-            .use { connection ->
-                connection.start()
-                val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
-                val infotrygdOppdateringProducer =
-                    session.producerForQueue(
-                        "queue:///${env.infotrygdOppdateringQueue}?targetClient=1",
-                    )
-                val infotrygdSporringProducer =
-                    session.producerForQueue(
-                        "queue:///${env.infotrygdSporringQueue}?targetClient=1",
-                    )
+        val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
+        val infotrygdOppdateringProducer =
+            session.producerForQueue(
+                "queue:///${env.infotrygdOppdateringQueue}?targetClient=1",
+            )
+        val infotrygdSporringProducer =
+            session.producerForQueue(
+                "queue:///${env.infotrygdSporringQueue}?targetClient=1",
+            )
 
-                blockingApplicationLogic(
-                    applicationState,
-                    infotrygdOppdateringProducer,
-                    infotrygdSporringProducer,
-                    session,
-                    env,
-                    kafkaAivenConsumerReceivedSykmelding,
-                    mottattSykmeldingService,
-                )
-            }
+        blockingApplicationLogic(
+            applicationState,
+            infotrygdOppdateringProducer,
+            infotrygdSporringProducer,
+            session,
+            env,
+            kafkaAivenConsumerReceivedSykmelding,
+            mottattSykmeldingService,
+        )
     }
 
     applicationState.alive = true
