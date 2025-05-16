@@ -103,7 +103,7 @@ class MottattSykmeldingService(
                         validationResult = validationResultForMottattSykmelding,
                         behandletAvManuell = behandletAvManuell,
                         loggingMeta = loggingMeta,
-                        false,
+                        tsmProcessingTarget = tsmProcessingTarget,
                     )
                 } else {
                     val lokaltNavkontor =
@@ -139,6 +139,7 @@ class MottattSykmeldingService(
                                 ),
                             behandletAvManuell = behandletAvManuell,
                             loggingMeta = loggingMeta,
+                            tsmProcessingTarget = tsmProcessingTarget
                         )
                     } else {
                         val helsepersonellKategoriVerdi =
@@ -155,7 +156,7 @@ class MottattSykmeldingService(
                                     ),
                                     helsepersonellKategoriVerdi,
                                     behandletAvManuell,
-                                    false,
+                                    tsmProcessingTarget,
                                 )
                             else -> {
                                 val navKontorNr =
@@ -285,6 +286,7 @@ class MottattSykmeldingService(
         itfh: InfotrygdForespAndHealthInformation,
         behandletAvManuell: Boolean,
         loggingMeta: LoggingMeta,
+        tsmProcessingTarget: Boolean,
     ) {
         val validationResultBehandler =
             ValidationResult(
@@ -309,7 +311,7 @@ class MottattSykmeldingService(
             itfh,
             HelsepersonellKategori.LEGE.verdi,
             behandletAvManuell,
-            false
+            tsmProcessingTarget,
         )
     }
 
