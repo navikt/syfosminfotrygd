@@ -10,6 +10,8 @@ import net.logstash.logback.argument.StructuredArguments.fields
 import no.nav.helse.eiFellesformat.XMLEIFellesformat
 import no.nav.helse.sm2013.KontrollsystemBlokkType
 import no.nav.syfo.InfotrygdForespAndHealthInformation
+import no.nav.syfo.PROCESSING_TARGET_HEADER
+import no.nav.syfo.TSM_PROCESSING_TARGET_VALUE
 import no.nav.syfo.erUtenlandskSykmelding
 import no.nav.syfo.get
 import no.nav.syfo.log
@@ -43,6 +45,7 @@ class UpdateInfotrygdService(
         navKontorNr: String,
         validationResult: ValidationResult,
         behandletAvManuell: Boolean,
+        tsmProcessingtarget: Boolean,
     ) {
         val perioder = itfh.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
         val marshalledFellesformat = receivedSykmelding.fellesformat
@@ -81,13 +84,26 @@ class UpdateInfotrygdService(
             nyligInfotrygdOppdatering == null -> {
                 delay(10_000)
                 try {
+                    val producerRecord =
+                        ProducerRecord(
+                            retryTopic,
+                            receivedSykmelding.sykmelding.id,
+                            receivedSykmelding,
+                        )
+                    if (tsmProcessingtarget) {
+                        log.info(
+                            "adding processingtarget to retrytopic for sykmeldingId: ${receivedSykmelding.sykmelding.id}"
+                        )
+                        producerRecord
+                            .headers()
+                            .add(
+                                PROCESSING_TARGET_HEADER,
+                                TSM_PROCESSING_TARGET_VALUE.toByteArray(Charsets.UTF_8)
+                            )
+                    }
                     kafkaAivenProducerReceivedSykmelding
                         .send(
-                            ProducerRecord(
-                                retryTopic,
-                                receivedSykmelding.sykmelding.id,
-                                receivedSykmelding,
-                            ),
+                            producerRecord,
                         )
                         .get()
                     log.warn("Melding sendt på retry topic {}", fields(loggingMeta))
@@ -110,6 +126,7 @@ class UpdateInfotrygdService(
                             receivedSykmelding.sykmelding.id,
                             validationResult,
                             loggingMeta,
+                            tsmProcessingtarget
                         )
                         log.warn(
                             "Melding market som infotrygd duplikat oppdatering {}",
@@ -174,6 +191,7 @@ class UpdateInfotrygdService(
                                 receivedSykmelding.sykmelding.id,
                                 validationResult,
                                 loggingMeta,
+                                tsmProcessingtarget
                             )
                         } catch (exception: Exception) {
                             valkeyService.slettValkeyKey(sha256String, loggingMeta)

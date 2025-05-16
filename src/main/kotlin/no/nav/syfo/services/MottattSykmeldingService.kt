@@ -55,6 +55,7 @@ class MottattSykmeldingService(
         infotrygdSporringProducer: MessageProducer,
         session: Session,
         loggingMeta: LoggingMeta,
+        tsmProcessingTarget: Boolean,
     ) {
         when (skalOppdatereInfotrygd(receivedSykmelding, cluster)) {
             true -> {
@@ -102,6 +103,7 @@ class MottattSykmeldingService(
                         validationResult = validationResultForMottattSykmelding,
                         behandletAvManuell = behandletAvManuell,
                         loggingMeta = loggingMeta,
+                        false,
                     )
                 } else {
                     val lokaltNavkontor =
@@ -153,6 +155,7 @@ class MottattSykmeldingService(
                                     ),
                                     helsepersonellKategoriVerdi,
                                     behandletAvManuell,
+                                    false,
                                 )
                             else -> {
                                 val navKontorNr =
@@ -184,6 +187,7 @@ class MottattSykmeldingService(
                                     navKontorNr = navKontorNr,
                                     validationResult = validationResult,
                                     behandletAvManuell = behandletAvManuell,
+                                    tsmProcessingtarget = tsmProcessingTarget
                                 )
                             }
                         }
@@ -211,7 +215,11 @@ class MottattSykmeldingService(
                     "Oppdaterer ikke infotrygd for sykmelding med merknad eller reisetilskudd, {}",
                     StructuredArguments.fields(loggingMeta),
                 )
-                handleSkalIkkeOppdatereInfotrygd(receivedSykmelding, loggingMeta)
+                handleSkalIkkeOppdatereInfotrygd(
+                    receivedSykmelding,
+                    loggingMeta,
+                    tsmProcessingTarget
+                )
             }
         }
     }
@@ -301,6 +309,7 @@ class MottattSykmeldingService(
             itfh,
             HelsepersonellKategori.LEGE.verdi,
             behandletAvManuell,
+            false
         )
     }
 
@@ -308,6 +317,7 @@ class MottattSykmeldingService(
     private fun handleSkalIkkeOppdatereInfotrygd(
         receivedSykmelding: ReceivedSykmelding,
         loggingMeta: LoggingMeta,
+        tsmProcessingTarget: Boolean,
     ) {
         val validationResult =
             if (receivedSykmelding.merknader?.any { it.type == "UNDER_BEHANDLING" } == true) {
@@ -329,6 +339,7 @@ class MottattSykmeldingService(
             receivedSykmelding.sykmelding.id,
             validationResult,
             loggingMeta,
+            tsmProcessingTarget
         )
     }
 
