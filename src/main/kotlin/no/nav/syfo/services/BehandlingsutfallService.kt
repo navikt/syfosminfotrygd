@@ -2,6 +2,8 @@ package no.nav.syfo.services
 
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import net.logstash.logback.argument.StructuredArguments
+import no.nav.syfo.PROCESSING_TARGET_HEADER
+import no.nav.syfo.TSM_PROCESSING_TARGET_VALUE
 import no.nav.syfo.log
 import no.nav.syfo.model.sykmelding.ValidationResult
 import no.nav.syfo.util.LoggingMeta
@@ -18,11 +20,23 @@ class BehandlingsutfallService(
         sykmeldingId: String,
         validationResult: ValidationResult,
         loggingMeta: LoggingMeta,
+        tsmProcessingTarget: Boolean,
     ) {
+        val record = ProducerRecord(behandlingsUtfallTopic, sykmeldingId, validationResult)
+        log.info("tsmprocessingtarget: $tsmProcessingTarget")
+        if (tsmProcessingTarget) {
+            log.info("adding tsm processing-target for validationResult for $sykmeldingId")
+            record
+                .headers()
+                .add(
+                    PROCESSING_TARGET_HEADER,
+                    TSM_PROCESSING_TARGET_VALUE.toByteArray(Charsets.UTF_8)
+                )
+        }
         try {
             kafkaAivenProducerBehandlingsutfall
                 .send(
-                    ProducerRecord(behandlingsUtfallTopic, sykmeldingId, validationResult),
+                    record,
                 )
                 .get()
 

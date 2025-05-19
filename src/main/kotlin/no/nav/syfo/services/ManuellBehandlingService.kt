@@ -38,11 +38,13 @@ class ManuellBehandlingService(
         validationResult: ValidationResult,
         behandletAvManuell: Boolean,
         loggingMeta: LoggingMeta,
+        tsmProcessingTarget: Boolean,
     ) {
         behandlingsutfallService.sendRuleCheckValidationResult(
             receivedSykmelding.sykmelding.id,
             validationResult,
             loggingMeta,
+            tsmProcessingTarget
         )
         oppgaveService.opprettOppgave(
             receivedSykmelding,
@@ -60,6 +62,7 @@ class ManuellBehandlingService(
         itfh: InfotrygdForespAndHealthInformation,
         helsepersonellKategoriVerdi: String,
         behandletAvManuell: Boolean,
+        tsmProcessingTarget: Boolean,
     ) {
         try {
             val perioder = itfh.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
@@ -126,6 +129,7 @@ class ManuellBehandlingService(
                             emptyList(),
                         ),
                         loggingMeta,
+                        tsmProcessingTarget = tsmProcessingTarget
                     )
                     log.warn(
                         "Melding er infotrygd duplikat, ikke opprett manuelloppgave {}",
@@ -141,6 +145,7 @@ class ManuellBehandlingService(
                             emptyList(),
                         ),
                         loggingMeta,
+                        tsmProcessingTarget = tsmProcessingTarget
                     )
                     log.warn(
                         "Sykmelding overlapper, trenger ikke å opprette manuell oppgave for {}",
@@ -151,7 +156,8 @@ class ManuellBehandlingService(
                     behandlingsutfallService.sendRuleCheckValidationResult(
                         receivedSykmelding.sykmelding.id,
                         validationResult,
-                        loggingMeta
+                        loggingMeta,
+                        tsmProcessingTarget = tsmProcessingTarget
                     )
                     oppgaveService.opprettOppgave(
                         receivedSykmelding,

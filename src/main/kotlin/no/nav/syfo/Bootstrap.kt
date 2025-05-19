@@ -418,11 +418,22 @@ private suspend fun runKafkaConsumer(
 ) {
     while (applicationState.ready && shouldRun(getCurrentTime())) {
         kafkaAivenConsumerReceivedSykmelding
-            .poll(Duration.ofMillis(0))
-            .mapNotNull { it.value() }
-            .forEach { receivedSykmeldingString ->
-                val tempReceivedSykmelding: ReceivedSykmelding =
-                    objectMapper.readValue(receivedSykmeldingString)
+            .poll(Duration.ofMillis(10_000))
+            .mapNotNull { record ->
+                record.value()?.let { sykmelding ->
+                    sykmelding to
+                        record
+                            .headers()
+                            .lastHeader(PROCESSING_TARGET_HEADER)
+                            ?.value()
+                            ?.toString(Charsets.UTF_8)
+                }
+            }
+            .forEach { (sykmelding, processingTarget) ->
+                val tsmProcessingTarget = processingTarget == TSM_PROCESSING_TARGET_VALUE
+                log.info("$PROCESSING_TARGET_HEADER is $processingTarget -> $tsmProcessingTarget")
+
+                val tempReceivedSykmelding: ReceivedSykmelding = objectMapper.readValue(sykmelding)
 
                 val receivedSykmelding =
                     if (tempReceivedSykmelding.tssid?.contains("{") == true) {
@@ -449,6 +460,7 @@ private suspend fun runKafkaConsumer(
                         infotrygdSporringProducer = infotrygdSporringProducer,
                         session = session,
                         loggingMeta = loggingMeta,
+                        tsmProcessingTarget = tsmProcessingTarget,
                     )
                 } catch (e: Exception) {
                     throw TrackableException(e, loggingMeta)

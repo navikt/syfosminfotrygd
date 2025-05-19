@@ -105,7 +105,8 @@ class MottattSykmeldingServiceTest :
                     infotrygdOppdateringProducer,
                     infotrygdSporringProducer,
                     session,
-                    loggingMeta
+                    loggingMeta,
+                    false,
                 )
 
                 coVerify {
@@ -119,11 +120,17 @@ class MottattSykmeldingServiceTest :
                         "0101",
                         match { it.status == Status.OK },
                         false,
+                        false,
                     )
                 }
                 coVerify { manuellClient.behandletAvManuell(any(), any()) }
                 coVerify(exactly = 0) {
-                    behandlingsutfallService.sendRuleCheckValidationResult(any(), any(), any())
+                    behandlingsutfallService.sendRuleCheckValidationResult(
+                        any(),
+                        any(),
+                        any(),
+                        false
+                    )
                 }
                 coVerify(exactly = 0) {
                     manuellBehandlingService.produceManualTaskAndSendValidationResults(
@@ -132,7 +139,8 @@ class MottattSykmeldingServiceTest :
                         any(),
                         any(),
                         any(),
-                        any()
+                        any(),
+                        any(),
                     )
                 }
             }
@@ -148,11 +156,13 @@ class MottattSykmeldingServiceTest :
                     infotrygdOppdateringProducer,
                     infotrygdSporringProducer,
                     session,
-                    loggingMeta
+                    loggingMeta,
+                    false,
                 )
 
                 coVerify(exactly = 0) {
                     updateInfotrygdService.updateInfotrygd(
+                        any(),
                         any(),
                         any(),
                         any(),
@@ -169,7 +179,8 @@ class MottattSykmeldingServiceTest :
                     behandlingsutfallService.sendRuleCheckValidationResult(
                         any(),
                         match { it.status == Status.OK },
-                        loggingMeta
+                        loggingMeta,
+                        false,
                     )
                 }
             }
@@ -204,7 +215,8 @@ class MottattSykmeldingServiceTest :
                     infotrygdOppdateringProducer,
                     infotrygdSporringProducer,
                     session,
-                    loggingMeta
+                    loggingMeta,
+                    false,
                 )
 
                 coVerify(exactly = 0) {
@@ -217,12 +229,18 @@ class MottattSykmeldingServiceTest :
                         any(),
                         any(),
                         any(),
-                        any()
+                        any(),
+                        any(),
                     )
                 }
                 coVerify { manuellClient.behandletAvManuell(any(), any()) }
                 coVerify(exactly = 0) {
-                    behandlingsutfallService.sendRuleCheckValidationResult(any(), any(), any())
+                    behandlingsutfallService.sendRuleCheckValidationResult(
+                        any(),
+                        any(),
+                        any(),
+                        any()
+                    )
                 }
                 coVerify {
                     manuellBehandlingService.produceManualTaskAndSendValidationResults(
@@ -235,6 +253,7 @@ class MottattSykmeldingServiceTest :
                         },
                         false,
                         loggingMeta,
+                        false,
                     )
                 }
             }
@@ -268,11 +287,13 @@ class MottattSykmeldingServiceTest :
                     infotrygdOppdateringProducer,
                     infotrygdSporringProducer,
                     session,
-                    loggingMeta
+                    loggingMeta,
+                    false,
                 )
 
                 coVerify(exactly = 0) {
                     updateInfotrygdService.updateInfotrygd(
+                        any(),
                         any(),
                         any(),
                         any(),
@@ -286,7 +307,12 @@ class MottattSykmeldingServiceTest :
                 }
                 coVerify { manuellClient.behandletAvManuell(any(), any()) }
                 coVerify(exactly = 0) {
-                    behandlingsutfallService.sendRuleCheckValidationResult(any(), any(), any())
+                    behandlingsutfallService.sendRuleCheckValidationResult(
+                        any(),
+                        any(),
+                        any(),
+                        any()
+                    )
                 }
                 coVerify {
                     manuellBehandlingService.produceManualTaskAndSendValidationResults(
@@ -300,6 +326,7 @@ class MottattSykmeldingServiceTest :
                         loggingMeta,
                         any(),
                         "LE",
+                        false,
                         false,
                     )
                 }
@@ -334,11 +361,13 @@ class MottattSykmeldingServiceTest :
                     infotrygdOppdateringProducer,
                     infotrygdSporringProducer,
                     session,
-                    loggingMeta
+                    loggingMeta,
+                    false,
                 )
 
                 coVerify(exactly = 0) {
                     updateInfotrygdService.updateInfotrygd(
+                        any(),
                         any(),
                         any(),
                         any(),
@@ -352,7 +381,12 @@ class MottattSykmeldingServiceTest :
                 }
                 coVerify { manuellClient.behandletAvManuell(any(), any()) }
                 coVerify(exactly = 0) {
-                    behandlingsutfallService.sendRuleCheckValidationResult(any(), any(), any())
+                    behandlingsutfallService.sendRuleCheckValidationResult(
+                        any(),
+                        any(),
+                        any(),
+                        any()
+                    )
                 }
                 coVerify {
                     manuellBehandlingService.produceManualTaskAndSendValidationResults(
@@ -366,6 +400,7 @@ class MottattSykmeldingServiceTest :
                         loggingMeta,
                         any(),
                         "LE",
+                        false,
                         false,
                     )
                 }
@@ -407,7 +442,8 @@ class MottattSykmeldingServiceTest :
                     infotrygdOppdateringProducer,
                     infotrygdSporringProducer,
                     session,
-                    loggingMeta
+                    loggingMeta,
+                    false,
                 )
 
                 coVerify {
@@ -421,14 +457,21 @@ class MottattSykmeldingServiceTest :
                         "0101",
                         match { it.status == Status.OK },
                         false,
+                        false,
                     )
                 }
                 coVerify { manuellClient.behandletAvManuell(any(), any()) }
                 coVerify(exactly = 0) {
-                    behandlingsutfallService.sendRuleCheckValidationResult(any(), any(), any())
+                    behandlingsutfallService.sendRuleCheckValidationResult(
+                        any(),
+                        any(),
+                        any(),
+                        any()
+                    )
                 }
                 coVerify(exactly = 0) {
                     manuellBehandlingService.produceManualTaskAndSendValidationResults(
+                        any(),
                         any(),
                         any(),
                         any(),
@@ -475,7 +518,8 @@ class MottattSykmeldingServiceTest :
                     infotrygdOppdateringProducer,
                     infotrygdSporringProducer,
                     session,
-                    loggingMeta
+                    loggingMeta,
+                    false,
                 )
 
                 coVerify {
@@ -489,14 +533,21 @@ class MottattSykmeldingServiceTest :
                         "0101",
                         match { it.status == Status.OK },
                         false,
+                        false,
                     )
                 }
                 coVerify { manuellClient.behandletAvManuell(any(), any()) }
                 coVerify(exactly = 0) {
-                    behandlingsutfallService.sendRuleCheckValidationResult(any(), any(), any())
+                    behandlingsutfallService.sendRuleCheckValidationResult(
+                        any(),
+                        any(),
+                        any(),
+                        any()
+                    )
                 }
                 coVerify(exactly = 0) {
                     manuellBehandlingService.produceManualTaskAndSendValidationResults(
+                        any(),
                         any(),
                         any(),
                         any(),
@@ -546,7 +597,8 @@ class MottattSykmeldingServiceTest :
                     infotrygdOppdateringProducer,
                     infotrygdSporringProducer,
                     session,
-                    loggingMeta
+                    loggingMeta,
+                    false,
                 )
 
                 coVerify {
@@ -560,11 +612,17 @@ class MottattSykmeldingServiceTest :
                         "0101",
                         any(),
                         false,
+                        false,
                     )
                 }
                 coVerify { manuellClient.behandletAvManuell(any(), any()) }
                 coVerify(exactly = 0) {
-                    behandlingsutfallService.sendRuleCheckValidationResult(any(), any(), any())
+                    behandlingsutfallService.sendRuleCheckValidationResult(
+                        any(),
+                        any(),
+                        any(),
+                        any()
+                    )
                 }
                 coVerify(exactly = 0) {
                     manuellBehandlingService.produceManualTaskAndSendValidationResults(
@@ -573,7 +631,8 @@ class MottattSykmeldingServiceTest :
                         any(),
                         any(),
                         any(),
-                        any()
+                        any(),
+                        any(),
                     )
                 }
             }
@@ -617,7 +676,8 @@ class MottattSykmeldingServiceTest :
                     infotrygdOppdateringProducer,
                     infotrygdSporringProducer,
                     session,
-                    loggingMeta
+                    loggingMeta,
+                    false,
                 )
 
                 coVerify {
@@ -631,11 +691,17 @@ class MottattSykmeldingServiceTest :
                         "2101",
                         any(),
                         any(),
+                        any(),
                     )
                 }
                 coVerify { manuellClient.behandletAvManuell(any(), any()) }
                 coVerify(exactly = 0) {
-                    behandlingsutfallService.sendRuleCheckValidationResult(any(), any(), any())
+                    behandlingsutfallService.sendRuleCheckValidationResult(
+                        any(),
+                        any(),
+                        any(),
+                        any()
+                    )
                 }
                 coVerify(exactly = 0) {
                     manuellBehandlingService.produceManualTaskAndSendValidationResults(
@@ -644,7 +710,8 @@ class MottattSykmeldingServiceTest :
                         any(),
                         any(),
                         any(),
-                        any()
+                        any(),
+                        any(),
                     )
                 }
             }
@@ -688,7 +755,8 @@ class MottattSykmeldingServiceTest :
                     infotrygdOppdateringProducer,
                     infotrygdSporringProducer,
                     session,
-                    loggingMeta
+                    loggingMeta,
+                    false,
                 )
 
                 coVerify {
@@ -702,11 +770,17 @@ class MottattSykmeldingServiceTest :
                         "2101",
                         any(),
                         any(),
+                        any(),
                     )
                 }
                 coVerify { manuellClient.behandletAvManuell(any(), any()) }
                 coVerify(exactly = 0) {
-                    behandlingsutfallService.sendRuleCheckValidationResult(any(), any(), any())
+                    behandlingsutfallService.sendRuleCheckValidationResult(
+                        any(),
+                        any(),
+                        any(),
+                        any()
+                    )
                 }
                 coVerify(exactly = 0) {
                     manuellBehandlingService.produceManualTaskAndSendValidationResults(
@@ -715,7 +789,8 @@ class MottattSykmeldingServiceTest :
                         any(),
                         any(),
                         any(),
-                        any()
+                        any(),
+                        any(),
                     )
                 }
             }
@@ -759,7 +834,8 @@ class MottattSykmeldingServiceTest :
                     infotrygdOppdateringProducer,
                     infotrygdSporringProducer,
                     session,
-                    loggingMeta
+                    loggingMeta,
+                    false,
                 )
 
                 coVerify {
@@ -773,14 +849,21 @@ class MottattSykmeldingServiceTest :
                         "0101",
                         any(),
                         any(),
+                        any(),
                     )
                 }
                 coVerify { manuellClient.behandletAvManuell(any(), any()) }
                 coVerify(exactly = 0) {
-                    behandlingsutfallService.sendRuleCheckValidationResult(any(), any(), any())
+                    behandlingsutfallService.sendRuleCheckValidationResult(
+                        any(),
+                        any(),
+                        any(),
+                        any()
+                    )
                 }
                 coVerify(exactly = 0) {
                     manuellBehandlingService.produceManualTaskAndSendValidationResults(
+                        any(),
                         any(),
                         any(),
                         any(),

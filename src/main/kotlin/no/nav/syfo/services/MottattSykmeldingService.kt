@@ -55,6 +55,7 @@ class MottattSykmeldingService(
         infotrygdSporringProducer: MessageProducer,
         session: Session,
         loggingMeta: LoggingMeta,
+        tsmProcessingTarget: Boolean,
     ) {
         when (skalOppdatereInfotrygd(receivedSykmelding, cluster)) {
             true -> {
@@ -102,6 +103,7 @@ class MottattSykmeldingService(
                         validationResult = validationResultForMottattSykmelding,
                         behandletAvManuell = behandletAvManuell,
                         loggingMeta = loggingMeta,
+                        tsmProcessingTarget = tsmProcessingTarget,
                     )
                 } else {
                     val lokaltNavkontor =
@@ -137,6 +139,7 @@ class MottattSykmeldingService(
                                 ),
                             behandletAvManuell = behandletAvManuell,
                             loggingMeta = loggingMeta,
+                            tsmProcessingTarget = tsmProcessingTarget
                         )
                     } else {
                         val helsepersonellKategoriVerdi =
@@ -153,6 +156,7 @@ class MottattSykmeldingService(
                                     ),
                                     helsepersonellKategoriVerdi,
                                     behandletAvManuell,
+                                    tsmProcessingTarget,
                                 )
                             else -> {
                                 val navKontorNr =
@@ -184,6 +188,7 @@ class MottattSykmeldingService(
                                     navKontorNr = navKontorNr,
                                     validationResult = validationResult,
                                     behandletAvManuell = behandletAvManuell,
+                                    tsmProcessingtarget = tsmProcessingTarget
                                 )
                             }
                         }
@@ -211,7 +216,11 @@ class MottattSykmeldingService(
                     "Oppdaterer ikke infotrygd for sykmelding med merknad eller reisetilskudd, {}",
                     StructuredArguments.fields(loggingMeta),
                 )
-                handleSkalIkkeOppdatereInfotrygd(receivedSykmelding, loggingMeta)
+                handleSkalIkkeOppdatereInfotrygd(
+                    receivedSykmelding,
+                    loggingMeta,
+                    tsmProcessingTarget
+                )
             }
         }
     }
@@ -277,6 +286,7 @@ class MottattSykmeldingService(
         itfh: InfotrygdForespAndHealthInformation,
         behandletAvManuell: Boolean,
         loggingMeta: LoggingMeta,
+        tsmProcessingTarget: Boolean,
     ) {
         val validationResultBehandler =
             ValidationResult(
@@ -301,6 +311,7 @@ class MottattSykmeldingService(
             itfh,
             HelsepersonellKategori.LEGE.verdi,
             behandletAvManuell,
+            tsmProcessingTarget,
         )
     }
 
@@ -308,6 +319,7 @@ class MottattSykmeldingService(
     private fun handleSkalIkkeOppdatereInfotrygd(
         receivedSykmelding: ReceivedSykmelding,
         loggingMeta: LoggingMeta,
+        tsmProcessingTarget: Boolean,
     ) {
         val validationResult =
             if (receivedSykmelding.merknader?.any { it.type == "UNDER_BEHANDLING" } == true) {
@@ -329,6 +341,7 @@ class MottattSykmeldingService(
             receivedSykmelding.sykmelding.id,
             validationResult,
             loggingMeta,
+            tsmProcessingTarget
         )
     }
 

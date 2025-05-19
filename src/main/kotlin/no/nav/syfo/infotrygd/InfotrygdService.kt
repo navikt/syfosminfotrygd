@@ -15,7 +15,10 @@ data class InfotrygdResponse(
     val tkNummer: String?,
 )
 
-class InfotrygdService(private val connection: Connection, private val infotrygdSporringQueue: String) {
+class InfotrygdService(
+    private val connection: Connection,
+    private val infotrygdSporringQueue: String
+) {
 
     fun sendInfotrygdForesporsel(infotrygdQuery: InfotrygdQuery): InfotrygdResponse {
         val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
