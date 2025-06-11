@@ -193,12 +193,15 @@ fun sendInfotrygdSporring(
 
 private fun stripNonValidXMLCharacters(infotrygdString: String): String {
     val out = StringBuffer(infotrygdString)
+    val xmlStringBuilder = StringBuilder()
     for (i in 0 until out.length) {
         if (out[i].code == 0x1a) {
-            out.setCharAt(i, '-')
+            xmlStringBuilder.append('-')
+        } else if(out[i].code != 0x1c) {
+            xmlStringBuilder.append(out[i])
         }
     }
-    return out.toString()
+    return xmlStringBuilder.toString()
 }
 
 private fun safeUnmarshal(inputMessageText: String, id: String): InfotrygdForesp {
