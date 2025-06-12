@@ -197,7 +197,11 @@ private fun stripNonValidXMLCharacters(infotrygdString: String): String {
     for (i in 0 until out.length) {
         if (out[i].code == 0x1a) {
             xmlStringBuilder.append('-')
-        } else if(out[i].code != 0x1c) {
+        } else if(out[i].code == 0x1c) {
+            log.warn("Invalid unicode in xml ${out[i].code}")
+        } else if (out[i].code == 0x0) {
+            log.warn("Invalid unicode in xml ${out[i].code}")
+        } else {
             xmlStringBuilder.append(out[i])
         }
     }
