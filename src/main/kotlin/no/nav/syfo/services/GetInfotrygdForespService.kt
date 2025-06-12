@@ -193,23 +193,15 @@ fun sendInfotrygdSporring(
 
 private fun stripNonValidXMLCharacters(infotrygdString: String): String {
     val out = StringBuffer(infotrygdString)
-    val xmlStringBuilder = StringBuilder()
     for (i in 0 until out.length) {
         if (out[i].code == 0x1a) {
-            xmlStringBuilder.append('-')
-        } else if (out[i].code == 0x1c) {
-            log.warn("Invalid unicode in xml ${out[i].code}")
-        } else if (out[i].code == 0x0) {
-            log.warn("Invalid unicode in xml ${out[i].code}")
-            xmlStringBuilder.append("0")
-        } else {
-            xmlStringBuilder.append(out[i])
+            out.setCharAt(i, '-')
         }
     }
-    return xmlStringBuilder.toString()
+    return out.toString()
 }
 
-private fun safeUnmarshal(inputMessageText: String, id: String): InfotrygdForesp {
+fun safeUnmarshal(inputMessageText: String, id: String): InfotrygdForesp {
     // Disable XXE
     try {
         return infotrygdForesp(inputMessageText)
