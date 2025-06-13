@@ -3,15 +3,10 @@ package no.nav.syfo.services.updateinfotrygd
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import jakarta.jms.MessageProducer
 import jakarta.jms.Session
-import java.time.LocalDate
-import java.util.concurrent.TimeUnit
-import kotlinx.coroutines.delay
 import net.logstash.logback.argument.StructuredArguments.fields
 import no.nav.helse.eiFellesformat.XMLEIFellesformat
 import no.nav.helse.sm2013.KontrollsystemBlokkType
 import no.nav.syfo.InfotrygdForespAndHealthInformation
-import no.nav.syfo.PROCESSING_TARGET_HEADER
-import no.nav.syfo.TSM_PROCESSING_TARGET_VALUE
 import no.nav.syfo.erUtenlandskSykmelding
 import no.nav.syfo.get
 import no.nav.syfo.log
@@ -19,11 +14,9 @@ import no.nav.syfo.model.sykmelding.ReceivedSykmelding
 import no.nav.syfo.model.sykmelding.ValidationResult
 import no.nav.syfo.services.BehandlingsutfallService
 import no.nav.syfo.services.ValkeyService
-import no.nav.syfo.services.sha256hashstring
 import no.nav.syfo.util.LoggingMeta
 import no.nav.syfo.util.xmlObjectWriter
 import org.apache.kafka.clients.producer.KafkaProducer
-import org.apache.kafka.clients.producer.ProducerRecord
 
 const val INFOTRYGD = "INFOTRYGD"
 
@@ -57,31 +50,31 @@ class UpdateInfotrygdService(
         log.info(
             "Fant første fraværsdag for sykmelding id ${receivedSykmelding.sykmelding.id} til $forsteFravaersDag"
         )
-        val sha256String =
-            sha256hashstring(
-                createInfotrygdBlokk(
-                    itfh = itfh,
-                    periode = perioder.first(),
-                    personNrPasient = personNrPasient,
-                    signaturDato = LocalDate.of(2019, 1, 1),
-                    helsepersonellKategoriVerdi = behandlerKode,
-                    tssid = tssid,
-                    loggingMeta = loggingMeta,
-                    navKontorNr = navKontorNr,
-                    navnArbeidsgiver =
-                        findArbeidsKategori(itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver),
-                    identDato = forsteFravaersDag,
-                    behandletAvManuell = behandletAvManuell,
-                    utenlandskSykmelding = receivedSykmelding.erUtenlandskSykmelding(),
-                ),
-            )
+        /* val sha256String =
+                    sha256hashstring(
+                        createInfotrygdBlokk(
+                            itfh = itfh,
+                            periode = perioder.first(),
+                            personNrPasient = personNrPasient,
+                            signaturDato = LocalDate.of(2019, 1, 1),
+                            helsepersonellKategoriVerdi = behandlerKode,
+                            tssid = tssid,
+                            loggingMeta = loggingMeta,
+                            navKontorNr = navKontorNr,
+                            navnArbeidsgiver =
+                                findArbeidsKategori(itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver),
+                            identDato = forsteFravaersDag,
+                            behandletAvManuell = behandletAvManuell,
+                            utenlandskSykmelding = receivedSykmelding.erUtenlandskSykmelding(),
+                        ),
+                    )
 
-        delay(100)
-        val nyligInfotrygdOppdatering =
-            valkeyService.oppdaterValkey(personNrPasient, personNrPasient, 4, loggingMeta)
-
+                delay(100)
+                val nyligInfotrygdOppdatering =
+                    valkeyService.oppdaterValkey(personNrPasient, personNrPasient, 4, loggingMeta)
+        */
         when {
-            nyligInfotrygdOppdatering == null -> {
+            /* nyligInfotrygdOppdatering == null -> {
                 delay(10_000)
                 try {
                     val producerRecord =
@@ -111,17 +104,17 @@ class UpdateInfotrygdService(
                     log.error("Failed to send sykmelding to retrytopic {}", fields(loggingMeta))
                     throw ex
                 }
-            }
+            }*/
             else -> {
-                val duplikatInfotrygdOppdatering =
-                    valkeyService.oppdaterValkey(
-                        sha256String,
-                        sha256String,
-                        TimeUnit.DAYS.toSeconds(60).toInt(),
-                        loggingMeta,
-                    )
+                /*   val duplikatInfotrygdOppdatering =
+                valkeyService.oppdaterValkey(
+                    sha256String,
+                    sha256String,
+                    TimeUnit.DAYS.toSeconds(60).toInt(),
+                    loggingMeta,
+                )*/
                 when {
-                    duplikatInfotrygdOppdatering == null -> {
+                    /*duplikatInfotrygdOppdatering == null -> {
                         behandlingsutfallService.sendRuleCheckValidationResult(
                             receivedSykmelding.sykmelding.id,
                             validationResult,
@@ -132,7 +125,7 @@ class UpdateInfotrygdService(
                             "Melding market som infotrygd duplikat oppdatering {}",
                             fields(loggingMeta),
                         )
-                    }
+                    }*/
                     else ->
                         try {
                             if (receivedSykmelding.erUtenlandskSykmelding()) {
@@ -194,7 +187,7 @@ class UpdateInfotrygdService(
                                 tsmProcessingtarget
                             )
                         } catch (exception: Exception) {
-                            valkeyService.slettValkeyKey(sha256String, loggingMeta)
+                            // valkeyService.slettValkeyKey(sha256String, loggingMeta)
                             log.error(
                                 "Feilet i infotrygd oppdaternings biten, kaster exception",
                                 exception,
