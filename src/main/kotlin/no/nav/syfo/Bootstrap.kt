@@ -293,14 +293,14 @@ fun Application.module() {
             registerInfotrygdApi(InfotrygdService(connection, env.infotrygdSporringQueue))
         }
     }
-/*
+
     launchListeners(
         applicationState,
         env,
         kafkaAivenConsumerReceivedSykmelding,
         mottattSykmeldingService,
         connection
-    )*/
+    )
 }
 
 private fun getkafkaProducerConfig(producerId: String, env: Environment) =
@@ -387,7 +387,7 @@ suspend fun blockingApplicationLogic(
         if (shouldRun(getCurrentTime())) {
             log.info("Starter kafkaconsumer")
             kafkaAivenConsumerReceivedSykmelding.subscribe(
-                listOf(env.okSykmeldingTopic, env.retryTopic),
+                listOf(env.retryTopic),
             )
             runKafkaConsumer(
                 infotrygdOppdateringProducer,
@@ -430,7 +430,7 @@ private suspend fun runKafkaConsumer(
                 }
             }
             .forEach { (sykmelding, processingTarget) ->
-                val tsmProcessingTarget = processingTarget == TSM_PROCESSING_TARGET_VALUE
+                val tsmProcessingTarget = true
                 log.info("$PROCESSING_TARGET_HEADER is $processingTarget -> $tsmProcessingTarget")
 
                 val tempReceivedSykmelding: ReceivedSykmelding = objectMapper.readValue(sykmelding)
