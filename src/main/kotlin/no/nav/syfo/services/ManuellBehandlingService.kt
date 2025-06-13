@@ -2,12 +2,14 @@ package no.nav.syfo.services
 
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import io.valkey.exceptions.JedisConnectionException
+import java.time.LocalDate
 import java.util.concurrent.TimeUnit
 import net.logstash.logback.argument.StructuredArguments
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.syfo.InfotrygdForespAndHealthInformation
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.daysBetween
+import no.nav.syfo.erUtenlandskSykmelding
 import no.nav.syfo.log
 import no.nav.syfo.metrics.OVERLAPPENDE_PERIODER_IKKE_OPPRETT_OPPGAVE
 import no.nav.syfo.metrics.OVERLAPPER_PERIODER_COUNTER
@@ -18,6 +20,9 @@ import no.nav.syfo.model.sykmelding.ValidationResult
 import no.nav.syfo.rules.validation.sortedPeriodeFOMDate
 import no.nav.syfo.rules.validation.sortedPeriodeTOMDate
 import no.nav.syfo.services.updateinfotrygd.INFOTRYGD
+import no.nav.syfo.services.updateinfotrygd.createInfotrygdBlokk
+import no.nav.syfo.services.updateinfotrygd.findArbeidsKategori
+import no.nav.syfo.sortedFOMDate
 import no.nav.syfo.util.LoggingMeta
 
 class ManuellBehandlingService(
@@ -35,7 +40,7 @@ class ManuellBehandlingService(
         loggingMeta: LoggingMeta,
         tsmProcessingTarget: Boolean,
     ) {
-        /*behandlingsutfallService.sendRuleCheckValidationResult(
+        behandlingsutfallService.sendRuleCheckValidationResult(
             receivedSykmelding.sykmelding.id,
             validationResult,
             loggingMeta,
@@ -46,8 +51,7 @@ class ManuellBehandlingService(
             validationResult,
             behandletAvManuell,
             loggingMeta
-        )*/
-        throw RuntimeException("Ikke implementert")
+        )
     }
 
     @WithSpan(value = "produceManualTaskAndSendValidationResultsWithHelsepersonellKategori")
@@ -61,38 +65,38 @@ class ManuellBehandlingService(
         tsmProcessingTarget: Boolean,
     ) {
         try {
-            /*val perioder = itfh.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
-                        val forsteFravaersDag = itfh.healthInformation.aktivitet.periode.sortedFOMDate().first()
-                        val tssid =
-                            if (!receivedSykmelding.tssid.isNullOrBlank()) {
-                                receivedSykmelding.tssid
-                            } else {
-                                "0"
-                            }
-                        val sha256String =
-                            sha256hashstring(
-                                createInfotrygdBlokk(
-                                    itfh = itfh,
-                                    periode = perioder.first(),
-                                    personNrPasient = receivedSykmelding.personNrPasient,
-                                    signaturDato = LocalDate.of(2019, 1, 1),
-                                    helsepersonellKategoriVerdi = helsepersonellKategoriVerdi,
-                                    tssid = tssid,
-                                    loggingMeta = loggingMeta,
-                                    navKontorNr = "",
-                                    navnArbeidsgiver =
-                                        findArbeidsKategori(
-                                            itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver
-                                        ),
-                                    identDato = forsteFravaersDag,
-                                    behandletAvManuell = behandletAvManuell,
-                                    utenlandskSykmelding = receivedSykmelding.erUtenlandskSykmelding(),
-                                    operasjonstypeKode = 1,
-                                ),
-                            )
+            val perioder = itfh.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
+            val forsteFravaersDag = itfh.healthInformation.aktivitet.periode.sortedFOMDate().first()
+            val tssid =
+                if (!receivedSykmelding.tssid.isNullOrBlank()) {
+                    receivedSykmelding.tssid
+                } else {
+                    "0"
+                }
+            val sha256String =
+                sha256hashstring(
+                    createInfotrygdBlokk(
+                        itfh = itfh,
+                        periode = perioder.first(),
+                        personNrPasient = receivedSykmelding.personNrPasient,
+                        signaturDato = LocalDate.of(2019, 1, 1),
+                        helsepersonellKategoriVerdi = helsepersonellKategoriVerdi,
+                        tssid = tssid,
+                        loggingMeta = loggingMeta,
+                        navKontorNr = "",
+                        navnArbeidsgiver =
+                            findArbeidsKategori(
+                                itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver
+                            ),
+                        identDato = forsteFravaersDag,
+                        behandletAvManuell = behandletAvManuell,
+                        utenlandskSykmelding = receivedSykmelding.erUtenlandskSykmelding(),
+                        operasjonstypeKode = 1,
+                    ),
+                )
 
-                        val duplikatInfotrygdOppdatering = valkeyService.erIValkey(sha256String)
-            */
+            val duplikatInfotrygdOppdatering = valkeyService.erIValkey(sha256String)
+
             if (errorFromInfotrygd(validationResult.ruleHits)) {
                 valkeyService.oppdaterAntallErrorIInfotrygd(
                     INFOTRYGD,
@@ -117,7 +121,7 @@ class ManuellBehandlingService(
                 )
             skalIkkeProdusereManuellOppgave(receivedSykmelding, validationResult)
             when {
-                /*duplikatInfotrygdOppdatering -> {
+                duplikatInfotrygdOppdatering -> {
                     behandlingsutfallService.sendRuleCheckValidationResult(
                         receivedSykmelding.sykmelding.id,
                         ValidationResult(
@@ -131,7 +135,7 @@ class ManuellBehandlingService(
                         "Melding er infotrygd duplikat, ikke opprett manuelloppgave {}",
                         StructuredArguments.fields(loggingMeta),
                     )
-                }*/
+                }
                 skalIkkeOppdatereInfotrygd -> {
                     OVERLAPPENDE_PERIODER_IKKE_OPPRETT_OPPGAVE.inc()
                     behandlingsutfallService.sendRuleCheckValidationResult(
@@ -149,24 +153,24 @@ class ManuellBehandlingService(
                     )
                 }
                 else -> {
-                    /*behandlingsutfallService.sendRuleCheckValidationResult(
+                    behandlingsutfallService.sendRuleCheckValidationResult(
                         receivedSykmelding.sykmelding.id,
                         validationResult,
                         loggingMeta,
                         tsmProcessingTarget = tsmProcessingTarget
-                    )*/
+                    )
                     oppgaveService.opprettOppgave(
                         receivedSykmelding,
                         validationResult,
                         behandletAvManuell,
                         loggingMeta
                     )
-                    /* valkeyService.oppdaterValkey(
+                    valkeyService.oppdaterValkey(
                         sha256String,
                         sha256String,
                         TimeUnit.DAYS.toSeconds(60).toInt(),
                         loggingMeta
-                    )*/
+                    )
                 }
             }
         } catch (connectionException: JedisConnectionException) {
