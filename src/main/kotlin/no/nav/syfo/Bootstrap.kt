@@ -293,14 +293,14 @@ fun Application.module() {
             registerInfotrygdApi(InfotrygdService(connection, env.infotrygdSporringQueue))
         }
     }
-/*
+
     launchListeners(
         applicationState,
         env,
         kafkaAivenConsumerReceivedSykmelding,
         mottattSykmeldingService,
         connection
-    )*/
+    )
 }
 
 private fun getkafkaProducerConfig(producerId: String, env: Environment) =
