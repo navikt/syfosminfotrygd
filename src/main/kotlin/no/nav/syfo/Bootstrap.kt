@@ -57,7 +57,6 @@ import no.nav.syfo.application.setupAuth
 import no.nav.syfo.client.AccessTokenClientV2
 import no.nav.syfo.client.ManuellClient
 import no.nav.syfo.client.NorskHelsenettClient
-import no.nav.syfo.client.SyketilfelleClient
 import no.nav.syfo.client.norg.Norg2Client
 import no.nav.syfo.client.norg.Norg2ValkeyService
 import no.nav.syfo.infotrygd.InfotrygdService
@@ -67,13 +66,11 @@ import no.nav.syfo.kafka.toConsumerConfig
 import no.nav.syfo.kafka.toProducerConfig
 import no.nav.syfo.model.OpprettOppgaveKafkaMessage
 import no.nav.syfo.model.sykmelding.ReceivedSykmelding
-import no.nav.syfo.model.sykmelding.ValidationResult
 import no.nav.syfo.mq.MqTlsUtils
 import no.nav.syfo.mq.connectionFactory
 import no.nav.syfo.mq.producerForQueue
 import no.nav.syfo.pdl.PdlFactory
 import no.nav.syfo.rules.validation.sortedPeriodeFOMDate
-import no.nav.syfo.services.BehandlingsutfallService
 import no.nav.syfo.services.FinnNAVKontorService
 import no.nav.syfo.services.ManuellBehandlingService
 import no.nav.syfo.services.MottattSykmeldingService
@@ -155,8 +152,6 @@ fun Application.module() {
 
     val kafkaAivenProducerReceivedSykmelding =
         KafkaProducer<String, ReceivedSykmelding>(getkafkaProducerConfig("retry-producer", env))
-    val kafkaAivenProducerBehandlingsutfall =
-        KafkaProducer<String, ValidationResult>(getkafkaProducerConfig("validation-producer", env))
     val kafkaAivenProducerOppgave =
         KafkaProducer<String, OpprettOppgaveKafkaMessage>(
             getkafkaProducerConfig("oppgave-producer", env),
@@ -227,13 +222,7 @@ fun Application.module() {
 
     val manuellClient =
         ManuellClient(httpClient, env.manuellUrl, accessTokenClientV2, env.manuellScope)
-    val syketilfelleClient =
-        SyketilfelleClient(
-            env.syketilfelleEndpointURL,
-            accessTokenClientV2,
-            env.syketilfelleScope,
-            httpClient,
-        )
+
     val sykmeldingService =
         SykmeldingService(
             smregisterClient =
@@ -244,11 +233,6 @@ fun Application.module() {
                     httpClient = httpClient,
                 ),
         )
-    val behandlingsutfallService =
-        BehandlingsutfallService(
-            kafkaAivenProducerBehandlingsutfall = kafkaAivenProducerBehandlingsutfall,
-            behandlingsUtfallTopic = env.behandlingsUtfallTopic,
-        )
 
     val oppgaveService =
         OppgaveService(
@@ -257,7 +241,6 @@ fun Application.module() {
         )
     val manuellBehandlingService =
         ManuellBehandlingService(
-            behandlingsutfallService = behandlingsutfallService,
             valkeyService = valkeyService,
             oppgaveService = oppgaveService,
             applicationState = applicationState,
@@ -268,7 +251,6 @@ fun Application.module() {
         UpdateInfotrygdService(
             kafkaAivenProducerReceivedSykmelding = kafkaAivenProducerReceivedSykmelding,
             retryTopic = env.retryTopic,
-            behandlingsutfallService = behandlingsutfallService,
             valkeyService = valkeyService,
         )
 
@@ -278,9 +260,7 @@ fun Application.module() {
             finnNAVKontorService = finnNAVKontorService,
             manuellClient = manuellClient,
             manuellBehandlingService = manuellBehandlingService,
-            behandlingsutfallService = behandlingsutfallService,
             norskHelsenettClient = norskHelsenettClient,
-            syketilfelleClient = syketilfelleClient,
             cluster = env.naiscluster
         )
     val connection =

@@ -27,7 +27,6 @@ data class Environment(
     val manuellUrl: String = "http://syfosmmanuell-backend",
     val manuellScope: String = getEnvVar("MANUELL_SCOPE"),
     val okSykmeldingTopic: String = "teamsykmelding.ok-sykmelding",
-    val behandlingsUtfallTopic: String = "teamsykmelding.sykmelding-behandlingsutfall",
     val produserOppgaveTopic: String = "teamsykmelding.oppgave-produser-oppgave",
     val retryTopic: String = "teamsykmelding.privat-sminfotrygd-retry",
     val syketilfelleEndpointURL: String =

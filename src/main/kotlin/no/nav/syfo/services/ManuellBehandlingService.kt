@@ -15,7 +15,6 @@ import no.nav.syfo.metrics.OVERLAPPENDE_PERIODER_IKKE_OPPRETT_OPPGAVE
 import no.nav.syfo.metrics.OVERLAPPER_PERIODER_COUNTER
 import no.nav.syfo.model.sykmelding.ReceivedSykmelding
 import no.nav.syfo.model.sykmelding.RuleInfo
-import no.nav.syfo.model.sykmelding.Status
 import no.nav.syfo.model.sykmelding.ValidationResult
 import no.nav.syfo.rules.validation.sortedPeriodeFOMDate
 import no.nav.syfo.rules.validation.sortedPeriodeTOMDate
@@ -26,7 +25,6 @@ import no.nav.syfo.sortedFOMDate
 import no.nav.syfo.util.LoggingMeta
 
 class ManuellBehandlingService(
-    private val behandlingsutfallService: BehandlingsutfallService,
     private val valkeyService: ValkeyService,
     private val oppgaveService: OppgaveService,
     private val applicationState: ApplicationState,
@@ -38,14 +36,7 @@ class ManuellBehandlingService(
         validationResult: ValidationResult,
         behandletAvManuell: Boolean,
         loggingMeta: LoggingMeta,
-        tsmProcessingTarget: Boolean,
     ) {
-        behandlingsutfallService.sendRuleCheckValidationResult(
-            receivedSykmelding.sykmelding.id,
-            validationResult,
-            loggingMeta,
-            tsmProcessingTarget
-        )
         oppgaveService.opprettOppgave(
             receivedSykmelding,
             validationResult,
@@ -62,7 +53,6 @@ class ManuellBehandlingService(
         itfh: InfotrygdForespAndHealthInformation,
         helsepersonellKategoriVerdi: String,
         behandletAvManuell: Boolean,
-        tsmProcessingTarget: Boolean,
     ) {
         try {
             val perioder = itfh.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
@@ -122,15 +112,6 @@ class ManuellBehandlingService(
             skalIkkeProdusereManuellOppgave(receivedSykmelding, validationResult)
             when {
                 duplikatInfotrygdOppdatering -> {
-                    behandlingsutfallService.sendRuleCheckValidationResult(
-                        receivedSykmelding.sykmelding.id,
-                        ValidationResult(
-                            Status.OK,
-                            emptyList(),
-                        ),
-                        loggingMeta,
-                        tsmProcessingTarget = tsmProcessingTarget
-                    )
                     log.warn(
                         "Melding er infotrygd duplikat, ikke opprett manuelloppgave {}",
                         StructuredArguments.fields(loggingMeta),
@@ -138,27 +119,12 @@ class ManuellBehandlingService(
                 }
                 skalIkkeOppdatereInfotrygd -> {
                     OVERLAPPENDE_PERIODER_IKKE_OPPRETT_OPPGAVE.inc()
-                    behandlingsutfallService.sendRuleCheckValidationResult(
-                        receivedSykmelding.sykmelding.id,
-                        ValidationResult(
-                            Status.OK,
-                            emptyList(),
-                        ),
-                        loggingMeta,
-                        tsmProcessingTarget = tsmProcessingTarget
-                    )
                     log.warn(
                         "Sykmelding overlapper, trenger ikke å opprette manuell oppgave for {}",
                         StructuredArguments.fields(loggingMeta)
                     )
                 }
                 else -> {
-                    behandlingsutfallService.sendRuleCheckValidationResult(
-                        receivedSykmelding.sykmelding.id,
-                        validationResult,
-                        loggingMeta,
-                        tsmProcessingTarget = tsmProcessingTarget
-                    )
                     oppgaveService.opprettOppgave(
                         receivedSykmelding,
                         validationResult,

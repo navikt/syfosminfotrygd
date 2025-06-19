@@ -17,7 +17,6 @@ import no.nav.syfo.get
 import no.nav.syfo.log
 import no.nav.syfo.model.sykmelding.ReceivedSykmelding
 import no.nav.syfo.model.sykmelding.ValidationResult
-import no.nav.syfo.services.BehandlingsutfallService
 import no.nav.syfo.services.ValkeyService
 import no.nav.syfo.services.sha256hashstring
 import no.nav.syfo.util.LoggingMeta
@@ -30,7 +29,6 @@ const val INFOTRYGD = "INFOTRYGD"
 class UpdateInfotrygdService(
     private val kafkaAivenProducerReceivedSykmelding: KafkaProducer<String, ReceivedSykmelding>,
     private val retryTopic: String,
-    private val behandlingsutfallService: BehandlingsutfallService,
     private val valkeyService: ValkeyService,
 ) {
 
@@ -122,12 +120,6 @@ class UpdateInfotrygdService(
                     )
                 when {
                     duplikatInfotrygdOppdatering == null -> {
-                        behandlingsutfallService.sendRuleCheckValidationResult(
-                            receivedSykmelding.sykmelding.id,
-                            validationResult,
-                            loggingMeta,
-                            tsmProcessingtarget
-                        )
                         log.warn(
                             "Melding market som infotrygd duplikat oppdatering {}",
                             fields(loggingMeta),
@@ -187,12 +179,6 @@ class UpdateInfotrygdService(
                                     loggingMeta,
                                 )
                             }
-                            behandlingsutfallService.sendRuleCheckValidationResult(
-                                receivedSykmelding.sykmelding.id,
-                                validationResult,
-                                loggingMeta,
-                                tsmProcessingtarget
-                            )
                         } catch (exception: Exception) {
                             valkeyService.slettValkeyKey(sha256String, loggingMeta)
                             log.error(

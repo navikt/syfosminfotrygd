@@ -19,7 +19,6 @@ import no.nav.syfo.client.Godkjenning
 import no.nav.syfo.client.Kode
 import no.nav.syfo.client.ManuellClient
 import no.nav.syfo.client.NorskHelsenettClient
-import no.nav.syfo.client.SyketilfelleClient
 import no.nav.syfo.createDefaultHealthInformation
 import no.nav.syfo.generatePeriode
 import no.nav.syfo.generateSykmelding
@@ -41,22 +40,18 @@ class MottattSykmeldingServiceTest :
         val finnNAVKontorService = mockk<FinnNAVKontorService>()
         val manuellClient = mockk<ManuellClient>()
         val manuellBehandlingService = mockk<ManuellBehandlingService>(relaxed = true)
-        val behandlingsutfallService = mockk<BehandlingsutfallService>(relaxed = true)
         val norskHelsenettClient = mockk<NorskHelsenettClient>()
         val infotrygdOppdateringProducer = mockk<MessageProducer>(relaxed = true)
         val infotrygdSporringProducer = mockk<MessageProducer>(relaxed = true)
         val session = mockk<Session>(relaxed = true)
         val loggingMeta = LoggingMeta("", "", "", "")
-        val syketilfelleClient = mockk<SyketilfelleClient>(relaxed = true)
         val mottattSykmeldingService =
             MottattSykmeldingService(
                 updateInfotrygdService,
                 finnNAVKontorService,
                 manuellClient,
                 manuellBehandlingService,
-                behandlingsutfallService,
                 norskHelsenettClient,
-                syketilfelleClient,
                 "localhost"
             )
 
@@ -67,7 +62,6 @@ class MottattSykmeldingServiceTest :
                 finnNAVKontorService,
                 manuellClient,
                 manuellBehandlingService,
-                behandlingsutfallService,
                 norskHelsenettClient
             )
             coEvery { manuellClient.behandletAvManuell(any(), any()) } returns false
@@ -125,16 +119,7 @@ class MottattSykmeldingServiceTest :
                 }
                 coVerify { manuellClient.behandletAvManuell(any(), any()) }
                 coVerify(exactly = 0) {
-                    behandlingsutfallService.sendRuleCheckValidationResult(
-                        any(),
-                        any(),
-                        any(),
-                        false
-                    )
-                }
-                coVerify(exactly = 0) {
                     manuellBehandlingService.produceManualTaskAndSendValidationResults(
-                        any(),
                         any(),
                         any(),
                         any(),
@@ -175,14 +160,6 @@ class MottattSykmeldingServiceTest :
                     )
                 }
                 coVerify(exactly = 0) { manuellClient.behandletAvManuell(any(), any()) }
-                coVerify {
-                    behandlingsutfallService.sendRuleCheckValidationResult(
-                        any(),
-                        match { it.status == Status.OK },
-                        loggingMeta,
-                        false,
-                    )
-                }
             }
             test("Går til manuell behandling hvis hoveddiagnose mangler") {
                 val healthInformation = createDefaultHealthInformation()
@@ -234,14 +211,6 @@ class MottattSykmeldingServiceTest :
                     )
                 }
                 coVerify { manuellClient.behandletAvManuell(any(), any()) }
-                coVerify(exactly = 0) {
-                    behandlingsutfallService.sendRuleCheckValidationResult(
-                        any(),
-                        any(),
-                        any(),
-                        any()
-                    )
-                }
                 coVerify {
                     manuellBehandlingService.produceManualTaskAndSendValidationResults(
                         receivedSykmeldingUtenHoveddiagose,
@@ -253,7 +222,6 @@ class MottattSykmeldingServiceTest :
                         },
                         false,
                         loggingMeta,
-                        false,
                     )
                 }
             }
@@ -306,14 +274,6 @@ class MottattSykmeldingServiceTest :
                     )
                 }
                 coVerify { manuellClient.behandletAvManuell(any(), any()) }
-                coVerify(exactly = 0) {
-                    behandlingsutfallService.sendRuleCheckValidationResult(
-                        any(),
-                        any(),
-                        any(),
-                        any()
-                    )
-                }
                 coVerify {
                     manuellBehandlingService.produceManualTaskAndSendValidationResults(
                         receivedSykmelding,
@@ -326,7 +286,6 @@ class MottattSykmeldingServiceTest :
                         loggingMeta,
                         any(),
                         "LE",
-                        false,
                         false,
                     )
                 }
@@ -380,14 +339,6 @@ class MottattSykmeldingServiceTest :
                     )
                 }
                 coVerify { manuellClient.behandletAvManuell(any(), any()) }
-                coVerify(exactly = 0) {
-                    behandlingsutfallService.sendRuleCheckValidationResult(
-                        any(),
-                        any(),
-                        any(),
-                        any()
-                    )
-                }
                 coVerify {
                     manuellBehandlingService.produceManualTaskAndSendValidationResults(
                         receivedSykmelding,
@@ -400,7 +351,6 @@ class MottattSykmeldingServiceTest :
                         loggingMeta,
                         any(),
                         "LE",
-                        false,
                         false,
                     )
                 }
@@ -462,16 +412,7 @@ class MottattSykmeldingServiceTest :
                 }
                 coVerify { manuellClient.behandletAvManuell(any(), any()) }
                 coVerify(exactly = 0) {
-                    behandlingsutfallService.sendRuleCheckValidationResult(
-                        any(),
-                        any(),
-                        any(),
-                        any()
-                    )
-                }
-                coVerify(exactly = 0) {
                     manuellBehandlingService.produceManualTaskAndSendValidationResults(
-                        any(),
                         any(),
                         any(),
                         any(),
@@ -538,16 +479,7 @@ class MottattSykmeldingServiceTest :
                 }
                 coVerify { manuellClient.behandletAvManuell(any(), any()) }
                 coVerify(exactly = 0) {
-                    behandlingsutfallService.sendRuleCheckValidationResult(
-                        any(),
-                        any(),
-                        any(),
-                        any()
-                    )
-                }
-                coVerify(exactly = 0) {
                     manuellBehandlingService.produceManualTaskAndSendValidationResults(
-                        any(),
                         any(),
                         any(),
                         any(),
@@ -562,7 +494,6 @@ class MottattSykmeldingServiceTest :
                 coEvery { fetchInfotrygdForesp(any(), any(), any(), any(), any()) } returns
                     getInfotrygdForespResponse()
                 val startdato = LocalDate.of(2023, 1, 1)
-                coEvery { syketilfelleClient.finnStartdato(any(), any(), any()) } returns startdato
                 val healthInformation = createDefaultHealthInformation()
                 val fellesformat = createFellesFormat(healthInformation)
 
@@ -617,16 +548,7 @@ class MottattSykmeldingServiceTest :
                 }
                 coVerify { manuellClient.behandletAvManuell(any(), any()) }
                 coVerify(exactly = 0) {
-                    behandlingsutfallService.sendRuleCheckValidationResult(
-                        any(),
-                        any(),
-                        any(),
-                        any()
-                    )
-                }
-                coVerify(exactly = 0) {
                     manuellBehandlingService.produceManualTaskAndSendValidationResults(
-                        any(),
                         any(),
                         any(),
                         any(),
@@ -641,7 +563,6 @@ class MottattSykmeldingServiceTest :
                 coEvery { fetchInfotrygdForesp(any(), any(), any(), any(), any()) } returns
                     getInfotrygdForespResponse()
                 val startdato = LocalDate.of(2023, 1, 1)
-                coEvery { syketilfelleClient.finnStartdato(any(), any(), any()) } returns startdato
                 val healthInformation = createDefaultHealthInformation()
                 val fellesformat = createFellesFormat(healthInformation)
 
@@ -696,16 +617,7 @@ class MottattSykmeldingServiceTest :
                 }
                 coVerify { manuellClient.behandletAvManuell(any(), any()) }
                 coVerify(exactly = 0) {
-                    behandlingsutfallService.sendRuleCheckValidationResult(
-                        any(),
-                        any(),
-                        any(),
-                        any()
-                    )
-                }
-                coVerify(exactly = 0) {
                     manuellBehandlingService.produceManualTaskAndSendValidationResults(
-                        any(),
                         any(),
                         any(),
                         any(),
@@ -720,7 +632,6 @@ class MottattSykmeldingServiceTest :
                 coEvery { fetchInfotrygdForesp(any(), any(), any(), any(), any()) } returns
                     getInfotrygdForespResponse()
                 val startdato = LocalDate.of(2023, 1, 1)
-                coEvery { syketilfelleClient.finnStartdato(any(), any(), any()) } returns startdato
                 val healthInformation = createDefaultHealthInformation()
                 val fellesformat = createFellesFormat(healthInformation)
 
@@ -775,16 +686,7 @@ class MottattSykmeldingServiceTest :
                 }
                 coVerify { manuellClient.behandletAvManuell(any(), any()) }
                 coVerify(exactly = 0) {
-                    behandlingsutfallService.sendRuleCheckValidationResult(
-                        any(),
-                        any(),
-                        any(),
-                        any()
-                    )
-                }
-                coVerify(exactly = 0) {
                     manuellBehandlingService.produceManualTaskAndSendValidationResults(
-                        any(),
                         any(),
                         any(),
                         any(),
@@ -799,7 +701,6 @@ class MottattSykmeldingServiceTest :
                 coEvery { fetchInfotrygdForesp(any(), any(), any(), any(), any()) } returns
                     getInfotrygdForespResponse()
                 val startdato = LocalDate.of(2023, 1, 1)
-                coEvery { syketilfelleClient.finnStartdato(any(), any(), any()) } returns startdato
                 val healthInformation = createDefaultHealthInformation()
                 val fellesformat = createFellesFormat(healthInformation)
 
@@ -854,16 +755,7 @@ class MottattSykmeldingServiceTest :
                 }
                 coVerify { manuellClient.behandletAvManuell(any(), any()) }
                 coVerify(exactly = 0) {
-                    behandlingsutfallService.sendRuleCheckValidationResult(
-                        any(),
-                        any(),
-                        any(),
-                        any()
-                    )
-                }
-                coVerify(exactly = 0) {
                     manuellBehandlingService.produceManualTaskAndSendValidationResults(
-                        any(),
                         any(),
                         any(),
                         any(),

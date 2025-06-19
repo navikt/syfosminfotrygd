@@ -17,7 +17,6 @@ import no.nav.syfo.client.Godkjenning
 import no.nav.syfo.client.Kode
 import no.nav.syfo.client.ManuellClient
 import no.nav.syfo.client.NorskHelsenettClient
-import no.nav.syfo.client.SyketilfelleClient
 import no.nav.syfo.erUtenlandskSykmelding
 import no.nav.syfo.extractHelseOpplysningerArbeidsuforhet
 import no.nav.syfo.log
@@ -42,9 +41,7 @@ class MottattSykmeldingService(
     private val finnNAVKontorService: FinnNAVKontorService,
     private val manuellClient: ManuellClient,
     private val manuellBehandlingService: ManuellBehandlingService,
-    private val behandlingsutfallService: BehandlingsutfallService,
     private val norskHelsenettClient: NorskHelsenettClient,
-    private val syketilfelleClient: SyketilfelleClient,
     private val cluster: String,
 ) {
 
@@ -103,7 +100,6 @@ class MottattSykmeldingService(
                         validationResult = validationResultForMottattSykmelding,
                         behandletAvManuell = behandletAvManuell,
                         loggingMeta = loggingMeta,
-                        tsmProcessingTarget = tsmProcessingTarget,
                     )
                 } else {
                     val lokaltNavkontor =
@@ -156,7 +152,6 @@ class MottattSykmeldingService(
                                     ),
                                     helsepersonellKategoriVerdi,
                                     behandletAvManuell,
-                                    tsmProcessingTarget,
                                 )
                             else -> {
                                 val navKontorNr =
@@ -215,11 +210,6 @@ class MottattSykmeldingService(
                 log.info(
                     "Oppdaterer ikke infotrygd for sykmelding med merknad eller reisetilskudd, {}",
                     StructuredArguments.fields(loggingMeta),
-                )
-                handleSkalIkkeOppdatereInfotrygd(
-                    receivedSykmelding,
-                    loggingMeta,
-                    tsmProcessingTarget
                 )
             }
         }
@@ -311,37 +301,6 @@ class MottattSykmeldingService(
             itfh,
             HelsepersonellKategori.LEGE.verdi,
             behandletAvManuell,
-            tsmProcessingTarget,
-        )
-    }
-
-    @WithSpan
-    private fun handleSkalIkkeOppdatereInfotrygd(
-        receivedSykmelding: ReceivedSykmelding,
-        loggingMeta: LoggingMeta,
-        tsmProcessingTarget: Boolean,
-    ) {
-        val validationResult =
-            if (receivedSykmelding.merknader?.any { it.type == "UNDER_BEHANDLING" } == true) {
-                ValidationResult(
-                    Status.OK,
-                    listOf(
-                        RuleInfo(
-                            "UNDER_BEHANDLING",
-                            "Sykmeldingen er til manuell behandling",
-                            "Sykmeldingen er til manuell behandling",
-                            Status.OK,
-                        ),
-                    ),
-                )
-            } else {
-                ValidationResult(Status.OK, emptyList())
-            }
-        behandlingsutfallService.sendRuleCheckValidationResult(
-            receivedSykmelding.sykmelding.id,
-            validationResult,
-            loggingMeta,
-            tsmProcessingTarget
         )
     }
 
