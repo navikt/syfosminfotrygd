@@ -4,18 +4,18 @@ import java.io.ByteArrayOutputStream
 group = "no.nav.syfo"
 version = "1.0.0"
 
-val artemisVersion = "2.39.0"
-val coroutinesVersion = "1.10.1"
-val ibmMqVersion = "9.4.2.0"
+val artemisVersion = "2.41.0"
+val coroutinesVersion = "1.10.2"
+val ibmMqVersion = "9.4.3.0"
 val javaxActivationVersion = "1.1.1"
-val jacksonVersion = "2.18.3"
+val jacksonVersion = "2.19.1"
 val jaxbApiVersion = "2.4.0-b180830.0359"
 val valkeyVersion = "5.3.0"
-val kafkaVersion = "3.9.0"
+val kafkaVersion = "3.9.1"
 val kluentVersion = "1.73"
-val ktorVersion = "3.1.1"
-val logbackVersion = "1.5.17"
-val logstashEncoderVersion = "8.0"
+val ktorVersion = "3.2.0"
+val logbackVersion = "1.5.18"
+val logstashEncoderVersion = "8.1"
 val prometheusVersion = "0.16.0"
 val kotestVersion = "5.9.1"
 val jaxwsApiVersion = "2.3.1"
@@ -23,26 +23,26 @@ val javaxAnnotationApiVersion = "1.3.2"
 val jaxwsToolsVersion = "2.3.1"
 val jaxbRuntimeVersion = "2.4.0-b180830.0438"
 val jaxbTimeAdaptersVersion = "1.1.3"
-val testcontainersVersion = "1.20.6"
+val testcontainersVersion = "1.21.2"
 val syfoXmlCodegen = "2.0.1"
-val mockkVersion = "1.13.17"
-val kotlinVersion = "2.1.10"
+val mockkVersion = "1.14.2"
+val kotlinVersion = "2.1.21"
 val ktfmtVersion = "0.44"
-val opentelemetryVersion = "2.13.3"
+val opentelemetryVersion = "2.16.0"
 
 val javaVersion = JvmTarget.JVM_21
 
 
 //Added due to vulnerabilities
-val nettycommonVersion = "4.1.119.Final"
+val nettycommonVersion = "4.2.2.Final"
 val commonsCompressVersion = "1.27.1"
 val commonsCodecVersion = "1.18.0"
 
 plugins {
     id("application")
-    kotlin("jvm") version "2.1.10"
+    kotlin("jvm") version "2.1.21"
     id("com.gradleup.shadow") version "8.3.6"
-    id("com.diffplug.spotless") version "7.0.2"
+    id("com.diffplug.spotless") version "7.0.4"
 }
 
 application {
