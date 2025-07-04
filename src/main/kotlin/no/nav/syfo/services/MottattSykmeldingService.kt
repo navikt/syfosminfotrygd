@@ -102,18 +102,29 @@ class MottattSykmeldingService(
                         loggingMeta = loggingMeta,
                     )
                 } else {
-                    val lokaltNavkontor =
+                    val localtKontor =
                         finnNAVKontorService.finnLokaltNavkontor(
                             receivedSykmeldingCopyTssId.personNrPasient,
                             loggingMeta,
                         )
+                    val navKontorNr =
+                        setNavKontorNr(
+                            receivedSykmeldingCopyTssId,
+                            localtKontor,
+                        )
+                    if (receivedSykmeldingCopyTssId.utenlandskSykmelding?.erAdresseUtland == true) {
+                        log.info(
+                            "Skal gjøre updateInfotrygd() og sjekker lokaltnavkontor der vi forventer 2101. NAV-kontor er: $navKontorNr, " +
+                                "for sykmelding med sykmeldingsId: ${receivedSykmeldingCopyTssId.sykmelding.id}. \n der erAdresseUtland = ${receivedSykmeldingCopyTssId.utenlandskSykmelding.erAdresseUtland}",
+                        )
+                    }
                     val infotrygdForespResponse =
                         fetchInfotrygdForesp(
                             receivedSykmeldingCopyTssId,
                             infotrygdSporringProducer,
                             session,
                             healthInformation,
-                            lokaltNavkontor
+                            navKontorNr
                         )
 
                     val validationResult =
@@ -154,20 +165,6 @@ class MottattSykmeldingService(
                                     behandletAvManuell,
                                 )
                             else -> {
-                                val navKontorNr =
-                                    setNavKontorNr(
-                                        receivedSykmeldingCopyTssId,
-                                        lokaltNavkontor,
-                                    )
-                                if (
-                                    receivedSykmeldingCopyTssId.utenlandskSykmelding
-                                        ?.erAdresseUtland == true
-                                ) {
-                                    log.info(
-                                        "Skal gjøre updateInfotrygd() og sjekker lokaltnavkontor der vi forventer 2101. NAV-kontor er: $navKontorNr, " +
-                                            "for sykmelding med sykmeldingsId: ${receivedSykmeldingCopyTssId.sykmelding.id}. \n der erAdresseUtland = ${receivedSykmeldingCopyTssId.utenlandskSykmelding.erAdresseUtland}",
-                                    )
-                                }
 
                                 updateInfotrygdService.updateInfotrygd(
                                     producer = infotrygdOppdateringProducer,
