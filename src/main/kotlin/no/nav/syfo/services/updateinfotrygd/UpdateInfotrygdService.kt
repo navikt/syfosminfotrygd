@@ -10,8 +10,6 @@ import net.logstash.logback.argument.StructuredArguments.fields
 import no.nav.helse.eiFellesformat.XMLEIFellesformat
 import no.nav.helse.sm2013.KontrollsystemBlokkType
 import no.nav.syfo.InfotrygdForespAndHealthInformation
-import no.nav.syfo.PROCESSING_TARGET_HEADER
-import no.nav.syfo.TSM_PROCESSING_TARGET_VALUE
 import no.nav.syfo.erUtenlandskSykmelding
 import no.nav.syfo.get
 import no.nav.syfo.log
@@ -88,17 +86,6 @@ class UpdateInfotrygdService(
                             receivedSykmelding.sykmelding.id,
                             receivedSykmelding,
                         )
-                    if (tsmProcessingtarget) {
-                        log.info(
-                            "adding processingtarget to retrytopic for sykmeldingId: ${receivedSykmelding.sykmelding.id}"
-                        )
-                        producerRecord
-                            .headers()
-                            .add(
-                                PROCESSING_TARGET_HEADER,
-                                TSM_PROCESSING_TARGET_VALUE.toByteArray(Charsets.UTF_8)
-                            )
-                    }
                     kafkaAivenProducerReceivedSykmelding
                         .send(
                             producerRecord,
