@@ -14,7 +14,6 @@ import no.nav.syfo.erUtenlandskSykmelding
 import no.nav.syfo.get
 import no.nav.syfo.log
 import no.nav.syfo.model.sykmelding.ReceivedSykmelding
-import no.nav.syfo.model.sykmelding.ValidationResult
 import no.nav.syfo.services.ValkeyService
 import no.nav.syfo.services.sha256hashstring
 import no.nav.syfo.util.LoggingMeta
@@ -39,9 +38,7 @@ class UpdateInfotrygdService(
         receivedSykmelding: ReceivedSykmelding,
         behandlerKode: String,
         navKontorNr: String,
-        validationResult: ValidationResult,
         behandletAvManuell: Boolean,
-        tsmProcessingtarget: Boolean,
     ) {
         val perioder = itfh.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
         val marshalledFellesformat = receivedSykmelding.fellesformat

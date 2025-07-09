@@ -2,9 +2,6 @@ package no.nav.syfo
 
 import no.nav.syfo.mq.MqConfig
 
-const val PROCESSING_TARGET_HEADER = "processing-target"
-const val TSM_PROCESSING_TARGET_VALUE = "tsm"
-
 data class Environment(
     val applicationPort: Int = getEnvVar("APPLICATION_PORT", "8080").toInt(),
     val applicationName: String = getEnvVar("NAIS_APP_NAME", "syfosminfotrygd"),

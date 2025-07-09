@@ -191,13 +191,11 @@ fun sendInfotrygdSporring(
     )
 }
 
-private fun stripNonValidXMLCharacters(infotrygdString: String, id: String): String {
+private fun stripNonValidXMLCharacters(infotrygdString: String): String {
     val out = StringBuffer(infotrygdString)
     for (i in 0 until out.length) {
         if (out[i].code == 0x1a) {
             out.setCharAt(i, '-')
-        } else if (listOf("899eed94-86f1-4e33-8e26-d2eed4fe1b40", "deec125d-d2de-4406-838c-777d09d9416b").contains(id) && out[i].code == 0x0) {
-            out.setCharAt(i, ' ')
         }
     }
     return out.toString()
@@ -212,7 +210,7 @@ fun safeUnmarshal(inputMessageText: String, id: String): InfotrygdForesp {
         sikkerlogg.warn("error parsing this $inputMessageText for: $id")
     }
     log.info("trying again with valid xml, for: $id")
-    val validXML = stripNonValidXMLCharacters(inputMessageText, id)
+    val validXML = stripNonValidXMLCharacters(inputMessageText)
 
     val result = infotrygdForesp(validXML)
 

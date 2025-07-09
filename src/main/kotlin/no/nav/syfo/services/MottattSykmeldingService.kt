@@ -52,7 +52,6 @@ class MottattSykmeldingService(
         infotrygdSporringProducer: MessageProducer,
         session: Session,
         loggingMeta: LoggingMeta,
-        tsmProcessingTarget: Boolean,
     ) {
         when (skalOppdatereInfotrygd(receivedSykmelding, cluster)) {
             true -> {
@@ -146,7 +145,6 @@ class MottattSykmeldingService(
                                 ),
                             behandletAvManuell = behandletAvManuell,
                             loggingMeta = loggingMeta,
-                            tsmProcessingTarget = tsmProcessingTarget
                         )
                     } else {
                         val helsepersonellKategoriVerdi =
@@ -178,9 +176,7 @@ class MottattSykmeldingService(
                                     receivedSykmelding = receivedSykmeldingCopyTssId,
                                     behandlerKode = helsepersonellKategoriVerdi,
                                     navKontorNr = navKontorNr,
-                                    validationResult = validationResult,
                                     behandletAvManuell = behandletAvManuell,
-                                    tsmProcessingtarget = tsmProcessingTarget
                                 )
                             }
                         }
@@ -273,7 +269,6 @@ class MottattSykmeldingService(
         itfh: InfotrygdForespAndHealthInformation,
         behandletAvManuell: Boolean,
         loggingMeta: LoggingMeta,
-        tsmProcessingTarget: Boolean,
     ) {
         val validationResultBehandler =
             ValidationResult(

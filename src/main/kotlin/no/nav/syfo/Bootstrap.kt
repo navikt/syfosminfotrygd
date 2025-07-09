@@ -399,20 +399,8 @@ private suspend fun runKafkaConsumer(
     while (applicationState.ready && shouldRun(getCurrentTime())) {
         kafkaAivenConsumerReceivedSykmelding
             .poll(Duration.ofMillis(10_000))
-            .mapNotNull { record ->
-                record.value()?.let { sykmelding ->
-                    sykmelding to
-                        record
-                            .headers()
-                            .lastHeader(PROCESSING_TARGET_HEADER)
-                            ?.value()
-                            ?.toString(Charsets.UTF_8)
-                }
-            }
-            .forEach { (sykmelding, processingTarget) ->
-                val tsmProcessingTarget = processingTarget == TSM_PROCESSING_TARGET_VALUE
-                log.info("$PROCESSING_TARGET_HEADER is $processingTarget -> $tsmProcessingTarget")
-
+            .mapNotNull { record -> record.value() }
+            .forEach { sykmelding ->
                 val tempReceivedSykmelding: ReceivedSykmelding = objectMapper.readValue(sykmelding)
 
                 val receivedSykmelding =
@@ -440,7 +428,6 @@ private suspend fun runKafkaConsumer(
                         infotrygdSporringProducer = infotrygdSporringProducer,
                         session = session,
                         loggingMeta = loggingMeta,
-                        tsmProcessingTarget = tsmProcessingTarget,
                     )
                 } catch (e: Exception) {
                     throw TrackableException(e, loggingMeta)

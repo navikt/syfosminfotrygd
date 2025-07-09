@@ -100,7 +100,6 @@ class MottattSykmeldingServiceTest :
                     infotrygdSporringProducer,
                     session,
                     loggingMeta,
-                    false,
                 )
 
                 coVerify {
@@ -112,8 +111,6 @@ class MottattSykmeldingServiceTest :
                         receivedSykmelding,
                         "LE",
                         "0101",
-                        match { it.status == Status.OK },
-                        false,
                         false,
                     )
                 }
@@ -142,7 +139,6 @@ class MottattSykmeldingServiceTest :
                     infotrygdSporringProducer,
                     session,
                     loggingMeta,
-                    false,
                 )
 
                 coVerify(exactly = 0) {
@@ -155,8 +151,6 @@ class MottattSykmeldingServiceTest :
                         any(),
                         any(),
                         any(),
-                        any(),
-                        any()
                     )
                 }
                 coVerify(exactly = 0) { manuellClient.behandletAvManuell(any(), any()) }
@@ -193,13 +187,10 @@ class MottattSykmeldingServiceTest :
                     infotrygdSporringProducer,
                     session,
                     loggingMeta,
-                    false,
                 )
 
                 coVerify(exactly = 0) {
                     updateInfotrygdService.updateInfotrygd(
-                        any(),
-                        any(),
                         any(),
                         any(),
                         any(),
@@ -256,7 +247,6 @@ class MottattSykmeldingServiceTest :
                     infotrygdSporringProducer,
                     session,
                     loggingMeta,
-                    false,
                 )
 
                 coVerify(exactly = 0) {
@@ -269,8 +259,6 @@ class MottattSykmeldingServiceTest :
                         any(),
                         any(),
                         any(),
-                        any(),
-                        any()
                     )
                 }
                 coVerify { manuellClient.behandletAvManuell(any(), any()) }
@@ -321,7 +309,6 @@ class MottattSykmeldingServiceTest :
                     infotrygdSporringProducer,
                     session,
                     loggingMeta,
-                    false,
                 )
 
                 coVerify(exactly = 0) {
@@ -334,8 +321,6 @@ class MottattSykmeldingServiceTest :
                         any(),
                         any(),
                         any(),
-                        any(),
-                        any()
                     )
                 }
                 coVerify { manuellClient.behandletAvManuell(any(), any()) }
@@ -393,7 +378,6 @@ class MottattSykmeldingServiceTest :
                     infotrygdSporringProducer,
                     session,
                     loggingMeta,
-                    false,
                 )
 
                 coVerify {
@@ -405,8 +389,6 @@ class MottattSykmeldingServiceTest :
                         receivedSykmelding,
                         "LE",
                         "0101",
-                        match { it.status == Status.OK },
-                        false,
                         false,
                     )
                 }
@@ -460,7 +442,6 @@ class MottattSykmeldingServiceTest :
                     infotrygdSporringProducer,
                     session,
                     loggingMeta,
-                    false,
                 )
 
                 coVerify {
@@ -472,8 +453,6 @@ class MottattSykmeldingServiceTest :
                         receivedSykmelding,
                         "LE",
                         "0101",
-                        match { it.status == Status.OK },
-                        false,
                         false,
                     )
                 }
@@ -529,7 +508,6 @@ class MottattSykmeldingServiceTest :
                     infotrygdSporringProducer,
                     session,
                     loggingMeta,
-                    false,
                 )
 
                 coVerify {
@@ -541,8 +519,6 @@ class MottattSykmeldingServiceTest :
                         any(),
                         any(),
                         "0101",
-                        any(),
-                        false,
                         false,
                     )
                 }
@@ -598,7 +574,6 @@ class MottattSykmeldingServiceTest :
                     infotrygdSporringProducer,
                     session,
                     loggingMeta,
-                    false,
                 )
 
                 coVerify {
@@ -610,8 +585,6 @@ class MottattSykmeldingServiceTest :
                         any(),
                         any(),
                         "2101",
-                        any(),
-                        any(),
                         any(),
                     )
                 }
@@ -667,7 +640,6 @@ class MottattSykmeldingServiceTest :
                     infotrygdSporringProducer,
                     session,
                     loggingMeta,
-                    false,
                 )
 
                 coVerify {
@@ -679,8 +651,6 @@ class MottattSykmeldingServiceTest :
                         any(),
                         any(),
                         "2101",
-                        any(),
-                        any(),
                         any(),
                     )
                 }
@@ -736,7 +706,6 @@ class MottattSykmeldingServiceTest :
                     infotrygdSporringProducer,
                     session,
                     loggingMeta,
-                    false,
                 )
 
                 coVerify {
@@ -748,8 +717,6 @@ class MottattSykmeldingServiceTest :
                         any(),
                         any(),
                         "0101",
-                        any(),
-                        any(),
                         any(),
                     )
                 }
