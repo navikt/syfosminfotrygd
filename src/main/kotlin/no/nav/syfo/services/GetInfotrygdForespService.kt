@@ -51,13 +51,13 @@ suspend fun fetchInfotrygdForesp(
                 receivedSykmelding.personNrPasient,
                 healthInformation.toInfotrygdForespValues(),
                 finnLegeFnrFra(receivedSykmelding),
-                utlandKontor
+                utlandKontor,
             )
         sendInfotrygdForesporsel(
             session,
             infotrygdSporringProducer,
             infotrygdForespRequest,
-            receivedSykmelding.sykmelding.id
+            receivedSykmelding.sykmelding.id,
         )
     }
 
@@ -86,7 +86,7 @@ fun sendInfotrygdForesporsel(
                             "Incoming message needs to be a byte message or text message, JMS type: $consumedMessage.jmsType",
                         )
                 }
-            safeUnmarshal(inputMessageText, id).also {
+            safeUnmarshal(inputMessageText, id, infotrygdForespRequest.tkNummer).also {
                 sikkerlogg.info(
                     "infotrygdForespResponse: ${
                         objectMapper.writeValueAsString(
@@ -120,7 +120,7 @@ fun HelseOpplysningerArbeidsuforhet.toInfotrygdForespValues(): InfotrygdForespVa
         biDiagnosekodeverk =
             medisinskVurdering.biDiagnoser?.diagnosekode?.firstOrNull()?.s?.let { system ->
                 Diagnosekode.entries.first { it.kithCode == system }.infotrygdCode
-            }
+            },
     )
 }
 
@@ -145,7 +145,7 @@ fun createInfotrygdForesp(
         fodselsnrBehandler = doctorFnr
         if (
             infotrygdForespValues.biDiagnoseKode != null &&
-                infotrygdForespValues.biDiagnosekodeverk != null
+            infotrygdForespValues.biDiagnosekodeverk != null
         ) {
             biDiagnoseKode = infotrygdForespValues.biDiagnoseKode
             biDiagnosekodeverk = infotrygdForespValues.biDiagnosekodeverk
@@ -191,17 +191,24 @@ fun sendInfotrygdSporring(
     )
 }
 
-private fun stripNonValidXMLCharacters(infotrygdString: String): String {
+private fun stripNonValidXMLCharacters(
+    infotrygdString: String,
+    id: String,
+    navkontor: String?
+): String {
     val out = StringBuffer(infotrygdString)
     for (i in 0 until out.length) {
         if (out[i].code == 0x1a) {
             out.setCharAt(i, '-')
+        } else if (navkontor == NAV_OPPFOLGING_UTLAND_KONTOR_NR && out[i].code == 0x0) {
+            log.info("We have 0x0 char in xml for $navkontor, replacing with space for $id")
+            out.setCharAt(i, ' ')
         }
     }
     return out.toString()
 }
 
-fun safeUnmarshal(inputMessageText: String, id: String): InfotrygdForesp {
+fun safeUnmarshal(inputMessageText: String, id: String, navkontor: String?): InfotrygdForesp {
     // Disable XXE
     try {
         return infotrygdForesp(inputMessageText)
@@ -210,7 +217,11 @@ fun safeUnmarshal(inputMessageText: String, id: String): InfotrygdForesp {
         sikkerlogg.warn("error parsing this $inputMessageText for: $id")
     }
     log.info("trying again with valid xml, for: $id")
-    val validXML = stripNonValidXMLCharacters(inputMessageText)
+    val validXML = stripNonValidXMLCharacters(
+        infotrygdString = inputMessageText,
+        id = id,
+        navkontor = navkontor,
+    )
 
     val result = infotrygdForesp(validXML)
 
