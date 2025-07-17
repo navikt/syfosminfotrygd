@@ -13,7 +13,7 @@ val jaxbApiVersion = "2.4.0-b180830.0359"
 val valkeyVersion = "5.4.0"
 val kafkaVersion = "3.9.1"
 val kluentVersion = "1.73"
-val ktorVersion = "3.2.1"
+val ktorVersion = "3.2.2"
 val logbackVersion = "1.5.18"
 val logstashEncoderVersion = "8.1"
 val prometheusVersion = "0.16.0"
@@ -25,7 +25,7 @@ val jaxbRuntimeVersion = "2.4.0-b180830.0438"
 val jaxbTimeAdaptersVersion = "1.1.3"
 val testcontainersVersion = "1.21.3"
 val syfoXmlCodegen = "2.0.1"
-val mockkVersion = "1.14.4"
+val mockkVersion = "1.14.5"
 val kotlinVersion = "2.2.0"
 val ktfmtVersion = "0.44"
 val opentelemetryVersion = "2.17.1"
@@ -34,7 +34,7 @@ val javaVersion = JvmTarget.JVM_21
 
 
 //Added due to vulnerabilities
-val nettycommonVersion = "4.2.2.Final"
+val nettycommonVersion = "4.2.3.Final"
 val commonsCompressVersion = "1.27.1"
 val commonsCodecVersion = "1.18.0"
 
