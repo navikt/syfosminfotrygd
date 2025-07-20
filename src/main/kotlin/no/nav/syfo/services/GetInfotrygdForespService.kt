@@ -200,7 +200,11 @@ private fun stripNonValidXMLCharacters(
     for (i in 0 until out.length) {
         if (out[i].code == 0x1a) {
             out.setCharAt(i, '-')
-        } else if (navkontor == NAV_OPPFOLGING_UTLAND_KONTOR_NR && out[i].code == 0x0) {
+        } else if (out[i].code == 0x0) {
+            out.setCharAt(i, ' ')
+        }
+        
+        else if (navkontor == NAV_OPPFOLGING_UTLAND_KONTOR_NR && out[i].code == 0x0) {
             log.info("We have 0x0 char in xml for $navkontor, replacing with space for $id")
             out.setCharAt(i, ' ')
         }
