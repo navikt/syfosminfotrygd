@@ -8,7 +8,7 @@ val artemisVersion = "2.42.0"
 val coroutinesVersion = "1.10.2"
 val ibmMqVersion = "9.4.3.0"
 val javaxActivationVersion = "1.1.1"
-val jacksonVersion = "2.19.1"
+val jacksonVersion = "2.19.2"
 val jaxbApiVersion = "2.4.0-b180830.0359"
 val valkeyVersion = "5.4.0"
 val kafkaVersion = "3.9.1"
@@ -42,7 +42,7 @@ plugins {
     id("application")
     kotlin("jvm") version "2.2.0"
     id("com.gradleup.shadow") version "8.3.8"
-    id("com.diffplug.spotless") version "7.1.0"
+    id("com.diffplug.spotless") version "7.2.0"
 }
 
 application {
