@@ -41,6 +41,7 @@ val commonsCodecVersion = "1.18.0"
 plugins {
     id("application")
     kotlin("jvm") version "2.2.0"
+    id("com.gradleup.shadow") version "8.3.8"
     id("com.diffplug.spotless") version "7.1.0"
 }
 
@@ -175,7 +176,20 @@ tasks {
             readme.writeText(newLines.joinToString("\n"))
         }
     }
- 
+
+
+    shadowJar {
+        archiveBaseName.set("app")
+        archiveClassifier.set("")
+        isZip64 = true
+        manifest {
+            attributes(
+                mapOf(
+                    "Main-Class" to "no.nav.syfo.BootstrapKt",
+                ),
+            )
+        }
+    }
 
     test {
         useJUnitPlatform {}
