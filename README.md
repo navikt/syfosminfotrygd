@@ -66,10 +66,10 @@ docker -version
 
 To build locally and run the integration tests you can simply run 
 ``` bash
-./gradlew installDist
+./gradlew shadowJar
 ```
 or on windows
-`gradlew.bat installDist`
+`gradlew.bat shadowJar`
 
 #### Creating a docker image
 
