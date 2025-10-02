@@ -1,6 +1,4 @@
-package no.nav.syfo
-
-import no.nav.syfo.diagnose.Kodeverk
+package no.nav.syfo.diagnose
 
 enum class ICPC2(
     override val codeValue: String,

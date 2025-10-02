@@ -19,14 +19,8 @@ class PdlPersonService(
         val accessToken = accessTokenClientV2.getAccessTokenV2(pdlScope)
         val pdlResponse = pdlClient.getPerson(fnr, accessToken)
 
-        if (pdlResponse.errors != null) {
-            pdlResponse.errors.forEach {
-                log.error(
-                    "PDL returnerte error {}, {}",
-                    it,
-                    StructuredArguments.fields(loggingMeta)
-                )
-            }
+        pdlResponse.errors?.forEach {
+            log.error("PDL returnerte error {}, {}", it, StructuredArguments.fields(loggingMeta))
         }
         if (pdlResponse.data.hentPerson == null) {
             log.error("Fant ikke person i PDL {}", StructuredArguments.fields(loggingMeta))
@@ -53,8 +47,7 @@ fun sisteKontaktAdresseIUtlandet(kontaktadresser: List<Kontaktadresse>?): Boolea
     val lastKontaktAdresse =
         kontaktadresser
             .filter { it.gyldigFraOgMed != null }
-            .sortedByDescending { LocalDateTime.parse(it.gyldigFraOgMed) }
-            .firstOrNull()
+            .maxByOrNull { LocalDateTime.parse(it.gyldigFraOgMed) }
 
     return if (lastKontaktAdresse != null) {
         lastKontaktAdresse.type == "Utland"

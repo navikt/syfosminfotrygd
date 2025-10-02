@@ -9,6 +9,7 @@ import no.nav.helse.sm2013.ArsakType
 import no.nav.helse.sm2013.CV
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.helse.sm2013.Ident
+import no.nav.syfo.diagnose.ICPC2
 import no.nav.syfo.diagnose.Kodeverk
 import no.nav.syfo.model.sykmelding.Adresse
 import no.nav.syfo.model.sykmelding.AktivitetIkkeMulig
@@ -193,7 +194,7 @@ fun generateMedisinskVurdering(
         annenFraversArsak = annenFraversArsak,
     )
 
-fun generateDiagnose() = ICPC2.values()[Random.nextInt(ICPC2.values().size)].toDiagnose()
+fun generateDiagnose() = ICPC2.entries[Random.nextInt(ICPC2.entries.size)].toDiagnose()
 
 fun Kodeverk.toDiagnose() = Diagnose(system = oid, kode = codeValue, tekst = text)
 
@@ -228,7 +229,7 @@ fun generateAktivitetIkkeMulig(
 fun generateMedisinskArsak(
     beskrivelse: String = "test data",
     arsak: List<MedisinskArsakType> =
-        listOf(MedisinskArsakType.values()[Random.nextInt(MedisinskArsakType.values().size)]),
+        listOf(MedisinskArsakType.entries[Random.nextInt(MedisinskArsakType.entries.size)]),
 ) =
     MedisinskArsak(
         beskrivelse = beskrivelse,

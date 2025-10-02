@@ -147,8 +147,13 @@ val sickLaveExtenionFromDiffrentNavOffice2: ValidationRule = { sykmelding, ruleM
                     ?.hovedDiagnosekode
                     .isNullOrBlank() &&
                 infotrygdSykmelding.sortedSMInfos().last().periode?.utbetTOM != null &&
-                infotrygdSykmelding.sortedSMInfos().last().periode.utbetTOM.plusDays(1) ==
-                    sykmeldingPerioder.sortedPeriodeFOMDate().last() &&
+                infotrygdSykmelding
+                    .sortedSMInfos()
+                    .last()
+                    .periode
+                    .utbetTOM
+                    .plusDays(1)
+                    .equals(sykmeldingPerioder.sortedPeriodeFOMDate().last()) &&
                 infotrygdSykmelding.sortedSMInfos().last().periode.hovedDiagnosekode != "000" &&
                 infotrygdSykmelding.sortedSMInfos().last().periode.friskKode != "H",
     )
@@ -332,7 +337,9 @@ val personMovingKodeFl: ValidationRule = { _, ruleMetadata ->
             infotrygdSykmelding
                 ?.find {
                     it.periode?.arbufoerFOM != null &&
-                        it.periode.arbufoerFOM == infotrygdSykmelding.sortedFOMDate().lastOrNull()
+                        it.periode.arbufoerFOM.equals(
+                            infotrygdSykmelding.sortedFOMDate().lastOrNull()
+                        )
                 }
                 ?.periode
                 ?.stans == "FL",
@@ -544,10 +551,10 @@ fun List<Periode>.sortedPeriodeFOMDate(): List<LocalDate> = map { it.fom }.sorte
 fun List<TypeSMinfo>.sortedSMInfos(): List<TypeSMinfo> = sortedBy { it.periode.arbufoerTOM }
 
 fun List<TypeSMinfo>.sortedFOMDate(): List<LocalDate> =
-    map { it.periode.arbufoerFOM }.filterNotNull().sorted()
+    mapNotNull { it.periode.arbufoerFOM }.sorted()
 
 fun List<TypeSMinfo>.sortedTOMDate(): List<LocalDate> =
-    map { it.periode.arbufoerTOM }.filterNotNull().sorted()
+    mapNotNull { it.periode.arbufoerTOM }.sorted()
 
 fun List<TypeSMinfo.Historikk>.sortedSMinfoHistorikk(): List<TypeSMinfo.Historikk> = sortedBy {
     it.endringsDato

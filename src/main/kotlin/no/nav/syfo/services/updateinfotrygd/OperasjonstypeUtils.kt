@@ -84,7 +84,7 @@ private fun endringSykmelding(
     typeSMinfo: TypeSMinfo,
 ): Boolean =
     itfh.infotrygdForesp.sMhistorikk.status.kodeMelding != "04" &&
-        (typeSMinfo.periode.arbufoerFOM == periode.periodeFOMDato ||
+        (typeSMinfo.periode.arbufoerFOM.equals(periode.periodeFOMDato) ||
             (typeSMinfo.periode.arbufoerFOM.isBefore(periode.periodeFOMDato)) ||
             (typeSMinfo.periode.arbufoerFOM != null &&
                 sammePeriodeInfotrygd(typeSMinfo.periode, periode))) &&
@@ -97,6 +97,6 @@ private fun sammePeriodeInfotrygd(
     infotrygdPeriode: TypeSMinfo.Periode,
     sykemldingsPeriode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode
 ): Boolean {
-    return infotrygdPeriode.arbufoerFOM == sykemldingsPeriode.periodeFOMDato &&
-        infotrygdPeriode.arbufoerTOM == sykemldingsPeriode.periodeTOMDato
+    return infotrygdPeriode.arbufoerFOM.equals(sykemldingsPeriode.periodeFOMDato) &&
+        infotrygdPeriode.arbufoerTOM.equals(sykemldingsPeriode.periodeTOMDato)
 }

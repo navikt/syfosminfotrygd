@@ -24,7 +24,10 @@ fun Application.setupAuth(
                     harTilgang(credentials, environment.clientIdV2) -> {
                         JWTPrincipal(credentials.payload)
                     }
-                    else -> unauthorized(credentials)
+                    else -> {
+                        unauthorized(credentials)
+                        null
+                    }
                 }
             }
         }
@@ -37,11 +40,10 @@ fun harTilgang(credentials: JWTCredential, clientId: String): Boolean {
     return credentials.payload.audience.contains(clientId)
 }
 
-fun unauthorized(credentials: JWTCredential): Unit? {
+fun unauthorized(credentials: JWTCredential) {
     log.warn(
         "Auth: Unexpected audience for jwt {}, {}",
         StructuredArguments.keyValue("issuer", credentials.payload.issuer),
         StructuredArguments.keyValue("audience", credentials.payload.audience),
     )
-    return null
 }

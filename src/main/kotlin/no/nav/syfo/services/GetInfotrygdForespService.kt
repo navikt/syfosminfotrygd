@@ -23,6 +23,7 @@ import no.nav.syfo.log
 import no.nav.syfo.model.Diagnosekode
 import no.nav.syfo.model.sykmelding.ReceivedSykmelding
 import no.nav.syfo.objectMapper
+import no.nav.syfo.services.updateinfotrygd.exception.InfotrygdDownException
 import no.nav.syfo.toString
 import no.nav.syfo.util.infotrygdSporringJaxBContext
 import org.xml.sax.InputSource
@@ -79,7 +80,7 @@ fun sendInfotrygdForesporsel(
             val consumedMessage = tmpConsumer.receive(20000)
             val inputMessageText =
                 when (consumedMessage) {
-                    null -> throw RuntimeException("Incoming message is null")
+                    null -> throw InfotrygdDownException("Incoming message is null")
                     is TextMessage -> consumedMessage.text
                     else ->
                         throw RuntimeException(
@@ -145,7 +146,7 @@ fun createInfotrygdForesp(
         fodselsnrBehandler = doctorFnr
         if (
             infotrygdForespValues.biDiagnoseKode != null &&
-            infotrygdForespValues.biDiagnosekodeverk != null
+                infotrygdForespValues.biDiagnosekodeverk != null
         ) {
             biDiagnoseKode = infotrygdForespValues.biDiagnoseKode
             biDiagnosekodeverk = infotrygdForespValues.biDiagnosekodeverk
@@ -197,7 +198,7 @@ private fun stripNonValidXMLCharacters(
     navkontor: String?
 ): String {
     val out = StringBuffer(infotrygdString)
-    for (i in out.length - 1 downTo  0) {
+    for (i in out.length - 1 downTo 0) {
         if (out[i].code == 0x1c && id == "bd340ba3-a3ee-4545-9175-d43316d4a51b") {
             out.deleteCharAt(i)
         }
@@ -220,11 +221,12 @@ fun safeUnmarshal(inputMessageText: String, id: String, navkontor: String?): Inf
         sikkerlogg.warn("error parsing this $inputMessageText for: $id")
     }
     log.info("trying again with valid xml, for: $id")
-    val validXML = stripNonValidXMLCharacters(
-        infotrygdString = inputMessageText,
-        id = id,
-        navkontor = navkontor,
-    )
+    val validXML =
+        stripNonValidXMLCharacters(
+            infotrygdString = inputMessageText,
+            id = id,
+            navkontor = navkontor,
+        )
 
     val result = infotrygdForesp(validXML)
 

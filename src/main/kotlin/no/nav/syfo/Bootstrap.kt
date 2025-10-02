@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.ibm.mq.MQEnvironment
 import io.ktor.client.HttpClient
@@ -19,21 +18,19 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.network.sockets.SocketTimeoutException
 import io.ktor.serialization.jackson.jackson
 import io.ktor.server.application.Application
+import io.ktor.server.application.ApplicationStarted
+import io.ktor.server.application.ApplicationStopping
 import io.ktor.server.application.install
 import io.ktor.server.auth.authenticate
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.server.routing.routing
 import io.prometheus.client.hotspot.DefaultExports
-import jakarta.jms.Connection
-import jakarta.jms.MessageProducer
-import jakarta.jms.Session
 import java.io.StringReader
 import java.io.StringWriter
 import java.net.URI
-import java.time.Duration
 import java.time.LocalDate
-import java.time.OffsetTime
+import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.TimeUnit
@@ -41,11 +38,8 @@ import javax.xml.bind.Marshaller
 import javax.xml.stream.XMLInputFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import net.logstash.logback.argument.StructuredArguments.fields
 import no.nav.helse.eiFellesformat.XMLEIFellesformat
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.msgHead.XMLMsgHead
@@ -67,21 +61,18 @@ import no.nav.syfo.kafka.toProducerConfig
 import no.nav.syfo.model.OpprettOppgaveKafkaMessage
 import no.nav.syfo.model.sykmelding.ReceivedSykmelding
 import no.nav.syfo.mq.MqTlsUtils
-import no.nav.syfo.mq.connectionFactory
-import no.nav.syfo.mq.producerForQueue
 import no.nav.syfo.pdl.PdlFactory
 import no.nav.syfo.rules.validation.sortedPeriodeFOMDate
 import no.nav.syfo.services.FinnNAVKontorService
 import no.nav.syfo.services.ManuellBehandlingService
 import no.nav.syfo.services.MottattSykmeldingService
 import no.nav.syfo.services.OppgaveService
+import no.nav.syfo.services.SykmeldingConsumerService
 import no.nav.syfo.services.SykmeldingService
 import no.nav.syfo.services.ValkeyService
 import no.nav.syfo.services.updateinfotrygd.UpdateInfotrygdService
 import no.nav.syfo.smregister.SmregisterClient
 import no.nav.syfo.util.JacksonKafkaSerializer
-import no.nav.syfo.util.LoggingMeta
-import no.nav.syfo.util.TrackableException
 import no.nav.syfo.util.createJedisPool
 import no.nav.syfo.util.fellesformatUnmarshaller
 import org.apache.kafka.clients.consumer.ConsumerConfig
@@ -124,8 +115,8 @@ fun main() {
 }
 
 @OptIn(DelicateCoroutinesApi::class)
-fun Application.module() {
-    MqTlsUtils.getMqTlsConfig().forEach { key, value ->
+suspend fun Application.module() {
+    MqTlsUtils.getMqTlsConfig().forEach { (key, value) ->
         System.setProperty(key as String, value as String)
     }
     val env = Environment()
@@ -145,11 +136,10 @@ fun Application.module() {
             .cached(10, java.time.Duration.ofHours(24))
             .rateLimited(10, 1, TimeUnit.MINUTES)
             .build(),
-        env
+        env,
     )
 
     DefaultExports.initialize()
-
     val kafkaAivenProducerReceivedSykmelding =
         KafkaProducer<String, ReceivedSykmelding>(getkafkaProducerConfig("retry-producer", env))
     val kafkaAivenProducerOppgave =
@@ -261,26 +251,29 @@ fun Application.module() {
             manuellClient = manuellClient,
             manuellBehandlingService = manuellBehandlingService,
             norskHelsenettClient = norskHelsenettClient,
-            cluster = env.naiscluster
+            cluster = env.naiscluster,
         )
-    val connection =
-        connectionFactory(env)
-            .createConnection(serviceUser.serviceuserUsername, serviceUser.serviceuserPassword)
-    connection.start()
     routing {
         registerNaisApi(applicationState)
         authenticate("servicebrukerAAD") {
-            registerInfotrygdApi(InfotrygdService(connection, env.infotrygdSporringQueue))
+            registerInfotrygdApi(InfotrygdService(serviceUser, env, env.infotrygdSporringQueue))
         }
     }
 
-    launchListeners(
-        applicationState,
-        env,
-        kafkaAivenConsumerReceivedSykmelding,
-        mottattSykmeldingService,
-        connection
-    )
+    val sykmeldingConsumerService =
+        SykmeldingConsumerService(
+            mottattSykmeldingService,
+            env,
+            serviceUser,
+            kafkaAivenConsumerReceivedSykmelding,
+            applicationState
+        )
+    monitor.subscribe(ApplicationStarted) {
+        log.info("Application is ready -> starting kafka consumer")
+        launch { sykmeldingConsumerService.startConsumer() }
+    }
+
+    monitor.subscribe(ApplicationStopping) { applicationState.ready = false }
 }
 
 private fun getkafkaProducerConfig(producerId: String, env: Environment) =
@@ -301,148 +294,12 @@ private fun getkafkaConsumerConfig(consumerId: String, env: Environment) =
             it[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = 1
         }
 
-@DelicateCoroutinesApi
-fun createListener(
-    applicationState: ApplicationState,
-    action: suspend CoroutineScope.() -> Unit
-): Job =
-    GlobalScope.launch {
-        try {
-            action()
-        } catch (e: TrackableException) {
-            log.error(
-                "En uhåndtert feil oppstod, applikasjonen restarter {}",
-                fields(e.loggingMeta),
-                e.cause,
-            )
-        } finally {
-            applicationState.alive = false
-            applicationState.ready = false
-        }
-    }
-
-@DelicateCoroutinesApi
-fun launchListeners(
-    applicationState: ApplicationState,
-    env: Environment,
-    kafkaAivenConsumerReceivedSykmelding: KafkaConsumer<String, String>,
-    mottattSykmeldingService: MottattSykmeldingService,
-    connection: Connection
-) {
-    createListener(applicationState) {
-        val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
-        val infotrygdOppdateringProducer =
-            session.producerForQueue(
-                "queue:///${env.infotrygdOppdateringQueue}?targetClient=1",
-            )
-        val infotrygdSporringProducer =
-            session.producerForQueue(
-                "queue:///${env.infotrygdSporringQueue}?targetClient=1",
-            )
-
-        blockingApplicationLogic(
-            applicationState,
-            infotrygdOppdateringProducer,
-            infotrygdSporringProducer,
-            session,
-            env,
-            kafkaAivenConsumerReceivedSykmelding,
-            mottattSykmeldingService,
-        )
-    }
-
-    applicationState.alive = true
+fun getCurrentTime(): OffsetDateTime {
+    return OffsetDateTime.now(ZoneId.of("Europe/Oslo"))
 }
 
-suspend fun blockingApplicationLogic(
-    applicationState: ApplicationState,
-    infotrygdOppdateringProducer: MessageProducer,
-    infotrygdSporringProducer: MessageProducer,
-    session: Session,
-    env: Environment,
-    kafkaAivenConsumerReceivedSykmelding: KafkaConsumer<String, String>,
-    mottattSykmeldingService: MottattSykmeldingService,
-) {
-    while (applicationState.ready) {
-        if (shouldRun(getCurrentTime())) {
-            log.info("Starter kafkaconsumer")
-            kafkaAivenConsumerReceivedSykmelding.subscribe(
-                listOf(env.okSykmeldingTopic, env.retryTopic),
-            )
-            runKafkaConsumer(
-                infotrygdOppdateringProducer,
-                infotrygdSporringProducer,
-                session,
-                applicationState,
-                kafkaAivenConsumerReceivedSykmelding,
-                mottattSykmeldingService,
-            )
-            kafkaAivenConsumerReceivedSykmelding.unsubscribe()
-            log.info("Stopper KafkaConsumer")
-        }
-        delay(100)
-    }
-}
-
-data class TSSident(
-    val tssid: String,
-)
-
-private suspend fun runKafkaConsumer(
-    infotrygdOppdateringProducer: MessageProducer,
-    infotrygdSporringProducer: MessageProducer,
-    session: Session,
-    applicationState: ApplicationState,
-    kafkaAivenConsumerReceivedSykmelding: KafkaConsumer<String, String>,
-    mottattSykmeldingService: MottattSykmeldingService,
-) {
-    while (applicationState.ready && shouldRun(getCurrentTime())) {
-        kafkaAivenConsumerReceivedSykmelding
-            .poll(Duration.ofMillis(10_000))
-            .mapNotNull { record -> record.value() }
-            .forEach { sykmelding ->
-                val tempReceivedSykmelding: ReceivedSykmelding = objectMapper.readValue(sykmelding)
-
-                val receivedSykmelding =
-                    if (tempReceivedSykmelding.tssid?.contains("{") == true) {
-                        log.info("tss id is object, trying to convert")
-                        val tssIdent =
-                            objectMapper.readValue<TSSident>(tempReceivedSykmelding.tssid).tssid
-                        tempReceivedSykmelding.copy(tssid = tssIdent)
-                    } else {
-                        tempReceivedSykmelding
-                    }
-                val loggingMeta =
-                    LoggingMeta(
-                        mottakId = receivedSykmelding.navLogId,
-                        orgNr = receivedSykmelding.legekontorOrgNr,
-                        msgId = receivedSykmelding.msgId,
-                        sykmeldingId = receivedSykmelding.sykmelding.id,
-                    )
-
-                log.info("Har mottatt sykmelding, {}", fields(loggingMeta))
-                try {
-                    mottattSykmeldingService.handleMessage(
-                        receivedSykmelding = receivedSykmelding,
-                        infotrygdOppdateringProducer = infotrygdOppdateringProducer,
-                        infotrygdSporringProducer = infotrygdSporringProducer,
-                        session = session,
-                        loggingMeta = loggingMeta,
-                    )
-                } catch (e: Exception) {
-                    throw TrackableException(e, loggingMeta)
-                }
-            }
-        delay(100)
-    }
-}
-
-fun getCurrentTime(): OffsetTime {
-    return OffsetTime.now(ZoneId.of("Europe/Oslo"))
-}
-
-fun shouldRun(now: OffsetTime): Boolean {
-    return now.hour in 5..20
+fun CoroutineScope.shouldRun(now: OffsetDateTime): Boolean {
+    return isActive && now.hour in 5..20
 }
 
 fun Marshaller.toString(input: Any): String =

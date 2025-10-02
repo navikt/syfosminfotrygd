@@ -1,9 +1,11 @@
 package no.nav.syfo.infotrygd
 
-import jakarta.jms.Connection
 import jakarta.jms.Session
 import java.util.UUID
+import no.nav.syfo.ServiceUser
 import no.nav.syfo.model.Diagnosekode
+import no.nav.syfo.mq.MqConfig
+import no.nav.syfo.mq.connectionFactory
 import no.nav.syfo.mq.producerForQueue
 import no.nav.syfo.rules.validation.sortedSMInfos
 import no.nav.syfo.services.InfotrygdForespValues
@@ -16,11 +18,16 @@ data class InfotrygdResponse(
 )
 
 class InfotrygdService(
-    private val connection: Connection,
+    private val serviceUser: ServiceUser,
+    private val mqConfig: MqConfig,
     private val infotrygdSporringQueue: String
 ) {
 
     fun sendInfotrygdForesporsel(infotrygdQuery: InfotrygdQuery): InfotrygdResponse {
+        val connection =
+            connectionFactory(mqConfig)
+                .createConnection(serviceUser.serviceuserUsername, serviceUser.serviceuserPassword)
+        connection.start()
         val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
         val infotrygdSporringProducer =
             session.producerForQueue(

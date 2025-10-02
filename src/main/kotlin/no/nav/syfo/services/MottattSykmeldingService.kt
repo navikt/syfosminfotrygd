@@ -32,9 +32,10 @@ import no.nav.syfo.rules.ruleCheck
 import no.nav.syfo.services.updateinfotrygd.UpdateInfotrygdService
 import no.nav.syfo.util.LoggingMeta
 import no.nav.syfo.util.fellesformatUnmarshaller
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-val sikkerlogg = LoggerFactory.getLogger("securelog")
+val sikkerlogg: Logger = LoggerFactory.getLogger("securelog")
 
 class MottattSykmeldingService(
     private val updateInfotrygdService: UpdateInfotrygdService,
@@ -163,7 +164,6 @@ class MottattSykmeldingService(
                                     behandletAvManuell,
                                 )
                             else -> {
-
                                 updateInfotrygdService.updateInfotrygd(
                                     producer = infotrygdOppdateringProducer,
                                     session = session,

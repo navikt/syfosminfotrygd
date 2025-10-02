@@ -196,8 +196,7 @@ private fun findBehandlingsDato(
                 itfh.healthInformation.kontaktMedPasient.kontaktDato,
                 itfh.healthInformation.kontaktMedPasient.behandletDato.toLocalDate(),
             )
-            .sorted()
-            .first()
+            .minOf { it }
     } else if (itfh.healthInformation.kontaktMedPasient?.behandletDato != null) {
         itfh.healthInformation.kontaktMedPasient.behandletDato.toLocalDate()
     } else {

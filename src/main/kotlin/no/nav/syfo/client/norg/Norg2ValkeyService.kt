@@ -12,7 +12,7 @@ class Norg2ValkeyService(private val jedisPool: JedisPool) {
     companion object {
         private val log: Logger = LoggerFactory.getLogger(Norg2ValkeyService::class.java)
         private val valkeyTimeoutSeconds: Long = Duration.ofDays(30).toSeconds()
-        private const val prefix = "NORG"
+        private const val PREFIX = "NORG"
     }
 
     fun putEnhet(geografiskOmraade: String, enhet: Enhet) {
@@ -20,7 +20,7 @@ class Norg2ValkeyService(private val jedisPool: JedisPool) {
         try {
             jedis = jedisPool.resource
             jedis.setex(
-                "$prefix$geografiskOmraade",
+                "$PREFIX$geografiskOmraade",
                 valkeyTimeoutSeconds,
                 objectMapper.writeValueAsString(enhet)
             )
@@ -35,7 +35,7 @@ class Norg2ValkeyService(private val jedisPool: JedisPool) {
         var jedis: Jedis? = null
         return try {
             jedis = jedisPool.resource
-            when (val stringValue = jedis.get("$prefix$geografiskOmraade")) {
+            when (val stringValue = jedis.get("$PREFIX$geografiskOmraade")) {
                 null -> null
                 else -> objectMapper.readValue<Enhet>(stringValue)
             }
