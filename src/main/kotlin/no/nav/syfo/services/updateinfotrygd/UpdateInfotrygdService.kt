@@ -16,6 +16,7 @@ import no.nav.syfo.log
 import no.nav.syfo.model.sykmelding.ReceivedSykmelding
 import no.nav.syfo.services.ValkeyService
 import no.nav.syfo.services.sha256hashstring
+import no.nav.syfo.services.sikkerlogg
 import no.nav.syfo.util.LoggingMeta
 import no.nav.syfo.util.xmlObjectWriter
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -182,21 +183,47 @@ class UpdateInfotrygdService(
         session: Session,
         fellesformat: XMLEIFellesformat,
         loggingMeta: LoggingMeta,
-    ) =
-        producer.send(
-            session.createTextMessage().apply {
-                log.info(
-                    "Melding har oprasjonstype: {}, tkNummer: {}, {}",
-                    fellesformat
-                        .get<KontrollsystemBlokkType>()
-                        .infotrygdBlokk
-                        .first()
-                        .operasjonstype,
-                    fellesformat.get<KontrollsystemBlokkType>().infotrygdBlokk.first().tkNummer,
-                    fields(loggingMeta),
-                )
-                text = xmlObjectWriter.writeValueAsString(fellesformat)
-                log.info("Melding er sendt til infotrygd {}", fields(loggingMeta))
-            },
-        )
+    ) {
+        val temporaryQueue = session.createTemporaryQueue()
+        try {
+            producer.send(
+                session.createTextMessage().apply {
+                    log.info(
+                        "Melding har oprasjonstype: {}, tkNummer: {}, {}",
+                        fellesformat
+                            .get<KontrollsystemBlokkType>()
+                            .infotrygdBlokk
+                            .first()
+                            .operasjonstype,
+                        fellesformat.get<KontrollsystemBlokkType>().infotrygdBlokk.first().tkNummer,
+                        fields(loggingMeta),
+                    )
+                    text = xmlObjectWriter.writeValueAsString(fellesformat)
+                    jmsReplyTo = temporaryQueue
+                    log.info("Melding er sendt til infotrygd {}", fields(loggingMeta))
+                },
+            )
+
+            session.createConsumer(temporaryQueue).use { tmpConsumer ->
+                tmpConsumer.receive(20000).also { message ->
+                    if (message == null) {
+                        log.warn("No response from Infotrygd, {}", fields(loggingMeta))
+                        throw RuntimeException("No response from Infotrygd")
+                    } else {
+                        log.info("Message response from Infotrygd is OK: {}", fields(loggingMeta))
+                        sikkerlogg.info(
+                            "Message response from Infotrygd is OK: ${
+                                when (message) {
+                                    else -> message.toString()
+                                }
+                            }",
+                            fields(loggingMeta),
+                        )
+                    }
+                }
+            }
+        } finally {
+            temporaryQueue.delete()
+        }
+    }
 }
