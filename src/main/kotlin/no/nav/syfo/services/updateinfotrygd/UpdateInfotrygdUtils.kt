@@ -64,7 +64,7 @@ fun createInfotrygdBlokk(
             }
 
         legeEllerInstitusjon = "ULLEVÅL SYKEHUS"
-        legeEllerInstitusjonsNummer = 80000465795.toBigInteger()
+        legeEllerInstitusjonsNummer = 9992642.toBigInteger()
         mottakerKode = "IN"
 
         if (itfh.infotrygdForesp.diagnosekodeOK != null) {
