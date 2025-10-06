@@ -88,7 +88,7 @@ class UpdateInfotrygdService(
                             producerRecord,
                         )
                         .get()
-                    log.warn("Melding sendt på retry topic {}", fields(loggingMeta))
+                    log.info("Melding sendt på retry topic {}", fields(loggingMeta))
                 } catch (ex: Exception) {
                     log.error("Failed to send sykmelding to retrytopic {}", fields(loggingMeta))
                     throw ex

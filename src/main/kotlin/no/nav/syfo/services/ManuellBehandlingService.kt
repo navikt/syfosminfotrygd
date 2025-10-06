@@ -119,7 +119,7 @@ class ManuellBehandlingService(
                 }
                 skalIkkeOppdatereInfotrygd -> {
                     OVERLAPPENDE_PERIODER_IKKE_OPPRETT_OPPGAVE.inc()
-                    log.warn(
+                    log.info(
                         "Sykmelding overlapper, trenger ikke å opprette manuell oppgave for {}",
                         StructuredArguments.fields(loggingMeta)
                     )
