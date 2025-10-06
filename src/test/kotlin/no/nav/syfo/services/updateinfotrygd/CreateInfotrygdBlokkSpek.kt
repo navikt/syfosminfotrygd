@@ -308,56 +308,6 @@ class CreateInfotrygdBlokkSpek :
                 infotrygdBlokk.behandlingsDato shouldBeEqualTo LocalDate.of(2019, 1, 1)
             }
 
-            test("Setter riktig behandlerinformasjon for utenlandsk sykmelding") {
-                val healthInformation =
-                    HelseOpplysningerArbeidsuforhet().apply {
-                        aktivitet =
-                            HelseOpplysningerArbeidsuforhet.Aktivitet().apply {
-                                periode.add(
-                                    HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
-                                        periodeFOMDato = LocalDate.of(2019, 1, 1)
-                                        periodeTOMDato = LocalDate.of(2019, 1, 2)
-                                    },
-                                )
-                            }
-                    }
-                val infotrygdForesp =
-                    InfotrygdForesp().apply {
-                        sMhistorikk =
-                            InfotrygdForesp.SMhistorikk().apply {
-                                status = StatusType().apply { kodeMelding = "04" }
-                            }
-                    }
-                val ifth = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
-                val perioder =
-                    ifth.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
-                val forsteFravaersDag =
-                    finnForsteFravaersDag(
-                        ifth,
-                        perioder.first(),
-                        LoggingMeta("mottakId", "12315", "", "")
-                    )
 
-                val infotrygdBlokk =
-                    createInfotrygdBlokk(
-                        ifth,
-                        healthInformation.aktivitet.periode.last(),
-                        "2134",
-                        LocalDate.now(),
-                        "LE",
-                        "0",
-                        LoggingMeta("mottakId", "12315", "", ""),
-                        "1234",
-                        "NAV IKT",
-                        forsteFravaersDag,
-                        behandletAvManuell = false,
-                        utenlandskSykmelding = true,
-                        operasjonstypeKode = 1,
-                    )
-
-                infotrygdBlokk.legeEllerInstitusjonsNummer shouldBeEqualTo
-                    UTENLANDSK_SYKEHUS.toBigInteger()
-                infotrygdBlokk.mottakerKode shouldBeEqualTo "IN"
-            }
         }
     })

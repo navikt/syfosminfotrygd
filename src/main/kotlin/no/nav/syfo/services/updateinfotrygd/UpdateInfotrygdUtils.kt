@@ -63,6 +63,10 @@ fun createInfotrygdBlokk(
                 helsepersonellKategoriVerdi
             }
 
+        legeEllerInstitusjon = "ULLEVÅL SYKEHUS"
+        legeEllerInstitusjonsNummer = 80000465795.toBigInteger()
+        mottakerKode = "IN"
+
         if (itfh.infotrygdForesp.diagnosekodeOK != null) {
             hovedDiagnose = itfh.infotrygdForesp.hovedDiagnosekode
             hovedDiagnoseGruppe = itfh.infotrygdForesp.hovedDiagnosekodeverk.toBigInteger()
