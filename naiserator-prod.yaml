@@ -58,6 +58,9 @@ spec:
         - application: norg2
           namespace: org
           cluster: prod-gcp
+        - application: institusjon-api
+          namespace: team-rocket
+          cluster: prod-gcp
       external:
         - host: pdl-api.prod-fss-pub.nais.io
         - host: norg2.prod-fss-pub.nais.io
