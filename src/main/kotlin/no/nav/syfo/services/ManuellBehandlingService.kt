@@ -11,6 +11,7 @@ import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.erUtenlandskSykmelding
 import no.nav.syfo.log
 import no.nav.syfo.metrics.OVERLAPPENDE_PERIODER_IKKE_OPPRETT_OPPGAVE
+import no.nav.syfo.metrics.OVERLAPPENDE_PERIODE_SKIP_OPPGAVE
 import no.nav.syfo.metrics.OVERLAPPER_PERIODER_COUNTER
 import no.nav.syfo.model.sykmelding.ReceivedSykmelding
 import no.nav.syfo.model.sykmelding.RuleInfo
@@ -108,7 +109,14 @@ class ManuellBehandlingService(
                     itfh.infotrygdForesp
                 )
 
+            if (skalIkkeOppdatereInfotrygd) {
+                OVERLAPPENDE_PERIODE_SKIP_OPPGAVE.labels("old").inc()
+            }
             val isUendretOperasjonstype = operasjonstypeAndFom.first == Operasjonstype.UENDRET
+            if (isUendretOperasjonstype) {
+                OVERLAPPENDE_PERIODE_SKIP_OPPGAVE.labels("new").inc()
+            }
+
             when {
                 duplikatInfotrygdOppdatering -> {
                     log.warn(
