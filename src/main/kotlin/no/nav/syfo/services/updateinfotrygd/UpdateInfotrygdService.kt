@@ -39,14 +39,14 @@ class UpdateInfotrygdService(
         behandlerKode: String,
         navKontorNr: String,
         behandletAvManuell: Boolean,
+        operasjonstypeAndFom: Pair<Operasjonstype, LocalDate>,
     ) {
         val perioder = itfh.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
         val marshalledFellesformat = receivedSykmelding.fellesformat
         val personNrPasient = receivedSykmelding.personNrPasient
         val signaturDato = receivedSykmelding.sykmelding.signaturDato.toLocalDate()
         val tssid = receivedSykmelding.tssid
-
-        val forsteFravaersDag = finnForsteFravaersDag(itfh, perioder.first(), loggingMeta)
+        val forsteFravaersDag = operasjonstypeAndFom.second
         log.info(
             "Fant første fraværsdag for sykmelding id ${receivedSykmelding.sykmelding.id} til $forsteFravaersDag"
         )
@@ -63,9 +63,9 @@ class UpdateInfotrygdService(
                     navKontorNr = navKontorNr,
                     navnArbeidsgiver =
                         findArbeidsKategori(itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver),
-                    identDato = forsteFravaersDag,
                     behandletAvManuell = behandletAvManuell,
                     utenlandskSykmelding = receivedSykmelding.erUtenlandskSykmelding(),
+                    operasjonstypeAndFom = operasjonstypeAndFom,
                 ),
             )
 
@@ -75,7 +75,7 @@ class UpdateInfotrygdService(
 
         when {
             nyligInfotrygdOppdatering == null -> {
-                delay(10_000)
+                delay(4_000)
                 try {
                     val producerRecord =
                         ProducerRecord(
@@ -137,6 +137,7 @@ class UpdateInfotrygdService(
                                     behandletAvManuell = behandletAvManuell,
                                     utenlandskSykmelding =
                                         receivedSykmelding.erUtenlandskSykmelding(),
+                                    operasjonstypeAndFom = operasjonstypeAndFom
                                 ),
                                 loggingMeta,
                             )
@@ -158,7 +159,10 @@ class UpdateInfotrygdService(
                                         behandletAvManuell = behandletAvManuell,
                                         utenlandskSykmelding =
                                             receivedSykmelding.erUtenlandskSykmelding(),
-                                        operasjonstypeKode = 2,
+                                        operasjonstypeAndFom =
+                                            operasjonstypeAndFom.copy(
+                                                first = Operasjonstype.ENDRING
+                                            ),
                                     ),
                                     loggingMeta,
                                 )

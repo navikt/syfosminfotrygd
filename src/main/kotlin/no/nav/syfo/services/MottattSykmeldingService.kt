@@ -5,7 +5,6 @@ import jakarta.jms.MessageProducer
 import jakarta.jms.Session
 import java.io.StringReader
 import java.time.LocalDate
-import java.time.temporal.ChronoUnit
 import java.util.Objects.isNull
 import net.logstash.logback.argument.StructuredArguments
 import no.nav.helse.eiFellesformat.XMLEIFellesformat
@@ -29,7 +28,11 @@ import no.nav.syfo.model.sykmelding.RuleInfo
 import no.nav.syfo.model.sykmelding.Status
 import no.nav.syfo.model.sykmelding.ValidationResult
 import no.nav.syfo.rules.ruleCheck
+import no.nav.syfo.rules.validation.InfotrygdPeriode
+import no.nav.syfo.services.updateinfotrygd.Operasjonstype
 import no.nav.syfo.services.updateinfotrygd.UpdateInfotrygdService
+import no.nav.syfo.services.updateinfotrygd.findoperasjonstypeAndFom
+import no.nav.syfo.services.updateinfotrygd.getInfotrygdPerioder
 import no.nav.syfo.util.LoggingMeta
 import no.nav.syfo.util.fellesformatUnmarshaller
 import org.slf4j.Logger
@@ -126,13 +129,24 @@ class MottattSykmeldingService(
                             healthInformation,
                             navKontorNr
                         )
+                    val operasjonstypeAndFom =
+                        findoperasjonstypeAndFom(
+                            receivedSykmelding.sykmelding.perioder.firstFom(),
+                            receivedSykmelding.sykmelding.perioder.lastTom(),
+                            infotrygdForespResponse.getInfotrygdPerioder()
+                        )
 
+                    log.info(
+                        "operasjonstype: ${operasjonstypeAndFom.first}, fom: ${operasjonstypeAndFom.second}, for perioder fom: ${receivedSykmelding.sykmelding.perioder.firstFom()} tom: ${receivedSykmelding.sykmelding.perioder.lastTom()}, infotrygdPerioder: ${infotrygdForespResponse.getInfotrygdPerioder().map { InfotrygdPeriode(it.periode?.arbufoerFOM, it.periode.arbufoerTOM) }}, {}",
+                        StructuredArguments.fields(loggingMeta)
+                    )
                     val validationResult =
                         ruleCheck(
                             receivedSykmeldingCopyTssId,
                             infotrygdForespResponse,
                             loggingMeta,
                             RuleExecutionService(),
+                            operasjonstypeAndFom,
                         )
 
                     val helsepersonell = getHelsepersonell(receivedSykmeldingCopyTssId)
@@ -146,6 +160,7 @@ class MottattSykmeldingService(
                                 ),
                             behandletAvManuell = behandletAvManuell,
                             loggingMeta = loggingMeta,
+                            operasjonstypeAndFom = operasjonstypeAndFom,
                         )
                     } else {
                         val helsepersonellKategoriVerdi =
@@ -162,6 +177,7 @@ class MottattSykmeldingService(
                                     ),
                                     helsepersonellKategoriVerdi,
                                     behandletAvManuell,
+                                    operasjonstypeAndFom
                                 )
                             else -> {
                                 updateInfotrygdService.updateInfotrygd(
@@ -177,6 +193,7 @@ class MottattSykmeldingService(
                                     behandlerKode = helsepersonellKategoriVerdi,
                                     navKontorNr = navKontorNr,
                                     behandletAvManuell = behandletAvManuell,
+                                    operasjonstypeAndFom = operasjonstypeAndFom,
                                 )
                             }
                         }
@@ -264,11 +281,12 @@ class MottattSykmeldingService(
         }
     }
 
-    private suspend fun handleBehandlerNotInHpr(
+    private fun handleBehandlerNotInHpr(
         receivedSykmelding: ReceivedSykmelding,
         itfh: InfotrygdForespAndHealthInformation,
         behandletAvManuell: Boolean,
         loggingMeta: LoggingMeta,
+        operasjonstypeAndFom: Pair<Operasjonstype, LocalDate>
     ) {
         val validationResultBehandler =
             ValidationResult(
@@ -293,6 +311,7 @@ class MottattSykmeldingService(
             itfh,
             HelsepersonellKategori.LEGE.verdi,
             behandletAvManuell,
+            operasjonstypeAndFom,
         )
     }
 
@@ -386,8 +405,6 @@ fun validerMottattSykmelding(
     }
 }
 
-fun List<Periode>.sortedFOMDate(): List<LocalDate> = map { it.fom }.sorted()
+fun List<Periode>.firstFom(): LocalDate = minOf { it.fom }
 
-fun List<Periode>.sortedTOMDate(): List<LocalDate> = map { it.tom }.sorted()
-
-fun ClosedRange<LocalDate>.daysBetween(): Long = ChronoUnit.DAYS.between(start, endInclusive)
+fun List<Periode>.lastTom(): LocalDate = maxOf { it.tom }

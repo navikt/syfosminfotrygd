@@ -11,12 +11,12 @@ import no.nav.syfo.model.sykmelding.Diagnose
 
 data class InfotrygdQuery(
     val ident: String,
-    val fom: LocalDate?,
-    val tom: LocalDate?,
-    val hoveddiagnose: Diagnose?,
-    val bidiagnose: Diagnose?,
-    val tknumber: String?,
-    val fodselsnrBehandler: String?,
+    val fom: LocalDate? = null,
+    val tom: LocalDate? = null,
+    val hoveddiagnose: Diagnose? = null,
+    val bidiagnose: Diagnose? = null,
+    val tknumber: String? = null,
+    val fodselsnrBehandler: String? = null,
     val traceId: String = UUID.randomUUID().toString(),
 )
 

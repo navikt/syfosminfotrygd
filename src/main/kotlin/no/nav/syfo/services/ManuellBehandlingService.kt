@@ -8,7 +8,6 @@ import net.logstash.logback.argument.StructuredArguments
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.syfo.InfotrygdForespAndHealthInformation
 import no.nav.syfo.application.ApplicationState
-import no.nav.syfo.daysBetween
 import no.nav.syfo.erUtenlandskSykmelding
 import no.nav.syfo.log
 import no.nav.syfo.metrics.OVERLAPPENDE_PERIODER_IKKE_OPPRETT_OPPGAVE
@@ -16,11 +15,11 @@ import no.nav.syfo.metrics.OVERLAPPER_PERIODER_COUNTER
 import no.nav.syfo.model.sykmelding.ReceivedSykmelding
 import no.nav.syfo.model.sykmelding.RuleInfo
 import no.nav.syfo.model.sykmelding.ValidationResult
-import no.nav.syfo.rules.validation.sortedPeriodeFOMDate
-import no.nav.syfo.rules.validation.sortedPeriodeTOMDate
 import no.nav.syfo.services.updateinfotrygd.INFOTRYGD
+import no.nav.syfo.services.updateinfotrygd.Operasjonstype
 import no.nav.syfo.services.updateinfotrygd.createInfotrygdBlokk
 import no.nav.syfo.services.updateinfotrygd.findArbeidsKategori
+import no.nav.syfo.services.updateinfotrygd.getInfotrygdPerioder
 import no.nav.syfo.sortedFOMDate
 import no.nav.syfo.util.LoggingMeta
 
@@ -28,7 +27,6 @@ class ManuellBehandlingService(
     private val valkeyService: ValkeyService,
     private val oppgaveService: OppgaveService,
     private val applicationState: ApplicationState,
-    private val sykmeldingService: SykmeldingService,
 ) {
     @WithSpan
     fun produceManualTaskAndSendValidationResults(
@@ -46,13 +44,14 @@ class ManuellBehandlingService(
     }
 
     @WithSpan(value = "produceManualTaskAndSendValidationResultsWithHelsepersonellKategori")
-    suspend fun produceManualTaskAndSendValidationResults(
+    fun produceManualTaskAndSendValidationResults(
         receivedSykmelding: ReceivedSykmelding,
         validationResult: ValidationResult,
         loggingMeta: LoggingMeta,
         itfh: InfotrygdForespAndHealthInformation,
         helsepersonellKategoriVerdi: String,
         behandletAvManuell: Boolean,
+        operasjonstypeAndFom: Pair<Operasjonstype, LocalDate>,
     ) {
         try {
             val perioder = itfh.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
@@ -78,10 +77,9 @@ class ManuellBehandlingService(
                             findArbeidsKategori(
                                 itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver
                             ),
-                        identDato = forsteFravaersDag,
                         behandletAvManuell = behandletAvManuell,
                         utenlandskSykmelding = receivedSykmelding.erUtenlandskSykmelding(),
-                        operasjonstypeKode = 1,
+                        operasjonstypeAndFom = operasjonstypeAndFom.copy(first = Operasjonstype.NY),
                     ),
                 )
 
@@ -109,7 +107,8 @@ class ManuellBehandlingService(
                     validationResult,
                     itfh.infotrygdForesp
                 )
-            skalIkkeProdusereManuellOppgave(receivedSykmelding, validationResult)
+
+            val isUendretOperasjonstype = operasjonstypeAndFom.first == Operasjonstype.UENDRET
             when {
                 duplikatInfotrygdOppdatering -> {
                     log.warn(
@@ -121,6 +120,12 @@ class ManuellBehandlingService(
                     OVERLAPPENDE_PERIODER_IKKE_OPPRETT_OPPGAVE.inc()
                     log.info(
                         "Sykmelding overlapper, trenger ikke å opprette manuell oppgave for {}",
+                        StructuredArguments.fields(loggingMeta)
+                    )
+                }
+                isUendretOperasjonstype -> {
+                    log.info(
+                        "Sykmelding er uendret for infotrygd, trenger ikke å opprette manuell oppgave for {}",
                         StructuredArguments.fields(loggingMeta)
                     )
                 }
@@ -148,7 +153,7 @@ class ManuellBehandlingService(
         }
     }
 
-    private suspend fun skalIkkeOppdatereInfotrygdNewCheck(
+    private fun skalIkkeOppdatereInfotrygdNewCheck(
         receivedSykmelding: ReceivedSykmelding,
         validationResult: ValidationResult,
         infotrygdForesp: InfotrygdForesp,
@@ -165,51 +170,25 @@ class ManuellBehandlingService(
         return false
     }
 
-    suspend fun harOverlappendePerioder(
+    fun harOverlappendePerioder(
         receivedSykmelding: ReceivedSykmelding,
         infotrygdForesp: InfotrygdForesp
     ): Boolean {
-        val overlapperFraRegisteret =
-            sykmeldingService.hasOverlappingPeriodsFromRegister(receivedSykmelding)
-        if (overlapperFraRegisteret) {
-            OVERLAPPER_PERIODER_COUNTER.labels("smregister").inc()
-        }
+        val infotrygdSykmelding = infotrygdForesp.getInfotrygdPerioder()
         val overlapperFraInfotrygd =
-            sykmeldingService.hasOverlappingPeriodsFromInfotrygd(
-                receivedSykmelding,
-                infotrygdForesp
+            hasOverlappingPeriodsFromInfotrygd(
+                receivedSykmelding.sykmelding.perioder.firstFom(),
+                receivedSykmelding.sykmelding.perioder.lastTom(),
+                infotrygdSykmelding.filter {
+                    it.periode.arbufoerFOM != null && it.periode.arbufoerTOM != null
+                }
             )
         if (overlapperFraInfotrygd) {
             OVERLAPPER_PERIODER_COUNTER.labels("infotrygd").inc()
         }
-        log.info(
-            "overlappendet perioder fra smregister: $overlapperFraRegisteret, infotrygd: $overlapperFraInfotrygd"
-        )
-        return overlapperFraRegisteret && overlapperFraInfotrygd
+        log.info("overlappendet perioder fra infotrygd: $overlapperFraInfotrygd")
+        return overlapperFraInfotrygd
     }
-}
-
-fun skalIkkeProdusereManuellOppgave(
-    receivedSykmelding: ReceivedSykmelding,
-    validationResult: ValidationResult,
-): Boolean {
-    val delvisOverlappendeSykmeldingRule =
-        validationResult.ruleHits.isNotEmpty() &&
-            validationResult.ruleHits.any {
-                (it.ruleName ==
-                    "PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE")
-            } &&
-            receivedSykmelding.sykmelding.perioder.sortedPeriodeFOMDate().lastOrNull() != null &&
-            receivedSykmelding.sykmelding.perioder.sortedPeriodeTOMDate().lastOrNull() != null &&
-            (receivedSykmelding.sykmelding.perioder
-                    .sortedPeriodeFOMDate()
-                    .last()..receivedSykmelding.sykmelding.perioder.sortedPeriodeTOMDate().last())
-                .daysBetween() <= 3
-
-    if (delvisOverlappendeSykmeldingRule) {
-        OVERLAPPER_PERIODER_COUNTER.labels("old").inc()
-    }
-    return delvisOverlappendeSykmeldingRule
 }
 
 fun errorFromInfotrygd(rules: List<RuleInfo>): Boolean =

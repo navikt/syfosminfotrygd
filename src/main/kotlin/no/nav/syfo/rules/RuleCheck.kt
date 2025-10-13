@@ -1,5 +1,6 @@
 package no.nav.syfo.rules
 
+import java.time.LocalDate
 import net.logstash.logback.argument.StructuredArguments
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.syfo.log
@@ -14,6 +15,7 @@ import no.nav.syfo.rules.common.RuleResult
 import no.nav.syfo.rules.dsl.TreeOutput
 import no.nav.syfo.rules.dsl.printRulePath
 import no.nav.syfo.services.RuleExecutionService
+import no.nav.syfo.services.updateinfotrygd.Operasjonstype
 import no.nav.syfo.util.LoggingMeta
 
 fun ruleCheck(
@@ -21,6 +23,7 @@ fun ruleCheck(
     infotrygdForespResponse: InfotrygdForesp,
     loggingMeta: LoggingMeta,
     ruleExecutionService: RuleExecutionService,
+    operasjonstypeAndFom: Pair<Operasjonstype, LocalDate>,
 ): ValidationResult {
     log.info("Going through rules {}", StructuredArguments.fields(loggingMeta))
 
@@ -33,6 +36,7 @@ fun ruleCheck(
             legekontorOrgnr = receivedSykmelding.legekontorOrgNr,
             tssid = receivedSykmelding.tssid,
             infotrygdForesp = infotrygdForespResponse,
+            operasjonstypeAndFom = operasjonstypeAndFom,
         )
 
     val result = ruleExecutionService.runRules(receivedSykmelding.sykmelding, ruleMetadata)

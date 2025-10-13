@@ -10,6 +10,7 @@ import no.nav.syfo.generateSykmelding
 import no.nav.syfo.model.RuleMetadata
 import no.nav.syfo.model.sykmelding.Status
 import no.nav.syfo.receivedSykmelding
+import no.nav.syfo.services.updateinfotrygd.Operasjonstype
 import org.amshove.kluent.shouldBeEqualTo
 
 class TSSTest :
@@ -44,13 +45,14 @@ class TSSTest :
 
                 val ruleMetadata =
                     RuleMetadata(
-                        receivedDate = receivedSykmelding.mottattDato,
                         signatureDate = receivedSykmelding.sykmelding.signaturDato,
+                        receivedDate = receivedSykmelding.mottattDato,
                         patientPersonNumber = receivedSykmelding.personNrPasient,
                         rulesetVersion = receivedSykmelding.rulesetVersion,
                         legekontorOrgnr = receivedSykmelding.legekontorOrgNr,
                         tssid = receivedSykmelding.tssid,
                         infotrygdForesp = infotrygdForespResponse,
+                        Operasjonstype.NY to LocalDate.now(),
                     )
 
                 val result = ruleTree.runRules(sykmelding, ruleMetadata)
@@ -94,13 +96,14 @@ class TSSTest :
 
                 val ruleMetadata =
                     RuleMetadata(
-                        receivedDate = receivedSykmelding.mottattDato,
                         signatureDate = receivedSykmelding.sykmelding.signaturDato,
+                        receivedDate = receivedSykmelding.mottattDato,
                         patientPersonNumber = receivedSykmelding.personNrPasient,
                         rulesetVersion = receivedSykmelding.rulesetVersion,
                         legekontorOrgnr = receivedSykmelding.legekontorOrgNr,
                         tssid = null,
                         infotrygdForesp = infotrygdForespResponse,
+                        Operasjonstype.NY to LocalDate.now(),
                     )
 
                 val result = ruleTree.runRules(sykmelding, ruleMetadata)

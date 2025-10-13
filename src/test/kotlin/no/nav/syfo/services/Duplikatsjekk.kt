@@ -8,6 +8,7 @@ import no.nav.helse.infotrygd.foresp.TypeSMinfo
 import no.nav.helse.sm2013.CS
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.syfo.InfotrygdForespAndHealthInformation
+import no.nav.syfo.services.updateinfotrygd.Operasjonstype
 import no.nav.syfo.services.updateinfotrygd.createInfotrygdBlokk
 import no.nav.syfo.util.LoggingMeta
 import org.amshove.kluent.shouldBeEqualTo
@@ -57,10 +58,9 @@ class Duplikatsjekk :
                         LoggingMeta("mottakId", "12315", "", ""),
                         "1234",
                         "NAV IKT",
-                        LocalDate.now(),
                         behandletAvManuell = false,
                         utenlandskSykmelding = false,
-                        operasjonstypeKode = 1,
+                        operasjonstypeAndFom = Operasjonstype.NY to LocalDate.now(),
                     )
 
                 val healthInformationAndreMelding =
@@ -102,10 +102,9 @@ class Duplikatsjekk :
                         LoggingMeta("mottakId", "12315", "2424", "2424"),
                         "1234",
                         "NAV IKT",
-                        LocalDate.now(),
                         behandletAvManuell = false,
                         utenlandskSykmelding = false,
-                        operasjonstypeKode = 1,
+                        operasjonstypeAndFom = Operasjonstype.NY to LocalDate.now(),
                     )
 
                 val sha256StringForsteMelding = sha256hashstring(infotrygdBlokkForsteMelding)

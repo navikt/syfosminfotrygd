@@ -24,6 +24,7 @@ import no.nav.syfo.model.HelsepersonellKategori
 import no.nav.syfo.objectMapper
 import no.nav.syfo.services.createInfotrygdForesp
 import no.nav.syfo.services.toInfotrygdForespValues
+import no.nav.syfo.sortedFOMDate
 import no.nav.syfo.toString
 import no.nav.syfo.util.LoggingMeta
 import no.nav.syfo.util.fellesformatMarshaller
@@ -54,6 +55,13 @@ class CreateInfotrygdInfoSpek :
                     val fellesFormatString = fellesformatMarshaller.toString(fellesFormat)
                     val itfh =
                         InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
+                    val operasjonstypeAndFom =
+                        findoperasjonstypeAndFom(
+                            healthInformation.aktivitet.periode.sortedFOMDate().first(),
+                            healthInformation.aktivitet.periode.maxOf { it.periodeTOMDato },
+                            infotrygdForesp.getInfotrygdPerioder()
+                        )
+                    val forsteFravaersDag = operasjonstypeAndFom.second
 
                     val infotrygdFellesformat =
                         createInfotrygdFellesformat(
@@ -69,6 +77,7 @@ class CreateInfotrygdInfoSpek :
                             LocalDate.now(),
                             behandletAvManuell = false,
                             utenlandskSykmelding = false,
+                            operasjonstypeAndFom
                         )
 
                     extractHelseOpplysningerArbeidsuforhet(infotrygdFellesformat)
@@ -94,6 +103,13 @@ class CreateInfotrygdInfoSpek :
                     val fellesFormatString = fellesformatMarshaller.toString(fellesFormat)
                     val itfh =
                         InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
+                    val operasjonstypeAndFom =
+                        findoperasjonstypeAndFom(
+                            healthInformation.aktivitet.periode.sortedFOMDate().first(),
+                            healthInformation.aktivitet.periode.maxOf { it.periodeTOMDato },
+                            infotrygdForesp.getInfotrygdPerioder()
+                        )
+                    val forsteFravaersDag = operasjonstypeAndFom.second
 
                     val infotrygdFellesformat =
                         createInfotrygdFellesformat(
@@ -109,6 +125,7 @@ class CreateInfotrygdInfoSpek :
                             LocalDate.now(),
                             behandletAvManuell = false,
                             utenlandskSykmelding = false,
+                            operasjonstypeAndFom
                         )
 
                     extractHelseOpplysningerArbeidsuforhet(infotrygdFellesformat)
@@ -141,6 +158,13 @@ class CreateInfotrygdInfoSpek :
                     val fellesFormatString = fellesformatMarshaller.toString(fellesFormat)
                     val itfh =
                         InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
+                    val operasjonstypeAndFom =
+                        findoperasjonstypeAndFom(
+                            healthInformation.aktivitet.periode.sortedFOMDate().first(),
+                            healthInformation.aktivitet.periode.maxOf { it.periodeTOMDato },
+                            infotrygdForesp.getInfotrygdPerioder()
+                        )
+                    val forsteFravaersDag = operasjonstypeAndFom.second
 
                     val infotrygdFellesformat =
                         createInfotrygdFellesformat(
@@ -156,6 +180,7 @@ class CreateInfotrygdInfoSpek :
                             LocalDate.now(),
                             behandletAvManuell = false,
                             utenlandskSykmelding = false,
+                            operasjonstypeAndFom
                         )
 
                     val infotrygdBlokk =
@@ -183,6 +208,13 @@ class CreateInfotrygdInfoSpek :
                     val fellesFormatString = fellesformatMarshaller.toString(fellesFormat)
                     val itfh =
                         InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
+                    val operasjonstypeAndFom =
+                        findoperasjonstypeAndFom(
+                            healthInformation.aktivitet.periode.sortedFOMDate().first(),
+                            healthInformation.aktivitet.periode.maxOf { it.periodeTOMDato },
+                            infotrygdForesp.getInfotrygdPerioder()
+                        )
+                    val forsteFravaersDag = operasjonstypeAndFom.second
 
                     val infotrygdFellesformat =
                         createInfotrygdFellesformat(
@@ -198,6 +230,7 @@ class CreateInfotrygdInfoSpek :
                             LocalDate.now(),
                             behandletAvManuell = false,
                             utenlandskSykmelding = false,
+                            operasjonstypeAndFom
                         )
 
                     val infotrygdBlokk =
@@ -229,6 +262,13 @@ class CreateInfotrygdInfoSpek :
                     val fellesFormatString = fellesformatMarshaller.toString(fellesFormat)
                     val itfh =
                         InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
+                    val operasjonstypeAndFom =
+                        findoperasjonstypeAndFom(
+                            healthInformation.aktivitet.periode.sortedFOMDate().first(),
+                            healthInformation.aktivitet.periode.maxOf { it.periodeTOMDato },
+                            infotrygdForesp.getInfotrygdPerioder()
+                        )
+                    val forsteFravaersDag = operasjonstypeAndFom.second
 
                     val infotrygdFellesformat =
                         createInfotrygdFellesformat(
@@ -244,6 +284,7 @@ class CreateInfotrygdInfoSpek :
                             LocalDate.now(),
                             behandletAvManuell = false,
                             utenlandskSykmelding = false,
+                            operasjonstypeAndFom
                         )
 
                     val infotrygdBlokk =
@@ -270,6 +311,13 @@ class CreateInfotrygdInfoSpek :
                     val fellesFormatString = fellesformatMarshaller.toString(fellesFormat)
                     val itfh =
                         InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
+                    val operasjonstypeAndFom =
+                        findoperasjonstypeAndFom(
+                            healthInformation.aktivitet.periode.sortedFOMDate().first(),
+                            healthInformation.aktivitet.periode.maxOf { it.periodeTOMDato },
+                            infotrygdForesp.getInfotrygdPerioder()
+                        )
+                    val forsteFravaersDag = operasjonstypeAndFom.second
 
                     val infotrygdFellesformat =
                         createInfotrygdFellesformat(
@@ -285,6 +333,7 @@ class CreateInfotrygdInfoSpek :
                             LocalDate.now(),
                             behandletAvManuell = false,
                             utenlandskSykmelding = false,
+                            operasjonstypeAndFom
                         )
 
                     val infotrygdBlokk =
@@ -310,6 +359,13 @@ class CreateInfotrygdInfoSpek :
                     val fellesFormatString = fellesformatMarshaller.toString(fellesformat)
                     val itfh =
                         InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
+                    val operasjonstypeAndFom =
+                        findoperasjonstypeAndFom(
+                            healthInformation.aktivitet.periode.sortedFOMDate().first(),
+                            healthInformation.aktivitet.periode.maxOf { it.periodeTOMDato },
+                            infotrygdForesp.getInfotrygdPerioder()
+                        )
+                    val forsteFravaersDag = operasjonstypeAndFom.second
 
                     val infotrygdFellesformat =
                         createInfotrygdFellesformat(
@@ -325,6 +381,7 @@ class CreateInfotrygdInfoSpek :
                             LocalDate.now(),
                             behandletAvManuell = false,
                             utenlandskSykmelding = false,
+                            operasjonstypeAndFom
                         )
 
                     xmlObjectWriter
@@ -370,6 +427,13 @@ class CreateInfotrygdInfoSpek :
                         }
                     val itfh =
                         InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
+                    val operasjonstypeAndFom =
+                        findoperasjonstypeAndFom(
+                            healthInformation.aktivitet.periode.sortedFOMDate().first(),
+                            healthInformation.aktivitet.periode.maxOf { it.periodeTOMDato },
+                            infotrygdForesp.getInfotrygdPerioder()
+                        )
+                    val forsteFravaersDag = operasjonstypeAndFom.second
 
                     val infotrygdFellesformat =
                         createInfotrygdFellesformat(
@@ -385,7 +449,7 @@ class CreateInfotrygdInfoSpek :
                             LocalDate.now(),
                             behandletAvManuell = false,
                             utenlandskSykmelding = false,
-                            2,
+                            operasjonstypeAndFom,
                         )
 
                     val infotrygdBlokk =
@@ -440,6 +504,13 @@ class CreateInfotrygdInfoSpek :
                     val fellesFormatString = fellesformatMarshaller.toString(fellesFormat)
                     val itfh =
                         InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
+                    val operasjonstypeAndFom =
+                        findoperasjonstypeAndFom(
+                            healthInformation.aktivitet.periode.sortedFOMDate().first(),
+                            healthInformation.aktivitet.periode.maxOf { it.periodeTOMDato },
+                            infotrygdForesp.getInfotrygdPerioder()
+                        )
+                    val forsteFravaersDag = operasjonstypeAndFom.second
 
                     val infotrygdFellesformat =
                         createInfotrygdFellesformat(
@@ -455,6 +526,7 @@ class CreateInfotrygdInfoSpek :
                             LocalDate.now(),
                             behandletAvManuell = false,
                             utenlandskSykmelding = false,
+                            operasjonstypeAndFom
                         )
 
                     val infotrygdBlokk =
@@ -531,6 +603,13 @@ class CreateInfotrygdInfoSpek :
                         }
                     val itfh =
                         InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
+                    val operasjonstypeAndFom =
+                        findoperasjonstypeAndFom(
+                            healthInformation.aktivitet.periode.sortedFOMDate().first(),
+                            healthInformation.aktivitet.periode.maxOf { it.periodeTOMDato },
+                            infotrygdForesp.getInfotrygdPerioder()
+                        )
+                    val forsteFravaersDag = operasjonstypeAndFom.second
 
                     val infotrygdFellesformat =
                         createInfotrygdFellesformat(
@@ -546,7 +625,7 @@ class CreateInfotrygdInfoSpek :
                             LocalDate.now(),
                             behandletAvManuell = false,
                             utenlandskSykmelding = false,
-                            2,
+                            operasjonstypeAndFom,
                         )
 
                     val infotrygdBlokk =

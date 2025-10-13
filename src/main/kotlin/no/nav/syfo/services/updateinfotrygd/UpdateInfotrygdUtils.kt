@@ -4,6 +4,7 @@ import io.opentelemetry.instrumentation.annotations.WithSpan
 import java.time.LocalDate
 import net.logstash.logback.argument.StructuredArguments
 import no.nav.helse.eiFellesformat.XMLEIFellesformat
+import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.helse.sm2013.KontrollSystemBlokk
 import no.nav.helse.sm2013.KontrollsystemBlokkType
@@ -11,7 +12,6 @@ import no.nav.syfo.InfotrygdForespAndHealthInformation
 import no.nav.syfo.UTENLANDSK_SYKEHUS
 import no.nav.syfo.log
 import no.nav.syfo.rules.validation.sortedSMInfos
-import no.nav.syfo.sortedFOMDate
 import no.nav.syfo.unmarshal
 import no.nav.syfo.util.LoggingMeta
 
@@ -26,16 +26,25 @@ fun createInfotrygdBlokk(
     loggingMeta: LoggingMeta,
     navKontorNr: String,
     navnArbeidsgiver: String?,
-    identDato: LocalDate,
     behandletAvManuell: Boolean,
     utenlandskSykmelding: Boolean,
-    operasjonstypeKode: Int = findOperasjonstype(periode, itfh, loggingMeta),
+    operasjonstypeAndFom: Pair<Operasjonstype, LocalDate>,
 ) =
     KontrollsystemBlokkType.InfotrygdBlokk().apply {
         fodselsnummer = personNrPasient
         tkNummer = navKontorNr
 
-        operasjonstype = operasjonstypeKode.toBigInteger()
+        operasjonstype =
+            when (operasjonstypeAndFom.first) {
+                Operasjonstype.NY -> 1
+                Operasjonstype.UENDRET -> 2
+                Operasjonstype.ENDRING -> 2
+                Operasjonstype.FORLENGELSE -> 3
+                Operasjonstype.UGYLDIG_OVERLAPP ->
+                    throw IllegalArgumentException(
+                        "Ugyldig operasjonstype for infotrygd ${operasjonstypeAndFom.first}"
+                    )
+            }.toBigInteger()
 
         val typeSMinfo = itfh.infotrygdForesp.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()
 
@@ -54,7 +63,7 @@ fun createInfotrygdBlokk(
                 }
         }
 
-        forsteFravaersDag = identDato
+        forsteFravaersDag = operasjonstypeAndFom.second
 
         mottakerKode =
             if (utenlandskSykmelding) {
@@ -136,7 +145,7 @@ fun createInfotrygdFellesformat(
     identDato: LocalDate,
     behandletAvManuell: Boolean,
     utenlandskSykmelding: Boolean,
-    operasjonstypeKode: Int = findOperasjonstype(periode, itfh, loggingMeta),
+    operasjonstypeAndFom: Pair<Operasjonstype, LocalDate>,
 ) =
     unmarshal<XMLEIFellesformat>(marshalledFellesformat).apply {
         any.add(
@@ -152,10 +161,9 @@ fun createInfotrygdFellesformat(
                         loggingMeta = loggingMeta,
                         navKontorNr = navKontorNr,
                         navnArbeidsgiver = itfh.healthInformation.arbeidsgiver?.navnArbeidsgiver,
-                        identDato = identDato,
                         behandletAvManuell = behandletAvManuell,
                         utenlandskSykmelding = utenlandskSykmelding,
-                        operasjonstypeKode = operasjonstypeKode,
+                        operasjonstypeAndFom = operasjonstypeAndFom,
                     ),
                 )
             },
@@ -167,20 +175,6 @@ fun findArbeidsKategori(navnArbeidsgiver: String?): String {
         "30"
     } else {
         "01"
-    }
-}
-
-fun finnForsteFravaersDag(
-    itfh: InfotrygdForespAndHealthInformation,
-    forstePeriode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode,
-    loggingMeta: LoggingMeta,
-): LocalDate {
-    val typeSMinfo = itfh.infotrygdForesp.sMhistorikk?.sykmelding?.sortedSMInfos()?.lastOrNull()
-    return if (findOperasjonstype(forstePeriode, itfh, loggingMeta) == 1) {
-        itfh.healthInformation.aktivitet.periode.sortedFOMDate().first()
-    } else {
-        typeSMinfo?.periode?.arbufoerFOM
-            ?: throw RuntimeException("Unable to find første fraværsdag in IT")
     }
 }
 
@@ -210,3 +204,5 @@ private fun HelseOpplysningerArbeidsuforhet.Behandler.formatName(): String =
     } else {
         "${navn.etternavn.uppercase()} ${navn.fornavn.uppercase()} ${navn.mellomnavn.uppercase()}"
     }
+
+fun InfotrygdForesp.getInfotrygdPerioder() = sMhistorikk?.sykmelding ?: emptyList()

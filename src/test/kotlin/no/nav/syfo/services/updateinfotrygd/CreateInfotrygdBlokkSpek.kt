@@ -42,12 +42,13 @@ class CreateInfotrygdBlokkSpek :
 
                 val perioder =
                     ifth.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
-                val forsteFravaersDag =
-                    finnForsteFravaersDag(
-                        ifth,
-                        perioder.first(),
-                        LoggingMeta("mottakId", "12315", "", "")
+                val operasjonstypeAndFom =
+                    findoperasjonstypeAndFom(
+                        healthInformation.aktivitet.periode.sortedFOMDate().first(),
+                        healthInformation.aktivitet.periode.maxOf { it.periodeTOMDato },
+                        infotrygdForesp.getInfotrygdPerioder()
                     )
+                val forsteFravaersDag = operasjonstypeAndFom.second
 
                 val infotrygdBlokk =
                     createInfotrygdBlokk(
@@ -60,10 +61,9 @@ class CreateInfotrygdBlokkSpek :
                         LoggingMeta("mottakId", "12315", "", ""),
                         "1234",
                         "NAV IKT",
-                        forsteFravaersDag,
                         behandletAvManuell = false,
                         utenlandskSykmelding = false,
-                        operasjonstypeKode = 1,
+                        operasjonstypeAndFom = operasjonstypeAndFom,
                     )
 
                 infotrygdBlokk.forsteFravaersDag shouldBeEqualTo
@@ -113,12 +113,13 @@ class CreateInfotrygdBlokkSpek :
 
                 val perioder =
                     ifth.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
-                val forsteFravaersDag =
-                    finnForsteFravaersDag(
-                        ifth,
-                        perioder.first(),
-                        LoggingMeta("mottakId", "12315", "", "")
+                val operasjonstypeAndFom =
+                    findoperasjonstypeAndFom(
+                        healthInformation.aktivitet.periode.sortedFOMDate().first(),
+                        healthInformation.aktivitet.periode.maxOf { it.periodeTOMDato },
+                        infotrygdForesp.getInfotrygdPerioder()
                     )
+                val forsteFravaersDag = operasjonstypeAndFom.second
 
                 val infotrygdfirstBlokk =
                     createInfotrygdBlokk(
@@ -131,10 +132,9 @@ class CreateInfotrygdBlokkSpek :
                         LoggingMeta("mottakId", "12315", "", ""),
                         "1234",
                         "NAV IKT",
-                        forsteFravaersDag,
                         behandletAvManuell = false,
                         utenlandskSykmelding = false,
-                        operasjonstypeKode = 2,
+                        operasjonstypeAndFom,
                     )
 
                 val infotrygdlastBlokk =
@@ -148,24 +148,16 @@ class CreateInfotrygdBlokkSpek :
                         LoggingMeta("mottakId", "12315", "", ""),
                         "1234",
                         "NAV IKT",
-                        forsteFravaersDag,
                         behandletAvManuell = false,
                         utenlandskSykmelding = false,
-                        operasjonstypeKode = 2,
+                        operasjonstypeAndFom,
                     )
-
+                val infotrygdSykmelding =
+                    ifth.infotrygdForesp.getInfotrygdPerioder().sortedSMInfos()
                 infotrygdfirstBlokk.forsteFravaersDag shouldBeEqualTo
-                    ifth.infotrygdForesp.sMhistorikk.sykmelding
-                        .sortedSMInfos()
-                        .last()
-                        .periode
-                        .arbufoerFOM
+                    infotrygdSykmelding.last().periode.arbufoerFOM
                 infotrygdlastBlokk.forsteFravaersDag shouldBeEqualTo
-                    ifth.infotrygdForesp.sMhistorikk.sykmelding
-                        .sortedSMInfos()
-                        .last()
-                        .periode
-                        .arbufoerFOM
+                    infotrygdSykmelding.last().periode.arbufoerFOM
             }
 
             test(
@@ -211,12 +203,13 @@ class CreateInfotrygdBlokkSpek :
 
                 val perioder =
                     ifth.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
-                val forsteFravaersDag =
-                    finnForsteFravaersDag(
-                        ifth,
-                        perioder.first(),
-                        LoggingMeta("mottakId", "12315", "", "")
+                val operasjonstypeAndFom =
+                    findoperasjonstypeAndFom(
+                        healthInformation.aktivitet.periode.sortedFOMDate().first(),
+                        healthInformation.aktivitet.periode.maxOf { it.periodeTOMDato },
+                        infotrygdForesp.getInfotrygdPerioder()
                     )
+                val forsteFravaersDag = operasjonstypeAndFom.second
 
                 val infotrygdfirstBlokk =
                     createInfotrygdBlokk(
@@ -229,10 +222,9 @@ class CreateInfotrygdBlokkSpek :
                         LoggingMeta("mottakId", "12315", "", ""),
                         "1234",
                         "NAV IKT",
-                        forsteFravaersDag,
                         behandletAvManuell = false,
                         utenlandskSykmelding = false,
-                        operasjonstypeKode = 1,
+                        operasjonstypeAndFom,
                     )
 
                 val infotrygdlastBlokk =
@@ -246,10 +238,9 @@ class CreateInfotrygdBlokkSpek :
                         LoggingMeta("mottakId", "12315", "", ""),
                         "1234",
                         "NAV IKT",
-                        forsteFravaersDag,
                         behandletAvManuell = false,
                         utenlandskSykmelding = false,
-                        operasjonstypeKode = 2,
+                        operasjonstypeAndFom,
                     )
 
                 infotrygdfirstBlokk.forsteFravaersDag shouldBeEqualTo
@@ -281,12 +272,13 @@ class CreateInfotrygdBlokkSpek :
                 val ifth = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
                 val perioder =
                     ifth.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
-                val forsteFravaersDag =
-                    finnForsteFravaersDag(
-                        ifth,
-                        perioder.first(),
-                        LoggingMeta("mottakId", "12315", "", "")
+                val operasjonstypeAndFom =
+                    findoperasjonstypeAndFom(
+                        healthInformation.aktivitet.periode.sortedFOMDate().first(),
+                        healthInformation.aktivitet.periode.maxOf { it.periodeTOMDato },
+                        infotrygdForesp.getInfotrygdPerioder()
                     )
+                val forsteFravaersDag = operasjonstypeAndFom.second
 
                 val infotrygdBlokk =
                     createInfotrygdBlokk(
@@ -299,10 +291,9 @@ class CreateInfotrygdBlokkSpek :
                         LoggingMeta("mottakId", "12315", "", ""),
                         "1234",
                         "NAV IKT",
-                        forsteFravaersDag,
                         behandletAvManuell = true,
                         utenlandskSykmelding = false,
-                        operasjonstypeKode = 1,
+                        operasjonstypeAndFom,
                     )
 
                 infotrygdBlokk.behandlingsDato shouldBeEqualTo LocalDate.of(2019, 1, 1)
@@ -331,12 +322,13 @@ class CreateInfotrygdBlokkSpek :
                 val ifth = InfotrygdForespAndHealthInformation(infotrygdForesp, healthInformation)
                 val perioder =
                     ifth.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
-                val forsteFravaersDag =
-                    finnForsteFravaersDag(
-                        ifth,
-                        perioder.first(),
-                        LoggingMeta("mottakId", "12315", "", "")
+                val operasjonstypeAndFom =
+                    findoperasjonstypeAndFom(
+                        healthInformation.aktivitet.periode.sortedFOMDate().first(),
+                        healthInformation.aktivitet.periode.maxOf { it.periodeTOMDato },
+                        infotrygdForesp.getInfotrygdPerioder()
                     )
+                val forsteFravaersDag = operasjonstypeAndFom.second
 
                 val infotrygdBlokk =
                     createInfotrygdBlokk(
@@ -349,10 +341,9 @@ class CreateInfotrygdBlokkSpek :
                         LoggingMeta("mottakId", "12315", "", ""),
                         "1234",
                         "NAV IKT",
-                        forsteFravaersDag,
                         behandletAvManuell = false,
                         utenlandskSykmelding = true,
-                        operasjonstypeKode = 1,
+                        operasjonstypeAndFom,
                     )
 
                 infotrygdBlokk.legeEllerInstitusjonsNummer shouldBeEqualTo

@@ -57,3 +57,11 @@ val OVERLAPPENDE_PERIODER_IKKE_OPPRETT_OPPGAVE: Counter =
         .name("overlappende_perioder_ikke_opprett_oppgave")
         .help("counts number of times we dont create oppgave for overlapping sykmeldinger")
         .register()
+
+val OVERLAPPENDE_PERIODE_RULE: Counter =
+    Counter.Builder()
+        .namespace(NAMESPACE)
+        .name("overplappende_periode_rule")
+        .help("Counts number of times we find overlappende perioder")
+        .labelNames("type")
+        .register()

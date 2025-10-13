@@ -10,6 +10,7 @@ import no.nav.syfo.generatePeriode
 import no.nav.syfo.generateSykmelding
 import no.nav.syfo.generateSykmeldingDto
 import no.nav.syfo.receivedSykmelding
+import no.nav.syfo.services.updateinfotrygd.getInfotrygdPerioder
 import no.nav.syfo.smregister.PeriodetypeDTO
 import no.nav.syfo.smregister.SmregisterClient
 import no.nav.syfo.smregister.SykmeldingsperiodeDTO
@@ -18,7 +19,6 @@ import org.amshove.kluent.shouldBeEqualTo
 class SykmeldingServiceTest :
     FunSpec({
         val smregisterClient = mockk<SmregisterClient>()
-        val sykmeldingService = SykmeldingService(smregisterClient)
         context("test overlappendede perioder") {
             context("Should overlap") {
                 test("should overlapp if period is same") {
@@ -64,14 +64,12 @@ class SykmeldingServiceTest :
                                 ),
                         )
 
-                    val overlapper =
-                        sykmeldingService.hasOverlappingPeriodsFromRegister(receivedSykmelding)
                     val overlapperInfotrygd =
-                        sykmeldingService.hasOverlappingPeriodsFromInfotrygd(
-                            receivedSykmelding,
-                            infotrygdForesp
+                        hasOverlappingPeriodsFromInfotrygd(
+                            receivedSykmelding.sykmelding.perioder.firstFom(),
+                            receivedSykmelding.sykmelding.perioder.lastTom(),
+                            infotrygdForesp.getInfotrygdPerioder()
                         )
-                    overlapper shouldBeEqualTo true
                     overlapperInfotrygd shouldBeEqualTo true
                 }
 
@@ -117,14 +115,12 @@ class SykmeldingServiceTest :
                                 ),
                         )
 
-                    val overlapper =
-                        sykmeldingService.hasOverlappingPeriodsFromRegister(receivedSykmelding)
                     val overlapperInfotrygd =
-                        sykmeldingService.hasOverlappingPeriodsFromInfotrygd(
-                            receivedSykmelding,
-                            infotrygdForesp
+                        hasOverlappingPeriodsFromInfotrygd(
+                            receivedSykmelding.sykmelding.perioder.firstFom(),
+                            receivedSykmelding.sykmelding.perioder.lastTom(),
+                            infotrygdForesp.getInfotrygdPerioder()
                         )
-                    overlapper shouldBeEqualTo true
                     overlapperInfotrygd shouldBeEqualTo true
                 }
                 test("should overlapp if new sykmelding inculdes saturday and sunday") {
@@ -169,14 +165,12 @@ class SykmeldingServiceTest :
                                 ),
                         )
 
-                    val overlapper =
-                        sykmeldingService.hasOverlappingPeriodsFromRegister(receivedSykmelding)
                     val overlapperInfotrygd =
-                        sykmeldingService.hasOverlappingPeriodsFromInfotrygd(
-                            receivedSykmelding,
-                            infotrygdForesp
+                        hasOverlappingPeriodsFromInfotrygd(
+                            receivedSykmelding.sykmelding.perioder.firstFom(),
+                            receivedSykmelding.sykmelding.perioder.lastTom(),
+                            infotrygdForesp.getInfotrygdPerioder()
                         )
-                    overlapper shouldBeEqualTo true
                     overlapperInfotrygd shouldBeEqualTo true
                 }
 
@@ -225,14 +219,12 @@ class SykmeldingServiceTest :
                                 ),
                         )
 
-                    val overlapper =
-                        sykmeldingService.hasOverlappingPeriodsFromRegister(receivedSykmelding)
                     val overlapperInfotrygd =
-                        sykmeldingService.hasOverlappingPeriodsFromInfotrygd(
-                            receivedSykmelding,
-                            infotrygdForesp
+                        hasOverlappingPeriodsFromInfotrygd(
+                            receivedSykmelding.sykmelding.perioder.firstFom(),
+                            receivedSykmelding.sykmelding.perioder.lastTom(),
+                            infotrygdForesp.getInfotrygdPerioder()
                         )
-                    overlapper shouldBeEqualTo true
                     overlapperInfotrygd shouldBeEqualTo true
                 }
 
@@ -298,14 +290,12 @@ class SykmeldingServiceTest :
                                 ),
                         )
 
-                    val overlapper =
-                        sykmeldingService.hasOverlappingPeriodsFromRegister(receivedSykmelding)
                     val overlapperInfotrygd =
-                        sykmeldingService.hasOverlappingPeriodsFromInfotrygd(
-                            receivedSykmelding,
-                            infotrygdForesp
+                        hasOverlappingPeriodsFromInfotrygd(
+                            receivedSykmelding.sykmelding.perioder.firstFom(),
+                            receivedSykmelding.sykmelding.perioder.lastTom(),
+                            infotrygdForesp.getInfotrygdPerioder()
                         )
-                    overlapper shouldBeEqualTo true
                     overlapperInfotrygd shouldBeEqualTo true
                 }
 
@@ -376,13 +366,12 @@ class SykmeldingServiceTest :
                                 ),
                         )
                     val overlapperInfotrygd =
-                        sykmeldingService.hasOverlappingPeriodsFromInfotrygd(
-                            receivedSykmelding,
-                            infotrygdForesp
+                        hasOverlappingPeriodsFromInfotrygd(
+                            receivedSykmelding.sykmelding.perioder.firstFom(),
+                            receivedSykmelding.sykmelding.perioder.lastTom(),
+                            infotrygdForesp.getInfotrygdPerioder()
                         )
-                    val overlapper =
-                        sykmeldingService.hasOverlappingPeriodsFromRegister(receivedSykmelding)
-                    overlapper shouldBeEqualTo true
+
                     overlapperInfotrygd shouldBeEqualTo true
                 }
             }
@@ -403,14 +392,13 @@ class SykmeldingServiceTest :
                                 ),
                         )
                     val infotrygdForesp = InfotrygdForesp()
-                    val overlapper =
-                        sykmeldingService.hasOverlappingPeriodsFromRegister(receivedSykmelding)
+
                     val overlapperInfotrygd =
-                        sykmeldingService.hasOverlappingPeriodsFromInfotrygd(
-                            receivedSykmelding,
-                            infotrygdForesp
+                        hasOverlappingPeriodsFromInfotrygd(
+                            receivedSykmelding.sykmelding.perioder.firstFom(),
+                            receivedSykmelding.sykmelding.perioder.lastTom(),
+                            infotrygdForesp.getInfotrygdPerioder()
                         )
-                    overlapper shouldBeEqualTo false
                     overlapperInfotrygd shouldBeEqualTo false
                 }
 
@@ -478,13 +466,12 @@ class SykmeldingServiceTest :
                                 ),
                         )
                     val overlapperInfotrygd =
-                        sykmeldingService.hasOverlappingPeriodsFromInfotrygd(
-                            receivedSykmelding,
-                            infotrygdForesp
+                        hasOverlappingPeriodsFromInfotrygd(
+                            receivedSykmelding.sykmelding.perioder.firstFom(),
+                            receivedSykmelding.sykmelding.perioder.lastTom(),
+                            infotrygdForesp.getInfotrygdPerioder()
                         )
-                    val overlapper =
-                        sykmeldingService.hasOverlappingPeriodsFromRegister(receivedSykmelding)
-                    overlapper shouldBeEqualTo false
+
                     overlapperInfotrygd shouldBeEqualTo false
                 }
 
@@ -532,14 +519,13 @@ class SykmeldingServiceTest :
                                     )
                                 }
                         }
-                    val overlapper =
-                        sykmeldingService.hasOverlappingPeriodsFromRegister(receivedSykmelding)
+
                     val overlapperInfotrygd =
-                        sykmeldingService.hasOverlappingPeriodsFromInfotrygd(
-                            receivedSykmelding,
-                            infotrygdForesp
+                        hasOverlappingPeriodsFromInfotrygd(
+                            receivedSykmelding.sykmelding.perioder.firstFom(),
+                            receivedSykmelding.sykmelding.perioder.lastTom(),
+                            infotrygdForesp.getInfotrygdPerioder()
                         )
-                    overlapper shouldBeEqualTo false
                     overlapperInfotrygd shouldBeEqualTo false
                 }
 
@@ -588,14 +574,12 @@ class SykmeldingServiceTest :
                                 ),
                         )
 
-                    val overlapper =
-                        sykmeldingService.hasOverlappingPeriodsFromRegister(receivedSykmelding)
                     val overlapperInfotrygd =
-                        sykmeldingService.hasOverlappingPeriodsFromInfotrygd(
-                            receivedSykmelding,
-                            infotrygdForesp
+                        hasOverlappingPeriodsFromInfotrygd(
+                            receivedSykmelding.sykmelding.perioder.firstFom(),
+                            receivedSykmelding.sykmelding.perioder.lastTom(),
+                            infotrygdForesp.getInfotrygdPerioder()
                         )
-                    overlapper shouldBeEqualTo false
                     overlapperInfotrygd shouldBeEqualTo false
                 }
             }

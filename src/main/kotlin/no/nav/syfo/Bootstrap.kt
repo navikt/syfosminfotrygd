@@ -68,10 +68,8 @@ import no.nav.syfo.services.ManuellBehandlingService
 import no.nav.syfo.services.MottattSykmeldingService
 import no.nav.syfo.services.OppgaveService
 import no.nav.syfo.services.SykmeldingConsumerService
-import no.nav.syfo.services.SykmeldingService
 import no.nav.syfo.services.ValkeyService
 import no.nav.syfo.services.updateinfotrygd.UpdateInfotrygdService
-import no.nav.syfo.smregister.SmregisterClient
 import no.nav.syfo.util.JacksonKafkaSerializer
 import no.nav.syfo.util.createJedisPool
 import no.nav.syfo.util.fellesformatUnmarshaller
@@ -85,6 +83,7 @@ import org.slf4j.LoggerFactory
 val log: Logger = LoggerFactory.getLogger("no.nav.syfo.sminfotrygd")
 val objectMapper: ObjectMapper =
     ObjectMapper().apply {
+        enable(SerializationFeature.INDENT_OUTPUT)
         registerKotlinModule()
         registerModule(JavaTimeModule())
         configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
@@ -213,17 +212,6 @@ suspend fun Application.module() {
     val manuellClient =
         ManuellClient(httpClient, env.manuellUrl, accessTokenClientV2, env.manuellScope)
 
-    val sykmeldingService =
-        SykmeldingService(
-            smregisterClient =
-                SmregisterClient(
-                    smregisterEndpointURL = env.smregisterEndpointURL,
-                    accessTokenClientV2 = accessTokenClientV2,
-                    scope = env.smregisterAudience,
-                    httpClient = httpClient,
-                ),
-        )
-
     val oppgaveService =
         OppgaveService(
             kafkaAivenProducerOppgave = kafkaAivenProducerOppgave,
@@ -234,7 +222,6 @@ suspend fun Application.module() {
             valkeyService = valkeyService,
             oppgaveService = oppgaveService,
             applicationState = applicationState,
-            sykmeldingService = sykmeldingService,
         )
 
     val updateInfotrygdService =

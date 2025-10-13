@@ -27,8 +27,10 @@ class InfotrygdService(
         val connection =
             connectionFactory(mqConfig)
                 .createConnection(serviceUser.serviceuserUsername, serviceUser.serviceuserPassword)
+
         connection.start()
         val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
+
         val infotrygdSporringProducer =
             session.producerForQueue(
                 "queue:///${infotrygdSporringQueue}?targetClient=1",

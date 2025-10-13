@@ -13,6 +13,79 @@ import no.nav.syfo.log
 import no.nav.syfo.rules.validation.sortedSMInfos
 import no.nav.syfo.util.LoggingMeta
 
+enum class Operasjonstype {
+    NY,
+    UENDRET,
+    ENDRING,
+    FORLENGELSE,
+    UGYLDIG_OVERLAPP
+}
+
+fun findoperasjonstypeAndFom(
+    fom: LocalDate,
+    tom: LocalDate,
+    listSMinfo: List<TypeSMinfo>
+): Pair<Operasjonstype, LocalDate> {
+
+    if (listSMinfo.isEmpty()) {
+        return Operasjonstype.NY to fom
+    }
+    val sortedSmInfo =
+        listSMinfo.filter { it.periode?.arbufoerFOM != null }.sortedBy { it.periode.arbufoerFOM }
+
+    for (i in sortedSmInfo.indices) {
+        val currentFom = sortedSmInfo[i].periode.arbufoerFOM
+        var currentTom = sortedSmInfo[i].periode.arbufoerTOM
+
+        if (currentTom == null) {
+            log.warn(
+                "Sykmelding i infotrygd mangler tom-dato, bruker tom-dato fra sykmelding istedenfor"
+            )
+            currentTom = tom
+        }
+
+        if (tom.isBefore(currentFom.minusDays(1))) {
+            return Operasjonstype.NY to fom
+        }
+
+        if (tom.isBefore(currentFom)) {
+            return Operasjonstype.UGYLDIG_OVERLAPP to fom
+        }
+
+        if (fom.isBefore(currentFom) && tom.isAfter(currentFom.minusDays(1))) {
+            return Operasjonstype.UGYLDIG_OVERLAPP to fom
+        }
+
+        if (!fom.isBefore(currentFom) && !tom.isAfter(currentTom)) {
+            return Operasjonstype.UENDRET to currentFom
+        }
+
+        if (fom.isEqual(currentFom) && tom.isAfter(currentTom)) {
+            if (i < sortedSmInfo.size - 1) {
+                val nextFom = sortedSmInfo[i + 1].periode.arbufoerFOM
+                if (tom.isBefore(nextFom.minusDays(1))) {
+                    return Operasjonstype.ENDRING to currentFom
+                }
+                return Operasjonstype.UGYLDIG_OVERLAPP to fom
+            }
+            return Operasjonstype.ENDRING to currentFom
+        }
+
+        if (!fom.isAfter(currentTom.plusDays(1))) {
+            if (i < sortedSmInfo.size - 1) {
+                val nextFom = sortedSmInfo[i + 1].periode.arbufoerFOM
+                if (tom.isBefore(nextFom.minusDays(1))) {
+                    return Operasjonstype.FORLENGELSE to currentFom
+                }
+                return Operasjonstype.UGYLDIG_OVERLAPP to fom
+            }
+            return Operasjonstype.FORLENGELSE to currentFom
+        }
+    }
+
+    return Operasjonstype.NY to fom
+}
+
 @WithSpan
 fun findOperasjonstype(
     periode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode,

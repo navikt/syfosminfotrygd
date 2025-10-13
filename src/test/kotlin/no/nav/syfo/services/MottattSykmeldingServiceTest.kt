@@ -28,6 +28,7 @@ import no.nav.syfo.model.sykmelding.Merknad
 import no.nav.syfo.model.sykmelding.Status
 import no.nav.syfo.model.sykmelding.UtenlandskSykmelding
 import no.nav.syfo.receivedSykmelding
+import no.nav.syfo.services.updateinfotrygd.Operasjonstype
 import no.nav.syfo.services.updateinfotrygd.UpdateInfotrygdService
 import no.nav.syfo.services.updateinfotrygd.createFellesFormat
 import no.nav.syfo.toString
@@ -112,11 +113,14 @@ class MottattSykmeldingServiceTest :
                         "LE",
                         "0101",
                         false,
+                        operasjonstypeAndFom =
+                            Operasjonstype.NY to receivedSykmelding.sykmelding.perioder.first().fom,
                     )
                 }
                 coVerify { manuellClient.behandletAvManuell(any(), any()) }
                 coVerify(exactly = 0) {
                     manuellBehandlingService.produceManualTaskAndSendValidationResults(
+                        any(),
                         any(),
                         any(),
                         any(),
@@ -143,6 +147,7 @@ class MottattSykmeldingServiceTest :
 
                 coVerify(exactly = 0) {
                     updateInfotrygdService.updateInfotrygd(
+                        any(),
                         any(),
                         any(),
                         any(),
@@ -191,6 +196,7 @@ class MottattSykmeldingServiceTest :
 
                 coVerify(exactly = 0) {
                     updateInfotrygdService.updateInfotrygd(
+                        any(),
                         any(),
                         any(),
                         any(),
@@ -259,6 +265,7 @@ class MottattSykmeldingServiceTest :
                         any(),
                         any(),
                         any(),
+                        any(),
                     )
                 }
                 coVerify { manuellClient.behandletAvManuell(any(), any()) }
@@ -275,6 +282,7 @@ class MottattSykmeldingServiceTest :
                         any(),
                         "LE",
                         false,
+                        any(),
                     )
                 }
             }
@@ -321,6 +329,7 @@ class MottattSykmeldingServiceTest :
                         any(),
                         any(),
                         any(),
+                        any(),
                     )
                 }
                 coVerify { manuellClient.behandletAvManuell(any(), any()) }
@@ -337,6 +346,7 @@ class MottattSykmeldingServiceTest :
                         any(),
                         "LE",
                         false,
+                        any(),
                     )
                 }
             }
@@ -390,6 +400,7 @@ class MottattSykmeldingServiceTest :
                         "LE",
                         "0101",
                         false,
+                        any(),
                     )
                 }
                 coVerify { manuellClient.behandletAvManuell(any(), any()) }
@@ -400,7 +411,8 @@ class MottattSykmeldingServiceTest :
                         any(),
                         any(),
                         any(),
-                        any()
+                        any(),
+                        any(),
                     )
                 }
             }
@@ -454,6 +466,7 @@ class MottattSykmeldingServiceTest :
                         "LE",
                         "0101",
                         false,
+                        any(),
                     )
                 }
                 coVerify { manuellClient.behandletAvManuell(any(), any()) }
@@ -464,7 +477,8 @@ class MottattSykmeldingServiceTest :
                         any(),
                         any(),
                         any(),
-                        any()
+                        any(),
+                        any(),
                     )
                 }
             }
@@ -520,11 +534,13 @@ class MottattSykmeldingServiceTest :
                         any(),
                         "0101",
                         false,
+                        any(),
                     )
                 }
                 coVerify { manuellClient.behandletAvManuell(any(), any()) }
                 coVerify(exactly = 0) {
                     manuellBehandlingService.produceManualTaskAndSendValidationResults(
+                        any(),
                         any(),
                         any(),
                         any(),
@@ -586,11 +602,13 @@ class MottattSykmeldingServiceTest :
                         any(),
                         "2101",
                         any(),
+                        any(),
                     )
                 }
                 coVerify { manuellClient.behandletAvManuell(any(), any()) }
                 coVerify(exactly = 0) {
                     manuellBehandlingService.produceManualTaskAndSendValidationResults(
+                        any(),
                         any(),
                         any(),
                         any(),
@@ -652,6 +670,7 @@ class MottattSykmeldingServiceTest :
                         any(),
                         "2101",
                         any(),
+                        any(),
                     )
                 }
                 coVerify { manuellClient.behandletAvManuell(any(), any()) }
@@ -663,6 +682,7 @@ class MottattSykmeldingServiceTest :
                         any(),
                         any(),
                         any(),
+                        any()
                     )
                 }
             }
@@ -718,6 +738,7 @@ class MottattSykmeldingServiceTest :
                         any(),
                         "0101",
                         any(),
+                        any(),
                     )
                 }
                 coVerify { manuellClient.behandletAvManuell(any(), any()) }
@@ -728,7 +749,8 @@ class MottattSykmeldingServiceTest :
                         any(),
                         any(),
                         any(),
-                        any()
+                        any(),
+                        any(),
                     )
                 }
             }
