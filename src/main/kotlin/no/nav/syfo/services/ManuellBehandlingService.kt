@@ -106,16 +106,9 @@ class ManuellBehandlingService(
                 skalIkkeOppdatereInfotrygdNewCheck(
                     receivedSykmelding,
                     validationResult,
-                    itfh.infotrygdForesp
+                    itfh.infotrygdForesp,
+                    operasjonstypeAndFom,
                 )
-
-            if (skalIkkeOppdatereInfotrygd) {
-                OVERLAPPENDE_PERIODE_SKIP_OPPGAVE.labels("old").inc()
-            }
-            val isUendretOperasjonstype = operasjonstypeAndFom.first == Operasjonstype.UENDRET
-            if (isUendretOperasjonstype) {
-                OVERLAPPENDE_PERIODE_SKIP_OPPGAVE.labels("new").inc()
-            }
 
             when {
                 duplikatInfotrygdOppdatering -> {
@@ -128,12 +121,6 @@ class ManuellBehandlingService(
                     OVERLAPPENDE_PERIODER_IKKE_OPPRETT_OPPGAVE.inc()
                     log.info(
                         "Sykmelding overlapper, trenger ikke å opprette manuell oppgave for {}",
-                        StructuredArguments.fields(loggingMeta)
-                    )
-                }
-                isUendretOperasjonstype -> {
-                    log.info(
-                        "Sykmelding er uendret for infotrygd, trenger ikke å opprette manuell oppgave for {}",
                         StructuredArguments.fields(loggingMeta)
                     )
                 }
@@ -165,6 +152,7 @@ class ManuellBehandlingService(
         receivedSykmelding: ReceivedSykmelding,
         validationResult: ValidationResult,
         infotrygdForesp: InfotrygdForesp,
+        operasjonstypeAndFom: Pair<Operasjonstype, LocalDate>,
     ): Boolean {
         val delvisOverlappendeSykmeldingRule =
             validationResult.ruleHits.isNotEmpty() &&
@@ -173,14 +161,27 @@ class ManuellBehandlingService(
                         "PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE")
                 }
         if (delvisOverlappendeSykmeldingRule) {
-            return harOverlappendePerioder(receivedSykmelding, infotrygdForesp)
+            val overlappendePerioder = harOverlappendePerioder(receivedSykmelding, infotrygdForesp)
+            val isUendretOperasjonstype = operasjonstypeAndFom.first == Operasjonstype.UENDRET
+            if (overlappendePerioder) {
+                OVERLAPPENDE_PERIODE_SKIP_OPPGAVE.labels("old").inc()
+            }
+            if (isUendretOperasjonstype) {
+                OVERLAPPENDE_PERIODE_SKIP_OPPGAVE.labels("new").inc()
+            }
+            if (overlappendePerioder != isUendretOperasjonstype) {
+                log.info(
+                    "Overlappende perioder is different from isUendretOperasjonstype for sykmeldingid: ${receivedSykmelding.sykmelding.id}"
+                )
+            }
+            return isUendretOperasjonstype || overlappendePerioder
         }
         return false
     }
 
     fun harOverlappendePerioder(
         receivedSykmelding: ReceivedSykmelding,
-        infotrygdForesp: InfotrygdForesp
+        infotrygdForesp: InfotrygdForesp,
     ): Boolean {
         val infotrygdSykmelding = infotrygdForesp.getInfotrygdPerioder()
         val overlapperFraInfotrygd =

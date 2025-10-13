@@ -20,6 +20,23 @@ class FindOprasjonstypeNewTest {
     }
 
     @Test
+    fun `Sykmelding shoudl not be ugylidg`() {
+
+        val fom = LocalDate.of(2025, 10, 11)
+        val tom = LocalDate.of(2025, 10, 27)
+        val perioder =
+            listOf(
+                LocalDate.parse("2025-07-26") to LocalDate.parse("2025-08-11"),
+                LocalDate.parse("2025-07-23") to LocalDate.parse("2025-09-12"),
+                LocalDate.parse("2025-06-26") to LocalDate.parse("2025-10-10"),
+            )
+        val listSMinfo = getSmInfos(perioder)
+
+        val result = findoperasjonstypeAndFom(fom, tom, listSMinfo)
+        result shouldBeEqualTo (Operasjonstype.FORLENGELSE to LocalDate.parse("2025-06-26"))
+    }
+
+    @Test
     fun `Sykmelding starts before infotrygd and is overlapping`() {
         val fom = LocalDate.of(2020, 1, 5)
         val tom = LocalDate.of(2020, 1, 10)

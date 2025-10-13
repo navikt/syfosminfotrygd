@@ -421,7 +421,10 @@ class CreateInfotrygdInfoSpek :
                             sykmelding.add(
                                 TypeSMinfo().apply {
                                     periode =
-                                        TypeSMinfo.Periode().apply { arbufoerFOM = LocalDate.now() }
+                                        TypeSMinfo.Periode().apply {
+                                            arbufoerFOM = LocalDate.now()
+                                            arbufoerTOM = LocalDate.now().minusDays(1)
+                                        }
                                 },
                             )
                         }
@@ -597,7 +600,10 @@ class CreateInfotrygdInfoSpek :
                             sykmelding.add(
                                 TypeSMinfo().apply {
                                     periode =
-                                        TypeSMinfo.Periode().apply { arbufoerFOM = LocalDate.now() }
+                                        TypeSMinfo.Periode().apply {
+                                            arbufoerFOM = LocalDate.now()
+                                            arbufoerTOM = LocalDate.now().plusDays(4)
+                                        }
                                 },
                             )
                         }

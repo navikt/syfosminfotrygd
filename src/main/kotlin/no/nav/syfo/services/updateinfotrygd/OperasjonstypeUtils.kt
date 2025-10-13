@@ -31,7 +31,12 @@ fun findoperasjonstypeAndFom(
         return Operasjonstype.NY to fom
     }
     val sortedSmInfo =
-        listSMinfo.filter { it.periode?.arbufoerFOM != null }.sortedBy { it.periode.arbufoerFOM }
+        listSMinfo
+            .filter { it.periode?.arbufoerFOM != null }
+            .sortedBy { it.periode.arbufoerFOM }
+            .filter {
+                it.periode.arbufoerTOM != null && it.periode.arbufoerTOM.isAfter(fom.minusDays(20))
+            }
 
     for (i in sortedSmInfo.indices) {
         val currentFom = sortedSmInfo[i].periode.arbufoerFOM
