@@ -98,6 +98,9 @@ fun sendInfotrygdForesporsel(
                 )
             }
         }
+    } catch (ex: Exception) {
+        log.error("Error fetching infotrygdForespResponse for $id", ex)
+        throw ex
     } finally {
         temporaryQueue.delete()
     }

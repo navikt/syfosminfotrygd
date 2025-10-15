@@ -26,6 +26,7 @@ class InfotrygdService(
     companion object {
         private val log = LoggerFactory.getLogger(InfotrygdService::class.java)
     }
+
     fun sendInfotrygdForesporsel(infotrygdQuery: InfotrygdQuery): InfotrygdResponse {
         val connection =
             connectionFactory(mqConfig)
