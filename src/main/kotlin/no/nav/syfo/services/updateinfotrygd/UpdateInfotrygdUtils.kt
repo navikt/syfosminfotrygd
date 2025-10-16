@@ -40,7 +40,8 @@ fun createInfotrygdBlokk(
                 Operasjonstype.UENDRET -> 2
                 Operasjonstype.ENDRING -> 2
                 Operasjonstype.FORLENGELSE -> 3
-                Operasjonstype.UGYLDIG_OVERLAPP ->
+                Operasjonstype.UGYLDIG_OVERLAPP,
+                Operasjonstype.UENDRET_IKKE_OPPDATER ->
                     throw IllegalArgumentException(
                         "Ugyldig operasjonstype for infotrygd ${operasjonstypeAndFom.first}"
                     )

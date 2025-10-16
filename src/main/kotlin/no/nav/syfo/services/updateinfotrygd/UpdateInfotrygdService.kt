@@ -47,9 +47,16 @@ class UpdateInfotrygdService(
         val signaturDato = receivedSykmelding.sykmelding.signaturDato.toLocalDate()
         val tssid = receivedSykmelding.tssid
         val forsteFravaersDag = operasjonstypeAndFom.second
+
         log.info(
             "Fant første fraværsdag for sykmelding id ${receivedSykmelding.sykmelding.id} til $forsteFravaersDag"
         )
+        if (operasjonstypeAndFom.first == Operasjonstype.UENDRET_IKKE_OPPDATER) {
+            log.info(
+                "Mottok UENDRET_IKKE_OPPDATER med for sykmelding id: ${receivedSykmelding.sykmelding.id}, perioden finnes i allerede i infotrygd"
+            )
+            return
+        }
         val sha256String =
             sha256hashstring(
                 createInfotrygdBlokk(

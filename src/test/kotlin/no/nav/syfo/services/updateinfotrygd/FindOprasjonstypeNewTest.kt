@@ -112,7 +112,7 @@ class FindOprasjonstypeNewTest {
         findoperasjonstypeAndFom(fom, tom, listSMinfo) shouldBeEqualTo
             (Operasjonstype.UENDRET to fom)
         findoperasjonstypeAndFom(fom.plusDays(1), tom.minusDays(1), listSMinfo) shouldBeEqualTo
-            (Operasjonstype.UENDRET to LocalDate.of(2020, 1, 1))
+            (Operasjonstype.UENDRET_IKKE_OPPDATER to LocalDate.of(2020, 1, 1))
     }
 
     @Test

@@ -16,6 +16,7 @@ import no.nav.syfo.util.LoggingMeta
 enum class Operasjonstype {
     NY,
     UENDRET,
+    UENDRET_IKKE_OPPDATER,
     ENDRING,
     FORLENGELSE,
     UGYLDIG_OVERLAPP
@@ -62,7 +63,10 @@ fun findoperasjonstypeAndFom(
         }
 
         if (!fom.isBefore(currentFom) && !tom.isAfter(currentTom)) {
-            return Operasjonstype.UENDRET to currentFom
+            if (tom.isEqual(currentTom)) {
+                return Operasjonstype.UENDRET to currentFom
+            }
+            return Operasjonstype.UENDRET_IKKE_OPPDATER to currentFom
         }
 
         if (fom.isEqual(currentFom) && tom.isAfter(currentTom)) {
