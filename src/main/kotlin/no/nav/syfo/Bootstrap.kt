@@ -243,7 +243,15 @@ suspend fun Application.module() {
     routing {
         registerNaisApi(applicationState)
         authenticate("servicebrukerAAD") {
-            registerInfotrygdApi(InfotrygdService(serviceUser, env, env.infotrygdSporringQueue))
+            registerInfotrygdApi(
+                InfotrygdService(
+                    finnNAVKontorService,
+                    serviceUser,
+                    env,
+                    env.infotrygdSporringQueue,
+                    env.infotrygdOppdateringQueue
+                )
+            )
         }
     }
 

@@ -53,6 +53,7 @@ class ManuellBehandlingService(
         helsepersonellKategoriVerdi: String,
         behandletAvManuell: Boolean,
         operasjonstypeAndFom: Pair<Operasjonstype, LocalDate>,
+        skipDuplicationCheck: Boolean = false,
     ) {
         try {
             val perioder = itfh.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
@@ -83,8 +84,12 @@ class ManuellBehandlingService(
                         operasjonstypeAndFom = operasjonstypeAndFom.copy(first = Operasjonstype.NY),
                     ),
                 )
-
-            val duplikatInfotrygdOppdatering = valkeyService.erIValkey(sha256String)
+            val duplikatInfotrygdOppdatering =
+                if (skipDuplicationCheck) {
+                    false
+                } else {
+                    valkeyService.erIValkey(sha256String)
+                }
 
             if (errorFromInfotrygd(validationResult.ruleHits)) {
                 valkeyService.oppdaterAntallErrorIInfotrygd(
@@ -131,12 +136,14 @@ class ManuellBehandlingService(
                         behandletAvManuell,
                         loggingMeta
                     )
-                    valkeyService.oppdaterValkey(
-                        sha256String,
-                        sha256String,
-                        TimeUnit.DAYS.toSeconds(60).toInt(),
-                        loggingMeta
-                    )
+                    if (!skipDuplicationCheck) {
+                        valkeyService.oppdaterValkey(
+                            sha256String,
+                            sha256String,
+                            TimeUnit.DAYS.toSeconds(60).toInt(),
+                            loggingMeta
+                        )
+                    }
                 }
             }
         } catch (connectionException: JedisConnectionException) {

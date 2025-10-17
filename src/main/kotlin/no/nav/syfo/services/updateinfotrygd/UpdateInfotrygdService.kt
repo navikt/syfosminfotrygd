@@ -40,6 +40,7 @@ class UpdateInfotrygdService(
         navKontorNr: String,
         behandletAvManuell: Boolean,
         operasjonstypeAndFom: Pair<Operasjonstype, LocalDate>,
+        skipDuplicationCheck: Boolean = false,
     ) {
         val perioder = itfh.healthInformation.aktivitet.periode.sortedBy { it.periodeFOMDato }
         val marshalledFellesformat = receivedSykmelding.fellesformat
@@ -103,12 +104,17 @@ class UpdateInfotrygdService(
             }
             else -> {
                 val duplikatInfotrygdOppdatering =
-                    valkeyService.oppdaterValkey(
-                        sha256String,
-                        sha256String,
-                        TimeUnit.DAYS.toSeconds(60).toInt(),
-                        loggingMeta,
-                    )
+                    if (skipDuplicationCheck) {
+                        false
+                    } else {
+                        valkeyService.oppdaterValkey(
+                            sha256String,
+                            sha256String,
+                            TimeUnit.DAYS.toSeconds(60).toInt(),
+                            loggingMeta,
+                        )
+                    }
+
                 when {
                     duplikatInfotrygdOppdatering == null -> {
                         log.warn(

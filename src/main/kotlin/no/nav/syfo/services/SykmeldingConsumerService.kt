@@ -152,10 +152,18 @@ class SykmeldingConsumerService(
     ) =
         withContext(Dispatchers.IO) {
             while (applicationState.ready && shouldRun(getCurrentTime())) {
-                kafkaConsumer
-                    .poll(10.seconds.toJavaDuration())
-                    .mapNotNull { record -> record.value() }
-                    .forEach { sykmelding ->
+                kafkaConsumer.poll(10.seconds.toJavaDuration()).forEach { record ->
+                    val sykmelding = record.value()
+                    if (sykmelding != null) {
+                        val skipDuplication =
+                            record
+                                .headers()
+                                .lastHeader("skip-duplication-check")
+                                ?.value()
+                                ?.toString(Charsets.UTF_8)
+                                ?.toBoolean()
+                                ?: false
+
                         val receivedSykmelding: ReceivedSykmelding =
                             objectMapper.readValue(sykmelding)
                         val loggingMeta =
@@ -171,8 +179,10 @@ class SykmeldingConsumerService(
                             infotrygdSporringProducer = infotrygdSporringProducer,
                             session = session,
                             loggingMeta = loggingMeta,
+                            skipDuplication
                         )
                     }
+                }
             }
         }
 }

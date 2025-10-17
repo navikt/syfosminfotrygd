@@ -56,6 +56,7 @@ class MottattSykmeldingService(
         infotrygdSporringProducer: MessageProducer,
         session: Session,
         loggingMeta: LoggingMeta,
+        skipDuplicationCheck: Boolean = false,
     ) {
         when (skalOppdatereInfotrygd(receivedSykmelding, cluster)) {
             true -> {
@@ -177,7 +178,8 @@ class MottattSykmeldingService(
                                     ),
                                     helsepersonellKategoriVerdi,
                                     behandletAvManuell,
-                                    operasjonstypeAndFom
+                                    operasjonstypeAndFom,
+                                    skipDuplicationCheck = skipDuplicationCheck,
                                 )
                             else -> {
                                 updateInfotrygdService.updateInfotrygd(
@@ -194,6 +196,7 @@ class MottattSykmeldingService(
                                     navKontorNr = navKontorNr,
                                     behandletAvManuell = behandletAvManuell,
                                     operasjonstypeAndFom = operasjonstypeAndFom,
+                                    skipDuplicationCheck = skipDuplicationCheck
                                 )
                             }
                         }

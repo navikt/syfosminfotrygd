@@ -5,6 +5,8 @@ import java.time.LocalDate
 import net.logstash.logback.argument.StructuredArguments
 import no.nav.helse.eiFellesformat.XMLEIFellesformat
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
+import no.nav.helse.infotrygd.foresp.TypeNavn
+import no.nav.helse.infotrygd.foresp.TypeSMinfo
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.helse.sm2013.KontrollSystemBlokk
 import no.nav.helse.sm2013.KontrollsystemBlokkType
@@ -204,6 +206,13 @@ private fun HelseOpplysningerArbeidsuforhet.Behandler.formatName(): String =
         "${navn.etternavn.uppercase()} ${navn.fornavn.uppercase()}"
     } else {
         "${navn.etternavn.uppercase()} ${navn.fornavn.uppercase()} ${navn.mellomnavn.uppercase()}"
+    }
+
+fun TypeNavn.formatName(): String =
+    if (mellomnavn == null) {
+        "${etternavn.uppercase()} ${fornavn.uppercase()}"
+    } else {
+        "${etternavn.uppercase()} ${fornavn.uppercase()} ${mellomnavn.uppercase()}"
     }
 
 fun InfotrygdForesp.getInfotrygdPerioder() = sMhistorikk?.sykmelding ?: emptyList()
