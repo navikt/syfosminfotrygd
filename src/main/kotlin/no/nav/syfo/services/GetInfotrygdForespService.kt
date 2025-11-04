@@ -202,14 +202,19 @@ private fun stripNonValidXMLCharacters(
 ): String {
     val out = StringBuffer(infotrygdString)
     for (i in out.length - 1 downTo 0) {
-        if (out[i].code == 0x1c && id == "bd340ba3-a3ee-4545-9175-d43316d4a51b") {
+        if (out[i].code == 0x1c && id.startsWith("bd340ba3")) {
             out.deleteCharAt(i)
         }
         if (out[i].code == 0x1a) {
             out.setCharAt(i, '-')
         } else if (navkontor == NAV_OPPFOLGING_UTLAND_KONTOR_NR && out[i].code == 0x0) {
-            log.info("We have 0x0 char in xml for $navkontor, replacing with space for $id")
-            out.setCharAt(i, ' ')
+            log.warn("We have 0x0 char in xml for $navkontor, replacing with space for $id")
+            out.deleteCharAt(i)
+        } else if (out[i].code == 0x0 && id.startsWith(
+            "06cb4797"
+        )) {
+            log.warn("We have 0x0 char in xml for deleting it for $id")
+            out.deleteCharAt(i)
         }
     }
     return out.toString()
