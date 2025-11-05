@@ -210,10 +210,7 @@ private fun stripNonValidXMLCharacters(
         } else if (navkontor == NAV_OPPFOLGING_UTLAND_KONTOR_NR && out[i].code == 0x0) {
             log.warn("We have 0x0 char in xml for $navkontor, replacing with space for $id")
             out.deleteCharAt(i)
-        } else if (out[i].code == 0x0 && (id.startsWith(
-                "b8245f5a",
-            ) || id.startsWith("76bb6868")
-                )) {
+        } else if (out[i].code == 0x0) {
             log.warn("We have 0x0 char in xml for deleting it for $id")
             out.deleteCharAt(i)
         }
