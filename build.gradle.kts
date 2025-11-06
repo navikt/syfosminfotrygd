@@ -41,7 +41,7 @@ val commonsCodecVersion = "1.19.0"
 plugins {
     id("application")
     kotlin("jvm") version "2.2.21"
-    id("com.gradleup.shadow") version "9.2.2"
+    id("com.gradleup.shadow") version "8.3.8"
     id("com.diffplug.spotless") version "8.0.0"
 }
 
