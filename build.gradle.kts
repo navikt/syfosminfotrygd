@@ -36,12 +36,12 @@ val javaVersion = JvmTarget.JVM_21
 //Added due to vulnerabilities
 val nettycommonVersion = "4.2.7.Final"
 val commonsCompressVersion = "1.28.0"
-val commonsCodecVersion = "1.19.0"
+val commonsCodecVersion = "1.20.0"
 
 plugins {
     id("application")
     kotlin("jvm") version "2.2.21"
-    id("com.gradleup.shadow") version "8.3.8"
+    id("com.gradleup.shadow") version "9.2.2"
     id("com.diffplug.spotless") version "8.0.0"
 }
 
