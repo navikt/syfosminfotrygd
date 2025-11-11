@@ -14,7 +14,7 @@ val valkeyVersion = "5.5.0"
 val kafkaVersion = "3.9.1"
 val kluentVersion = "1.73"
 val ktorVersion = "3.3.2"
-val logbackVersion = "1.5.20"
+val logbackVersion = "1.5.21"
 val logstashEncoderVersion = "9.0"
 val prometheusVersion = "0.16.0"
 val kotestVersion = "6.0.4"
@@ -36,12 +36,12 @@ val javaVersion = JvmTarget.JVM_21
 //Added due to vulnerabilities
 val nettycommonVersion = "4.2.7.Final"
 val commonsCompressVersion = "1.28.0"
-val commonsCodecVersion = "1.19.0"
+val commonsCodecVersion = "1.20.0"
 
 plugins {
     id("application")
     kotlin("jvm") version "2.2.21"
-    id("com.gradleup.shadow") version "8.3.8"
+    id("com.gradleup.shadow") version "9.2.2"
     id("com.diffplug.spotless") version "8.0.0"
 }
 
