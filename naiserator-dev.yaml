@@ -49,6 +49,8 @@ spec:
   accessPolicy:
     outbound:
       rules:
+        - application: logging
+          namespace: nais-system
         - application: syfosmmanuell-backend
         - application: syfosmregister
         - application: flex-syketilfelle
