@@ -29,7 +29,7 @@ val mockkVersion = "1.14.6"
 val kotlinVersion = "2.2.21"
 val ktfmtVersion = "0.44"
 val opentelemetryVersion = "2.21.0"
-
+val diagnoseVersion = "2026.1.0-1767868775"
 val javaVersion = JvmTarget.JVM_21
 
 
@@ -118,7 +118,7 @@ dependencies {
     implementation("com.sun.xml.ws:jaxws-tools:$jaxwsToolsVersion") {
         exclude(group = "com.sun.xml.ws", module = "policy")
     }
-
+    implementation("no.nav.tsm:diagnoser:$diagnoseVersion")
     testImplementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
     testImplementation("org.amshove.kluent:kluent:$kluentVersion")
     testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
