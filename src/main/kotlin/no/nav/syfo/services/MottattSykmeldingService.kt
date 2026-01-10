@@ -35,10 +35,6 @@ import no.nav.syfo.services.updateinfotrygd.findoperasjonstypeAndFom
 import no.nav.syfo.services.updateinfotrygd.getInfotrygdPerioder
 import no.nav.syfo.util.LoggingMeta
 import no.nav.syfo.util.fellesformatUnmarshaller
-import no.nav.tsm.diagnoser.Diagnose
-import no.nav.tsm.diagnoser.ICPC2
-import no.nav.tsm.diagnoser.ICPC2B
-import no.nav.tsm.diagnoser.toICPC2
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -73,7 +69,7 @@ class MottattSykmeldingService(
                     ) as XMLEIFellesformat
 
                 val healthInformation =
-                    fixMissingAndICPC2BDiagnoser(
+                    setHovedDiagnoseToA99IfhovedDiagnoseIsNullAndAnnenFraversArsakIsSet(
                         extractHelseOpplysningerArbeidsuforhet(fellesformat),
                     )
                 val behandletAvManuell =
@@ -327,6 +323,28 @@ class MottattSykmeldingService(
 }
 
 fun skalOppdatereInfotrygd(receivedSykmelding: ReceivedSykmelding, cluster: String): Boolean {
+    if (cluster == "dev-gcp") {
+        try {
+            val fellesformat =
+                fellesformatUnmarshaller.unmarshal(
+                    StringReader(receivedSykmelding.fellesformat),
+                ) as XMLEIFellesformat
+
+            val healthInformation =
+                setHovedDiagnoseToA99IfhovedDiagnoseIsNullAndAnnenFraversArsakIsSet(
+                    extractHelseOpplysningerArbeidsuforhet(fellesformat),
+                )
+            if (
+                healthInformation.medisinskVurdering.biDiagnoser?.diagnosekode?.firstOrNull()?.s ==
+                    "icd10"
+            ) {
+                return false
+            }
+        } catch (exception: Exception) {
+            log.error("Throwing exception $exception.message")
+            return false
+        }
+    }
     // Vi skal ikke oppdatere Infotrygd hvis sykmeldingen inneholder en av de angitte merknadene
     val merknad =
         receivedSykmelding.merknader?.none {
@@ -346,10 +364,9 @@ fun skalOppdatereInfotrygd(receivedSykmelding: ReceivedSykmelding, cluster: Stri
     return merknad && reisetilskudd
 }
 
-fun fixMissingAndICPC2BDiagnoser(
+fun setHovedDiagnoseToA99IfhovedDiagnoseIsNullAndAnnenFraversArsakIsSet(
     helseOpplysningerArbeidsuforhet: HelseOpplysningerArbeidsuforhet,
 ): HelseOpplysningerArbeidsuforhet {
-
     if (
         helseOpplysningerArbeidsuforhet.medisinskVurdering.hovedDiagnose == null &&
             helseOpplysningerArbeidsuforhet.medisinskVurdering.annenFraversArsak != null
@@ -364,40 +381,10 @@ fun fixMissingAndICPC2BDiagnoser(
                     }
             }
         ANNEN_FRAVERS_ARSKAK_CHANGE_TO_A99_COUNTER.inc()
+        return helseOpplysningerArbeidsuforhet
+    } else {
+        return helseOpplysningerArbeidsuforhet
     }
-    if (
-        helseOpplysningerArbeidsuforhet.medisinskVurdering?.hovedDiagnose?.diagnosekode?.s ==
-            ICPC2B.OID
-    ) {
-        val diagnose =
-            Diagnose.fromOid(
-                    helseOpplysningerArbeidsuforhet.medisinskVurdering.hovedDiagnose.diagnosekode.s,
-                    helseOpplysningerArbeidsuforhet.medisinskVurdering.hovedDiagnose.diagnosekode.v
-                )
-                ?.toICPC2()
-        log.info("Hoveddiagnose er ICPC2B, setter diagnosekode til ICPC2")
-        helseOpplysningerArbeidsuforhet.medisinskVurdering.hovedDiagnose =
-            HelseOpplysningerArbeidsuforhet.MedisinskVurdering.HovedDiagnose().apply {
-                diagnosekode =
-                    CV().apply {
-                        dn = diagnose?.text
-                        s = ICPC2.OID
-                        v = diagnose?.code
-                    }
-            }
-    }
-
-    helseOpplysningerArbeidsuforhet.medisinskVurdering?.biDiagnoser?.diagnosekode?.forEach {
-        if (it.s == ICPC2B.OID) {
-            log.info("Bidiagnose er ICPC2B, setter diagnosekode til ICPC2")
-            val diagnose = Diagnose.fromOid(it.s, it.v)?.toICPC2()
-            it.s = ICPC2.OID
-            it.v = diagnose?.code
-            it.dn = diagnose?.text
-        }
-    }
-
-    return helseOpplysningerArbeidsuforhet
 }
 
 fun validerMottattSykmelding(

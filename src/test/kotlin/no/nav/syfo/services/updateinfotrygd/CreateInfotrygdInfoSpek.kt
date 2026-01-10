@@ -1,5 +1,6 @@
 package no.nav.syfo.services.updateinfotrygd
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import io.kotest.core.spec.style.FunSpec
 import java.io.StringReader
 import java.time.LocalDate
@@ -20,6 +21,7 @@ import no.nav.syfo.extractHelseOpplysningerArbeidsuforhet
 import no.nav.syfo.get
 import no.nav.syfo.getFileAsString
 import no.nav.syfo.model.HelsepersonellKategori
+import no.nav.syfo.objectMapper
 import no.nav.syfo.services.createInfotrygdForesp
 import no.nav.syfo.services.toInfotrygdForespValues
 import no.nav.syfo.sortedFOMDate
@@ -484,7 +486,7 @@ class CreateInfotrygdInfoSpek :
                                         diagnosekode =
                                             CV().apply {
                                                 dn = "Problem med jus/politi"
-                                                s = "2.16.578.1.12.4.1.1.7170"
+                                                s = "2.16.578.1.12.4.1.1.7110"
                                                 v = "Z09"
                                             }
                                     }
@@ -539,7 +541,7 @@ class CreateInfotrygdInfoSpek :
                     infotrygdBlokk.first().behandlingsDato shouldBeEqualTo LocalDate.now()
                     infotrygdBlokk.first().mottakerKode shouldBeEqualTo "LE"
                     infotrygdBlokk.first().hovedDiagnose shouldBeEqualTo "Z09"
-                    infotrygdBlokk.first().hovedDiagnoseGruppe shouldBeEqualTo "5".toBigInteger()
+                    infotrygdBlokk.first().hovedDiagnoseGruppe shouldBeEqualTo "3".toBigInteger()
                     infotrygdBlokk.first().hovedDiagnoseTekst shouldBeEqualTo
                         "Problem med jus/politi"
                     infotrygdBlokk.first().biDiagnose shouldBeEqualTo null
@@ -652,6 +654,25 @@ class CreateInfotrygdInfoSpek :
                     infotrygdBlokk[0].arbeidsufoerTOM shouldBeEqualTo LocalDate.now().plusDays(10)
                     infotrygdBlokk[0].ufoeregrad shouldBeEqualTo "100".toBigInteger()
                     infotrygdBlokk[0].operasjonstype shouldBeEqualTo "2".toBigInteger()
+                }
+
+                test("Should throw exeption, on invalid diagnosekode s") {
+                    val healthInformationString =
+                        getFileAsString("src/test/resources/healthInformation.json")
+
+                    val healthInformation: HelseOpplysningerArbeidsuforhet =
+                        objectMapper.readValue(healthInformationString)
+                    try {
+                        createInfotrygdForesp(
+                            "1231234",
+                            healthInformation.toInfotrygdForespValues(),
+                            "135153245",
+                            ""
+                        )
+                    } catch (exception: Exception) {
+                        exception.message shouldBeEqualTo
+                            "Collection contains no element matching the predicate."
+                    }
                 }
             }
         },

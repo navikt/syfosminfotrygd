@@ -14,13 +14,11 @@ import javax.xml.parsers.SAXParserFactory
 import javax.xml.transform.Source
 import javax.xml.transform.sax.SAXSource
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
-import no.nav.helse.sm2013.CV
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.syfo.NAV_OPPFOLGING_UTLAND_KONTOR_NR
 import no.nav.syfo.UTENLANDSK_SYKEHUS
 import no.nav.syfo.erUtenlandskSykmelding
 import no.nav.syfo.helpers.retry
-import no.nav.syfo.infotrygd.InfotrygdQuery
 import no.nav.syfo.log
 import no.nav.syfo.model.Diagnosekode
 import no.nav.syfo.model.sykmelding.ReceivedSykmelding
@@ -28,12 +26,6 @@ import no.nav.syfo.objectMapper
 import no.nav.syfo.services.updateinfotrygd.exception.InfotrygdDownException
 import no.nav.syfo.toString
 import no.nav.syfo.util.infotrygdSporringJaxBContext
-import no.nav.tsm.diagnoser.Diagnose
-import no.nav.tsm.diagnoser.DiagnoseType
-import no.nav.tsm.diagnoser.ICD10
-import no.nav.tsm.diagnoser.ICPC2
-import no.nav.tsm.diagnoser.ICPC2B
-import no.nav.tsm.diagnoser.toICPC2
 import org.xml.sax.InputSource
 
 @WithSpan
@@ -114,82 +106,27 @@ fun sendInfotrygdForesporsel(
     }
 }
 
-class InfotrygdForespValues
-private constructor(
+class InfotrygdForespValues(
     val hovedDiagnosekode: String?,
     val hovedDiagnosekodeverk: String?,
     val biDiagnoseKode: String?,
     val biDiagnosekodeverk: String?,
-) {
-    companion object {
-        fun from(
-            helseOpplysningerArbeidsuforhet: HelseOpplysningerArbeidsuforhet
-        ): InfotrygdForespValues {
-            val hovedDiagnose =
-                helseOpplysningerArbeidsuforhet.medisinskVurdering.hovedDiagnose.diagnosekode
-                    ?.toInfotrygdDiagnose()
-            val firstBiDiagnose =
-                helseOpplysningerArbeidsuforhet.medisinskVurdering.biDiagnoser
-                    ?.diagnosekode
-                    ?.firstOrNull()
-                    ?.toInfotrygdDiagnose()
-            return InfotrygdForespValues(
-                hovedDiagnosekode = hovedDiagnose?.kode,
-                hovedDiagnosekodeverk = hovedDiagnose?.kodeverk,
-                biDiagnoseKode = firstBiDiagnose?.kode,
-                biDiagnosekodeverk = firstBiDiagnose?.kodeverk,
-            )
-        }
-
-        fun from(infotrygdQuery: InfotrygdQuery): InfotrygdForespValues {
-            val hovedDiagnose = infotrygdQuery.hoveddiagnose?.toInfotrygdDiagnose()
-            val firstBiDiagnoseKode = infotrygdQuery.bidiagnose?.toInfotrygdDiagnose()
-
-            return InfotrygdForespValues(
-                hovedDiagnosekode = hovedDiagnose?.kode,
-                hovedDiagnosekodeverk = hovedDiagnose?.kodeverk,
-                biDiagnoseKode = firstBiDiagnoseKode?.kode,
-                biDiagnosekodeverk = firstBiDiagnoseKode?.kodeverk,
-            )
-        }
-    }
-}
-
-data class InfotrygdDiagnose(
-    val kodeverk: String?,
-    val kode: String?,
 )
 
-private fun no.nav.syfo.model.sykmelding.Diagnose.toInfotrygdDiagnose() =
-    Diagnose.fromOid(system, kode)?.infotrygdDiagnose()
-
-private fun CV.toInfotrygdDiagnose(): InfotrygdDiagnose? =
-    Diagnose.fromOid(s, v)?.infotrygdDiagnose()
-
-fun Diagnose.Companion.fromOid(s: String, v: String): Diagnose? {
-    when (s) {
-        ICPC2.OID -> return ICPC2[v]
-        ICPC2B.OID -> return ICPC2B[v]
-        ICD10.OID -> return ICD10[v]
-        else -> throw IllegalArgumentException("Unknown oid: $s")
-    }
+fun HelseOpplysningerArbeidsuforhet.toInfotrygdForespValues(): InfotrygdForespValues {
+    return InfotrygdForespValues(
+        hovedDiagnosekode = medisinskVurdering.hovedDiagnose.diagnosekode.v,
+        hovedDiagnosekodeverk =
+            Diagnosekode.entries
+                .first { it.kithCode == medisinskVurdering.hovedDiagnose.diagnosekode.s }
+                .infotrygdCode,
+        biDiagnoseKode = medisinskVurdering.biDiagnoser?.diagnosekode?.firstOrNull()?.v,
+        biDiagnosekodeverk =
+            medisinskVurdering.biDiagnoser?.diagnosekode?.firstOrNull()?.s?.let { system ->
+                Diagnosekode.entries.first { it.kithCode == system }.infotrygdCode
+            },
+    )
 }
-
-private fun Diagnose.infotrygdDiagnose(): InfotrygdDiagnose {
-    val (kodeverk, kode) =
-        when (system) {
-            DiagnoseType.ICPC2 -> Diagnosekode.ICPC_2.infotrygdCode to code
-            DiagnoseType.ICPC2B -> {
-                log.info("Diagnose is ICPC_2B, mapping to ICPC2")
-                Diagnosekode.ICPC_2.infotrygdCode to toICPC2().code
-            }
-            DiagnoseType.ICD10 -> Diagnosekode.ICD_10.infotrygdCode to code
-        }
-    return InfotrygdDiagnose(kodeverk, kode)
-}
-
-fun HelseOpplysningerArbeidsuforhet.toInfotrygdForespValues(): InfotrygdForespValues =
-    InfotrygdForespValues.from(this)
 
 fun createInfotrygdForesp(
     personNrPasient: String,

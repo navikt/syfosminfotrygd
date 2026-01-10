@@ -25,7 +25,10 @@ class OverstyrHoveddiagnoseTest :
                             },
                         )
                     }
-                val healthInformation = fixMissingAndICPC2BDiagnoser(defaultHealthInformation)
+                val healthInformation =
+                    setHovedDiagnoseToA99IfhovedDiagnoseIsNullAndAnnenFraversArsakIsSet(
+                        defaultHealthInformation
+                    )
 
                 healthInformation.medisinskVurdering.hovedDiagnose.diagnosekode.v shouldBeEqualTo
                     "A99"
@@ -46,7 +49,10 @@ class OverstyrHoveddiagnoseTest :
                             },
                         )
                     }
-                val healthInformation = fixMissingAndICPC2BDiagnoser(defaultHealthInformation)
+                val healthInformation =
+                    setHovedDiagnoseToA99IfhovedDiagnoseIsNullAndAnnenFraversArsakIsSet(
+                        defaultHealthInformation
+                    )
 
                 healthInformation.medisinskVurdering.hovedDiagnose.diagnosekode.v shouldBeEqualTo
                     "Z09"
