@@ -1,6 +1,7 @@
 package no.nav.syfo.infotrygd
 
 import jakarta.jms.Session
+import java.math.BigInteger
 import java.time.LocalDate
 import java.util.UUID
 import no.nav.helse.eiFellesformat.XMLEIFellesformat
@@ -9,7 +10,6 @@ import no.nav.helse.sm2013.KontrollSystemBlokk
 import no.nav.helse.sm2013.KontrollsystemBlokkType
 import no.nav.syfo.ServiceUser
 import no.nav.syfo.log
-import no.nav.syfo.model.Diagnosekode
 import no.nav.syfo.mq.MqConfig
 import no.nav.syfo.mq.connectionFactory
 import no.nav.syfo.mq.producerForQueue
@@ -24,7 +24,6 @@ import no.nav.syfo.services.updateinfotrygd.findoperasjonstypeAndFom
 import no.nav.syfo.services.updateinfotrygd.formatName
 import no.nav.syfo.util.LoggingMeta
 import no.nav.syfo.util.xmlObjectWriter
-import java.math.BigInteger
 
 data class InfotrygdResponse(
     val identDato: String?,
@@ -85,19 +84,8 @@ class InfotrygdService(
             session.producerForQueue(
                 "queue:///${infotrygdSporringQueue}?targetClient=1",
             )
-        val infotrygdForespValues =
-            InfotrygdForespValues(
-                hovedDiagnosekode = infotrygdQuery.hoveddiagnose?.kode,
-                hovedDiagnosekodeverk =
-                    infotrygdQuery.hoveddiagnose?.system?.let { system ->
-                        Diagnosekode.entries.first { it.kithCode == system }.infotrygdCode
-                    },
-                biDiagnoseKode = infotrygdQuery.bidiagnose?.kode,
-                biDiagnosekodeverk =
-                    infotrygdQuery.bidiagnose?.system?.let { system ->
-                        Diagnosekode.entries.first { it.kithCode == system }.infotrygdCode
-                    },
-            )
+        val infotrygdForespValues = InfotrygdForespValues.from(infotrygdQuery)
+
         val infotrygdForesp =
             createInfotrygdForesp(
                 infotrygdQuery.ident,
@@ -137,12 +125,12 @@ class InfotrygdService(
             "UpdateInfotrygdRequest ${objectMapper.writeValueAsString(updateRequest)}, infotrygdResponse  ${objectMapper.writeValueAsString(infotrygdResponse)}"
         )
 
-        val oprasjonstype = findoperasjonstypeAndFom(
-            updateRequest.fom,
-            updateRequest.tom,
-            infotrygdResponse.sMhistorikk?.sykmelding?.sortedSMInfos() ?: emptyList()
-        )
-
+        val oprasjonstype =
+            findoperasjonstypeAndFom(
+                updateRequest.fom,
+                updateRequest.tom,
+                infotrygdResponse.sMhistorikk?.sykmelding?.sortedSMInfos() ?: emptyList()
+            )
 
         val sykmeldingToUpdate =
             infotrygdResponse.sMhistorikk?.sykmelding?.find {
@@ -152,15 +140,13 @@ class InfotrygdService(
                 equalFomAndTom
             }
 
-
         if (sykmeldingToUpdate == null) {
             return UpdateResponse(false, false, "Could not find sykmelding to update")
         }
 
         sikkerlogg.info(
             "Found sykmelding to update for ${objectMapper.writeValueAsString(updateRequest)}, infotrygdResponse  ${objectMapper.writeValueAsString(sykmeldingToUpdate)}"
-            )
-
+        )
 
         if (updateRequest.dryRun) {
             log.info("Dry run, not updating")
