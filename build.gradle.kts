@@ -29,7 +29,7 @@ val mockkVersion = "1.14.6"
 val kotlinVersion = "2.2.21"
 val ktfmtVersion = "0.44"
 val opentelemetryVersion = "2.21.0"
-val diagnoseVersion = "2026.1.0-1767868775"
+val diagnoseVersion = "2026.1.10"
 val javaVersion = JvmTarget.JVM_21
 
 

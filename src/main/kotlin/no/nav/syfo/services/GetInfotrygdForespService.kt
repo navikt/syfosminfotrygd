@@ -166,15 +166,6 @@ private fun no.nav.syfo.model.sykmelding.Diagnose.toInfotrygdDiagnose() =
 private fun CV.toInfotrygdDiagnose(): InfotrygdDiagnose? =
     Diagnose.fromOid(s, v)?.infotrygdDiagnose()
 
-fun Diagnose.Companion.fromOid(s: String, v: String): Diagnose? {
-    when (s) {
-        ICPC2.OID -> return ICPC2[v]
-        ICPC2B.OID -> return ICPC2B[v]
-        ICD10.OID -> return ICD10[v]
-        else -> throw IllegalArgumentException("Unknown oid: $s")
-    }
-}
-
 private fun Diagnose.infotrygdDiagnose(): InfotrygdDiagnose {
     val (kodeverk, kode) =
         when (system) {
