@@ -76,8 +76,6 @@ spec:
       access: readwrite
   envFrom:
     - secret: syfosminfotrygd-secrets
-  secureLogs:
-    enabled: true
   env:
     - name: INFOTRYGD_SPORRING_QUEUE
       value: QA.P278.IT00_FORESPORSEL_XML
