@@ -5,6 +5,7 @@ import io.mockk.every
 import io.mockk.mockk
 import no.nav.helse.sm2013.CV
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
+import no.nav.syfo.diagnose.ICD10
 import no.nav.syfo.infotrygd.InfotrygdQuery
 import no.nav.syfo.model.sykmelding.Diagnose
 import no.nav.tsm.diagnoser.ICPC2B
@@ -85,5 +86,21 @@ class InfotrygdForespValuesTest :
             assertEquals(null, values.biDiagnosekodeverk)
             assertEquals(null, values.biDiagnoseKode)
             assertEquals(null, values.hovedDiagnosekode)
+        }
+
+        test("Map lowercase ICD10 diagnose to correct values from infotrygdQueries") {
+            val infotrygdQuery = mockk<InfotrygdQuery>(relaxed = true)
+            every { infotrygdQuery.hoveddiagnose } returns
+                Diagnose(
+                    system = no.nav.tsm.diagnoser.ICD10.OID,
+                    kode = "k01.1",
+                    tekst = "tekst",
+                )
+
+            val values = InfotrygdForespValues.from(infotrygdQuery)
+            assertEquals("3", values.hovedDiagnosekodeverk)
+            assertEquals(null, values.biDiagnosekodeverk)
+            assertEquals(null, values.biDiagnoseKode)
+            assertEquals("K01.1", values.hovedDiagnosekode)
         }
     })

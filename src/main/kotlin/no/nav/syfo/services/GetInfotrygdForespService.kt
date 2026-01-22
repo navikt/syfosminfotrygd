@@ -161,10 +161,10 @@ data class InfotrygdDiagnose(
 )
 
 private fun no.nav.syfo.model.sykmelding.Diagnose.toInfotrygdDiagnose() =
-    Diagnose.fromOid(system, kode)?.infotrygdDiagnose()
+    Diagnose.fromOid(system, kode.uppercase())?.infotrygdDiagnose()
 
 private fun CV.toInfotrygdDiagnose(): InfotrygdDiagnose? =
-    Diagnose.fromOid(s, v)?.infotrygdDiagnose()
+    Diagnose.fromOid(s, v.uppercase())?.infotrygdDiagnose()
 
 private fun Diagnose.infotrygdDiagnose(): InfotrygdDiagnose {
     val (kodeverk, kode) =
