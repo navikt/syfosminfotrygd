@@ -36,6 +36,7 @@ import no.nav.syfo.services.updateinfotrygd.getInfotrygdPerioder
 import no.nav.syfo.util.LoggingMeta
 import no.nav.syfo.util.fellesformatUnmarshaller
 import no.nav.tsm.diagnoser.Diagnose
+import no.nav.tsm.diagnoser.ICD10
 import no.nav.tsm.diagnoser.ICPC2
 import no.nav.tsm.diagnoser.ICPC2B
 import no.nav.tsm.diagnoser.toICPC2
@@ -155,6 +156,7 @@ class MottattSykmeldingService(
                         )
 
                     val helsepersonell = getHelsepersonell(receivedSykmeldingCopyTssId)
+
                     if (helsepersonell == null) {
                         handleBehandlerNotInHpr(
                             receivedSykmelding = receivedSykmeldingCopyTssId,
@@ -365,10 +367,9 @@ fun fixMissingAndICPC2BDiagnoser(
             }
         ANNEN_FRAVERS_ARSKAK_CHANGE_TO_A99_COUNTER.inc()
     }
-    if (
-        helseOpplysningerArbeidsuforhet.medisinskVurdering?.hovedDiagnose?.diagnosekode?.s ==
-            ICPC2B.OID
-    ) {
+    val hovedDiagnoseOid =
+        helseOpplysningerArbeidsuforhet.medisinskVurdering?.hovedDiagnose?.diagnosekode?.s
+    if (hovedDiagnoseOid == ICPC2B.OID) {
         val diagnose =
             Diagnose.fromOid(
                     helseOpplysningerArbeidsuforhet.medisinskVurdering.hovedDiagnose.diagnosekode.s,
@@ -385,6 +386,14 @@ fun fixMissingAndICPC2BDiagnoser(
                         v = diagnose?.code
                     }
             }
+    }
+
+    if (hovedDiagnoseOid == ICD10.OID) {
+        val hoveddiagnose =
+            helseOpplysningerArbeidsuforhet.medisinskVurdering.hovedDiagnose.diagnosekode.v
+        if (hoveddiagnose == "V4n1i") {
+            helseOpplysningerArbeidsuforhet.medisinskVurdering.hovedDiagnose.diagnosekode.v = "V4n1"
+        }
     }
 
     helseOpplysningerArbeidsuforhet.medisinskVurdering?.biDiagnoser?.diagnosekode?.forEach {

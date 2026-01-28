@@ -20,9 +20,11 @@ import no.nav.syfo.client.Kode
 import no.nav.syfo.client.ManuellClient
 import no.nav.syfo.client.NorskHelsenettClient
 import no.nav.syfo.createDefaultHealthInformation
+import no.nav.syfo.diagnose.ICD10
 import no.nav.syfo.generatePeriode
 import no.nav.syfo.generateSykmelding
 import no.nav.syfo.model.HelsepersonellKategori
+import no.nav.syfo.model.sykmelding.Diagnose
 import no.nav.syfo.model.sykmelding.MedisinskVurdering
 import no.nav.syfo.model.sykmelding.Merknad
 import no.nav.syfo.model.sykmelding.Status
@@ -36,657 +38,728 @@ import no.nav.syfo.util.LoggingMeta
 import no.nav.syfo.util.fellesformatMarshaller
 
 class MottattSykmeldingServiceTest :
-    FunSpec({
-        val updateInfotrygdService = mockk<UpdateInfotrygdService>(relaxed = true)
-        val finnNAVKontorService = mockk<FinnNAVKontorService>()
-        val manuellClient = mockk<ManuellClient>()
-        val manuellBehandlingService = mockk<ManuellBehandlingService>(relaxed = true)
-        val norskHelsenettClient = mockk<NorskHelsenettClient>()
-        val infotrygdOppdateringProducer = mockk<MessageProducer>(relaxed = true)
-        val infotrygdSporringProducer = mockk<MessageProducer>(relaxed = true)
-        val session = mockk<Session>(relaxed = true)
-        val loggingMeta = LoggingMeta("", "", "", "")
-        val mottattSykmeldingService =
-            MottattSykmeldingService(
-                updateInfotrygdService,
-                finnNAVKontorService,
-                manuellClient,
-                manuellBehandlingService,
-                norskHelsenettClient,
-                "localhost"
-            )
-
-        beforeTest { mockkStatic("no.nav.syfo.services.GetInfotrygdForespServiceKt") }
-        beforeEach {
-            clearMocks(
-                updateInfotrygdService,
-                finnNAVKontorService,
-                manuellClient,
-                manuellBehandlingService,
-                norskHelsenettClient
-            )
-            coEvery { manuellClient.behandletAvManuell(any(), any()) } returns false
-            coEvery { norskHelsenettClient.finnBehandler(any(), any()) } returns getBehandler()
-            coEvery { finnNAVKontorService.finnLokaltNavkontor(any(), any()) } returns "0101"
-        }
-
-        context("handleMessage") {
-            test("Happy case") {
-                coEvery { fetchInfotrygdForesp(any(), any(), any(), any(), any()) } returns
-                    getInfotrygdForespResponse()
-                val healthInformation = createDefaultHealthInformation()
-                val fellesformat = createFellesFormat(healthInformation)
-
-                val receivedSykmelding =
-                    receivedSykmelding(
-                        id = UUID.randomUUID().toString(),
-                        sykmelding =
-                            generateSykmelding(
-                                medisinskVurdering =
-                                    MedisinskVurdering(
-                                        hovedDiagnose = null,
-                                        biDiagnoser = emptyList(),
-                                        svangerskap = false,
-                                        yrkesskade = false,
-                                        yrkesskadeDato = null,
-                                        annenFraversArsak = null
-                                    ),
-                            ),
-                        fellesformat = fellesformatMarshaller.toString(fellesformat),
-                    )
-
-                mottattSykmeldingService.handleMessage(
-                    receivedSykmelding,
-                    infotrygdOppdateringProducer,
-                    infotrygdSporringProducer,
-                    session,
-                    loggingMeta,
+    FunSpec(
+        {
+            val updateInfotrygdService = mockk<UpdateInfotrygdService>(relaxed = true)
+            val finnNAVKontorService = mockk<FinnNAVKontorService>()
+            val manuellClient = mockk<ManuellClient>()
+            val manuellBehandlingService = mockk<ManuellBehandlingService>(relaxed = true)
+            val norskHelsenettClient = mockk<NorskHelsenettClient>()
+            val infotrygdOppdateringProducer = mockk<MessageProducer>(relaxed = true)
+            val infotrygdSporringProducer = mockk<MessageProducer>(relaxed = true)
+            val session = mockk<Session>(relaxed = true)
+            val loggingMeta = LoggingMeta("", "", "", "")
+            val mottattSykmeldingService =
+                MottattSykmeldingService(
+                    updateInfotrygdService,
+                    finnNAVKontorService,
+                    manuellClient,
+                    manuellBehandlingService,
+                    norskHelsenettClient,
+                    "localhost"
                 )
 
-                coVerify {
-                    updateInfotrygdService.updateInfotrygd(
+            beforeTest { mockkStatic("no.nav.syfo.services.GetInfotrygdForespServiceKt") }
+            beforeEach {
+                clearMocks(
+                    updateInfotrygdService,
+                    finnNAVKontorService,
+                    manuellClient,
+                    manuellBehandlingService,
+                    norskHelsenettClient
+                )
+                coEvery { manuellClient.behandletAvManuell(any(), any()) } returns false
+                coEvery { norskHelsenettClient.finnBehandler(any(), any()) } returns getBehandler()
+                coEvery { finnNAVKontorService.finnLokaltNavkontor(any(), any()) } returns "0101"
+            }
+
+            context("handleMessage") {
+                test("Happy case") {
+                    coEvery { fetchInfotrygdForesp(any(), any(), any(), any(), any()) } returns
+                        getInfotrygdForespResponse()
+                    val healthInformation = createDefaultHealthInformation()
+                    val fellesformat = createFellesFormat(healthInformation)
+
+                    val receivedSykmelding =
+                        receivedSykmelding(
+                            id = UUID.randomUUID().toString(),
+                            sykmelding =
+                                generateSykmelding(
+                                    medisinskVurdering =
+                                        MedisinskVurdering(
+                                            hovedDiagnose = null,
+                                            biDiagnoser = emptyList(),
+                                            svangerskap = false,
+                                            yrkesskade = false,
+                                            yrkesskadeDato = null,
+                                            annenFraversArsak = null
+                                        ),
+                                ),
+                            fellesformat = fellesformatMarshaller.toString(fellesformat),
+                        )
+
+                    mottattSykmeldingService.handleMessage(
+                        receivedSykmelding,
                         infotrygdOppdateringProducer,
+                        infotrygdSporringProducer,
                         session,
                         loggingMeta,
-                        any(),
-                        receivedSykmelding,
-                        "LE",
-                        "0101",
-                        false,
-                        operasjonstypeAndFom =
-                            Operasjonstype.NY to receivedSykmelding.sykmelding.perioder.first().fom,
-                    )
-                }
-                coVerify { manuellClient.behandletAvManuell(any(), any()) }
-                coVerify(exactly = 0) {
-                    manuellBehandlingService.produceManualTaskAndSendValidationResults(
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                    )
-                }
-            }
-            test("Oppdaterer ikke infotrygd hvis sykmelding har merknad") {
-                val receivedSykmeldingMedMerknad =
-                    receivedSykmelding(
-                        id = UUID.randomUUID().toString(),
-                        merknader = listOf(Merknad("UNDER_BEHANDLING", ""))
                     )
 
-                mottattSykmeldingService.handleMessage(
-                    receivedSykmeldingMedMerknad,
-                    infotrygdOppdateringProducer,
-                    infotrygdSporringProducer,
-                    session,
-                    loggingMeta,
-                )
-
-                coVerify(exactly = 0) {
-                    updateInfotrygdService.updateInfotrygd(
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                    )
-                }
-                coVerify(exactly = 0) { manuellClient.behandletAvManuell(any(), any()) }
-            }
-            test("Går til manuell behandling hvis hoveddiagnose mangler") {
-                val healthInformation = createDefaultHealthInformation()
-                healthInformation.medisinskVurdering =
-                    HelseOpplysningerArbeidsuforhet.MedisinskVurdering().apply {
-                        hovedDiagnose = null
+                    coVerify {
+                        updateInfotrygdService.updateInfotrygd(
+                            infotrygdOppdateringProducer,
+                            session,
+                            loggingMeta,
+                            any(),
+                            receivedSykmelding,
+                            "LE",
+                            "0101",
+                            false,
+                            operasjonstypeAndFom =
+                                Operasjonstype.NY to
+                                    receivedSykmelding.sykmelding.perioder.first().fom,
+                        )
                     }
-                val fellesformat = createFellesFormat(healthInformation)
-
-                val receivedSykmeldingUtenHoveddiagose =
-                    receivedSykmelding(
-                        id = UUID.randomUUID().toString(),
-                        sykmelding =
-                            generateSykmelding(
-                                medisinskVurdering =
-                                    MedisinskVurdering(
-                                        hovedDiagnose = null,
-                                        biDiagnoser = emptyList(),
-                                        svangerskap = false,
-                                        yrkesskade = false,
-                                        yrkesskadeDato = null,
-                                        annenFraversArsak = null
-                                    ),
-                            ),
-                        fellesformat = fellesformatMarshaller.toString(fellesformat),
-                    )
-
-                mottattSykmeldingService.handleMessage(
-                    receivedSykmeldingUtenHoveddiagose,
-                    infotrygdOppdateringProducer,
-                    infotrygdSporringProducer,
-                    session,
-                    loggingMeta,
-                )
-
-                coVerify(exactly = 0) {
-                    updateInfotrygdService.updateInfotrygd(
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                    )
+                    coVerify { manuellClient.behandletAvManuell(any(), any()) }
+                    coVerify(exactly = 0) {
+                        manuellBehandlingService.produceManualTaskAndSendValidationResults(
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                        )
+                    }
                 }
-                coVerify { manuellClient.behandletAvManuell(any(), any()) }
-                coVerify {
-                    manuellBehandlingService.produceManualTaskAndSendValidationResults(
+                test("Oppdaterer ikke infotrygd hvis sykmelding har merknad") {
+                    val receivedSykmeldingMedMerknad =
+                        receivedSykmelding(
+                            id = UUID.randomUUID().toString(),
+                            merknader = listOf(Merknad("UNDER_BEHANDLING", ""))
+                        )
+
+                    mottattSykmeldingService.handleMessage(
+                        receivedSykmeldingMedMerknad,
+                        infotrygdOppdateringProducer,
+                        infotrygdSporringProducer,
+                        session,
+                        loggingMeta,
+                    )
+
+                    coVerify(exactly = 0) {
+                        updateInfotrygdService.updateInfotrygd(
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                        )
+                    }
+                    coVerify(exactly = 0) { manuellClient.behandletAvManuell(any(), any()) }
+                }
+                test("Går til manuell behandling hvis hoveddiagnose mangler") {
+                    val healthInformation = createDefaultHealthInformation()
+                    healthInformation.medisinskVurdering =
+                        HelseOpplysningerArbeidsuforhet.MedisinskVurdering().apply {
+                            hovedDiagnose = null
+                        }
+                    val fellesformat = createFellesFormat(healthInformation)
+
+                    val receivedSykmeldingUtenHoveddiagose =
+                        receivedSykmelding(
+                            id = UUID.randomUUID().toString(),
+                            sykmelding =
+                                generateSykmelding(
+                                    medisinskVurdering =
+                                        MedisinskVurdering(
+                                            hovedDiagnose = null,
+                                            biDiagnoser = emptyList(),
+                                            svangerskap = false,
+                                            yrkesskade = false,
+                                            yrkesskadeDato = null,
+                                            annenFraversArsak = null
+                                        ),
+                                ),
+                            fellesformat = fellesformatMarshaller.toString(fellesformat),
+                        )
+
+                    mottattSykmeldingService.handleMessage(
                         receivedSykmeldingUtenHoveddiagose,
-                        match {
-                            it.status == Status.MANUAL_PROCESSING &&
-                                it.ruleHits.any { ruleInfo ->
-                                    ruleInfo.ruleName == "HOVEDDIAGNOSE_MANGLER"
-                                }
-                        },
-                        false,
+                        infotrygdOppdateringProducer,
+                        infotrygdSporringProducer,
+                        session,
                         loggingMeta,
                     )
+
+                    coVerify(exactly = 0) {
+                        updateInfotrygdService.updateInfotrygd(
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                        )
+                    }
+                    coVerify { manuellClient.behandletAvManuell(any(), any()) }
+                    coVerify {
+                        manuellBehandlingService.produceManualTaskAndSendValidationResults(
+                            receivedSykmeldingUtenHoveddiagose,
+                            match {
+                                it.status == Status.MANUAL_PROCESSING &&
+                                    it.ruleHits.any { ruleInfo ->
+                                        ruleInfo.ruleName == "HOVEDDIAGNOSE_MANGLER"
+                                    }
+                            },
+                            false,
+                            loggingMeta,
+                        )
+                    }
                 }
-            }
-            test("Går til manuell behandling hvis vi mangler behandler") {
-                coEvery { norskHelsenettClient.finnBehandler(any(), any()) } returns null
-                coEvery { fetchInfotrygdForesp(any(), any(), any(), any(), any()) } returns
-                    getInfotrygdForespResponse()
-                val healthInformation = createDefaultHealthInformation()
-                val fellesformat = createFellesFormat(healthInformation)
+                test("Går til manuell behandling hvis vi mangler behandler") {
+                    coEvery { norskHelsenettClient.finnBehandler(any(), any()) } returns null
+                    coEvery { fetchInfotrygdForesp(any(), any(), any(), any(), any()) } returns
+                        getInfotrygdForespResponse()
+                    val healthInformation = createDefaultHealthInformation()
+                    val fellesformat = createFellesFormat(healthInformation)
 
-                val receivedSykmelding =
-                    receivedSykmelding(
-                        id = UUID.randomUUID().toString(),
-                        sykmelding =
-                            generateSykmelding(
-                                medisinskVurdering =
-                                    MedisinskVurdering(
-                                        hovedDiagnose = null,
-                                        biDiagnoser = emptyList(),
-                                        svangerskap = false,
-                                        yrkesskade = false,
-                                        yrkesskadeDato = null,
-                                        annenFraversArsak = null
-                                    ),
-                            ),
-                        fellesformat = fellesformatMarshaller.toString(fellesformat),
-                    )
+                    val receivedSykmelding =
+                        receivedSykmelding(
+                            id = UUID.randomUUID().toString(),
+                            sykmelding =
+                                generateSykmelding(
+                                    medisinskVurdering =
+                                        MedisinskVurdering(
+                                            hovedDiagnose = null,
+                                            biDiagnoser = emptyList(),
+                                            svangerskap = false,
+                                            yrkesskade = false,
+                                            yrkesskadeDato = null,
+                                            annenFraversArsak = null
+                                        ),
+                                ),
+                            fellesformat = fellesformatMarshaller.toString(fellesformat),
+                        )
 
-                mottattSykmeldingService.handleMessage(
-                    receivedSykmelding,
-                    infotrygdOppdateringProducer,
-                    infotrygdSporringProducer,
-                    session,
-                    loggingMeta,
-                )
-
-                coVerify(exactly = 0) {
-                    updateInfotrygdService.updateInfotrygd(
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                    )
-                }
-                coVerify { manuellClient.behandletAvManuell(any(), any()) }
-                coVerify {
-                    manuellBehandlingService.produceManualTaskAndSendValidationResults(
+                    mottattSykmeldingService.handleMessage(
                         receivedSykmelding,
-                        match {
-                            it.status == Status.MANUAL_PROCESSING &&
-                                it.ruleHits.any { ruleInfo ->
-                                    ruleInfo.ruleName == "BEHANDLER_NOT_IN_HPR"
-                                }
-                        },
+                        infotrygdOppdateringProducer,
+                        infotrygdSporringProducer,
+                        session,
                         loggingMeta,
-                        any(),
-                        "LE",
-                        false,
-                        any(),
                     )
+
+                    coVerify(exactly = 0) {
+                        updateInfotrygdService.updateInfotrygd(
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                        )
+                    }
+                    coVerify { manuellClient.behandletAvManuell(any(), any()) }
+                    coVerify {
+                        manuellBehandlingService.produceManualTaskAndSendValidationResults(
+                            receivedSykmelding,
+                            match {
+                                it.status == Status.MANUAL_PROCESSING &&
+                                    it.ruleHits.any { ruleInfo ->
+                                        ruleInfo.ruleName == "BEHANDLER_NOT_IN_HPR"
+                                    }
+                            },
+                            loggingMeta,
+                            any(),
+                            "LE",
+                            false,
+                            any(),
+                        )
+                    }
                 }
-            }
-            test("Går til manuell behandling hvis infotrygd-regler slår ut") {
-                coEvery { fetchInfotrygdForesp(any(), any(), any(), any(), any()) } returns
-                    getInfotrygdForespResponse()
-                val healthInformation = createDefaultHealthInformation()
-                val fellesformat = createFellesFormat(healthInformation)
+                test("Går til manuell behandling hvis infotrygd-regler slår ut") {
+                    coEvery { fetchInfotrygdForesp(any(), any(), any(), any(), any()) } returns
+                        getInfotrygdForespResponse()
+                    val healthInformation = createDefaultHealthInformation()
+                    val fellesformat = createFellesFormat(healthInformation)
 
-                val receivedSykmelding =
-                    receivedSykmelding(
-                        id = UUID.randomUUID().toString(),
-                        sykmelding =
-                            generateSykmelding(
-                                medisinskVurdering =
-                                    MedisinskVurdering(
-                                        hovedDiagnose = null,
-                                        biDiagnoser = emptyList(),
-                                        svangerskap = false,
-                                        yrkesskade = false,
-                                        yrkesskadeDato = null,
-                                        annenFraversArsak = null
-                                    ),
-                            ),
-                        fellesformat = fellesformatMarshaller.toString(fellesformat),
-                        tssid = null,
-                    )
+                    val receivedSykmelding =
+                        receivedSykmelding(
+                            id = UUID.randomUUID().toString(),
+                            sykmelding =
+                                generateSykmelding(
+                                    medisinskVurdering =
+                                        MedisinskVurdering(
+                                            hovedDiagnose = null,
+                                            biDiagnoser = emptyList(),
+                                            svangerskap = false,
+                                            yrkesskade = false,
+                                            yrkesskadeDato = null,
+                                            annenFraversArsak = null
+                                        ),
+                                ),
+                            fellesformat = fellesformatMarshaller.toString(fellesformat),
+                            tssid = null,
+                        )
 
-                mottattSykmeldingService.handleMessage(
-                    receivedSykmelding,
-                    infotrygdOppdateringProducer,
-                    infotrygdSporringProducer,
-                    session,
-                    loggingMeta,
-                )
-
-                coVerify(exactly = 0) {
-                    updateInfotrygdService.updateInfotrygd(
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                    )
-                }
-                coVerify { manuellClient.behandletAvManuell(any(), any()) }
-                coVerify {
-                    manuellBehandlingService.produceManualTaskAndSendValidationResults(
+                    mottattSykmeldingService.handleMessage(
                         receivedSykmelding,
-                        match {
-                            it.status == Status.MANUAL_PROCESSING &&
-                                it.ruleHits.any { ruleInfo ->
-                                    ruleInfo.ruleName == "TSS_IDENT_MANGLER"
-                                }
-                        },
-                        loggingMeta,
-                        any(),
-                        "LE",
-                        false,
-                        any(),
-                    )
-                }
-            }
-
-            test("Use local nav office when under 12 weeks and not utenlandsksykmelding") {
-                coEvery { fetchInfotrygdForesp(any(), any(), any(), any(), any()) } returns
-                    getInfotrygdForespResponse()
-                val healthInformation = createDefaultHealthInformation()
-                val fellesformat = createFellesFormat(healthInformation)
-
-                val receivedSykmelding =
-                    receivedSykmelding(
-                        id = UUID.randomUUID().toString(),
-                        sykmelding =
-                            generateSykmelding(
-                                perioder =
-                                    listOf(
-                                        generatePeriode(
-                                            fom = LocalDate.now(),
-                                            tom = LocalDate.now().plusDays(84),
-                                        ),
-                                    ),
-                                medisinskVurdering =
-                                    MedisinskVurdering(
-                                        hovedDiagnose = null,
-                                        biDiagnoser = emptyList(),
-                                        svangerskap = false,
-                                        yrkesskade = false,
-                                        yrkesskadeDato = null,
-                                        annenFraversArsak = null
-                                    ),
-                            ),
-                        fellesformat = fellesformatMarshaller.toString(fellesformat),
-                    )
-
-                mottattSykmeldingService.handleMessage(
-                    receivedSykmelding,
-                    infotrygdOppdateringProducer,
-                    infotrygdSporringProducer,
-                    session,
-                    loggingMeta,
-                )
-
-                coVerify {
-                    updateInfotrygdService.updateInfotrygd(
                         infotrygdOppdateringProducer,
+                        infotrygdSporringProducer,
                         session,
                         loggingMeta,
-                        any(),
+                    )
+
+                    coVerify(exactly = 0) {
+                        updateInfotrygdService.updateInfotrygd(
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                        )
+                    }
+                    coVerify { manuellClient.behandletAvManuell(any(), any()) }
+                    coVerify {
+                        manuellBehandlingService.produceManualTaskAndSendValidationResults(
+                            receivedSykmelding,
+                            match {
+                                it.status == Status.MANUAL_PROCESSING &&
+                                    it.ruleHits.any { ruleInfo ->
+                                        ruleInfo.ruleName == "TSS_IDENT_MANGLER"
+                                    }
+                            },
+                            loggingMeta,
+                            any(),
+                            "LE",
+                            false,
+                            any(),
+                        )
+                    }
+                }
+
+                test("Use local nav office when under 12 weeks and not utenlandsksykmelding") {
+                    coEvery { fetchInfotrygdForesp(any(), any(), any(), any(), any()) } returns
+                        getInfotrygdForespResponse()
+                    val healthInformation = createDefaultHealthInformation()
+                    val fellesformat = createFellesFormat(healthInformation)
+
+                    val receivedSykmelding =
+                        receivedSykmelding(
+                            id = UUID.randomUUID().toString(),
+                            sykmelding =
+                                generateSykmelding(
+                                    perioder =
+                                        listOf(
+                                            generatePeriode(
+                                                fom = LocalDate.now(),
+                                                tom = LocalDate.now().plusDays(84),
+                                            ),
+                                        ),
+                                    medisinskVurdering =
+                                        MedisinskVurdering(
+                                            hovedDiagnose = null,
+                                            biDiagnoser = emptyList(),
+                                            svangerskap = false,
+                                            yrkesskade = false,
+                                            yrkesskadeDato = null,
+                                            annenFraversArsak = null
+                                        ),
+                                ),
+                            fellesformat = fellesformatMarshaller.toString(fellesformat),
+                        )
+
+                    mottattSykmeldingService.handleMessage(
                         receivedSykmelding,
-                        "LE",
-                        "0101",
-                        false,
-                        any(),
-                    )
-                }
-                coVerify { manuellClient.behandletAvManuell(any(), any()) }
-                coVerify(exactly = 0) {
-                    manuellBehandlingService.produceManualTaskAndSendValidationResults(
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                    )
-                }
-            }
-
-            test("Use local nav office when over 12 weeks and not utenlandsksykmelding") {
-                coEvery { fetchInfotrygdForesp(any(), any(), any(), any(), any()) } returns
-                    getInfotrygdForespResponse()
-                val healthInformation = createDefaultHealthInformation()
-                val fellesformat = createFellesFormat(healthInformation)
-
-                val receivedSykmelding =
-                    receivedSykmelding(
-                        id = UUID.randomUUID().toString(),
-                        sykmelding =
-                            generateSykmelding(
-                                perioder =
-                                    listOf(
-                                        generatePeriode(
-                                            fom = LocalDate.now(),
-                                            tom = LocalDate.now().plusDays(85),
-                                        ),
-                                    ),
-                                medisinskVurdering =
-                                    MedisinskVurdering(
-                                        hovedDiagnose = null,
-                                        biDiagnoser = emptyList(),
-                                        svangerskap = false,
-                                        yrkesskade = false,
-                                        yrkesskadeDato = null,
-                                        annenFraversArsak = null
-                                    ),
-                            ),
-                        fellesformat = fellesformatMarshaller.toString(fellesformat),
-                    )
-
-                mottattSykmeldingService.handleMessage(
-                    receivedSykmelding,
-                    infotrygdOppdateringProducer,
-                    infotrygdSporringProducer,
-                    session,
-                    loggingMeta,
-                )
-
-                coVerify {
-                    updateInfotrygdService.updateInfotrygd(
                         infotrygdOppdateringProducer,
+                        infotrygdSporringProducer,
                         session,
                         loggingMeta,
-                        any(),
+                    )
+
+                    coVerify {
+                        updateInfotrygdService.updateInfotrygd(
+                            infotrygdOppdateringProducer,
+                            session,
+                            loggingMeta,
+                            any(),
+                            receivedSykmelding,
+                            "LE",
+                            "0101",
+                            false,
+                            any(),
+                        )
+                    }
+                    coVerify { manuellClient.behandletAvManuell(any(), any()) }
+                    coVerify(exactly = 0) {
+                        manuellBehandlingService.produceManualTaskAndSendValidationResults(
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                        )
+                    }
+                }
+
+                test("Use local nav office when over 12 weeks and not utenlandsksykmelding") {
+                    coEvery { fetchInfotrygdForesp(any(), any(), any(), any(), any()) } returns
+                        getInfotrygdForespResponse()
+                    val healthInformation = createDefaultHealthInformation()
+                    val fellesformat = createFellesFormat(healthInformation)
+
+                    val receivedSykmelding =
+                        receivedSykmelding(
+                            id = UUID.randomUUID().toString(),
+                            sykmelding =
+                                generateSykmelding(
+                                    perioder =
+                                        listOf(
+                                            generatePeriode(
+                                                fom = LocalDate.now(),
+                                                tom = LocalDate.now().plusDays(85),
+                                            ),
+                                        ),
+                                    medisinskVurdering =
+                                        MedisinskVurdering(
+                                            hovedDiagnose = null,
+                                            biDiagnoser = emptyList(),
+                                            svangerskap = false,
+                                            yrkesskade = false,
+                                            yrkesskadeDato = null,
+                                            annenFraversArsak = null
+                                        ),
+                                ),
+                            fellesformat = fellesformatMarshaller.toString(fellesformat),
+                        )
+
+                    mottattSykmeldingService.handleMessage(
                         receivedSykmelding,
-                        "LE",
-                        "0101",
-                        false,
-                        any(),
-                    )
-                }
-                coVerify { manuellClient.behandletAvManuell(any(), any()) }
-                coVerify(exactly = 0) {
-                    manuellBehandlingService.produceManualTaskAndSendValidationResults(
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                    )
-                }
-            }
-
-            test("Use local nav office when under 12 weeks and utenlandsksykmelding") {
-                coEvery { fetchInfotrygdForesp(any(), any(), any(), any(), any()) } returns
-                    getInfotrygdForespResponse()
-                val startdato = LocalDate.of(2023, 1, 1)
-                val healthInformation = createDefaultHealthInformation()
-                val fellesformat = createFellesFormat(healthInformation)
-
-                val receivedSykmelding =
-                    receivedSykmelding(
-                        id = UUID.randomUUID().toString(),
-                        sykmelding =
-                            generateSykmelding(
-                                perioder =
-                                    listOf(
-                                        generatePeriode(
-                                            fom = startdato,
-                                            tom = startdato.plusDays(83),
-                                        ),
-                                    ),
-                                medisinskVurdering =
-                                    MedisinskVurdering(
-                                        hovedDiagnose = null,
-                                        biDiagnoser = emptyList(),
-                                        svangerskap = false,
-                                        yrkesskade = false,
-                                        yrkesskadeDato = null,
-                                        annenFraversArsak = null
-                                    ),
-                            ),
-                        fellesformat = fellesformatMarshaller.toString(fellesformat),
-                        utenlandskSykmelding = UtenlandskSykmelding("POL", false, false),
-                    )
-
-                mottattSykmeldingService.handleMessage(
-                    receivedSykmelding,
-                    infotrygdOppdateringProducer,
-                    infotrygdSporringProducer,
-                    session,
-                    loggingMeta,
-                )
-
-                coVerify {
-                    updateInfotrygdService.updateInfotrygd(
                         infotrygdOppdateringProducer,
+                        infotrygdSporringProducer,
                         session,
                         loggingMeta,
-                        any(),
-                        any(),
-                        any(),
-                        "0101",
-                        false,
-                        any(),
                     )
-                }
-                coVerify { manuellClient.behandletAvManuell(any(), any()) }
-                coVerify(exactly = 0) {
-                    manuellBehandlingService.produceManualTaskAndSendValidationResults(
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                    )
-                }
-            }
 
-            test("Use nav office 2101 when over 12 weeks and utenlandsksykmelding") {
-                coEvery { fetchInfotrygdForesp(any(), any(), any(), any(), any()) } returns
-                    getInfotrygdForespResponse()
-                val startdato = LocalDate.of(2023, 1, 1)
-                val healthInformation = createDefaultHealthInformation()
-                val fellesformat = createFellesFormat(healthInformation)
+                    coVerify {
+                        updateInfotrygdService.updateInfotrygd(
+                            infotrygdOppdateringProducer,
+                            session,
+                            loggingMeta,
+                            any(),
+                            receivedSykmelding,
+                            "LE",
+                            "0101",
+                            false,
+                            any(),
+                        )
+                    }
+                    coVerify { manuellClient.behandletAvManuell(any(), any()) }
+                    coVerify(exactly = 0) {
+                        manuellBehandlingService.produceManualTaskAndSendValidationResults(
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                        )
+                    }
+                }
 
-                val receivedSykmelding =
-                    receivedSykmelding(
-                        id = UUID.randomUUID().toString(),
-                        sykmelding =
-                            generateSykmelding(
-                                perioder =
-                                    listOf(
-                                        generatePeriode(
-                                            fom = startdato,
-                                            tom = startdato.plusDays(85),
+                test("Use local nav office when under 12 weeks and utenlandsksykmelding") {
+                    coEvery { fetchInfotrygdForesp(any(), any(), any(), any(), any()) } returns
+                        getInfotrygdForespResponse()
+                    val startdato = LocalDate.of(2023, 1, 1)
+                    val healthInformation = createDefaultHealthInformation()
+                    val fellesformat = createFellesFormat(healthInformation)
+
+                    val receivedSykmelding =
+                        receivedSykmelding(
+                            id = UUID.randomUUID().toString(),
+                            sykmelding =
+                                generateSykmelding(
+                                    perioder =
+                                        listOf(
+                                            generatePeriode(
+                                                fom = startdato,
+                                                tom = startdato.plusDays(83),
+                                            ),
                                         ),
-                                    ),
-                                medisinskVurdering =
-                                    MedisinskVurdering(
-                                        hovedDiagnose = null,
-                                        biDiagnoser = emptyList(),
-                                        svangerskap = false,
-                                        yrkesskade = false,
-                                        yrkesskadeDato = null,
-                                        annenFraversArsak = null
-                                    ),
-                            ),
-                        fellesformat = fellesformatMarshaller.toString(fellesformat),
-                        utenlandskSykmelding = UtenlandskSykmelding("POL", false, true),
-                    )
+                                    medisinskVurdering =
+                                        MedisinskVurdering(
+                                            hovedDiagnose = null,
+                                            biDiagnoser = emptyList(),
+                                            svangerskap = false,
+                                            yrkesskade = false,
+                                            yrkesskadeDato = null,
+                                            annenFraversArsak = null
+                                        ),
+                                ),
+                            fellesformat = fellesformatMarshaller.toString(fellesformat),
+                            utenlandskSykmelding = UtenlandskSykmelding("POL", false, false),
+                        )
 
-                mottattSykmeldingService.handleMessage(
-                    receivedSykmelding,
-                    infotrygdOppdateringProducer,
-                    infotrygdSporringProducer,
-                    session,
-                    loggingMeta,
-                )
-
-                coVerify {
-                    updateInfotrygdService.updateInfotrygd(
+                    mottattSykmeldingService.handleMessage(
+                        receivedSykmelding,
                         infotrygdOppdateringProducer,
+                        infotrygdSporringProducer,
                         session,
                         loggingMeta,
-                        any(),
-                        any(),
-                        any(),
-                        "2101",
-                        any(),
-                        any(),
                     )
-                }
-                coVerify { manuellClient.behandletAvManuell(any(), any()) }
-                coVerify(exactly = 0) {
-                    manuellBehandlingService.produceManualTaskAndSendValidationResults(
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                    )
-                }
-            }
 
-            test("Use nav office 2101 when sisteKontaktAdresseIUtlandet is true") {
-                coEvery { fetchInfotrygdForesp(any(), any(), any(), any(), any()) } returns
-                    getInfotrygdForespResponse()
-                val startdato = LocalDate.of(2023, 1, 1)
-                val healthInformation = createDefaultHealthInformation()
-                val fellesformat = createFellesFormat(healthInformation)
+                    coVerify {
+                        updateInfotrygdService.updateInfotrygd(
+                            infotrygdOppdateringProducer,
+                            session,
+                            loggingMeta,
+                            any(),
+                            any(),
+                            any(),
+                            "0101",
+                            false,
+                            any(),
+                        )
+                    }
+                    coVerify { manuellClient.behandletAvManuell(any(), any()) }
+                    coVerify(exactly = 0) {
+                        manuellBehandlingService.produceManualTaskAndSendValidationResults(
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                        )
+                    }
+                }
 
-                val receivedSykmelding =
-                    receivedSykmelding(
-                        id = UUID.randomUUID().toString(),
-                        sykmelding =
-                            generateSykmelding(
-                                perioder =
-                                    listOf(
-                                        generatePeriode(
-                                            fom = startdato,
-                                            tom = startdato.plusDays(10),
+                test("Use nav office 2101 when over 12 weeks and utenlandsksykmelding") {
+                    coEvery { fetchInfotrygdForesp(any(), any(), any(), any(), any()) } returns
+                        getInfotrygdForespResponse()
+                    val startdato = LocalDate.of(2023, 1, 1)
+                    val healthInformation = createDefaultHealthInformation()
+                    val fellesformat = createFellesFormat(healthInformation)
+
+                    val receivedSykmelding =
+                        receivedSykmelding(
+                            id = UUID.randomUUID().toString(),
+                            sykmelding =
+                                generateSykmelding(
+                                    perioder =
+                                        listOf(
+                                            generatePeriode(
+                                                fom = startdato,
+                                                tom = startdato.plusDays(85),
+                                            ),
                                         ),
-                                    ),
-                                medisinskVurdering =
-                                    MedisinskVurdering(
-                                        hovedDiagnose = null,
-                                        biDiagnoser = emptyList(),
-                                        svangerskap = false,
-                                        yrkesskade = false,
-                                        yrkesskadeDato = null,
-                                        annenFraversArsak = null
-                                    ),
-                            ),
-                        fellesformat = fellesformatMarshaller.toString(fellesformat),
-                        utenlandskSykmelding = UtenlandskSykmelding("POL", true, true),
-                    )
+                                    medisinskVurdering =
+                                        MedisinskVurdering(
+                                            hovedDiagnose = null,
+                                            biDiagnoser = emptyList(),
+                                            svangerskap = false,
+                                            yrkesskade = false,
+                                            yrkesskadeDato = null,
+                                            annenFraversArsak = null
+                                        ),
+                                ),
+                            fellesformat = fellesformatMarshaller.toString(fellesformat),
+                            utenlandskSykmelding = UtenlandskSykmelding("POL", false, true),
+                        )
 
-                mottattSykmeldingService.handleMessage(
-                    receivedSykmelding,
-                    infotrygdOppdateringProducer,
-                    infotrygdSporringProducer,
-                    session,
-                    loggingMeta,
-                )
-
-                coVerify {
-                    updateInfotrygdService.updateInfotrygd(
+                    mottattSykmeldingService.handleMessage(
+                        receivedSykmelding,
                         infotrygdOppdateringProducer,
+                        infotrygdSporringProducer,
                         session,
                         loggingMeta,
-                        any(),
-                        any(),
-                        any(),
-                        "2101",
-                        any(),
-                        any(),
                     )
+
+                    coVerify {
+                        updateInfotrygdService.updateInfotrygd(
+                            infotrygdOppdateringProducer,
+                            session,
+                            loggingMeta,
+                            any(),
+                            any(),
+                            any(),
+                            "2101",
+                            any(),
+                            any(),
+                        )
+                    }
+                    coVerify { manuellClient.behandletAvManuell(any(), any()) }
+                    coVerify(exactly = 0) {
+                        manuellBehandlingService.produceManualTaskAndSendValidationResults(
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                        )
+                    }
                 }
-                coVerify { manuellClient.behandletAvManuell(any(), any()) }
-                coVerify(exactly = 0) {
-                    manuellBehandlingService.produceManualTaskAndSendValidationResults(
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any()
+
+                test("Use nav office 2101 when sisteKontaktAdresseIUtlandet is true") {
+                    coEvery { fetchInfotrygdForesp(any(), any(), any(), any(), any()) } returns
+                        getInfotrygdForespResponse()
+                    val startdato = LocalDate.of(2023, 1, 1)
+                    val healthInformation = createDefaultHealthInformation()
+                    val fellesformat = createFellesFormat(healthInformation)
+
+                    val receivedSykmelding =
+                        receivedSykmelding(
+                            id = UUID.randomUUID().toString(),
+                            sykmelding =
+                                generateSykmelding(
+                                    perioder =
+                                        listOf(
+                                            generatePeriode(
+                                                fom = startdato,
+                                                tom = startdato.plusDays(10),
+                                            ),
+                                        ),
+                                    medisinskVurdering =
+                                        MedisinskVurdering(
+                                            hovedDiagnose = null,
+                                            biDiagnoser = emptyList(),
+                                            svangerskap = false,
+                                            yrkesskade = false,
+                                            yrkesskadeDato = null,
+                                            annenFraversArsak = null
+                                        ),
+                                ),
+                            fellesformat = fellesformatMarshaller.toString(fellesformat),
+                            utenlandskSykmelding = UtenlandskSykmelding("POL", true, true),
+                        )
+
+                    mottattSykmeldingService.handleMessage(
+                        receivedSykmelding,
+                        infotrygdOppdateringProducer,
+                        infotrygdSporringProducer,
+                        session,
+                        loggingMeta,
                     )
+
+                    coVerify {
+                        updateInfotrygdService.updateInfotrygd(
+                            infotrygdOppdateringProducer,
+                            session,
+                            loggingMeta,
+                            any(),
+                            any(),
+                            any(),
+                            "2101",
+                            any(),
+                            any(),
+                        )
+                    }
+                    coVerify { manuellClient.behandletAvManuell(any(), any()) }
+                    coVerify(exactly = 0) {
+                        manuellBehandlingService.produceManualTaskAndSendValidationResults(
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any()
+                        )
+                    }
+                }
+                test("Manuall processing when diagnosekode is missing or something unknown") {
+                    coEvery { fetchInfotrygdForesp(any(), any(), any(), any(), any()) } returns
+                        getInfotrygdForespResponse().apply { hovedDiagnosekode = null }
+                    val healthInformation =
+                        createDefaultHealthInformation().apply {
+                            medisinskVurdering.hovedDiagnose.diagnosekode.v = "nvvvvv"
+                        }
+
+                    val fellesformat = createFellesFormat(healthInformation)
+
+                    val receivedSykmelding =
+                        receivedSykmelding(
+                            id = UUID.randomUUID().toString(),
+                            sykmelding =
+                                generateSykmelding(
+                                    medisinskVurdering =
+                                        MedisinskVurdering(
+                                            hovedDiagnose =
+                                                Diagnose(
+                                                    no.nav.tsm.diagnoser.ICD10.OID,
+                                                    "vnnnn",
+                                                    "diagnose"
+                                                ),
+                                            biDiagnoser = emptyList(),
+                                            svangerskap = false,
+                                            yrkesskade = false,
+                                            yrkesskadeDato = null,
+                                            annenFraversArsak = null
+                                        ),
+                                ),
+                            fellesformat = fellesformatMarshaller.toString(fellesformat),
+                        )
+
+                    mottattSykmeldingService.handleMessage(
+                        receivedSykmelding,
+                        infotrygdOppdateringProducer,
+                        infotrygdSporringProducer,
+                        session,
+                        loggingMeta,
+                    )
+
+                    coVerify(exactly = 0) {
+                        updateInfotrygdService.updateInfotrygd(
+                            infotrygdOppdateringProducer,
+                            session,
+                            loggingMeta,
+                            any(),
+                            receivedSykmelding,
+                            "LE",
+                            "0101",
+                            false,
+                            operasjonstypeAndFom =
+                                Operasjonstype.NY to
+                                    receivedSykmelding.sykmelding.perioder.first().fom,
+                        )
+                    }
+                    coVerify { manuellClient.behandletAvManuell(any(), any()) }
+                    coVerify(exactly = 1) {
+                        manuellBehandlingService.produceManualTaskAndSendValidationResults(
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                        )
+                    }
                 }
             }
-
             test("Use nav office 0101 when sisteKontaktAdresseIUtlandet is false") {
                 coEvery { fetchInfotrygdForesp(any(), any(), any(), any(), any()) } returns
                     getInfotrygdForespResponse()
@@ -754,8 +827,8 @@ class MottattSykmeldingServiceTest :
                     )
                 }
             }
-        }
-    })
+        },
+    )
 
 private fun getBehandler() =
     Behandler(
@@ -774,6 +847,8 @@ private fun getBehandler() =
 
 private fun getInfotrygdForespResponse(): InfotrygdForesp =
     InfotrygdForesp().apply {
+        hovedDiagnosekode = "R74"
+        hovedDiagnosekodeverk = "3"
         sMhistorikk =
             InfotrygdForesp.SMhistorikk().apply {
                 sykmelding.add(

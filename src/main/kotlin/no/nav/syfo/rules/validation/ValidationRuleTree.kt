@@ -27,6 +27,7 @@ enum class ValidationRules {
     ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING,
     ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING,
     ARBEIDUFORETOM_MANGLER,
+    MISSING_OR_INCORRECT_HOVEDDIAGNOSE,
 }
 
 val validationRuleTree =
@@ -158,18 +159,29 @@ val validationRuleTree =
                                                                                     )
                                                                                     no(
                                                                                         ValidationRules
-                                                                                            .ARBEIDUFORETOM_MANGLER
+                                                                                            .MISSING_OR_INCORRECT_HOVEDDIAGNOSE
                                                                                     ) {
                                                                                         yes(
                                                                                             Status
                                                                                                 .MANUAL_PROCESSING,
                                                                                             ValidationRuleHit
-                                                                                                .ARBEIDUFORETOM_MANGLER,
+                                                                                                .MISSING_OR_INCORRECT_HOVEDDIAGNOSE
                                                                                         )
                                                                                         no(
-                                                                                            Status
-                                                                                                .OK
-                                                                                        )
+                                                                                            ValidationRules
+                                                                                                .ARBEIDUFORETOM_MANGLER
+                                                                                        ) {
+                                                                                            yes(
+                                                                                                Status
+                                                                                                    .MANUAL_PROCESSING,
+                                                                                                ValidationRuleHit
+                                                                                                    .ARBEIDUFORETOM_MANGLER,
+                                                                                            )
+                                                                                            no(
+                                                                                                Status
+                                                                                                    .OK
+                                                                                            )
+                                                                                        }
                                                                                     }
                                                                                 }
                                                                             }
@@ -240,5 +252,6 @@ fun getRule(rules: ValidationRules): Rule<ValidationRules> {
         ValidationRules.ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING ->
             errorFromItPasientUtrekkStatusKodemelding
         ValidationRules.ARBEIDUFORETOM_MANGLER -> arbeiduforetomMangler
+        ValidationRules.MISSING_OR_INCORRECT_HOVEDDIAGNOSE -> missingOrIncorrectHoveddiagnose
     }
 }

@@ -14,6 +14,15 @@ typealias Rule<T> = (sykmelding: Sykmelding, ruleMetadata: RuleMetadata) -> Rule
 
 typealias ValidationRule = Rule<ValidationRules>
 
+val missingOrIncorrectHoveddiagnose: ValidationRule = { _, ruleMetadata ->
+    val hoveddiagnose = ruleMetadata.infotrygdForesp.hovedDiagnosekode
+    RuleResult(
+        ruleInputs = mapOf("hoveddiagnosekode" to ruleMetadata.infotrygdForesp.hovedDiagnosekode),
+        rule = ValidationRules.MISSING_OR_INCORRECT_HOVEDDIAGNOSE,
+        ruleResult = (hoveddiagnose == null),
+    )
+}
+
 val numberOfTrementsDaySet: ValidationRule = { sykmelding, _ ->
     val perioder = sykmelding.perioder
 

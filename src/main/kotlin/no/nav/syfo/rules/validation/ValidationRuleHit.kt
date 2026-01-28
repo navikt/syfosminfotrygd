@@ -229,4 +229,13 @@ enum class ValidationRuleHit(
                     "Fant ikke arbufoerTOM-dato for sykmeldingshistorikken i Infotrygd. Vi kan derfor ikke oppdatere Infotrygd automatisk.",
             ),
     ),
+    MISSING_OR_INCORRECT_HOVEDDIAGNOSE(
+        ruleHit =
+            RuleHit(
+                rule = "MISSING_OR_INCORRECT_HOVEDDIAGNOSE",
+                status = Status.MANUAL_PROCESSING,
+                messageForSender = "Hoveddiagnose mangler eller er ikke riktig.",
+                messageForUser = "Hoveddiagnose mangler eller er ikke riktig",
+            ),
+    ),
 }

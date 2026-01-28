@@ -39,6 +39,8 @@ class ValidationTest :
                 val infotrygdForespResponse =
                     InfotrygdForesp().apply {
                         hovedStatus = StatusType().apply { kodeMelding = "00" }
+                        hovedDiagnosekode = "R74"
+                        hovedDiagnosekodeverk = "3"
                     }
 
                 val receivedSykmelding =
@@ -93,6 +95,7 @@ class ValidationTest :
                         ValidationRules.ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING to
                             false,
                         ValidationRules.ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING to false,
+                        ValidationRules.MISSING_OR_INCORRECT_HOVEDDIAGNOSE to false,
                         ValidationRules.ARBEIDUFORETOM_MANGLER to false,
                     )
 
@@ -110,6 +113,7 @@ class ValidationTest :
                     "parallelleYtelsesKodeMelding" to "",
                     "diagnoseKodeKodeMelding" to "",
                     "pasientStatusKodeMelding" to "",
+                    "hoveddiagnosekode" to "R74",
                     "status" to "",
                 ) shouldBeEqualTo result.first.ruleInputs
 
@@ -383,6 +387,8 @@ class ValidationTest :
                 val infotrygdForespResponse =
                     InfotrygdForesp().apply {
                         hovedStatus = StatusType().apply { kodeMelding = "00" }
+                        hovedDiagnosekode = "R74"
+                        hovedDiagnosekodeverk = "3"
                         sMhistorikk =
                             InfotrygdForesp.SMhistorikk().apply {
                                 sykmelding.add(
@@ -450,6 +456,7 @@ class ValidationTest :
                         ValidationRules.ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING to
                             false,
                         ValidationRules.ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING to false,
+                        ValidationRules.MISSING_OR_INCORRECT_HOVEDDIAGNOSE to false,
                         ValidationRules.ARBEIDUFORETOM_MANGLER to false,
                     )
 
@@ -467,6 +474,7 @@ class ValidationTest :
                     "parallelleYtelsesKodeMelding" to "",
                     "diagnoseKodeKodeMelding" to "",
                     "pasientStatusKodeMelding" to "",
+                    "hoveddiagnosekode" to "R74",
                     "status" to "",
                 ) shouldBeEqualTo result.first.ruleInputs
 
@@ -1938,6 +1946,8 @@ class ValidationTest :
                 val infotrygdForespResponse =
                     InfotrygdForesp().apply {
                         hovedStatus = StatusType().apply { kodeMelding = "00" }
+                        hovedDiagnosekode = "R74"
+                        hovedDiagnosekodeverk = "3"
                         sMhistorikk =
                             InfotrygdForesp.SMhistorikk().apply {
                                 sykmelding.add(
@@ -2004,6 +2014,7 @@ class ValidationTest :
                         ValidationRules.ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING to
                             false,
                         ValidationRules.ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING to false,
+                        ValidationRules.MISSING_OR_INCORRECT_HOVEDDIAGNOSE to false,
                         ValidationRules.ARBEIDUFORETOM_MANGLER to true,
                     )
 
@@ -2021,11 +2032,77 @@ class ValidationTest :
                     "parallelleYtelsesKodeMelding" to "",
                     "diagnoseKodeKodeMelding" to "",
                     "pasientStatusKodeMelding" to "",
+                    "hoveddiagnosekode" to "R74",
                     "status" to statusType,
                 ) shouldBeEqualTo result.first.ruleInputs
 
                 result.first.treeResult.ruleHit shouldBeEqualTo
                     ValidationRuleHit.ARBEIDUFORETOM_MANGLER.ruleHit
+
+                result.first.treeResult.status shouldBeEqualTo Status.MANUAL_PROCESSING
+            }
+
+            test("Should trigger rule when hoveddiagnose is null") {
+                val generateSykmelding =
+                    generateSykmelding(
+                        perioder =
+                            listOf(
+                                generatePeriode(
+                                    fom = LocalDate.of(2019, 6, 27),
+                                    tom = LocalDate.of(2019, 6, 28),
+                                ),
+                            ),
+                    )
+
+                val statusType = StatusType().apply { kodeMelding = "00" }
+
+                val infotrygdForespResponse =
+                    InfotrygdForesp().apply {
+                        hovedStatus = StatusType().apply { kodeMelding = "00" }
+                        sMhistorikk =
+                            InfotrygdForesp.SMhistorikk().apply {
+                                sykmelding.add(
+                                    TypeSMinfo().apply {
+                                        periode =
+                                            TypeSMinfo.Periode().apply {
+                                                arbufoerFOM = LocalDate.of(2019, 6, 24)
+                                            }
+                                    },
+                                )
+                                status = statusType
+                            }
+                        hovedDiagnosekode = null
+                        hovedDiagnosekodeverk = null
+                    }
+
+                val receivedSykmelding =
+                    receivedSykmelding(
+                        id = UUID.randomUUID().toString(),
+                        sykmelding = generateSykmelding,
+                        fellesformat = "",
+                    )
+                val operasjonstypeAndFom =
+                    findoperasjonstypeAndFom(
+                        generateSykmelding.perioder.firstFom(),
+                        generateSykmelding.perioder.lastTom(),
+                        infotrygdForespResponse.getInfotrygdPerioder()
+                    )
+                val ruleMetadata =
+                    RuleMetadata(
+                        signatureDate = receivedSykmelding.sykmelding.signaturDato,
+                        receivedDate = receivedSykmelding.mottattDato,
+                        patientPersonNumber = receivedSykmelding.personNrPasient,
+                        rulesetVersion = receivedSykmelding.rulesetVersion,
+                        legekontorOrgnr = receivedSykmelding.legekontorOrgNr,
+                        tssid = receivedSykmelding.tssid,
+                        infotrygdForesp = infotrygdForespResponse,
+                        operasjonstypeAndFom,
+                    )
+
+                val result = ruleTree.runRules(generateSykmelding, ruleMetadata)
+
+                result.first.treeResult.ruleHit shouldBeEqualTo
+                    ValidationRuleHit.MISSING_OR_INCORRECT_HOVEDDIAGNOSE.ruleHit
 
                 result.first.treeResult.status shouldBeEqualTo Status.MANUAL_PROCESSING
             }
