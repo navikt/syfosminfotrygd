@@ -64,6 +64,11 @@ class ManuellBehandlingService(
                 } else {
                     "0"
                 }
+
+            if(itfh.infotrygdForesp.hovedDiagnosekode == null) {
+                itfh.infotrygdForesp.diagnosekodeOK = null
+            }
+
             val sha256String =
                 sha256hashstring(
                     createInfotrygdBlokk(
