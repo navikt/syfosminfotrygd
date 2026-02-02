@@ -65,7 +65,7 @@ class ManuellBehandlingService(
                     "0"
                 }
 
-            if(itfh.infotrygdForesp.hovedDiagnosekode == null) {
+            if (itfh.infotrygdForesp.hovedDiagnosekode == null) {
                 itfh.infotrygdForesp.diagnosekodeOK = null
             }
 
