@@ -70,6 +70,7 @@ import no.nav.syfo.services.OppgaveService
 import no.nav.syfo.services.SykmeldingConsumerService
 import no.nav.syfo.services.ValkeyService
 import no.nav.syfo.services.updateinfotrygd.UpdateInfotrygdService
+import no.nav.syfo.tss.SmtssClient
 import no.nav.syfo.util.JacksonKafkaSerializer
 import no.nav.syfo.util.createJedisPool
 import no.nav.syfo.util.fellesformatUnmarshaller
@@ -230,7 +231,8 @@ suspend fun Application.module() {
             retryTopic = env.retryTopic,
             valkeyService = valkeyService,
         )
-
+    val smtssClient =
+        SmtssClient(env.smtssEndpointURL, accessTokenClientV2, env.smtssScope, httpClient)
     val mottattSykmeldingService =
         MottattSykmeldingService(
             updateInfotrygdService = updateInfotrygdService,
@@ -239,6 +241,7 @@ suspend fun Application.module() {
             manuellBehandlingService = manuellBehandlingService,
             norskHelsenettClient = norskHelsenettClient,
             cluster = env.naiscluster,
+            smtssClient = smtssClient
         )
     routing {
         registerNaisApi(applicationState)

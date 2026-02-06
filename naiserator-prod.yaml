@@ -52,6 +52,7 @@ spec:
           namespace: nais-system
         - application: syfosmmanuell-backend
         - application: syfosmregister
+        - application: smtss
         - application: flex-syketilfelle
           namespace: flex
           cluster: prod-gcp
@@ -100,3 +101,5 @@ spec:
       value: api://prod-gcp.flex.flex-syketilfelle/.default
     - name: SMREGISTER_AUDIENCE
       value: api://prod-gcp.teamsykmelding.syfosmregister/.default
+    - name: SMTSS_API_SCOPE
+      value: api://prod-gcp.teamsykmelding.smtss/.default

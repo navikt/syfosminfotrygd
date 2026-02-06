@@ -33,6 +33,7 @@ import no.nav.syfo.services.updateinfotrygd.Operasjonstype
 import no.nav.syfo.services.updateinfotrygd.UpdateInfotrygdService
 import no.nav.syfo.services.updateinfotrygd.findoperasjonstypeAndFom
 import no.nav.syfo.services.updateinfotrygd.getInfotrygdPerioder
+import no.nav.syfo.tss.SmtssClient
 import no.nav.syfo.util.LoggingMeta
 import no.nav.syfo.util.fellesformatUnmarshaller
 import no.nav.tsm.diagnoser.Diagnose
@@ -52,6 +53,7 @@ class MottattSykmeldingService(
     private val manuellBehandlingService: ManuellBehandlingService,
     private val norskHelsenettClient: NorskHelsenettClient,
     private val cluster: String,
+    private val smtssClient: SmtssClient,
 ) {
 
     @WithSpan
@@ -90,6 +92,17 @@ class MottattSykmeldingService(
                                 if (receivedSykmelding.erUtenlandskSykmelding()) {
                                     "0"
                                 } else {
+                                    sikkerlogg.info(
+                                        "Henter TSS-ID fra TSS for lege ${receivedSykmelding.personNrLege} og ${receivedSykmelding.legekontorOrgNr}"
+                                    )
+                                    val tss =
+                                        smtssClient.getTssId(
+                                            samhandlerFnr = receivedSykmelding.personNrLege,
+                                            samhandlerOrgnr = receivedSykmelding.legekontorOrgNr
+                                                    ?: "",
+                                            loggingMeta = loggingMeta,
+                                            sykmeldingId = receivedSykmelding.sykmelding.id,
+                                        )
                                     receivedSykmelding.tssid
                                 },
                         )

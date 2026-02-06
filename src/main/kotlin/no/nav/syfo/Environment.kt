@@ -33,6 +33,8 @@ data class Environment(
     val smregisterAudience: String = getEnvVar("SMREGISTER_AUDIENCE"),
     val jwkKeysUrlV2: String = getEnvVar("AZURE_OPENID_CONFIG_JWKS_URI"),
     val jwtIssuerV2: String = getEnvVar("AZURE_OPENID_CONFIG_ISSUER"),
+    val smtssScope: String = getEnvVar("SMTSS_API_SCOPE"),
+    val smtssEndpointURL: String = "http://smtss",
 ) : MqConfig
 
 data class ServiceUser(

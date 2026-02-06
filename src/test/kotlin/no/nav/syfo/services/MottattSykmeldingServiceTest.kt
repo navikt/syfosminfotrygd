@@ -20,7 +20,6 @@ import no.nav.syfo.client.Kode
 import no.nav.syfo.client.ManuellClient
 import no.nav.syfo.client.NorskHelsenettClient
 import no.nav.syfo.createDefaultHealthInformation
-import no.nav.syfo.diagnose.ICD10
 import no.nav.syfo.generatePeriode
 import no.nav.syfo.generateSykmelding
 import no.nav.syfo.model.HelsepersonellKategori
@@ -34,6 +33,7 @@ import no.nav.syfo.services.updateinfotrygd.Operasjonstype
 import no.nav.syfo.services.updateinfotrygd.UpdateInfotrygdService
 import no.nav.syfo.services.updateinfotrygd.createFellesFormat
 import no.nav.syfo.toString
+import no.nav.syfo.tss.SmtssClient
 import no.nav.syfo.util.LoggingMeta
 import no.nav.syfo.util.fellesformatMarshaller
 
@@ -48,6 +48,7 @@ class MottattSykmeldingServiceTest :
             val infotrygdOppdateringProducer = mockk<MessageProducer>(relaxed = true)
             val infotrygdSporringProducer = mockk<MessageProducer>(relaxed = true)
             val session = mockk<Session>(relaxed = true)
+            val smtssClient = mockk<SmtssClient>(relaxed = true)
             val loggingMeta = LoggingMeta("", "", "", "")
             val mottattSykmeldingService =
                 MottattSykmeldingService(
@@ -56,7 +57,8 @@ class MottattSykmeldingServiceTest :
                     manuellClient,
                     manuellBehandlingService,
                     norskHelsenettClient,
-                    "localhost"
+                    "localhost",
+                    smtssClient
                 )
 
             beforeTest { mockkStatic("no.nav.syfo.services.GetInfotrygdForespServiceKt") }
