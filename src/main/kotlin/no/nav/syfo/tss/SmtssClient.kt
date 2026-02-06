@@ -51,13 +51,10 @@ class SmtssClient(
     ): String? {
         return when (httpResponse.status) {
             HttpStatusCode.OK -> {
-                val response = httpResponse.body<SmtssResponse>()
-                response.samhandlerAvd125.samhAvd
-                    .firstOrNull { it.offNrAvd == samhandlerOrgnr }
-                    ?.idOffTSS
-                    ?: response.samhandlerAvd125.samhAvd
-                        .firstOrNull { it.gyldigAvd == "J" }
-                        ?.idOffTSS
+                val response =
+                    httpResponse.body<List<SmtssResponse>>().flatMap { it.samhandlerAvd125.samhAvd }
+                response.firstOrNull { it.offNrAvd == samhandlerOrgnr }?.idOffTSS
+                    ?: response.firstOrNull { it.gyldigAvd == "J" }?.idOffTSS
             }
             HttpStatusCode.NotFound -> {
                 logger.info(
