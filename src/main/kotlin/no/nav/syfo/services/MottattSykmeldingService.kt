@@ -56,6 +56,45 @@ class MottattSykmeldingService(
     private val smtssClient: SmtssClient,
 ) {
 
+    private suspend fun getTssId(
+        receivedSykmelding: ReceivedSykmelding,
+        loggingMeta: LoggingMeta
+    ): String? {
+
+        if (receivedSykmelding.utenlandskSykmelding != null) return "0"
+
+        val tss =
+            smtssClient.getTssId(
+                samhandlerFnr = receivedSykmelding.personNrLege,
+                samhandlerOrgnr = receivedSykmelding.legekontorOrgNr ?: "",
+                loggingMeta = loggingMeta,
+                sykmeldingId = receivedSykmelding.sykmelding.id,
+            )
+
+        sikkerlogg.info(
+            "Henter TSS-ID fra TSS for lege ${receivedSykmelding.personNrLege} og ${receivedSykmelding.legekontorOrgNr}, sykmeldingId ${receivedSykmelding.sykmelding.id}, tssId: $tss"
+        )
+
+        if (tss != receivedSykmelding.tssid) {
+            log.warn(
+                "TSS id fra TSS er ulik TSS i receivedSykmelding, tss: $tss, rs-tssid: ${receivedSykmelding.tssid}"
+            )
+        }
+
+        val correctTSS =
+            if (receivedSykmelding.tssid.isNullOrBlank()) {
+                log.info("TSS id fra receivedSykmelding er null eller blank, using $tss")
+                tss
+            } else {
+                receivedSykmelding.tssid
+            }
+        if (correctTSS.isNullOrBlank()) {
+            log.warn("TSS id er null eller blank, returnerer null")
+            return null
+        }
+        return correctTSS
+    }
+
     @WithSpan
     suspend fun handleMessage(
         receivedSykmelding: ReceivedSykmelding,
@@ -85,30 +124,9 @@ class MottattSykmeldingService(
                         loggingMeta,
                     )
 
-                val receivedSykmeldingCopyTssId =
-                    if (receivedSykmelding.tssid.isNullOrBlank()) {
-                        receivedSykmelding.copy(
-                            tssid =
-                                if (receivedSykmelding.erUtenlandskSykmelding()) {
-                                    "0"
-                                } else {
-                                    sikkerlogg.info(
-                                        "Henter TSS-ID fra TSS for lege ${receivedSykmelding.personNrLege} og ${receivedSykmelding.legekontorOrgNr}"
-                                    )
-                                    val tss =
-                                        smtssClient.getTssId(
-                                            samhandlerFnr = receivedSykmelding.personNrLege,
-                                            samhandlerOrgnr = receivedSykmelding.legekontorOrgNr
-                                                    ?: "",
-                                            loggingMeta = loggingMeta,
-                                            sykmeldingId = receivedSykmelding.sykmelding.id,
-                                        )
-                                    receivedSykmelding.tssid
-                                },
-                        )
-                    } else {
-                        receivedSykmelding
-                    }
+                val tssID = getTssId(receivedSykmelding, loggingMeta)
+
+                val receivedSykmeldingCopyTssId = receivedSykmelding.copy(tssid = tssID)
 
                 val validationResultForMottattSykmelding =
                     validerMottattSykmelding(healthInformation)

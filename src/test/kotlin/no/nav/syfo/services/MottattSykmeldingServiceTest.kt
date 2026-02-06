@@ -357,6 +357,74 @@ class MottattSykmeldingServiceTest :
                     }
                 }
 
+                test(
+                    "Går til ikke til manuell behandling hvis tss hentes fra smtss når den er null i received sykmelding"
+                ) {
+                    coEvery { fetchInfotrygdForesp(any(), any(), any(), any(), any()) } returns
+                        getInfotrygdForespResponse()
+                    val healthInformation = createDefaultHealthInformation()
+                    val fellesformat = createFellesFormat(healthInformation)
+                    coEvery { smtssClient.getTssId(any(), any(), any(), any()) } returns
+                        "12345678912"
+                    val receivedSykmelding =
+                        receivedSykmelding(
+                            id = UUID.randomUUID().toString(),
+                            sykmelding =
+                                generateSykmelding(
+                                    medisinskVurdering =
+                                        MedisinskVurdering(
+                                            hovedDiagnose = null,
+                                            biDiagnoser = emptyList(),
+                                            svangerskap = false,
+                                            yrkesskade = false,
+                                            yrkesskadeDato = null,
+                                            annenFraversArsak = null
+                                        ),
+                                ),
+                            fellesformat = fellesformatMarshaller.toString(fellesformat),
+                            tssid = null,
+                        )
+
+                    mottattSykmeldingService.handleMessage(
+                        receivedSykmelding,
+                        infotrygdOppdateringProducer,
+                        infotrygdSporringProducer,
+                        session,
+                        loggingMeta,
+                    )
+
+                    coVerify(exactly = 1) {
+                        updateInfotrygdService.updateInfotrygd(
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                        )
+                    }
+                    coVerify { manuellClient.behandletAvManuell(any(), any()) }
+                    coVerify(exactly = 0) {
+                        manuellBehandlingService.produceManualTaskAndSendValidationResults(
+                            receivedSykmelding,
+                            match {
+                                it.status == Status.MANUAL_PROCESSING &&
+                                    it.ruleHits.any { ruleInfo ->
+                                        ruleInfo.ruleName == "TSS_IDENT_MANGLER"
+                                    }
+                            },
+                            loggingMeta,
+                            any(),
+                            "LE",
+                            false,
+                            any(),
+                        )
+                    }
+                }
+
                 test("Use local nav office when under 12 weeks and not utenlandsksykmelding") {
                     coEvery { fetchInfotrygdForesp(any(), any(), any(), any(), any()) } returns
                         getInfotrygdForespResponse()
