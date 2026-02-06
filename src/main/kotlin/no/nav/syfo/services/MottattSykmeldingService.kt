@@ -76,14 +76,14 @@ class MottattSykmeldingService(
         )
 
         if (tss != receivedSykmelding.tssid) {
-            log.warn(
+            sikkerlogg.warn(
                 "TSS id fra TSS er ulik TSS i receivedSykmelding, tss: $tss, rs-tssid: ${receivedSykmelding.tssid}"
             )
         }
 
         val correctTSS =
             if (receivedSykmelding.tssid.isNullOrBlank()) {
-                log.info("TSS id fra receivedSykmelding er null eller blank, using $tss")
+                sikkerlogg.info("TSS id fra receivedSykmelding er null eller blank, using $tss")
                 tss
             } else {
                 receivedSykmelding.tssid
