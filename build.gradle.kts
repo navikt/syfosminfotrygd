@@ -4,32 +4,32 @@ import java.io.ByteArrayOutputStream
 group = "no.nav.syfo"
 version = "1.0.0"
 
-val artemisVersion = "2.44.0"
+val artemisVersion = "2.50.0"
 val coroutinesVersion = "1.10.2"
-val ibmMqVersion = "9.4.4.0"
+val ibmMqVersion = "9.4.4.1"
 val javaxActivationVersion = "1.1.1"
-val jacksonVersion = "2.20.2"
+val jacksonVersion = "2.21.0"
 val jaxbApiVersion = "2.4.0-b180830.0359"
 val valkeyVersion = "5.5.0"
 val kafkaVersion = "3.9.1"
 val kluentVersion = "1.73"
 val ktorVersion = "3.4.0"
-val logbackVersion = "1.5.20"
+val logbackVersion = "1.5.27"
 val logstashEncoderVersion = "9.0"
 val prometheusVersion = "0.16.0"
-val kotestVersion = "6.0.4"
+val kotestVersion = "6.1.2"
 val jaxwsApiVersion = "2.3.1"
 val javaxAnnotationApiVersion = "1.3.2"
 val jaxwsToolsVersion = "2.3.1"
 val jaxbRuntimeVersion = "2.4.0-b180830.0438"
 val jaxbTimeAdaptersVersion = "1.1.3"
-val testcontainersVersion = "2.0.1"
+val testcontainersVersion = "2.0.3"
 val syfoXmlCodegen = "2.0.1"
-val mockkVersion = "1.14.6"
-val kotlinVersion = "2.2.21"
+val mockkVersion = "1.14.9"
+val kotlinVersion = "2.3.0"
 val ktfmtVersion = "0.44"
-val opentelemetryVersion = "2.21.0"
-val diagnoseVersion = "2026.1.10"
+val opentelemetryVersion = "2.24.0"
+val diagnoseVersion = "2026.1.13"
 val javaVersion = JvmTarget.JVM_21
 
 
@@ -38,9 +38,9 @@ val commonsCompressVersion = "1.28.0"
 
 plugins {
     id("application")
-    kotlin("jvm") version "2.2.21"
-    id("com.gradleup.shadow") version "8.3.8"
-    id("com.diffplug.spotless") version "8.0.0"
+    kotlin("jvm") version "2.3.0"
+    id("com.gradleup.shadow") version "9.3.1"
+    id("com.diffplug.spotless") version "8.2.1"
 }
 
 application {
