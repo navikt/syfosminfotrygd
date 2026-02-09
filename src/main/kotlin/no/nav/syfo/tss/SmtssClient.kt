@@ -52,7 +52,9 @@ class SmtssClient(
         return when (httpResponse.status) {
             HttpStatusCode.OK -> {
                 val response =
-                    httpResponse.body<List<SmtssResponse>>().flatMap { it.samhandlerAvd125?.samhAvd ?: emptyList() }
+                    httpResponse.body<List<SmtssResponse>>().flatMap {
+                        it.samhandlerAvd125?.samhAvd ?: emptyList()
+                    }
                 response.firstOrNull { it.offNrAvd == samhandlerOrgnr }?.idOffTSS
                     ?: response.firstOrNull { it.gyldigAvd == "J" }?.idOffTSS
             }

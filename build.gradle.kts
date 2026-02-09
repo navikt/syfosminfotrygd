@@ -14,7 +14,7 @@ val valkeyVersion = "5.5.0"
 val kafkaVersion = "3.9.1"
 val kluentVersion = "1.73"
 val ktorVersion = "3.4.0"
-val logbackVersion = "1.5.20"
+val logbackVersion = "1.5.26"
 val logstashEncoderVersion = "9.0"
 val prometheusVersion = "0.16.0"
 val kotestVersion = "6.0.4"
@@ -23,7 +23,7 @@ val javaxAnnotationApiVersion = "1.3.2"
 val jaxwsToolsVersion = "2.3.1"
 val jaxbRuntimeVersion = "2.4.0-b180830.0438"
 val jaxbTimeAdaptersVersion = "1.1.3"
-val testcontainersVersion = "2.0.1"
+val testcontainerVersion = "2.0.1"
 val syfoXmlCodegen = "2.0.1"
 val mockkVersion = "1.14.6"
 val kotlinVersion = "2.2.21"
@@ -31,10 +31,6 @@ val ktfmtVersion = "0.44"
 val opentelemetryVersion = "2.21.0"
 val diagnoseVersion = "2026.1.10"
 val javaVersion = JvmTarget.JVM_21
-
-
-//Added due to vulnerabilities
-val commonsCompressVersion = "1.28.0"
 
 plugins {
     id("application")
@@ -81,7 +77,7 @@ dependencies {
 
     implementation("com.ibm.mq:com.ibm.mq.jakarta.client:$ibmMqVersion")
 
-    implementation("org.apache.kafka:kafka_2.12:$kafkaVersion")
+    implementation("org.apache.kafka:kafka-clients:$kafkaVersion")
 
     implementation("com.fasterxml.jackson.module:jackson-module-jaxb-annotations:$jacksonVersion")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
@@ -103,9 +99,7 @@ dependencies {
     implementation("javax.xml.bind:jaxb-api:$jaxbApiVersion")
     implementation("org.glassfish.jaxb:jaxb-runtime:$jaxbRuntimeVersion")
     implementation("javax.activation:activation:$javaxActivationVersion")
-    implementation("com.sun.xml.ws:jaxws-tools:$jaxwsToolsVersion") {
-        exclude(group = "com.sun.xml.ws", module = "policy")
-    }
+    implementation("com.sun.xml.ws:jaxws-tools:$jaxwsToolsVersion")
     implementation("no.nav.tsm:diagnoser:$diagnoseVersion")
     testImplementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
     testImplementation("org.amshove.kluent:kluent:$kluentVersion")
@@ -117,12 +111,7 @@ dependencies {
     }
     testImplementation("org.apache.activemq:artemis-jakarta-server:$artemisVersion")
     testImplementation("org.apache.activemq:artemis-jakarta-client:$artemisVersion")
-    testImplementation("org.testcontainers:testcontainers:$testcontainersVersion")
-    constraints {
-        implementation("org.apache.commons:commons-compress:$commonsCompressVersion") {
-            because("Due to vulnerabilities, see CVE-2024-26308")
-        }
-    }
+    testImplementation("org.testcontainers:testcontainers:$testcontainerVersion")
     testImplementation("io.mockk:mockk:$mockkVersion")
 }
 
