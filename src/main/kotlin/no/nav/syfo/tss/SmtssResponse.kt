@@ -1,6 +1,6 @@
 package no.nav.syfo.tss
 
-data class SmtssResponse(val samhandlerAvd125: SamhandlerAvd125)
+data class SmtssResponse(val samhandlerAvd125: SamhandlerAvd125?)
 
 data class SamhandlerAvd125(val samhAvd: List<SamhandlerAvd>)
 
