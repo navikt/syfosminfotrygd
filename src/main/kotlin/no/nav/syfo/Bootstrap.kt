@@ -42,6 +42,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import no.nav.helse.eiFellesformat.XMLEIFellesformat
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
+import no.nav.helse.msgHead.XMLDocument
 import no.nav.helse.msgHead.XMLMsgHead
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.syfo.application.ApplicationState
@@ -326,9 +327,38 @@ inline fun <reified T> XMLEIFellesformat.get() = this.any.find { it is T } as T
 
 fun extractHelseOpplysningerArbeidsuforhet(
     fellesformat: XMLEIFellesformat
-): HelseOpplysningerArbeidsuforhet =
-    fellesformat.get<XMLMsgHead>().document[0].refDoc.content.any[0]
-        as HelseOpplysningerArbeidsuforhet
+): HelseOpplysningerArbeidsuforhet {
+
+    val helseOpplysningerArbeidsuforhet =
+        tryGetHelseOpplysningerArbeidsuforhet(fellesformat.get<XMLMsgHead>())
+    requireNotNull(helseOpplysningerArbeidsuforhet) {
+        RuntimeException("Chould not find HelseOpplysningerArbeidsuforhet in message")
+    }
+    return helseOpplysningerArbeidsuforhet
+}
+
+fun tryGetHelseOpplysningerArbeidsuforhet(
+    XMLMsgHead: XMLMsgHead
+): HelseOpplysningerArbeidsuforhet? {
+    XMLMsgHead.document.forEach {
+        val helseOpplysningerArbeidsuforhet = tryGetHelseOpplysningerArbeidsuforhet(it)
+        if (helseOpplysningerArbeidsuforhet != null) {
+            return helseOpplysningerArbeidsuforhet
+        }
+    }
+    return null
+}
+
+fun tryGetHelseOpplysningerArbeidsuforhet(document: XMLDocument): HelseOpplysningerArbeidsuforhet? {
+    document.refDoc.content.any.forEach {
+        if (it is HelseOpplysningerArbeidsuforhet) {
+            return it as HelseOpplysningerArbeidsuforhet
+        } else if (it is XMLMsgHead) {
+            return tryGetHelseOpplysningerArbeidsuforhet(it)
+        }
+    }
+    return null
+}
 
 fun ClosedRange<LocalDate>.daysBetween(): Long = ChronoUnit.DAYS.between(start, endInclusive)
 
