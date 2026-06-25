@@ -258,7 +258,7 @@ class MottattSykmeldingService(
             }
             else -> {
                 log.info(
-                    "Oppdaterer ikke infotrygd for sykmelding med merknad eller reisetilskudd, {}",
+                    "Oppdaterer ikke infotrygd for sykmelding med merknad, reisetilskudd eller behandlingsdager {}",
                     StructuredArguments.fields(loggingMeta),
                 )
             }
@@ -376,7 +376,10 @@ fun skalOppdatereInfotrygd(receivedSykmelding: ReceivedSykmelding, cluster: Stri
             it.reisetilskudd || (it.gradert?.reisetilskudd == true)
         }
 
-    return merknad && reisetilskudd
+    val isBehandlingsdager =
+        receivedSykmelding.sykmelding.perioder.none { it.behandlingsdager != null }
+
+    return merknad && reisetilskudd && isBehandlingsdager
 }
 
 fun fixMissingAndICPC2BDiagnoser(

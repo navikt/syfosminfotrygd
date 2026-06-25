@@ -7,8 +7,10 @@ import no.nav.syfo.generatePeriode
 import no.nav.syfo.generateSykmelding
 import no.nav.syfo.model.sykmelding.Gradert
 import no.nav.syfo.model.sykmelding.Merknad
+import no.nav.syfo.model.sykmelding.Periode
 import no.nav.syfo.model.sykmelding.ReceivedSykmelding
 import org.amshove.kluent.shouldBeEqualTo
+import java.time.LocalDate
 
 class SkalOppdatereInfotrygdSpek :
     FunSpec({
@@ -23,6 +25,12 @@ class SkalOppdatereInfotrygdSpek :
                 every { sm.merknader } returns null
                 every { sm.sykmelding.perioder } returns emptyList()
                 skalOppdatereInfotrygd(sm, "localhost") shouldBeEqualTo true
+            }
+            test("Skal ikke oppdater infotrygd ved behandlingsdager") {
+                every { sm.merknader } returns null
+                every { sm.sykmelding.perioder } returns listOf(Periode(LocalDate.now().minusDays(1), LocalDate.now().minusDays(1),
+                    null, null, 1, null, false ))
+                skalOppdatereInfotrygd(sm, "localhost") shouldBeEqualTo false
             }
             test("Skal ikke oppdatere infotrygd ved merknader UGYLDIG_TILBAKEDATERING") {
                 every { sm.merknader } returns listOf(Merknad("UGYLDIG_TILBAKEDATERING", null))
