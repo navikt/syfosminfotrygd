@@ -154,7 +154,7 @@ class SykmeldingConsumerService(
             while (applicationState.ready && shouldRun(getCurrentTime())) {
                 kafkaConsumer.poll(10.seconds.toJavaDuration()).forEach { record ->
                     val sykmelding = record.value()
-                    if (sykmelding != null) {
+                    if (sykmelding != null && sykmelding != "null") {
                         val skipDuplication =
                             record
                                 .headers()
