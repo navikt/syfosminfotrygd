@@ -10,7 +10,6 @@ import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
@@ -29,7 +28,6 @@ import no.nav.syfo.services.updateinfotrygd.exception.InfotrygdDownException
 import no.nav.syfo.shouldRun
 import no.nav.syfo.util.LoggingMeta
 import org.apache.kafka.clients.consumer.KafkaConsumer
-import org.apache.kafka.common.errors.WakeupException
 
 class SykmeldingConsumerService(
     private val mottattSykmeldingService: MottattSykmeldingService,
@@ -42,19 +40,9 @@ class SykmeldingConsumerService(
         private const val DELAY_ON_ERROR_SECONDS = 60L
     }
 
-    fun stop() {
-        kafkaConsumer.wakeup()
-        stopping.complete(Unit)
-    }
-
-    private val stopping = CompletableDeferred<Unit>()
-
-    val stopped: Boolean
-        get() = stopping.isCompleted
-
     suspend fun startConsumer() =
         withContext(Dispatchers.IO) {
-            while (!stopped && isActive) {
+            while (applicationState.ready && isActive) {
                 var mqConnection: Connection? = null
                 var session: Session? = null
                 var infotrygdOppdateringProducer: MessageProducer? = null
@@ -66,14 +54,14 @@ class SykmeldingConsumerService(
                     delay(getDelay(getCurrentTime().toLocalDateTime()))
                 }
 
-                while (isActive && !stopped && shouldRun(getCurrentTime())) {
+                while (applicationState.ready && shouldRun(getCurrentTime())) {
                     try {
                         delayTime = 0.seconds
                         mqConnection =
                             connectionFactory(environment)
                                 .createConnection(
                                     serviceUser.serviceuserUsername,
-                                    serviceUser.serviceuserPassword,
+                                    serviceUser.serviceuserPassword
                                 )
                         mqConnection.start()
                         session = mqConnection.createSession(false, Session.AUTO_ACKNOWLEDGE)
@@ -86,39 +74,36 @@ class SykmeldingConsumerService(
                                 "queue:///${environment.infotrygdSporringQueue}?targetClient=1",
                             )
                         kafkaConsumer.subscribe(
-                            listOf(environment.okSykmeldingTopic, environment.retryTopic),
+                            listOf(environment.okSykmeldingTopic, environment.retryTopic)
                         )
                         runConsumer(
                             infotrygdSporringProducer,
                             infotrygdOppdateringProducer,
-                            session,
+                            session
                         )
                     } catch (ex: InfotrygdDownException) {
                         val currentTime = getCurrentTime().toLocalDateTime()
                         delayTime = getDelay(currentTime)
                         log.warn(
                             "Infotrygd is down?, unsubscribing and dalaying for $delayTime",
-                            ex,
+                            ex
                         )
-                    } catch (ex: WakeupException) {
-                        log.debug("Kafka consumer woken up, stopping")
-                        throw ex
                     } catch (cancellationException: CancellationException) {
                         log.info(
                             "Coroutine was cancelled, cancelling mq connection and exitting loop",
-                            cancellationException,
+                            cancellationException
                         )
                         throw cancellationException
                     } catch (ex: Exception) {
                         log.error(
                             "Error running consumer, unsubscribing and waiting 60 seconds for retry",
-                            ex,
+                            ex
                         )
                         delayTime = DELAY_ON_ERROR_SECONDS.seconds
                     } finally {
                         withContext(NonCancellable) {
                             try {
-                                kafkaConsumer.close()
+                                kafkaConsumer.unsubscribe()
                             } catch (_: Exception) {}
                             try {
                                 infotrygdOppdateringProducer?.close()
@@ -166,7 +151,7 @@ class SykmeldingConsumerService(
         session: Session
     ) =
         withContext(Dispatchers.IO) {
-            while (isActive && !stopped && shouldRun(getCurrentTime())) {
+            while (applicationState.ready && shouldRun(getCurrentTime())) {
                 kafkaConsumer.poll(10.seconds.toJavaDuration()).forEach { record ->
                     val sykmelding = record.value()
                     if (sykmelding != null && sykmelding != "null") {
@@ -194,7 +179,7 @@ class SykmeldingConsumerService(
                             infotrygdSporringProducer = infotrygdSporringProducer,
                             session = session,
                             loggingMeta = loggingMeta,
-                            skipDuplication,
+                            skipDuplication
                         )
                     }
                 }

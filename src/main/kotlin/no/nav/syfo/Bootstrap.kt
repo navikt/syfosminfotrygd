@@ -19,7 +19,7 @@ import io.ktor.network.sockets.SocketTimeoutException
 import io.ktor.serialization.jackson.jackson
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationStarted
-import io.ktor.server.application.ApplicationStopPreparing
+import io.ktor.server.application.ApplicationStopping
 import io.ktor.server.application.install
 import io.ktor.server.auth.authenticate
 import io.ktor.server.engine.embeddedServer
@@ -36,18 +36,10 @@ import java.time.temporal.ChronoUnit
 import java.util.concurrent.TimeUnit
 import javax.xml.bind.Marshaller
 import javax.xml.stream.XMLInputFactory
-import kotlin.time.Duration.Companion.seconds
-import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeout
 import no.nav.helse.eiFellesformat.XMLEIFellesformat
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.msgHead.XMLDocument
@@ -267,10 +259,6 @@ suspend fun Application.module() {
         }
     }
 
-    val consumerScope =
-        CoroutineScope(Dispatchers.IO + SupervisorJob() + CoroutineName("SykmeldingConsumer"))
-    var job: Job? = null
-
     val sykmeldingConsumerService =
         SykmeldingConsumerService(
             mottattSykmeldingService,
@@ -281,21 +269,10 @@ suspend fun Application.module() {
         )
     monitor.subscribe(ApplicationStarted) {
         log.info("Application is ready -> starting kafka consumer")
-        job = launch(Dispatchers.IO) { sykmeldingConsumerService.startConsumer() }
+        launch { sykmeldingConsumerService.startConsumer() }
     }
 
-    monitor.subscribe(ApplicationStopPreparing) {
-        runBlocking {
-            try {
-                log.info("Stopping kafka consumer")
-                sykmeldingConsumerService.stop()
-                withTimeout(5.seconds) { job?.join() }
-            } catch (e: Exception) {
-                log.error("Exception caught while stopping kafka consumer", e)
-                consumerScope.cancel()
-            }
-        }
-    }
+    monitor.subscribe(ApplicationStopping) { applicationState.ready = false }
 }
 
 private fun getkafkaProducerConfig(producerId: String, env: Environment) =
