@@ -44,6 +44,7 @@ class SykmeldingConsumerService(
 
     fun stop() {
         kafkaConsumer.wakeup()
+        stopping.complete(Unit)
     }
 
     private val stopping = CompletableDeferred<Unit>()
@@ -53,7 +54,7 @@ class SykmeldingConsumerService(
 
     suspend fun startConsumer() =
         withContext(Dispatchers.IO) {
-            while (applicationState.ready && isActive) {
+            while (!stopped && isActive) {
                 var mqConnection: Connection? = null
                 var session: Session? = null
                 var infotrygdOppdateringProducer: MessageProducer? = null
@@ -165,7 +166,7 @@ class SykmeldingConsumerService(
         session: Session
     ) =
         withContext(Dispatchers.IO) {
-            while (applicationState.ready && shouldRun(getCurrentTime())) {
+            while (isActive && !stopped && shouldRun(getCurrentTime())) {
                 kafkaConsumer.poll(10.seconds.toJavaDuration()).forEach { record ->
                     val sykmelding = record.value()
                     if (sykmelding != null && sykmelding != "null") {
