@@ -1,6 +1,5 @@
 package no.nav.syfo.services
 
-import com.fasterxml.jackson.module.kotlin.readValue
 import jakarta.jms.Connection
 import jakarta.jms.MessageProducer
 import jakarta.jms.Session
@@ -19,15 +18,16 @@ import no.nav.syfo.Environment
 import no.nav.syfo.ServiceUser
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.getCurrentTime
+import no.nav.syfo.jsonMapper
 import no.nav.syfo.log
 import no.nav.syfo.model.sykmelding.ReceivedSykmelding
 import no.nav.syfo.mq.connectionFactory
 import no.nav.syfo.mq.producerForQueue
-import no.nav.syfo.objectMapper
 import no.nav.syfo.services.updateinfotrygd.exception.InfotrygdDownException
 import no.nav.syfo.shouldRun
 import no.nav.syfo.util.LoggingMeta
 import org.apache.kafka.clients.consumer.KafkaConsumer
+import tools.jackson.module.kotlin.readValue
 
 class SykmeldingConsumerService(
     private val mottattSykmeldingService: MottattSykmeldingService,
@@ -164,7 +164,7 @@ class SykmeldingConsumerService(
                                 ?.toBoolean() ?: false
 
                         val receivedSykmelding: ReceivedSykmelding =
-                            objectMapper.readValue(sykmelding)
+                            jsonMapper.readValue(sykmelding)
                         val loggingMeta =
                             LoggingMeta(
                                 mottakId = receivedSykmelding.navLogId,

@@ -1,11 +1,6 @@
 package no.nav.syfo
 
 import com.auth0.jwk.JwkProviderBuilder
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.ibm.mq.MQEnvironment
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
@@ -16,7 +11,7 @@ import io.ktor.client.plugins.HttpResponseValidator
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.network.sockets.SocketTimeoutException
-import io.ktor.serialization.jackson.jackson
+import io.ktor.serialization.jackson3.jackson
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationStarted
 import io.ktor.server.application.ApplicationStopping
@@ -81,16 +76,14 @@ import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import tools.jackson.databind.SerializationFeature
+import tools.jackson.databind.json.JsonMapper
+import tools.jackson.module.kotlin.jacksonMapperBuilder
 
 val log: Logger = LoggerFactory.getLogger("no.nav.syfo.sminfotrygd")
-val objectMapper: ObjectMapper =
-    ObjectMapper().apply {
-        enable(SerializationFeature.INDENT_OUTPUT)
-        registerKotlinModule()
-        registerModule(JavaTimeModule())
-        configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-        configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-    }
+
+val jsonMapper: JsonMapper =
+    jacksonMapperBuilder().enable(SerializationFeature.INDENT_OUTPUT).build()
 
 const val NAV_OPPFOLGING_UTLAND_KONTOR_NR = "2101"
 const val NAV_VIKAFOSSEN_KONTOR_NR = "2103"

@@ -1,12 +1,5 @@
 package no.nav.syfo.util
 
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.dataformat.xml.JacksonXmlModule
-import com.fasterxml.jackson.dataformat.xml.XmlMapper
-import com.fasterxml.jackson.dataformat.xml.ser.ToXmlGenerator
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.migesok.jaxb.adapter.javatime.LocalDateTimeXmlAdapter
 import com.migesok.jaxb.adapter.javatime.LocalDateXmlAdapter
 import javax.xml.bind.JAXBContext
@@ -20,6 +13,10 @@ import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.helse.sm2013.KontrollSystemBlokk
 import no.nav.helse.sm2013.KontrollsystemBlokkType
 import org.codehaus.stax2.XMLOutputFactory2
+import tools.jackson.databind.cfg.DateTimeFeature
+import tools.jackson.dataformat.xml.XmlMapper
+import tools.jackson.dataformat.xml.XmlWriteFeature
+import tools.jackson.module.jaxb.JaxbAnnotationModule
 
 val infotrygdSporringJaxBContext: JAXBContext = JAXBContext.newInstance(InfotrygdForesp::class.java)
 
@@ -45,19 +42,17 @@ val fellesformatMarshaller: Marshaller =
     }
 
 val xmlObjectWriter: XmlMapper =
-    (XmlMapper(JacksonXmlModule().apply { setDefaultUseWrapper(false) })
-            .configure(ToXmlGenerator.Feature.WRITE_XML_DECLARATION, true)
-            .registerModule(JaxbAnnotationModule())
-            .registerKotlinModule()
-            .registerModule(JavaTimeModule())
-            .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false) as XmlMapper)
+    XmlMapper.builder()
+        .defaultUseWrapper(false)
+        .enable(XmlWriteFeature.WRITE_XML_DECLARATION)
+        .addModule(JaxbAnnotationModule())
+        .disable(DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS)
+        .build()
         .apply {
-            factory.xmlOutputFactory.setProperty(
-                XMLOutputFactory2.P_TEXT_ESCAPER,
-                CustomXmlEscapingWriterFactory,
-            )
-            factory.xmlOutputFactory.setProperty(
-                XMLOutputFactory2.P_ATTR_VALUE_ESCAPER,
-                CustomXmlEscapingWriterFactory,
-            )
+            tokenStreamFactory()
+                .xmlOutputFactory
+                .setProperty(XMLOutputFactory2.P_TEXT_ESCAPER, CustomXmlEscapingWriterFactory)
+            tokenStreamFactory()
+                .xmlOutputFactory
+                .setProperty(XMLOutputFactory2.P_ATTR_VALUE_ESCAPER, CustomXmlEscapingWriterFactory)
         }

@@ -9,11 +9,11 @@ import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.sm2013.KontrollSystemBlokk
 import no.nav.helse.sm2013.KontrollsystemBlokkType
 import no.nav.syfo.ServiceUser
+import no.nav.syfo.jsonMapper
 import no.nav.syfo.log
 import no.nav.syfo.mq.MqConfig
 import no.nav.syfo.mq.connectionFactory
 import no.nav.syfo.mq.producerForQueue
-import no.nav.syfo.objectMapper
 import no.nav.syfo.rules.validation.sortedSMInfos
 import no.nav.syfo.services.FinnNAVKontorService
 import no.nav.syfo.services.InfotrygdForespValues
@@ -113,7 +113,7 @@ class InfotrygdService(
         val infotrygdResponse = getInfotrygdForesp(InfotrygdQuery(ident = updateRequest.fnr))
 
         sikkerlogg.info(
-            "UpdateInfotrygdRequest ${objectMapper.writeValueAsString(updateRequest)}, infotrygdResponse  ${objectMapper.writeValueAsString(infotrygdResponse)}"
+            "UpdateInfotrygdRequest ${jsonMapper.writeValueAsString(updateRequest)}, infotrygdResponse  ${jsonMapper.writeValueAsString(infotrygdResponse)}"
         )
 
         val oprasjonstype =
@@ -136,7 +136,7 @@ class InfotrygdService(
         }
 
         sikkerlogg.info(
-            "Found sykmelding to update for ${objectMapper.writeValueAsString(updateRequest)}, infotrygdResponse  ${objectMapper.writeValueAsString(sykmeldingToUpdate)}"
+            "Found sykmelding to update for ${jsonMapper.writeValueAsString(updateRequest)}, infotrygdResponse  ${jsonMapper.writeValueAsString(sykmeldingToUpdate)}"
         )
 
         if (updateRequest.dryRun) {

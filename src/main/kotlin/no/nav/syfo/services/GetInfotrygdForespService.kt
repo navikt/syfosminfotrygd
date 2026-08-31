@@ -21,10 +21,10 @@ import no.nav.syfo.UTENLANDSK_SYKEHUS
 import no.nav.syfo.erUtenlandskSykmelding
 import no.nav.syfo.helpers.retry
 import no.nav.syfo.infotrygd.InfotrygdQuery
+import no.nav.syfo.jsonMapper
 import no.nav.syfo.log
 import no.nav.syfo.model.Diagnosekode
 import no.nav.syfo.model.sykmelding.ReceivedSykmelding
-import no.nav.syfo.objectMapper
 import no.nav.syfo.services.updateinfotrygd.exception.InfotrygdDownException
 import no.nav.syfo.toString
 import no.nav.syfo.util.infotrygdSporringJaxBContext
@@ -95,7 +95,7 @@ fun sendInfotrygdForesporsel(
             safeUnmarshal(inputMessageText, id, infotrygdForespRequest.tkNummer).also {
                 sikkerlogg.info(
                     "infotrygdForespResponse: ${
-                        objectMapper.writeValueAsString(
+                        jsonMapper.writeValueAsString(
                             it
                         )
                     }" +
@@ -229,7 +229,7 @@ fun sendInfotrygdSporring(
     infotrygdForesp: InfotrygdForesp,
     temporaryQueue: TemporaryQueue,
 ) {
-    val infotrygdForespJson = objectMapper.writeValueAsString(infotrygdForesp)
+    val infotrygdForespJson = jsonMapper.writeValueAsString(infotrygdForesp)
     sikkerlogg.info("sending infotrygdforsp json: $infotrygdForespJson")
     val infotrygdForespXml =
         infotrygdSporringJaxBContext.createMarshaller().toString(infotrygdForesp)
