@@ -13,6 +13,7 @@ import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.helse.sm2013.KontrollSystemBlokk
 import no.nav.helse.sm2013.KontrollsystemBlokkType
 import org.codehaus.stax2.XMLOutputFactory2
+import tools.jackson.databind.MapperFeature
 import tools.jackson.databind.cfg.DateTimeFeature
 import tools.jackson.dataformat.xml.XmlMapper
 import tools.jackson.dataformat.xml.XmlWriteFeature
@@ -47,6 +48,7 @@ val xmlObjectWriter: XmlMapper =
         .enable(XmlWriteFeature.WRITE_XML_DECLARATION)
         .addModule(JaxbAnnotationModule())
         .disable(DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS)
+        .disable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
         .build()
         .apply {
             tokenStreamFactory()
