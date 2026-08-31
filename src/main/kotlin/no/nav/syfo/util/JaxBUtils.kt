@@ -1,5 +1,6 @@
 package no.nav.syfo.util
 
+import com.fasterxml.jackson.annotation.JsonPropertyOrder
 import com.migesok.jaxb.adapter.javatime.LocalDateTimeXmlAdapter
 import com.migesok.jaxb.adapter.javatime.LocalDateXmlAdapter
 import javax.xml.bind.JAXBContext
@@ -9,6 +10,7 @@ import no.nav.helse.eiFellesformat.XMLEIFellesformat
 import no.nav.helse.eiFellesformat.XMLMottakenhetBlokk
 import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.msgHead.XMLMsgHead
+import no.nav.helse.sm2013.CV
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.helse.sm2013.KontrollSystemBlokk
 import no.nav.helse.sm2013.KontrollsystemBlokkType
@@ -17,6 +19,8 @@ import tools.jackson.databind.cfg.DateTimeFeature
 import tools.jackson.dataformat.xml.XmlMapper
 import tools.jackson.dataformat.xml.XmlWriteFeature
 import tools.jackson.module.jaxb.JaxbAnnotationModule
+
+@JsonPropertyOrder("v", "s", "dn") private abstract class CVPropertyOrderMixin
 
 val infotrygdSporringJaxBContext: JAXBContext = JAXBContext.newInstance(InfotrygdForesp::class.java)
 
@@ -45,6 +49,7 @@ val xmlObjectWriter: XmlMapper =
     XmlMapper.builder()
         .defaultUseWrapper(false)
         .enable(XmlWriteFeature.WRITE_XML_DECLARATION)
+        .addMixIn(CV::class.java, CVPropertyOrderMixin::class.java)
         .addModule(JaxbAnnotationModule())
         .disable(DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS)
         .build()
