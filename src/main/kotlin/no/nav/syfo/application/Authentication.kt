@@ -11,10 +11,7 @@ import net.logstash.logback.argument.StructuredArguments
 import no.nav.syfo.Environment
 import no.nav.syfo.log
 
-fun Application.setupAuth(
-    jwkProviderAadV2: JwkProvider,
-    environment: Environment,
-) {
+fun Application.setupAuth(jwkProviderAadV2: JwkProvider, environment: Environment) {
 
     install(Authentication) {
         jwt(name = "servicebrukerAAD") {

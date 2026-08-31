@@ -61,17 +61,17 @@ class SykmeldingConsumerService(
                             connectionFactory(environment)
                                 .createConnection(
                                     serviceUser.serviceuserUsername,
-                                    serviceUser.serviceuserPassword
+                                    serviceUser.serviceuserPassword,
                                 )
                         mqConnection.start()
                         session = mqConnection.createSession(false, Session.AUTO_ACKNOWLEDGE)
                         infotrygdOppdateringProducer =
                             session.producerForQueue(
-                                "queue:///${environment.infotrygdOppdateringQueue}?targetClient=1",
+                                "queue:///${environment.infotrygdOppdateringQueue}?targetClient=1"
                             )
                         infotrygdSporringProducer =
                             session.producerForQueue(
-                                "queue:///${environment.infotrygdSporringQueue}?targetClient=1",
+                                "queue:///${environment.infotrygdSporringQueue}?targetClient=1"
                             )
                         kafkaConsumer.subscribe(
                             listOf(environment.okSykmeldingTopic, environment.retryTopic)
@@ -79,25 +79,25 @@ class SykmeldingConsumerService(
                         runConsumer(
                             infotrygdSporringProducer,
                             infotrygdOppdateringProducer,
-                            session
+                            session,
                         )
                     } catch (ex: InfotrygdDownException) {
                         val currentTime = getCurrentTime().toLocalDateTime()
                         delayTime = getDelay(currentTime)
                         log.warn(
                             "Infotrygd is down?, unsubscribing and dalaying for $delayTime",
-                            ex
+                            ex,
                         )
                     } catch (cancellationException: CancellationException) {
                         log.info(
                             "Coroutine was cancelled, cancelling mq connection and exitting loop",
-                            cancellationException
+                            cancellationException,
                         )
                         throw cancellationException
                     } catch (ex: Exception) {
                         log.error(
                             "Error running consumer, unsubscribing and waiting 60 seconds for retry",
-                            ex
+                            ex,
                         )
                         delayTime = DELAY_ON_ERROR_SECONDS.seconds
                     } finally {
@@ -148,7 +148,7 @@ class SykmeldingConsumerService(
     private suspend fun runConsumer(
         infotrygdSporringProducer: MessageProducer,
         infotrygdOppdateringProducer: MessageProducer,
-        session: Session
+        session: Session,
     ) =
         withContext(Dispatchers.IO) {
             while (applicationState.ready && shouldRun(getCurrentTime())) {
@@ -161,8 +161,7 @@ class SykmeldingConsumerService(
                                 .lastHeader("skip-duplication-check")
                                 ?.value()
                                 ?.toString(Charsets.UTF_8)
-                                ?.toBoolean()
-                                ?: false
+                                ?.toBoolean() ?: false
 
                         val receivedSykmelding: ReceivedSykmelding =
                             objectMapper.readValue(sykmelding)
@@ -179,7 +178,7 @@ class SykmeldingConsumerService(
                             infotrygdSporringProducer = infotrygdSporringProducer,
                             session = session,
                             loggingMeta = loggingMeta,
-                            skipDuplication
+                            skipDuplication,
                         )
                     }
                 }

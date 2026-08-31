@@ -24,7 +24,7 @@ class MqSpek :
                     .setPersistenceEnabled(false)
                     .setJournalDirectory("target/data/journal")
                     .setSecurityEnabled(false)
-                    .addAcceptorConfiguration("invm", "vm://0"),
+                    .addAcceptorConfiguration("invm", "vm://0")
             )
 
         beforeSpec { activeMQServer.start() }
@@ -56,7 +56,7 @@ class MqSpek :
                                                     arbufoerFOM = LocalDate.now()
                                                     arbufoerTOM = LocalDate.now().plusDays(2)
                                                 }
-                                        },
+                                        }
                                     )
                                     status = StatusType().apply { kodeMelding = "04" }
                                 }
@@ -70,7 +70,7 @@ class MqSpek :
                                     .toString(infotrygdForesp)
                             log.info("Sending: {}", StructuredArguments.keyValue("message", text))
                             log.info("Pushed message to queue")
-                        },
+                        }
                     )
                     val message = consumer.receiveNoWait()
 

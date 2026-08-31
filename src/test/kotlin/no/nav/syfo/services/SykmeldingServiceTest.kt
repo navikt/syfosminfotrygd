@@ -36,7 +36,7 @@ class SykmeldingServiceTest :
                                                     arbufoerFOM = fom
                                                     arbufoerTOM = tom
                                                 }
-                                        },
+                                        }
                                     )
                                 }
                         }
@@ -49,26 +49,24 @@ class SykmeldingServiceTest :
                                             fom,
                                             tom,
                                             null,
-                                            PeriodetypeDTO.AKTIVITET_IKKE_MULIG
-                                        ),
-                                    ),
-                            ),
+                                            PeriodetypeDTO.AKTIVITET_IKKE_MULIG,
+                                        )
+                                    )
+                            )
                         )
 
                     val receivedSykmelding =
                         receivedSykmelding(
                             "1",
                             sykmelding =
-                                generateSykmelding(
-                                    perioder = listOf(generatePeriode(fom, tom)),
-                                ),
+                                generateSykmelding(perioder = listOf(generatePeriode(fom, tom))),
                         )
 
                     val overlapperInfotrygd =
                         hasOverlappingPeriodsFromInfotrygd(
                             receivedSykmelding.sykmelding.perioder.firstFom(),
                             receivedSykmelding.sykmelding.perioder.lastTom(),
-                            infotrygdForesp.getInfotrygdPerioder()
+                            infotrygdForesp.getInfotrygdPerioder(),
                         )
                     overlapperInfotrygd shouldBeEqualTo true
                 }
@@ -86,10 +84,10 @@ class SykmeldingServiceTest :
                                             fom,
                                             tom.plusDays(2),
                                             null,
-                                            PeriodetypeDTO.AKTIVITET_IKKE_MULIG
-                                        ),
-                                    ),
-                            ),
+                                            PeriodetypeDTO.AKTIVITET_IKKE_MULIG,
+                                        )
+                                    )
+                            )
                         )
                     val infotrygdForesp =
                         InfotrygdForesp().apply {
@@ -102,7 +100,7 @@ class SykmeldingServiceTest :
                                                     arbufoerFOM = fom
                                                     arbufoerTOM = tom.plusDays(2)
                                                 }
-                                        },
+                                        }
                                     )
                                 }
                         }
@@ -110,16 +108,14 @@ class SykmeldingServiceTest :
                         receivedSykmelding(
                             "1",
                             sykmelding =
-                                generateSykmelding(
-                                    perioder = listOf(generatePeriode(fom, tom)),
-                                ),
+                                generateSykmelding(perioder = listOf(generatePeriode(fom, tom))),
                         )
 
                     val overlapperInfotrygd =
                         hasOverlappingPeriodsFromInfotrygd(
                             receivedSykmelding.sykmelding.perioder.firstFom(),
                             receivedSykmelding.sykmelding.perioder.lastTom(),
-                            infotrygdForesp.getInfotrygdPerioder()
+                            infotrygdForesp.getInfotrygdPerioder(),
                         )
                     overlapperInfotrygd shouldBeEqualTo true
                 }
@@ -136,10 +132,10 @@ class SykmeldingServiceTest :
                                             fom,
                                             tom.minusDays(2),
                                             null,
-                                            PeriodetypeDTO.AKTIVITET_IKKE_MULIG
-                                        ),
-                                    ),
-                            ),
+                                            PeriodetypeDTO.AKTIVITET_IKKE_MULIG,
+                                        )
+                                    )
+                            )
                         )
                     val infotrygdForesp =
                         InfotrygdForesp().apply {
@@ -152,7 +148,7 @@ class SykmeldingServiceTest :
                                                     arbufoerFOM = fom
                                                     arbufoerTOM = tom.minusDays(2)
                                                 }
-                                        },
+                                        }
                                     )
                                 }
                         }
@@ -160,16 +156,14 @@ class SykmeldingServiceTest :
                         receivedSykmelding(
                             "1",
                             sykmelding =
-                                generateSykmelding(
-                                    perioder = listOf(generatePeriode(fom, tom)),
-                                ),
+                                generateSykmelding(perioder = listOf(generatePeriode(fom, tom))),
                         )
 
                     val overlapperInfotrygd =
                         hasOverlappingPeriodsFromInfotrygd(
                             receivedSykmelding.sykmelding.perioder.firstFom(),
                             receivedSykmelding.sykmelding.perioder.lastTom(),
-                            infotrygdForesp.getInfotrygdPerioder()
+                            infotrygdForesp.getInfotrygdPerioder(),
                         )
                     overlapperInfotrygd shouldBeEqualTo true
                 }
@@ -184,10 +178,10 @@ class SykmeldingServiceTest :
                                             LocalDate.of(2023, 1, 9),
                                             LocalDate.of(2023, 1, 13),
                                             null,
-                                            PeriodetypeDTO.AKTIVITET_IKKE_MULIG
-                                        ),
-                                    ),
-                            ),
+                                            PeriodetypeDTO.AKTIVITET_IKKE_MULIG,
+                                        )
+                                    )
+                            )
                         )
                     val infotrygdForesp =
                         InfotrygdForesp().apply {
@@ -200,7 +194,7 @@ class SykmeldingServiceTest :
                                                     arbufoerFOM = LocalDate.of(2023, 1, 9)
                                                     arbufoerTOM = LocalDate.of(2023, 1, 13)
                                                 }
-                                        },
+                                        }
                                     )
                                 }
                         }
@@ -213,9 +207,9 @@ class SykmeldingServiceTest :
                                         listOf(
                                             generatePeriode(
                                                 LocalDate.of(2023, 1, 7),
-                                                LocalDate.of(2023, 1, 15)
+                                                LocalDate.of(2023, 1, 15),
                                             )
-                                        ),
+                                        )
                                 ),
                         )
 
@@ -223,7 +217,7 @@ class SykmeldingServiceTest :
                         hasOverlappingPeriodsFromInfotrygd(
                             receivedSykmelding.sykmelding.perioder.firstFom(),
                             receivedSykmelding.sykmelding.perioder.lastTom(),
-                            infotrygdForesp.getInfotrygdPerioder()
+                            infotrygdForesp.getInfotrygdPerioder(),
                         )
                     overlapperInfotrygd shouldBeEqualTo true
                 }
@@ -241,9 +235,9 @@ class SykmeldingServiceTest :
                                             fom,
                                             fom.plusDays(4),
                                             null,
-                                            PeriodetypeDTO.AKTIVITET_IKKE_MULIG
-                                        ),
-                                    ),
+                                            PeriodetypeDTO.AKTIVITET_IKKE_MULIG,
+                                        )
+                                    )
                             ),
                             generateSykmeldingDto(
                                 perioder =
@@ -252,9 +246,9 @@ class SykmeldingServiceTest :
                                             fom.plusDays(7),
                                             tom,
                                             null,
-                                            PeriodetypeDTO.AKTIVITET_IKKE_MULIG
-                                        ),
-                                    ),
+                                            PeriodetypeDTO.AKTIVITET_IKKE_MULIG,
+                                        )
+                                    )
                             ),
                         )
                     val infotrygdForesp =
@@ -268,7 +262,7 @@ class SykmeldingServiceTest :
                                                     arbufoerFOM = fom
                                                     arbufoerTOM = tom.plusDays(2)
                                                 }
-                                        },
+                                        }
                                     )
                                     sykmelding.add(
                                         TypeSMinfo().apply {
@@ -277,7 +271,7 @@ class SykmeldingServiceTest :
                                                     arbufoerFOM = fom.plusDays(7)
                                                     arbufoerTOM = tom
                                                 }
-                                        },
+                                        }
                                     )
                                 }
                         }
@@ -285,16 +279,14 @@ class SykmeldingServiceTest :
                         receivedSykmelding(
                             "1",
                             sykmelding =
-                                generateSykmelding(
-                                    perioder = listOf(generatePeriode(fom, tom)),
-                                ),
+                                generateSykmelding(perioder = listOf(generatePeriode(fom, tom))),
                         )
 
                     val overlapperInfotrygd =
                         hasOverlappingPeriodsFromInfotrygd(
                             receivedSykmelding.sykmelding.perioder.firstFom(),
                             receivedSykmelding.sykmelding.perioder.lastTom(),
-                            infotrygdForesp.getInfotrygdPerioder()
+                            infotrygdForesp.getInfotrygdPerioder(),
                         )
                     overlapperInfotrygd shouldBeEqualTo true
                 }
@@ -312,8 +304,8 @@ class SykmeldingServiceTest :
                                             LocalDate.of(2023, 1, 6),
                                             null,
                                             PeriodetypeDTO.AKTIVITET_IKKE_MULIG,
-                                        ),
-                                    ),
+                                        )
+                                    )
                             ),
                             generateSykmeldingDto(
                                 perioder =
@@ -322,9 +314,9 @@ class SykmeldingServiceTest :
                                             LocalDate.of(2023, 1, 9),
                                             LocalDate.of(2023, 1, 13),
                                             null,
-                                            PeriodetypeDTO.AKTIVITET_IKKE_MULIG
-                                        ),
-                                    ),
+                                            PeriodetypeDTO.AKTIVITET_IKKE_MULIG,
+                                        )
+                                    )
                             ),
                         )
                     val infotrygdForesp =
@@ -338,7 +330,7 @@ class SykmeldingServiceTest :
                                                     arbufoerFOM = LocalDate.of(2023, 1, 1)
                                                     arbufoerTOM = LocalDate.of(2023, 1, 6)
                                                 }
-                                        },
+                                        }
                                     )
                                     sykmelding.add(
                                         TypeSMinfo().apply {
@@ -347,7 +339,7 @@ class SykmeldingServiceTest :
                                                     arbufoerFOM = LocalDate.of(2023, 1, 9)
                                                     arbufoerTOM = LocalDate.of(2023, 1, 13)
                                                 }
-                                        },
+                                        }
                                     )
                                 }
                         }
@@ -360,16 +352,16 @@ class SykmeldingServiceTest :
                                         listOf(
                                             generatePeriode(
                                                 LocalDate.of(2023, 1, 7),
-                                                LocalDate.of(2023, 1, 9)
+                                                LocalDate.of(2023, 1, 9),
                                             )
-                                        ),
+                                        )
                                 ),
                         )
                     val overlapperInfotrygd =
                         hasOverlappingPeriodsFromInfotrygd(
                             receivedSykmelding.sykmelding.perioder.firstFom(),
                             receivedSykmelding.sykmelding.perioder.lastTom(),
-                            infotrygdForesp.getInfotrygdPerioder()
+                            infotrygdForesp.getInfotrygdPerioder(),
                         )
 
                     overlapperInfotrygd shouldBeEqualTo true
@@ -387,9 +379,7 @@ class SykmeldingServiceTest :
                         receivedSykmelding(
                             "1",
                             sykmelding =
-                                generateSykmelding(
-                                    perioder = listOf(generatePeriode(fom, tom)),
-                                ),
+                                generateSykmelding(perioder = listOf(generatePeriode(fom, tom))),
                         )
                     val infotrygdForesp = InfotrygdForesp()
 
@@ -397,7 +387,7 @@ class SykmeldingServiceTest :
                         hasOverlappingPeriodsFromInfotrygd(
                             receivedSykmelding.sykmelding.perioder.firstFom(),
                             receivedSykmelding.sykmelding.perioder.lastTom(),
-                            infotrygdForesp.getInfotrygdPerioder()
+                            infotrygdForesp.getInfotrygdPerioder(),
                         )
                     overlapperInfotrygd shouldBeEqualTo false
                 }
@@ -417,9 +407,9 @@ class SykmeldingServiceTest :
                                             fom,
                                             fom.plusDays(4),
                                             null,
-                                            PeriodetypeDTO.AKTIVITET_IKKE_MULIG
-                                        ),
-                                    ),
+                                            PeriodetypeDTO.AKTIVITET_IKKE_MULIG,
+                                        )
+                                    )
                             ),
                             generateSykmeldingDto(
                                 perioder =
@@ -428,9 +418,9 @@ class SykmeldingServiceTest :
                                             fom.plusDays(8),
                                             tom,
                                             null,
-                                            PeriodetypeDTO.AKTIVITET_IKKE_MULIG
-                                        ),
-                                    ),
+                                            PeriodetypeDTO.AKTIVITET_IKKE_MULIG,
+                                        )
+                                    )
                             ),
                         )
                     val infotrygdForesp =
@@ -444,7 +434,7 @@ class SykmeldingServiceTest :
                                                     arbufoerFOM = fom
                                                     arbufoerTOM = fom.plusDays(4)
                                                 }
-                                        },
+                                        }
                                     )
                                     sykmelding.add(
                                         TypeSMinfo().apply {
@@ -453,7 +443,7 @@ class SykmeldingServiceTest :
                                                     arbufoerFOM = fom.plusDays(8)
                                                     arbufoerTOM = tom
                                                 }
-                                        },
+                                        }
                                     )
                                 }
                         }
@@ -461,15 +451,13 @@ class SykmeldingServiceTest :
                         receivedSykmelding(
                             "1",
                             sykmelding =
-                                generateSykmelding(
-                                    perioder = listOf(generatePeriode(fom, tom)),
-                                ),
+                                generateSykmelding(perioder = listOf(generatePeriode(fom, tom))),
                         )
                     val overlapperInfotrygd =
                         hasOverlappingPeriodsFromInfotrygd(
                             receivedSykmelding.sykmelding.perioder.firstFom(),
                             receivedSykmelding.sykmelding.perioder.lastTom(),
-                            infotrygdForesp.getInfotrygdPerioder()
+                            infotrygdForesp.getInfotrygdPerioder(),
                         )
 
                     overlapperInfotrygd shouldBeEqualTo false
@@ -485,10 +473,10 @@ class SykmeldingServiceTest :
                                             LocalDate.of(2023, 1, 3),
                                             LocalDate.of(2023, 1, 7),
                                             null,
-                                            PeriodetypeDTO.AKTIVITET_IKKE_MULIG
-                                        ),
-                                    ),
-                            ),
+                                            PeriodetypeDTO.AKTIVITET_IKKE_MULIG,
+                                        )
+                                    )
+                            )
                         )
                     val receivedSykmelding =
                         receivedSykmelding(
@@ -499,9 +487,9 @@ class SykmeldingServiceTest :
                                         listOf(
                                             generatePeriode(
                                                 LocalDate.of(2023, 1, 2),
-                                                LocalDate.of(2023, 1, 7)
+                                                LocalDate.of(2023, 1, 7),
                                             )
-                                        ),
+                                        )
                                 ),
                         )
                     val infotrygdForesp =
@@ -515,7 +503,7 @@ class SykmeldingServiceTest :
                                                     arbufoerFOM = LocalDate.of(2023, 1, 3)
                                                     arbufoerTOM = LocalDate.of(2023, 1, 7)
                                                 }
-                                        },
+                                        }
                                     )
                                 }
                         }
@@ -524,7 +512,7 @@ class SykmeldingServiceTest :
                         hasOverlappingPeriodsFromInfotrygd(
                             receivedSykmelding.sykmelding.perioder.firstFom(),
                             receivedSykmelding.sykmelding.perioder.lastTom(),
-                            infotrygdForesp.getInfotrygdPerioder()
+                            infotrygdForesp.getInfotrygdPerioder(),
                         )
                     overlapperInfotrygd shouldBeEqualTo false
                 }
@@ -539,10 +527,10 @@ class SykmeldingServiceTest :
                                             LocalDate.of(2023, 1, 3),
                                             LocalDate.of(2023, 1, 11),
                                             null,
-                                            PeriodetypeDTO.AKTIVITET_IKKE_MULIG
-                                        ),
-                                    ),
-                            ),
+                                            PeriodetypeDTO.AKTIVITET_IKKE_MULIG,
+                                        )
+                                    )
+                            )
                         )
                     val infotrygdForesp =
                         InfotrygdForesp().apply {
@@ -555,7 +543,7 @@ class SykmeldingServiceTest :
                                                     arbufoerFOM = LocalDate.of(2023, 1, 3)
                                                     arbufoerTOM = LocalDate.of(2023, 1, 11)
                                                 }
-                                        },
+                                        }
                                     )
                                 }
                         }
@@ -568,9 +556,9 @@ class SykmeldingServiceTest :
                                         listOf(
                                             generatePeriode(
                                                 LocalDate.of(2023, 1, 3),
-                                                LocalDate.of(2023, 1, 12)
+                                                LocalDate.of(2023, 1, 12),
                                             )
-                                        ),
+                                        )
                                 ),
                         )
 
@@ -578,7 +566,7 @@ class SykmeldingServiceTest :
                         hasOverlappingPeriodsFromInfotrygd(
                             receivedSykmelding.sykmelding.perioder.firstFom(),
                             receivedSykmelding.sykmelding.perioder.lastTom(),
-                            infotrygdForesp.getInfotrygdPerioder()
+                            infotrygdForesp.getInfotrygdPerioder(),
                         )
                     overlapperInfotrygd shouldBeEqualTo false
                 }

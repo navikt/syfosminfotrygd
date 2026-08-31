@@ -12,12 +12,7 @@ import org.testcontainers.containers.GenericContainer
 class ValkeySpek :
     FunSpec({
         val loggingMeta =
-            LoggingMeta(
-                mottakId = "1313",
-                orgNr = "0",
-                msgId = "0",
-                sykmeldingId = "0",
-            )
+            LoggingMeta(mottakId = "1313", orgNr = "0", msgId = "0", sykmeldingId = "0")
 
         val valkeyContainer: GenericContainer<Nothing> =
             GenericContainer("valkey/valkey:8.0.2-alpine")
@@ -41,13 +36,13 @@ class ValkeySpek :
                     INFOTRYGD,
                     "1",
                     TimeUnit.MINUTES.toSeconds(5).toInt(),
-                    loggingMeta
+                    loggingMeta,
                 )
                 valkeyService.oppdaterAntallErrorIInfotrygd(
                     INFOTRYGD,
                     "1",
                     TimeUnit.MINUTES.toSeconds(5).toInt(),
-                    loggingMeta
+                    loggingMeta,
                 )
 
                 valkeyService.antallErrorIInfotrygd(INFOTRYGD, loggingMeta) shouldBeEqualTo 2
@@ -58,7 +53,7 @@ class ValkeySpek :
                     INFOTRYGD,
                     "1",
                     TimeUnit.MINUTES.toSeconds(5).toInt(),
-                    loggingMeta
+                    loggingMeta,
                 )
 
                 valkeyService.antallErrorIInfotrygd(INFOTRYGD, loggingMeta) shouldBeEqualTo 1
@@ -70,7 +65,7 @@ class ValkeySpek :
                         INFOTRYGD,
                         "1",
                         TimeUnit.MINUTES.toSeconds(5).toInt(),
-                        loggingMeta
+                        loggingMeta,
                     )
 
                 oppdaterValkey shouldBeEqualTo "OK"
@@ -81,14 +76,14 @@ class ValkeySpek :
                     INFOTRYGD,
                     "1",
                     TimeUnit.MINUTES.toSeconds(5).toInt(),
-                    loggingMeta
+                    loggingMeta,
                 )
                 val oppdaterValkeyFAIL =
                     valkeyService.oppdaterValkey(
                         INFOTRYGD,
                         "1",
                         TimeUnit.MINUTES.toSeconds(5).toInt(),
-                        loggingMeta
+                        loggingMeta,
                     )
 
                 oppdaterValkeyFAIL shouldBeEqualTo null
@@ -99,7 +94,7 @@ class ValkeySpek :
                     INFOTRYGD,
                     "1",
                     TimeUnit.MINUTES.toSeconds(10).toInt(),
-                    loggingMeta
+                    loggingMeta,
                 )
                 val antallSlettede = valkeyService.slettValkeyKey(INFOTRYGD, loggingMeta)
                 antallSlettede shouldBeEqualTo 1L

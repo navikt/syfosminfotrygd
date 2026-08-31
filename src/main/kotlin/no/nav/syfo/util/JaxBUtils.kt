@@ -45,9 +45,7 @@ val fellesformatMarshaller: Marshaller =
     }
 
 val xmlObjectWriter: XmlMapper =
-    (XmlMapper(
-                JacksonXmlModule().apply { setDefaultUseWrapper(false) },
-            )
+    (XmlMapper(JacksonXmlModule().apply { setDefaultUseWrapper(false) })
             .configure(ToXmlGenerator.Feature.WRITE_XML_DECLARATION, true)
             .registerModule(JaxbAnnotationModule())
             .registerKotlinModule()
@@ -56,10 +54,10 @@ val xmlObjectWriter: XmlMapper =
         .apply {
             factory.xmlOutputFactory.setProperty(
                 XMLOutputFactory2.P_TEXT_ESCAPER,
-                CustomXmlEscapingWriterFactory
+                CustomXmlEscapingWriterFactory,
             )
             factory.xmlOutputFactory.setProperty(
                 XMLOutputFactory2.P_ATTR_VALUE_ESCAPER,
-                CustomXmlEscapingWriterFactory
+                CustomXmlEscapingWriterFactory,
             )
         }

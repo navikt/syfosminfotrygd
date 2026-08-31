@@ -44,8 +44,8 @@ class AccessTokenClientV2(
                                                 append("scope", resource)
                                                 append("grant_type", "client_credentials")
                                                 append("client_secret", clientSecret)
-                                            },
-                                        ),
+                                            }
+                                        )
                                     )
                                 }
                                 .body()
@@ -65,10 +65,7 @@ class AccessTokenClientV2(
 }
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class AadAccessTokenV2(
-    val access_token: String,
-    val expires_in: Int,
-)
+data class AadAccessTokenV2(val access_token: String, val expires_in: Int)
 
 data class AadAccessTokenMedExpiry(
     val access_token: String,

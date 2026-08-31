@@ -11,7 +11,7 @@ class ValkeyConfig(
     val password: String = getEnvVar("VALKEY_PASSWORD_INFOTRYGD"),
     val host: String = getEnvVar("VALKEY_HOST_INFOTRYGD"),
     val port: Int = getEnvVar("VALKEY_PORT_INFOTRYGD").toInt(),
-    val ssl: Boolean = true
+    val ssl: Boolean = true,
 )
 
 fun createJedisPool(valkeyConfig: ValkeyConfig = ValkeyConfig()): JedisPool {
@@ -22,6 +22,6 @@ fun createJedisPool(valkeyConfig: ValkeyConfig = ValkeyConfig()): JedisPool {
             .ssl(valkeyConfig.ssl)
             .user(valkeyConfig.username)
             .password(valkeyConfig.password)
-            .build()
+            .build(),
     )
 }

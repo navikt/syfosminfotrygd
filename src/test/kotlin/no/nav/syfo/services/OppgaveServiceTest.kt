@@ -37,9 +37,9 @@ class OppgaveServiceTest :
                                 "TILBAKEDATERT_MER_ENN_8_DAGER_FORSTE_SYKMELDING_MED_BEGRUNNELSE",
                                 "message for sender",
                                 "message for user",
-                                Status.MANUAL_PROCESSING
+                                Status.MANUAL_PROCESSING,
                             )
-                        )
+                        ),
                     )
                 val receivedSykmelding = receivedSykmelding(UUID.randomUUID().toString())
 
@@ -48,7 +48,7 @@ class OppgaveServiceTest :
                         receivedSykmelding,
                         validationResults,
                         behandletAvManuell = true,
-                        loggingMeta
+                        loggingMeta,
                     )
 
                 oppgave.behandlingstype shouldBeEqualTo "ae0256"
@@ -62,9 +62,9 @@ class OppgaveServiceTest :
                                 "TILBAKEDATERT_MER_ENN_8_DAGER_FORSTE_SYKMELDING_MED_BEGRUNNELSE",
                                 "message for sender",
                                 "message for user",
-                                Status.MANUAL_PROCESSING
+                                Status.MANUAL_PROCESSING,
                             )
-                        )
+                        ),
                     )
                 val receivedSykmelding = receivedSykmelding(UUID.randomUUID().toString())
 
@@ -73,7 +73,7 @@ class OppgaveServiceTest :
                         receivedSykmelding,
                         validationResults,
                         behandletAvManuell = true,
-                        loggingMeta
+                        loggingMeta,
                     )
 
                 oppgave.fristFerdigstillelse shouldBeEqualTo
@@ -90,9 +90,9 @@ class OppgaveServiceTest :
                                 "ANNEN_REGEL",
                                 "message for sender",
                                 "message for user",
-                                Status.MANUAL_PROCESSING
+                                Status.MANUAL_PROCESSING,
                             )
-                        )
+                        ),
                     )
                 val receivedSykmelding =
                     receivedSykmelding(
@@ -108,13 +108,13 @@ class OppgaveServiceTest :
                                             aktivitetIkkeMulig =
                                                 AktivitetIkkeMulig(
                                                     MedisinskArsak("", emptyList()),
-                                                    null
+                                                    null,
                                                 ),
                                             avventendeInnspillTilArbeidsgiver = null,
                                             behandlingsdager = null,
                                             gradert = null,
                                             reisetilskudd = false,
-                                        ),
+                                        )
                                     ),
                             ),
                     )
@@ -124,7 +124,7 @@ class OppgaveServiceTest :
                         receivedSykmelding,
                         validationResults,
                         behandletAvManuell = false,
-                        loggingMeta
+                        loggingMeta,
                     )
 
                 oppgave.behandlingstype shouldBeEqualTo "ae0256"
@@ -140,9 +140,9 @@ class OppgaveServiceTest :
                                 "ANNEN_REGEL",
                                 "message for sender",
                                 "message for user",
-                                Status.MANUAL_PROCESSING
+                                Status.MANUAL_PROCESSING,
                             )
-                        )
+                        ),
                     )
                 val receivedSykmelding = receivedSykmelding(UUID.randomUUID().toString())
 
@@ -151,7 +151,7 @@ class OppgaveServiceTest :
                         receivedSykmelding,
                         validationResults,
                         behandletAvManuell = false,
-                        loggingMeta
+                        loggingMeta,
                     )
 
                 oppgave.behandlingstype shouldBeEqualTo "ANY"
@@ -165,9 +165,9 @@ class OppgaveServiceTest :
                                 "ANNEN_REGEL",
                                 "message for sender",
                                 "message for user",
-                                Status.MANUAL_PROCESSING
+                                Status.MANUAL_PROCESSING,
                             )
-                        )
+                        ),
                     )
                 val receivedSykmelding =
                     receivedSykmelding(UUID.randomUUID().toString())
@@ -178,7 +178,7 @@ class OppgaveServiceTest :
                         receivedSykmelding,
                         validationResults,
                         behandletAvManuell = false,
-                        loggingMeta
+                        loggingMeta,
                     )
 
                 oppgave.behandlingstype shouldBeEqualTo "ae0106"

@@ -140,17 +140,17 @@ class FindOprasjonstypeNewTest {
         findoperasjonstypeAndFom(
             LocalDate.of(2020, 1, 10),
             tom.plusDays(20),
-            listSMinfo
+            listSMinfo,
         ) shouldBeEqualTo (Operasjonstype.FORLENGELSE to iFom)
         findoperasjonstypeAndFom(
             LocalDate.of(2020, 1, 11),
             tom.plusDays(20),
-            listSMinfo
+            listSMinfo,
         ) shouldBeEqualTo (Operasjonstype.FORLENGELSE to iFom)
         findoperasjonstypeAndFom(
             LocalDate.of(2020, 1, 12),
             tom.plusDays(20),
-            listSMinfo
+            listSMinfo,
         ) shouldBeEqualTo (Operasjonstype.NY to LocalDate.of(2020, 1, 12))
     }
 
@@ -167,7 +167,7 @@ class FindOprasjonstypeNewTest {
                 listOf(
                     iFirstFom to LocalDate.of(2020, 1, 10),
                     iSecondFom to LocalDate.of(2020, 1, 30),
-                    iThiredFom to LocalDate.of(2020, 2, 20)
+                    iThiredFom to LocalDate.of(2020, 2, 20),
                 )
             )
 
@@ -183,7 +183,7 @@ class FindOprasjonstypeNewTest {
         findoperasjonstypeAndFom(
             LocalDate.of(2020, 1, 1).minusDays(1),
             tom,
-            listSMinfo
+            listSMinfo,
         ) shouldBeEqualTo (Operasjonstype.UGYLDIG_OVERLAPP to LocalDate.of(2020, 1, 1).minusDays(1))
         findoperasjonstypeAndFom(fom, tom.plusDays(1), listSMinfo) shouldBeEqualTo
             (Operasjonstype.UGYLDIG_OVERLAPP to fom)
@@ -194,22 +194,22 @@ class FindOprasjonstypeNewTest {
         findoperasjonstypeAndFom(
             LocalDate.of(2020, 2, 2),
             LocalDate.of(2020, 2, 8),
-            listSMinfo
+            listSMinfo,
         ) shouldBeEqualTo (Operasjonstype.NY to LocalDate.of(2020, 2, 2))
         findoperasjonstypeAndFom(
             LocalDate.of(2020, 2, 2),
             LocalDate.of(2020, 2, 9),
-            listSMinfo
+            listSMinfo,
         ) shouldBeEqualTo (Operasjonstype.UGYLDIG_OVERLAPP to LocalDate.of(2020, 2, 2))
         findoperasjonstypeAndFom(
             LocalDate.of(2020, 2, 21),
             LocalDate.of(2020, 2, 28),
-            listSMinfo
+            listSMinfo,
         ) shouldBeEqualTo (Operasjonstype.FORLENGELSE to iThiredFom)
         findoperasjonstypeAndFom(
             LocalDate.of(2020, 2, 22),
             LocalDate.of(2020, 2, 28),
-            listSMinfo
+            listSMinfo,
         ) shouldBeEqualTo (Operasjonstype.NY to LocalDate.of(2020, 2, 22))
     }
 }

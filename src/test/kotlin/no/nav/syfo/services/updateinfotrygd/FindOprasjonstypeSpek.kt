@@ -22,7 +22,7 @@ class FindOprasjonstypeSpek :
                                     HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
                                         periodeFOMDato = LocalDate.now()
                                         periodeTOMDato = LocalDate.now().plusDays(4)
-                                    },
+                                    }
                                 )
                             }
                     }
@@ -38,7 +38,7 @@ class FindOprasjonstypeSpek :
                                                 arbufoerFOM = LocalDate.now()
                                                 arbufoerTOM = LocalDate.now().plusDays(2)
                                             }
-                                    },
+                                    }
                                 )
                                 status = StatusType().apply { kodeMelding = "04" }
                             }
@@ -60,7 +60,7 @@ class FindOprasjonstypeSpek :
                                     HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
                                         periodeFOMDato = LocalDate.of(2019, 1, 14)
                                         periodeTOMDato = LocalDate.of(2019, 1, 20)
-                                    },
+                                    }
                                 )
                             }
                     }
@@ -76,7 +76,7 @@ class FindOprasjonstypeSpek :
                                                 arbufoerFOM = LocalDate.of(2019, 1, 9)
                                                 arbufoerTOM = LocalDate.of(2019, 1, 13)
                                             }
-                                    },
+                                    }
                                 )
                                 status = StatusType().apply { kodeMelding = "00" }
                             }
@@ -98,7 +98,7 @@ class FindOprasjonstypeSpek :
                                     HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
                                         periodeFOMDato = LocalDate.of(2019, 2, 20)
                                         periodeTOMDato = LocalDate.of(2019, 3, 29)
-                                    },
+                                    }
                                 )
                             }
                     }
@@ -114,7 +114,7 @@ class FindOprasjonstypeSpek :
                                                 arbufoerFOM = LocalDate.of(2019, 2, 10)
                                                 arbufoerTOM = LocalDate.of(2019, 2, 20)
                                             }
-                                    },
+                                    }
                                 )
                                 status = StatusType().apply { kodeMelding = "00" }
                             }
@@ -136,7 +136,7 @@ class FindOprasjonstypeSpek :
                                     HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
                                         periodeFOMDato = LocalDate.of(2022, 2, 14) // mandag
                                         periodeTOMDato = LocalDate.of(2022, 2, 20)
-                                    },
+                                    }
                                 )
                             }
                     }
@@ -152,7 +152,7 @@ class FindOprasjonstypeSpek :
                                                 arbufoerFOM = LocalDate.of(2022, 2, 1)
                                                 arbufoerTOM = LocalDate.of(2022, 2, 11) // fredag
                                             }
-                                    },
+                                    }
                                 )
                                 status = StatusType().apply { kodeMelding = "00" }
                             }
@@ -174,7 +174,7 @@ class FindOprasjonstypeSpek :
                                     HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
                                         periodeFOMDato = LocalDate.of(2022, 2, 13) // søndag
                                         periodeTOMDato = LocalDate.of(2022, 2, 20)
-                                    },
+                                    }
                                 )
                             }
                     }
@@ -190,7 +190,7 @@ class FindOprasjonstypeSpek :
                                                 arbufoerFOM = LocalDate.of(2022, 2, 1)
                                                 arbufoerTOM = LocalDate.of(2022, 2, 11) // fredag
                                             }
-                                    },
+                                    }
                                 )
                                 status = StatusType().apply { kodeMelding = "00" }
                             }
@@ -212,7 +212,7 @@ class FindOprasjonstypeSpek :
                                     HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
                                         periodeFOMDato = LocalDate.of(2022, 2, 14) // mandag
                                         periodeTOMDato = LocalDate.of(2022, 2, 20)
-                                    },
+                                    }
                                 )
                             }
                     }
@@ -228,7 +228,7 @@ class FindOprasjonstypeSpek :
                                                 arbufoerFOM = LocalDate.of(2022, 2, 1)
                                                 arbufoerTOM = LocalDate.of(2022, 2, 12) // lørdag
                                             }
-                                    },
+                                    }
                                 )
                                 status = StatusType().apply { kodeMelding = "00" }
                             }
@@ -250,7 +250,7 @@ class FindOprasjonstypeSpek :
                                     HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
                                         periodeFOMDato = LocalDate.of(2022, 2, 17) // torsdag
                                         periodeTOMDato = LocalDate.of(2022, 2, 20)
-                                    },
+                                    }
                                 )
                             }
                     }
@@ -266,7 +266,7 @@ class FindOprasjonstypeSpek :
                                                 arbufoerFOM = LocalDate.of(2022, 2, 1)
                                                 arbufoerTOM = LocalDate.of(2022, 2, 14) // mandag
                                             }
-                                    },
+                                    }
                                 )
                                 status = StatusType().apply { kodeMelding = "00" }
                             }
@@ -288,7 +288,7 @@ class FindOprasjonstypeSpek :
                                     HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
                                         periodeFOMDato = LocalDate.of(2018, 10, 9)
                                         periodeTOMDato = LocalDate.of(2018, 11, 11)
-                                    },
+                                    }
                                 )
                             }
                     }
@@ -304,7 +304,7 @@ class FindOprasjonstypeSpek :
                                                 arbufoerFOM = LocalDate.of(2018, 10, 9)
                                                 arbufoerTOM = LocalDate.of(2019, 1, 1)
                                             }
-                                    },
+                                    }
                                 )
                                 status = StatusType().apply { kodeMelding = "00" }
                             }
@@ -326,7 +326,7 @@ class FindOprasjonstypeSpek :
                                     HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
                                         periodeFOMDato = LocalDate.of(2019, 1, 1)
                                         periodeTOMDato = LocalDate.of(2019, 1, 9)
-                                    },
+                                    }
                                 )
                             }
                     }
@@ -342,7 +342,7 @@ class FindOprasjonstypeSpek :
                                                 arbufoerFOM = LocalDate.of(2019, 1, 1)
                                                 arbufoerTOM = LocalDate.of(2019, 1, 10)
                                             }
-                                    },
+                                    }
                                 )
                                 status = StatusType().apply { kodeMelding = "00" }
                             }
@@ -368,7 +368,7 @@ class FindOprasjonstypeSpek :
                                             HelseOpplysningerArbeidsuforhet.Aktivitet.Periode
                                                 .GradertSykmelding()
                                                 .apply { sykmeldingsgrad = 50 }
-                                    },
+                                    }
                                 )
                             }
                     }
@@ -385,7 +385,7 @@ class FindOprasjonstypeSpek :
                                                 arbufoerTOM = LocalDate.of(2019, 4, 30)
                                                 ufoeregrad = 60.toBigInteger()
                                             }
-                                    },
+                                    }
                                 )
                                 status = StatusType().apply { kodeMelding = "00" }
                             }
@@ -407,7 +407,7 @@ class FindOprasjonstypeSpek :
                                     HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
                                         periodeFOMDato = LocalDate.of(2019, 5, 22)
                                         periodeTOMDato = LocalDate.of(2019, 6, 14)
-                                    },
+                                    }
                                 )
                             }
                     }
@@ -423,7 +423,7 @@ class FindOprasjonstypeSpek :
                                                 arbufoerFOM = LocalDate.of(2019, 5, 22)
                                                 arbufoerTOM = LocalDate.of(2019, 5, 26)
                                             }
-                                    },
+                                    }
                                 )
                                 status = StatusType().apply { kodeMelding = "00" }
                             }
@@ -445,7 +445,7 @@ class FindOprasjonstypeSpek :
                                     HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
                                         periodeFOMDato = LocalDate.of(2019, 5, 20)
                                         periodeTOMDato = LocalDate.of(2019, 6, 2)
-                                    },
+                                    }
                                 )
                                 periode.add(
                                     HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
@@ -455,7 +455,7 @@ class FindOprasjonstypeSpek :
                                             HelseOpplysningerArbeidsuforhet.Aktivitet.Periode
                                                 .GradertSykmelding()
                                                 .apply { sykmeldingsgrad = 80 }
-                                    },
+                                    }
                                 )
                             }
                     }
@@ -472,7 +472,7 @@ class FindOprasjonstypeSpek :
                                                 arbufoerTOM = LocalDate.of(2019, 5, 31)
                                                 ufoeregrad = 80.toBigInteger()
                                             }
-                                    },
+                                    }
                                 )
                                 status = StatusType().apply { kodeMelding = "00" }
                             }
@@ -494,7 +494,7 @@ class FindOprasjonstypeSpek :
                                     HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
                                         periodeFOMDato = LocalDate.of(2019, 6, 1)
                                         periodeTOMDato = LocalDate.of(2019, 6, 30)
-                                    },
+                                    }
                                 )
                             }
                     }
@@ -510,7 +510,7 @@ class FindOprasjonstypeSpek :
                                                 arbufoerFOM = LocalDate.of(2019, 5, 1)
                                                 arbufoerTOM = LocalDate.of(2019, 5, 31)
                                             }
-                                    },
+                                    }
                                 )
                                 status = StatusType().apply { kodeMelding = "00" }
                             }
@@ -532,7 +532,7 @@ class FindOprasjonstypeSpek :
                                     HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
                                         periodeFOMDato = LocalDate.of(2019, 8, 10)
                                         periodeTOMDato = LocalDate.of(2019, 8, 10)
-                                    },
+                                    }
                                 )
                             }
                     }
@@ -548,7 +548,7 @@ class FindOprasjonstypeSpek :
                                                 arbufoerFOM = LocalDate.of(2019, 8, 12)
                                                 arbufoerTOM = LocalDate.of(2019, 8, 12)
                                             }
-                                    },
+                                    }
                                 )
                                 status = StatusType().apply { kodeMelding = "00" }
                             }
@@ -570,7 +570,7 @@ class FindOprasjonstypeSpek :
                                     HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
                                         periodeFOMDato = LocalDate.of(2019, 8, 15)
                                         periodeTOMDato = LocalDate.of(2019, 8, 15)
-                                    },
+                                    }
                                 )
                             }
                     }
@@ -586,7 +586,7 @@ class FindOprasjonstypeSpek :
                                                 arbufoerFOM = LocalDate.of(2019, 8, 16)
                                                 arbufoerTOM = LocalDate.of(2019, 8, 16)
                                             }
-                                    },
+                                    }
                                 )
                                 status = StatusType().apply { kodeMelding = "00" }
                             }
@@ -608,7 +608,7 @@ class FindOprasjonstypeSpek :
                                     HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
                                         periodeFOMDato = LocalDate.of(2019, 8, 10)
                                         periodeTOMDato = LocalDate.of(2019, 8, 10)
-                                    },
+                                    }
                                 )
                             }
                     }
@@ -624,7 +624,7 @@ class FindOprasjonstypeSpek :
                                                 arbufoerFOM = LocalDate.of(2019, 8, 16)
                                                 arbufoerTOM = LocalDate.of(2019, 8, 16)
                                             }
-                                    },
+                                    }
                                 )
                                 status = StatusType().apply { kodeMelding = "00" }
                             }
@@ -646,7 +646,7 @@ class FindOprasjonstypeSpek :
                                     HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
                                         periodeFOMDato = LocalDate.of(2019, 8, 14)
                                         periodeTOMDato = LocalDate.of(2019, 8, 17)
-                                    },
+                                    }
                                 )
                             }
                     }
@@ -662,7 +662,7 @@ class FindOprasjonstypeSpek :
                                                 arbufoerFOM = LocalDate.of(2019, 3, 4)
                                                 arbufoerTOM = LocalDate.of(2019, 3, 7)
                                             }
-                                    },
+                                    }
                                 )
                                 status = StatusType().apply { kodeMelding = "00" }
                             }

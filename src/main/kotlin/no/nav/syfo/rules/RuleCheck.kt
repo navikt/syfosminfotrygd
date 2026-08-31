@@ -40,12 +40,7 @@ fun ruleCheck(
         )
 
     val result = ruleExecutionService.runRules(receivedSykmelding.sykmelding, ruleMetadata)
-    result.forEach {
-        RULE_NODE_RULE_PATH_COUNTER.labels(
-                it.first.printRulePath(),
-            )
-            .inc()
-    }
+    result.forEach { RULE_NODE_RULE_PATH_COUNTER.labels(it.first.printRulePath()).inc() }
 
     val validationResult = validationResult(result.map { it.first })
     RULE_NODE_RULE_HIT_COUNTER.labels(
@@ -64,7 +59,7 @@ fun validationResult(results: List<TreeOutput<out Enum<*>, RuleResult>>): Valida
                 .let {
                     it.firstOrNull { status -> status == Status.INVALID }
                         ?: it.firstOrNull { status -> status == Status.MANUAL_PROCESSING }
-                            ?: Status.OK
+                        ?: Status.OK
                 },
         ruleHits =
             results

@@ -26,7 +26,7 @@ class PdlClient(
 
     private suspend inline fun <reified R> getGraphQLResponse(
         graphQlBody: Any,
-        accessToken: String
+        accessToken: String,
     ): R {
         return httpClient
             .post(basePath) {

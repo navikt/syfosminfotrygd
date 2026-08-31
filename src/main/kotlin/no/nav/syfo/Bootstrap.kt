@@ -9,8 +9,8 @@ import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.ibm.mq.MQEnvironment
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
-import io.ktor.client.engine.apache.Apache
-import io.ktor.client.engine.apache.ApacheEngineConfig
+import io.ktor.client.engine.apache5.Apache5
+import io.ktor.client.engine.apache5.Apache5EngineConfig
 import io.ktor.client.plugins.HttpRequestRetry
 import io.ktor.client.plugins.HttpResponseValidator
 import io.ktor.client.plugins.HttpTimeout
@@ -100,17 +100,13 @@ const val UTENLANDSK_SYKEHUS = "9900004"
 fun main() {
 
     val embeddedServer =
-        embeddedServer(
-            Netty,
-            port = Environment().applicationPort,
-            module = Application::module,
-        )
+        embeddedServer(Netty, port = Environment().applicationPort, module = Application::module)
     Runtime.getRuntime()
         .addShutdownHook(
             Thread {
                 log.info("Shutting down application from shutdown hook")
                 embeddedServer.stop(TimeUnit.SECONDS.toMillis(10), TimeUnit.SECONDS.toMillis(10))
-            },
+            }
         )
     embeddedServer.start(true)
 }
@@ -123,14 +119,7 @@ suspend fun Application.module() {
     val env = Environment()
     val serviceUser = ServiceUser()
     val applicationState = ApplicationState()
-    install(io.ktor.server.plugins.contentnegotiation.ContentNegotiation) {
-        jackson {
-            registerKotlinModule()
-            registerModule(JavaTimeModule())
-            configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-            configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-        }
-    }
+    install(io.ktor.server.plugins.contentnegotiation.ContentNegotiation) { jackson {} }
 
     setupAuth(
         JwkProviderBuilder(URI.create(env.jwkKeysUrlV2).toURL())
@@ -145,7 +134,7 @@ suspend fun Application.module() {
         KafkaProducer<String, ReceivedSykmelding>(getkafkaProducerConfig("retry-producer", env))
     val kafkaAivenProducerOppgave =
         KafkaProducer<String, OpprettOppgaveKafkaMessage>(
-            getkafkaProducerConfig("oppgave-producer", env),
+            getkafkaProducerConfig("oppgave-producer", env)
         )
 
     val kafkaAivenConsumerReceivedSykmelding =
@@ -157,15 +146,8 @@ suspend fun Application.module() {
     MQEnvironment.userID = serviceUser.serviceuserUsername
     MQEnvironment.password = serviceUser.serviceuserPassword
 
-    val config: HttpClientConfig<ApacheEngineConfig>.() -> Unit = {
-        install(ContentNegotiation) {
-            jackson {
-                registerKotlinModule()
-                registerModule(JavaTimeModule())
-                configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-                configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-            }
-        }
+    val config: HttpClientConfig<Apache5EngineConfig>.() -> Unit = {
+        install(ContentNegotiation) { jackson {} }
         install(HttpTimeout) { socketTimeoutMillis = 6000 }
         HttpResponseValidator {
             handleResponseExceptionWithRequest { exception, _ ->
@@ -192,7 +174,7 @@ suspend fun Application.module() {
         }
     }
 
-    val httpClient = HttpClient(Apache, config)
+    val httpClient = HttpClient(Apache5, config)
     val jedisPool = createJedisPool()
     val valkeyService = ValkeyService(jedisPool)
 
@@ -242,7 +224,7 @@ suspend fun Application.module() {
             manuellBehandlingService = manuellBehandlingService,
             norskHelsenettClient = norskHelsenettClient,
             cluster = env.naiscluster,
-            smtssClient = smtssClient
+            smtssClient = smtssClient,
         )
     routing {
         registerNaisApi(applicationState)
@@ -253,7 +235,7 @@ suspend fun Application.module() {
                     serviceUser,
                     env,
                     env.infotrygdSporringQueue,
-                    env.infotrygdOppdateringQueue
+                    env.infotrygdOppdateringQueue,
                 )
             )
         }
@@ -265,7 +247,7 @@ suspend fun Application.module() {
             env,
             serviceUser,
             kafkaAivenConsumerReceivedSykmelding,
-            applicationState
+            applicationState,
         )
     monitor.subscribe(ApplicationStarted) {
         log.info("Application is ready -> starting kafka consumer")
@@ -277,10 +259,7 @@ suspend fun Application.module() {
 
 private fun getkafkaProducerConfig(producerId: String, env: Environment) =
     KafkaUtils.getAivenKafkaConfig(producerId)
-        .toProducerConfig(
-            env.applicationName,
-            valueSerializer = JacksonKafkaSerializer::class,
-        )
+        .toProducerConfig(env.applicationName, valueSerializer = JacksonKafkaSerializer::class)
 
 private fun getkafkaConsumerConfig(consumerId: String, env: Environment) =
     KafkaUtils.getAivenKafkaConfig(consumerId)

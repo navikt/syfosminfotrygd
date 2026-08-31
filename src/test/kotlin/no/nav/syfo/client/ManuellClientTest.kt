@@ -84,7 +84,7 @@ class ManuellClientTest :
             test("Returnerer false hvis sykmeldingId ikke er behandlet av manuell") {
                 manuellClient.behandletAvManuell(
                     sykmeldingErIkkeBehandlet,
-                    loggingMeta
+                    loggingMeta,
                 ) shouldBeEqualTo false
             }
             test("Feiler hvis kall mot manuell ikke gir OK eller NotFound") {

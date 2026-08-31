@@ -25,7 +25,7 @@ class Duplikatsjekk :
                                     HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
                                         periodeFOMDato = LocalDate.of(2019, 1, 1)
                                         periodeTOMDato = LocalDate.of(2019, 1, 2)
-                                    },
+                                    }
                                 )
                             }
                     }
@@ -35,7 +35,7 @@ class Duplikatsjekk :
                         sMhistorikk =
                             InfotrygdForesp.SMhistorikk().apply {
                                 sykmelding.add(
-                                    TypeSMinfo().apply { periode = TypeSMinfo.Periode().apply {} },
+                                    TypeSMinfo().apply { periode = TypeSMinfo.Periode().apply {} }
                                 )
                                 status = StatusType().apply { kodeMelding = "00" }
                             }
@@ -44,7 +44,7 @@ class Duplikatsjekk :
                 val ifthForstemelding =
                     InfotrygdForespAndHealthInformation(
                         infotrygdForesp,
-                        healthInformationForstemelding
+                        healthInformationForstemelding,
                     )
 
                 val infotrygdBlokkForsteMelding =
@@ -71,7 +71,7 @@ class Duplikatsjekk :
                                     HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
                                         periodeFOMDato = LocalDate.of(2019, 1, 1)
                                         periodeTOMDato = LocalDate.of(2019, 1, 2)
-                                    },
+                                    }
                                 )
                             }
                         arbeidsgiver =
@@ -88,7 +88,7 @@ class Duplikatsjekk :
                 val ifthAndreMelding =
                     InfotrygdForespAndHealthInformation(
                         infotrygdForesp,
-                        healthInformationAndreMelding
+                        healthInformationAndreMelding,
                     )
 
                 val infotrygdBlokkAndreMelding =

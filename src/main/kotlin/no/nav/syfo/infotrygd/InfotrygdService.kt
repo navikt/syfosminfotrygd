@@ -25,23 +25,16 @@ import no.nav.syfo.services.updateinfotrygd.formatName
 import no.nav.syfo.util.LoggingMeta
 import no.nav.syfo.util.xmlObjectWriter
 
-data class InfotrygdResponse(
-    val identDato: String?,
-    val tkNummer: String?,
-)
+data class InfotrygdResponse(val identDato: String?, val tkNummer: String?)
 
-data class UpdateResponse(
-    val oppdatert: Boolean,
-    val canUpdate: Boolean,
-    val message: String,
-)
+data class UpdateResponse(val oppdatert: Boolean, val canUpdate: Boolean, val message: String)
 
 class InfotrygdService(
     private val finnNAVKontorService: FinnNAVKontorService,
     private val serviceUser: ServiceUser,
     private val mqConfig: MqConfig,
     private val infotrygdSporringQueue: String,
-    private val infotrygdOppdateringQueue: String
+    private val infotrygdOppdateringQueue: String,
 ) {
 
     val connection =
@@ -66,7 +59,7 @@ class InfotrygdService(
                     ?.periode
                     ?.arbufoerFOM
                     ?.toString(),
-            tkNummer = infotrygdResult.tkNummer
+            tkNummer = infotrygdResult.tkNummer,
         )
     }
 
@@ -74,16 +67,14 @@ class InfotrygdService(
         producer.send(
             session.createTextMessage().apply {
                 text = xmlObjectWriter.writeValueAsString(fellesformat)
-            },
+            }
         )
     }
 
     fun getInfotrygdForesp(infotrygdQuery: InfotrygdQuery): InfotrygdForesp {
 
         val infotrygdSporringProducer =
-            session.producerForQueue(
-                "queue:///${infotrygdSporringQueue}?targetClient=1",
-            )
+            session.producerForQueue("queue:///${infotrygdSporringQueue}?targetClient=1")
         val infotrygdForespValues = InfotrygdForespValues.from(infotrygdQuery)
 
         val infotrygdForesp =
@@ -110,13 +101,13 @@ class InfotrygdService(
                 mottakId = updateRequest.mottakId,
                 orgNr = null,
                 msgId = updateRequest.msgId,
-                sykmeldingId = updateRequest.sykmeldingId
+                sykmeldingId = updateRequest.sykmeldingId,
             )
         val navKontor =
             updateRequest.navKontorNr
                 ?: finnNAVKontorService.finnLokaltNavkontor(
                     updateRequest.fnr,
-                    loggingMeta = loggingMeta
+                    loggingMeta = loggingMeta,
                 )
 
         val infotrygdResponse = getInfotrygdForesp(InfotrygdQuery(ident = updateRequest.fnr))
@@ -129,7 +120,7 @@ class InfotrygdService(
             findoperasjonstypeAndFom(
                 updateRequest.fom,
                 updateRequest.tom,
-                infotrygdResponse.sMhistorikk?.sykmelding?.sortedSMInfos() ?: emptyList()
+                infotrygdResponse.sMhistorikk?.sykmelding?.sortedSMInfos() ?: emptyList(),
             )
 
         val sykmeldingToUpdate =
@@ -161,7 +152,7 @@ class InfotrygdService(
                 tom = updateRequest.toTom,
                 uforegrad = sykmeldingToUpdate.periode.ufoeregrad.toInt(),
                 tssIdent = sykmeldingToUpdate.periode.legeInstNr ?: "0".toBigInteger(),
-                legeNavn = sykmeldingToUpdate.periode.legeNavn?.formatName() ?: ""
+                legeNavn = sykmeldingToUpdate.periode.legeNavn?.formatName() ?: "",
             )
 
         sendInfotrygdBlock(fellesformat)
@@ -172,7 +163,7 @@ class InfotrygdService(
         return UpdateResponse(
             true,
             true,
-            "Updated sykmelding with fom: ${sykmeldingToUpdate.periode.arbufoerFOM}, and tom: ${sykmeldingToUpdate.periode.arbufoerTOM} from infotrygd"
+            "Updated sykmelding with fom: ${sykmeldingToUpdate.periode.arbufoerFOM}, and tom: ${sykmeldingToUpdate.periode.arbufoerTOM} from infotrygd",
         )
     }
 
@@ -190,7 +181,7 @@ private fun getInfotrygdBlock(
     tom: LocalDate,
     uforegrad: Int,
     tssIdent: BigInteger,
-    legeNavn: String
+    legeNavn: String,
 ): XMLEIFellesformat {
     return XMLEIFellesformat().apply {
         any.add(

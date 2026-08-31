@@ -22,7 +22,7 @@ class Norg2ValkeyService(private val jedisPool: JedisPool) {
             jedis.setex(
                 "$PREFIX$geografiskOmraade",
                 valkeyTimeoutSeconds,
-                objectMapper.writeValueAsString(enhet)
+                objectMapper.writeValueAsString(enhet),
             )
         } catch (ex: Exception) {
             log.error("Could not update valkey for GT {}", ex.message)

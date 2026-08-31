@@ -7,6 +7,6 @@ import no.nav.syfo.rules.dsl.TreeOutput
 interface RuleExecution<T> {
     fun runRules(
         sykmelding: Sykmelding,
-        ruleMetadata: RuleMetadata
+        ruleMetadata: RuleMetadata,
     ): Pair<TreeOutput<T, RuleResult>, Juridisk>
 }

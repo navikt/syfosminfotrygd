@@ -10,16 +10,8 @@ class PdlPersonServiceKtTest :
         test("Should not fail when adresse is fraOgMed is null") {
             val kontaktaddresser =
                 listOf(
-                    Kontaktadresse(
-                        type = "Utland",
-                        gyldigFraOgMed = null,
-                        gyldigTilOgMed = null,
-                    ),
-                    Kontaktadresse(
-                        "Innland",
-                        LocalDateTime.now().toString(),
-                        null,
-                    ),
+                    Kontaktadresse(type = "Utland", gyldigFraOgMed = null, gyldigTilOgMed = null),
+                    Kontaktadresse("Innland", LocalDateTime.now().toString(), null),
                 )
 
             val utland = sisteKontaktAdresseIUtlandet(kontaktaddresser)

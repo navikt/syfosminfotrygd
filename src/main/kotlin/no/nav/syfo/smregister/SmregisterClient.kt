@@ -42,17 +42,13 @@ data class SykmeldingDTO(
     val merknader: List<Merknad>?,
 )
 
-data class Merknad(
-    val type: String,
-    val beskrivelse: String?,
-)
+data class Merknad(val type: String, val beskrivelse: String?)
 
 enum class MerknadType {
     UGYLDIG_TILBAKEDATERING,
     TILBAKEDATERING_KREVER_FLERE_OPPLYSNINGER,
     UNDER_BEHANDLING,
-    DELVIS_GODKJENT,
-    ;
+    DELVIS_GODKJENT;
 
     companion object {
         fun contains(type: String): Boolean {
@@ -68,18 +64,11 @@ data class SykmeldingsperiodeDTO(
     val type: PeriodetypeDTO,
 )
 
-data class MedisinskVurderingDTO(
-    val hovedDiagnose: DiagnoseDTO?,
-)
+data class MedisinskVurderingDTO(val hovedDiagnose: DiagnoseDTO?)
 
-data class DiagnoseDTO(
-    val kode: String,
-)
+data class DiagnoseDTO(val kode: String)
 
-data class GradertDTO(
-    val grad: Int,
-    val reisetilskudd: Boolean,
-)
+data class GradertDTO(val grad: Int, val reisetilskudd: Boolean)
 
 enum class PeriodetypeDTO {
     AKTIVITET_IKKE_MULIG,
@@ -89,14 +78,12 @@ enum class PeriodetypeDTO {
     REISETILSKUDD,
 }
 
-data class BehandlingsutfallDTO(
-    val status: RegelStatusDTO,
-)
+data class BehandlingsutfallDTO(val status: RegelStatusDTO)
 
 enum class RegelStatusDTO {
     OK,
     MANUAL_PROCESSING,
-    INVALID
+    INVALID,
 }
 
 fun List<SykmeldingsperiodeDTO>.sortedFOMDate(): List<LocalDate> = map { it.fom }.sorted()

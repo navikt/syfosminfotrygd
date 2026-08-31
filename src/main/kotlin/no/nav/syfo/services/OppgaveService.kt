@@ -37,25 +37,25 @@ class OppgaveService(
                             receivedSykmelding,
                             validationResult,
                             behandletAvManuell,
-                            loggingMeta
+                            loggingMeta,
                         ),
-                    ),
+                    )
                 )
                 .get()
             MANUELLE_OPPGAVER_COUNTER.labels(
                     validationResult.ruleHits.firstOrNull()?.ruleName
-                        ?: validationResult.status.name,
+                        ?: validationResult.status.name
                 )
                 .inc()
             log.info(
                 "Message sendt to topic: {}, {}",
                 produserOppgaveTopic,
-                StructuredArguments.fields(loggingMeta)
+                StructuredArguments.fields(loggingMeta),
             )
         } catch (ex: Exception) {
             log.error(
                 "Error when writing to oppgave kafka topic {}",
-                StructuredArguments.fields(loggingMeta)
+                StructuredArguments.fields(loggingMeta),
             )
             throw ex
         }
@@ -65,7 +65,7 @@ class OppgaveService(
         receivedSykmelding: ReceivedSykmelding,
         validationResult: ValidationResult,
         behandletAvManuell: Boolean,
-        loggingMeta: LoggingMeta
+        loggingMeta: LoggingMeta,
     ): OpprettOppgaveKafkaMessage {
         val oppgave =
             OpprettOppgaveKafkaMessage(
@@ -85,13 +85,13 @@ class OppgaveService(
                     if (behandletAvManuell || receivedSykmelding.erTilbakedatert()) {
                         log.info(
                             "sykmelding har vært behandlet av syfosmmanuell eller er tilbakedatert, {}",
-                            StructuredArguments.fields(loggingMeta)
+                            StructuredArguments.fields(loggingMeta),
                         )
                         "ae0256"
                     } else if (receivedSykmelding.erUtenlandskSykmelding()) {
                         log.info(
                             "sykmelding er utenlandsk, {}",
-                            StructuredArguments.fields(loggingMeta)
+                            StructuredArguments.fields(loggingMeta),
                         )
                         "ae0106"
                     } else {

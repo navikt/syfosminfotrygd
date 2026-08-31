@@ -8,11 +8,7 @@ import no.nav.syfo.rules.tss.tssRuleTree
 import no.nav.syfo.rules.validation.validationRuleTree
 
 fun main() {
-    val ruleTrees =
-        listOf(
-            "Validation" to validationRuleTree,
-            "TSS" to tssRuleTree,
-        )
+    val ruleTrees = listOf("Validation" to validationRuleTree, "TSS" to tssRuleTree)
 
     ruleTrees.forEach {
         val builder = StringBuilder()

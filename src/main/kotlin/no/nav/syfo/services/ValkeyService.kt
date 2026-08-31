@@ -34,7 +34,7 @@ class ValkeyService(private val jedisPool: JedisPool) {
         valkeyKey: String,
         valkeyValue: String,
         sekunder: Int,
-        loggingMeta: LoggingMeta
+        loggingMeta: LoggingMeta,
     ): String? {
         log.info("Prøver å oppdaterer valkey {}", fields(loggingMeta))
         var jedis: Jedis? = null
@@ -74,7 +74,7 @@ class ValkeyService(private val jedisPool: JedisPool) {
         valkeyKey: String,
         valkeyValue: String,
         sekunder: Int,
-        loggingMeta: LoggingMeta
+        loggingMeta: LoggingMeta,
     ) {
         when (erIValkey(valkeyKey)) {
             false -> oppdaterValkey(valkeyKey, valkeyValue, sekunder, loggingMeta)
@@ -86,7 +86,7 @@ class ValkeyService(private val jedisPool: JedisPool) {
                 } catch (e: Exception) {
                     log.error(
                         "Noe gikk galt ved oppdatering av antall infotrygdfeil i valkey: {}",
-                        e.message
+                        e.message,
                     )
                     throw e
                 } finally {

@@ -37,7 +37,7 @@ class NorskHelsenettClient(
             NotFound -> {
                 log.warn(
                     "Syfohelsenettproxy svarte med finnBehandler basert på fnr med NotFound msgId {}",
-                    msgId
+                    msgId,
                 )
                 null
             }
@@ -45,7 +45,7 @@ class NorskHelsenettClient(
                 log.error(
                     "Syfohelsenettproxy svarte med feilmelding for msgId {}: {}",
                     msgId,
-                    httpResponse.status
+                    httpResponse.status,
                 )
                 throw IOException("Syfohelsenettproxy svarte med feilmelding for $msgId")
             }
@@ -53,17 +53,8 @@ class NorskHelsenettClient(
     }
 }
 
-data class Behandler(
-    val godkjenninger: List<Godkjenning>,
-)
+data class Behandler(val godkjenninger: List<Godkjenning>)
 
-data class Godkjenning(
-    val helsepersonellkategori: Kode? = null,
-    val autorisasjon: Kode? = null,
-)
+data class Godkjenning(val helsepersonellkategori: Kode? = null, val autorisasjon: Kode? = null)
 
-data class Kode(
-    val aktiv: Boolean,
-    val oid: Int,
-    val verdi: String?,
-)
+data class Kode(val aktiv: Boolean, val oid: Int, val verdi: String?)
