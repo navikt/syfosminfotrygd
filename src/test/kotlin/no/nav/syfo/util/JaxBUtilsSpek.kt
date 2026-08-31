@@ -30,7 +30,7 @@ class JaxBUtilsSpek :
 
                 escapetXMLSomString
                     .contains(
-                        "DN=\"KVALME SVANGERSKAP (&gt;22 UKER)\""
+                        "Diagnosekode V=\"W05\" S=\"2.16.578.1.12.4.1.1.7170\" DN=\"KVALME SVANGERSKAP (&gt;22 UKER)\"/>"
                     )
                     .shouldBeTrue()
             }
