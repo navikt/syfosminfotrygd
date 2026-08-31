@@ -12,8 +12,6 @@ object CustomXmlEscapingWriterFactory : EscapingWriterFactory {
             override fun write(cbuf: CharArray, off: Int, len: Int) {
                 var value = ""
                 for (i in off until len) {
-                    value += cbuf[i]
-                }
                 val escapetString = value.replace(">", "&gt;").replace("<", "&lt;")
                 writer.write(escapetString)
             }
