@@ -15,7 +15,10 @@ class JaxBUtilsSpek :
             test("Oppretter ny marshaller og unmarshaller for hver tilgang") {
                 assertNotSame(fellesformatUnmarshaller, fellesformatUnmarshaller)
                 assertNotSame(fellesformatMarshaller, fellesformatMarshaller)
-                assertEquals("ISO-8859-1", fellesformatMarshaller.getProperty(Marshaller.JAXB_ENCODING))
+                assertEquals(
+                    "ISO-8859-1",
+                    fellesformatMarshaller.getProperty(Marshaller.JAXB_ENCODING),
+                )
             }
 
             test("Escaper krokodiller i verdier") {
