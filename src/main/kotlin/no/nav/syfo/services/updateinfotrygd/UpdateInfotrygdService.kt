@@ -17,7 +17,7 @@ import no.nav.syfo.model.sykmelding.ReceivedSykmelding
 import no.nav.syfo.services.ValkeyService
 import no.nav.syfo.services.sha256hashstring
 import no.nav.syfo.util.LoggingMeta
-import no.nav.syfo.util.xmlObjectWriter
+import no.nav.syfo.util.xmlSendInfotrygdBlockObjectWriter
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 
@@ -208,7 +208,7 @@ class UpdateInfotrygdService(
                     fellesformat.get<KontrollsystemBlokkType>().infotrygdBlokk.first().tkNummer,
                     fields(loggingMeta),
                 )
-                text = xmlObjectWriter.writeValueAsString(fellesformat)
+                text = xmlSendInfotrygdBlockObjectWriter.writeValueAsString(fellesformat)
                 log.info("Melding er sendt til infotrygd {}", fields(loggingMeta))
             }
         )

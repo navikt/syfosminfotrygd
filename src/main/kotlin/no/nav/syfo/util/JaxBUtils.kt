@@ -19,6 +19,10 @@ import tools.jackson.dataformat.xml.XmlMapper
 import tools.jackson.dataformat.xml.XmlWriteFeature
 import tools.jackson.module.jaxb.JaxbAnnotationModule
 
+// JAXBContext is thread-safe and expensive to create, so it is shared. Marshaller and Unmarshaller
+// are NOT thread-safe and must never be shared between concurrent requests, so a fresh instance is
+// created for every call.
+
 val infotrygdSporringJaxBContext: JAXBContext = JAXBContext.newInstance(InfotrygdForesp::class.java)
 
 val fellesformatJaxBContext: JAXBContext =
@@ -37,12 +41,35 @@ val fellesformatUnmarshaller: Unmarshaller =
         setAdapter(LocalDateXmlAdapter::class.java, XMLDateAdapter())
     }
 
+val fellesformatHandleMessageUnmarshaller: Unmarshaller =
+    fellesformatJaxBContext.createUnmarshaller().apply {
+        setAdapter(LocalDateTimeXmlAdapter::class.java, XMLDateTimeAdapter())
+        setAdapter(LocalDateXmlAdapter::class.java, XMLDateAdapter())
+    }
+
 val fellesformatMarshaller: Marshaller =
     fellesformatJaxBContext.createMarshaller().apply {
         setProperty(Marshaller.JAXB_ENCODING, "ISO-8859-1")
     }
 
 val xmlObjectWriter: XmlMapper =
+    XmlMapper.builder()
+        .defaultUseWrapper(false)
+        .enable(XmlWriteFeature.WRITE_XML_DECLARATION)
+        .addModule(JaxbAnnotationModule())
+        .disable(DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS)
+        .disable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
+        .build()
+        .apply {
+            tokenStreamFactory()
+                .xmlOutputFactory
+                .setProperty(XMLOutputFactory2.P_TEXT_ESCAPER, CustomXmlEscapingWriterFactory)
+            tokenStreamFactory()
+                .xmlOutputFactory
+                .setProperty(XMLOutputFactory2.P_ATTR_VALUE_ESCAPER, CustomXmlEscapingWriterFactory)
+        }
+
+val xmlSendInfotrygdBlockObjectWriter: XmlMapper =
     XmlMapper.builder()
         .defaultUseWrapper(false)
         .enable(XmlWriteFeature.WRITE_XML_DECLARATION)

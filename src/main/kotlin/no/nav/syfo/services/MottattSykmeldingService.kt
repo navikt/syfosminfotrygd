@@ -35,7 +35,7 @@ import no.nav.syfo.services.updateinfotrygd.findoperasjonstypeAndFom
 import no.nav.syfo.services.updateinfotrygd.getInfotrygdPerioder
 import no.nav.syfo.tss.SmtssClient
 import no.nav.syfo.util.LoggingMeta
-import no.nav.syfo.util.fellesformatUnmarshaller
+import no.nav.syfo.util.fellesformatHandleMessageUnmarshaller
 import no.nav.tsm.diagnoser.Diagnose
 import no.nav.tsm.diagnoser.ICD10
 import no.nav.tsm.diagnoser.ICPC2
@@ -110,7 +110,7 @@ class MottattSykmeldingService(
                 val requestLatency = REQUEST_TIME.startTimer()
 
                 val fellesformat =
-                    fellesformatUnmarshaller.unmarshal(
+                    fellesformatHandleMessageUnmarshaller.unmarshal(
                         StringReader(receivedSykmelding.fellesformat)
                     ) as XMLEIFellesformat
 
