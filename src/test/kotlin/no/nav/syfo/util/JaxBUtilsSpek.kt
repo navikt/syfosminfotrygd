@@ -2,6 +2,9 @@ package no.nav.syfo.util
 
 import io.kotest.core.spec.style.FunSpec
 import java.io.StringReader
+import javax.xml.bind.Marshaller
+import kotlin.test.assertEquals
+import kotlin.test.assertNotSame
 import no.nav.helse.eiFellesformat.XMLEIFellesformat
 import no.nav.syfo.getFileAsString
 import org.amshove.kluent.shouldBeTrue
@@ -9,6 +12,12 @@ import org.amshove.kluent.shouldBeTrue
 class JaxBUtilsSpek :
     FunSpec({
         context("JaxBUtilsSpek") {
+            test("Oppretter ny marshaller og unmarshaller for hver tilgang") {
+                assertNotSame(fellesformatUnmarshaller, fellesformatUnmarshaller)
+                assertNotSame(fellesformatMarshaller, fellesformatMarshaller)
+                assertEquals("ISO-8859-1", fellesformatMarshaller.getProperty(Marshaller.JAXB_ENCODING))
+            }
+
             test("Escaper krokodiller i verdier") {
                 val stringInput =
                     getFileAsString("src/test/resources/sykemeldingMedSpesialtegn.xml")

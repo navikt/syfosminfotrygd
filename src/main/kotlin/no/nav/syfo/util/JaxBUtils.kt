@@ -31,14 +31,14 @@ val fellesformatJaxBContext: JAXBContext =
         KontrollSystemBlokk::class.java,
         InfotrygdForesp::class.java,
     )
-val fellesformatUnmarshaller: Unmarshaller =
-    fellesformatJaxBContext.createUnmarshaller().apply {
+val fellesformatUnmarshaller: Unmarshaller
+    get() = fellesformatJaxBContext.createUnmarshaller().apply {
         setAdapter(LocalDateTimeXmlAdapter::class.java, XMLDateTimeAdapter())
         setAdapter(LocalDateXmlAdapter::class.java, XMLDateAdapter())
     }
 
-val fellesformatMarshaller: Marshaller =
-    fellesformatJaxBContext.createMarshaller().apply {
+val fellesformatMarshaller: Marshaller
+    get() = fellesformatJaxBContext.createMarshaller().apply {
         setProperty(Marshaller.JAXB_ENCODING, "ISO-8859-1")
     }
 
