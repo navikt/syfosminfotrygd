@@ -51,13 +51,12 @@ val validationRuleTree =
                         no(ValidationRules.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_1) {
                             yes(
                                 Status.MANUAL_PROCESSING,
-                                ValidationRuleHit.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_1
+                                ValidationRuleHit.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_1,
                             )
                             no(ValidationRules.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_2) {
                                 yes(
                                     Status.MANUAL_PROCESSING,
-                                    ValidationRuleHit
-                                        .SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_2,
+                                    ValidationRuleHit.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_2,
                                 )
                                 no(ValidationRules.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_3) {
                                     yes(
@@ -68,7 +67,7 @@ val validationRuleTree =
                                     no(ValidationRules.NEW_CLEAN_BILL_DATE_BEFORE_PAYOUT) {
                                         yes(
                                             Status.MANUAL_PROCESSING,
-                                            ValidationRuleHit.NEW_CLEAN_BILL_DATE_BEFORE_PAYOUT
+                                            ValidationRuleHit.NEW_CLEAN_BILL_DATE_BEFORE_PAYOUT,
                                         )
                                         no(
                                             ValidationRules
@@ -82,22 +81,22 @@ val validationRuleTree =
                                             no(ValidationRules.EXTANION_OVER_FA) {
                                                 yes(
                                                     Status.MANUAL_PROCESSING,
-                                                    ValidationRuleHit.EXTANION_OVER_FA
+                                                    ValidationRuleHit.EXTANION_OVER_FA,
                                                 )
                                                 no(ValidationRules.PERSON_MOVING_KODE_FL) {
                                                     yes(
                                                         Status.MANUAL_PROCESSING,
-                                                        ValidationRuleHit.PERSON_MOVING_KODE_FL
+                                                        ValidationRuleHit.PERSON_MOVING_KODE_FL,
                                                     )
                                                     no(ValidationRules.PERIOD_FOR_AA_ENDED) {
                                                         yes(
                                                             Status.MANUAL_PROCESSING,
-                                                            ValidationRuleHit.PERIOD_FOR_AA_ENDED
+                                                            ValidationRuleHit.PERIOD_FOR_AA_ENDED,
                                                         )
                                                         no(ValidationRules.PERIOD_IS_AF) {
                                                             yes(
                                                                 Status.MANUAL_PROCESSING,
-                                                                ValidationRuleHit.PERIOD_IS_AF
+                                                                ValidationRuleHit.PERIOD_IS_AF,
                                                             )
                                                             no(
                                                                 ValidationRules
@@ -165,7 +164,7 @@ val validationRuleTree =
                                                                                             Status
                                                                                                 .MANUAL_PROCESSING,
                                                                                             ValidationRuleHit
-                                                                                                .MISSING_OR_INCORRECT_HOVEDDIAGNOSE
+                                                                                                .MISSING_OR_INCORRECT_HOVEDDIAGNOSE,
                                                                                         )
                                                                                         no(
                                                                                             ValidationRules
@@ -206,14 +205,14 @@ val validationRuleTree =
 
 internal fun RuleNode<ValidationRules, RuleResult>.yes(
     status: Status,
-    ruleHit: ValidationRuleHit? = null
+    ruleHit: ValidationRuleHit? = null,
 ) {
     yes(RuleResult(status, ruleHit?.ruleHit))
 }
 
 internal fun RuleNode<ValidationRules, RuleResult>.no(
     status: Status,
-    ruleHit: ValidationRuleHit? = null
+    ruleHit: ValidationRuleHit? = null,
 ) {
     no(RuleResult(status, ruleHit?.ruleHit))
 }

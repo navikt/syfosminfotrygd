@@ -13,9 +13,7 @@ fun finnAktivHelsepersonellAutorisasjons(helsepersonelPerson: Behandler): String
     return when (
         helsepersonellGodkjenningSom(
             godkjenteHelsepersonellAutorisasjonsAktiv,
-            listOf(
-                HelsepersonellKategori.LEGE.verdi,
-            ),
+            listOf(HelsepersonellKategori.LEGE.verdi),
         )
     ) {
         true -> HelsepersonellKategori.LEGE.verdi
@@ -37,7 +35,7 @@ private fun godkjenteHelsepersonellAutorisasjonsAktiv(
 
 private fun helsepersonellGodkjenningSom(
     helsepersonellGodkjenning: List<Godkjenning>,
-    helsepersonerVerdi: List<String>
+    helsepersonerVerdi: List<String>,
 ): Boolean =
     helsepersonellGodkjenning.any { godkjenning ->
         godkjenning.helsepersonellkategori.let { kode -> kode?.verdi in helsepersonerVerdi }

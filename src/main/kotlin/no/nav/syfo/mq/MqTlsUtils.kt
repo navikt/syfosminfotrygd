@@ -10,6 +10,9 @@ class MqTlsUtils {
                 it["javax.net.ssl.keyStore"] = mqEnv.NAV_TRUSTSTORE_PATH
                 it["javax.net.ssl.keyStorePassword"] = mqEnv.NAV_TRUSTSTORE_PASSWORD
                 it["javax.net.ssl.keyStoreType"] = "jks"
+                it["com.ibm.mq.cfg.TCP.ClntSndBuffSize"] = "32768"
+                it["com.ibm.mq.cfg.TCP.ClntRcvBuffSize"] = "32768"
+                it["com.ibm.msg.client.commonservices.log.outputName"] = "System.out"
             }
         }
     }

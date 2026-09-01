@@ -14,7 +14,7 @@ suspend inline fun <reified T> retry(
     vararg legalExceptions: KClass<out Throwable> = arrayOf(IOException::class),
     retryIntervals: Array<Long> = arrayOf(500, 1000, 3000, 5000, 10000),
     exceptionCausedByDepth: Int = 3,
-    crossinline block: suspend () -> T
+    crossinline block: suspend () -> T,
 ): T {
     for (interval in retryIntervals) {
         try {
@@ -26,7 +26,7 @@ suspend inline fun <reified T> retry(
             log.warn(
                 "Failed to execute {}, retrying in $interval ms",
                 keyValue("callName", callName),
-                e
+                e,
             )
         }
         delay(interval)
@@ -37,7 +37,7 @@ suspend inline fun <reified T> retry(
 fun isCausedBy(
     throwable: Throwable,
     depth: Int,
-    legalExceptions: Array<out KClass<out Throwable>>
+    legalExceptions: Array<out KClass<out Throwable>>,
 ): Boolean {
     var current: Throwable = throwable
     for (i in 0.until(depth)) {

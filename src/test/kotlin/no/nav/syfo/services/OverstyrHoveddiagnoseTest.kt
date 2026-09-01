@@ -22,7 +22,7 @@ class OverstyrHoveddiagnoseTest :
                                 dn =
                                     "Når vedkommende er under behandling og legen erklærer at behandlingen gjør det" +
                                         " nødvendig at vedkommende ikke arbeider"
-                            },
+                            }
                         )
                     }
                 val healthInformation = fixMissingAndICPC2BDiagnoser(defaultHealthInformation)
@@ -43,7 +43,7 @@ class OverstyrHoveddiagnoseTest :
                                 dn =
                                     "Når vedkommende er under behandling og legen erklærer at behandlingen gjør det" +
                                         " nødvendig at vedkommende ikke arbeider"
-                            },
+                            }
                         )
                     }
                 val healthInformation = fixMissingAndICPC2BDiagnoser(defaultHealthInformation)

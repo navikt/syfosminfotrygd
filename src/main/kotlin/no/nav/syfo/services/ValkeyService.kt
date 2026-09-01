@@ -7,8 +7,8 @@ import io.valkey.params.SetParams
 import java.security.MessageDigest
 import net.logstash.logback.argument.StructuredArguments.fields
 import no.nav.helse.sm2013.KontrollsystemBlokkType
+import no.nav.syfo.jsonMapper
 import no.nav.syfo.log
-import no.nav.syfo.objectMapper
 import no.nav.syfo.util.LoggingMeta
 
 class ValkeyService(private val jedisPool: JedisPool) {
@@ -34,7 +34,7 @@ class ValkeyService(private val jedisPool: JedisPool) {
         valkeyKey: String,
         valkeyValue: String,
         sekunder: Int,
-        loggingMeta: LoggingMeta
+        loggingMeta: LoggingMeta,
     ): String? {
         log.info("Prøver å oppdaterer valkey {}", fields(loggingMeta))
         var jedis: Jedis? = null
@@ -74,7 +74,7 @@ class ValkeyService(private val jedisPool: JedisPool) {
         valkeyKey: String,
         valkeyValue: String,
         sekunder: Int,
-        loggingMeta: LoggingMeta
+        loggingMeta: LoggingMeta,
     ) {
         when (erIValkey(valkeyKey)) {
             false -> oppdaterValkey(valkeyKey, valkeyValue, sekunder, loggingMeta)
@@ -86,7 +86,7 @@ class ValkeyService(private val jedisPool: JedisPool) {
                 } catch (e: Exception) {
                     log.error(
                         "Noe gikk galt ved oppdatering av antall infotrygdfeil i valkey: {}",
-                        e.message
+                        e.message,
                     )
                     throw e
                 } finally {
@@ -112,6 +112,8 @@ class ValkeyService(private val jedisPool: JedisPool) {
 }
 
 fun sha256hashstring(infotrygdblokk: KontrollsystemBlokkType.InfotrygdBlokk): String =
-    MessageDigest.getInstance("SHA-256")
-        .digest(objectMapper.writeValueAsBytes(infotrygdblokk))
-        .fold("") { str, it -> str + "%02x".format(it) }
+    MessageDigest.getInstance("SHA-256").digest(jsonMapper.writeValueAsBytes(infotrygdblokk)).fold(
+        ""
+    ) { str, it ->
+        str + "%02x".format(it)
+    }

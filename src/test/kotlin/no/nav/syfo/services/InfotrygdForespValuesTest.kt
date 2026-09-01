@@ -33,11 +33,7 @@ class InfotrygdForespValuesTest :
         test("Map ICPC_2B to correct values from infotrygdQueries") {
             val infotrygdQuery = mockk<InfotrygdQuery>(relaxed = true)
             every { infotrygdQuery.hoveddiagnose } returns
-                Diagnose(
-                    system = ICPC2B.OID,
-                    kode = "R74.0001",
-                    tekst = "tekst",
-                )
+                Diagnose(system = ICPC2B.OID, kode = "R74.0001", tekst = "tekst")
 
             every { infotrygdQuery.bidiagnose } returns null
             val values = InfotrygdForespValues.from(infotrygdQuery)
@@ -48,18 +44,10 @@ class InfotrygdForespValuesTest :
         test("Map ICPC_2B bidiagnose to correct values from infotrygdQueries") {
             val infotrygdQuery = mockk<InfotrygdQuery>(relaxed = true)
             every { infotrygdQuery.hoveddiagnose } returns
-                Diagnose(
-                    system = ICPC2B.OID,
-                    kode = "R74.0001",
-                    tekst = "tekst",
-                )
+                Diagnose(system = ICPC2B.OID, kode = "R74.0001", tekst = "tekst")
 
             every { infotrygdQuery.bidiagnose } returns
-                Diagnose(
-                    system = ICPC2B.OID,
-                    kode = "R74.0002",
-                    tekst = "tekst",
-                )
+                Diagnose(system = ICPC2B.OID, kode = "R74.0002", tekst = "tekst")
             val values = InfotrygdForespValues.from(infotrygdQuery)
             assertEquals("5", values.hovedDiagnosekodeverk)
             assertEquals("5", values.biDiagnosekodeverk)
@@ -69,18 +57,10 @@ class InfotrygdForespValuesTest :
         test("Map invalid ICPC_2B bidiagnose to correct values from infotrygdQueries") {
             val infotrygdQuery = mockk<InfotrygdQuery>(relaxed = true)
             every { infotrygdQuery.hoveddiagnose } returns
-                Diagnose(
-                    system = ICPC2B.OID,
-                    kode = "R74.000111",
-                    tekst = "tekst",
-                )
+                Diagnose(system = ICPC2B.OID, kode = "R74.000111", tekst = "tekst")
 
             every { infotrygdQuery.bidiagnose } returns
-                Diagnose(
-                    system = ICPC2B.OID,
-                    kode = "R74.000222",
-                    tekst = "tekst",
-                )
+                Diagnose(system = ICPC2B.OID, kode = "R74.000222", tekst = "tekst")
             val values = InfotrygdForespValues.from(infotrygdQuery)
             assertEquals(null, values.hovedDiagnosekodeverk)
             assertEquals(null, values.biDiagnosekodeverk)
@@ -91,11 +71,7 @@ class InfotrygdForespValuesTest :
         test("Map lowercase ICD10 diagnose to correct values from infotrygdQueries") {
             val infotrygdQuery = mockk<InfotrygdQuery>(relaxed = true)
             every { infotrygdQuery.hoveddiagnose } returns
-                Diagnose(
-                    system = no.nav.tsm.diagnoser.ICD10.OID,
-                    kode = "k01.1",
-                    tekst = "tekst",
-                )
+                Diagnose(system = no.nav.tsm.diagnoser.ICD10.OID, kode = "k01.1", tekst = "tekst")
 
             val values = InfotrygdForespValues.from(infotrygdQuery)
             assertEquals("3", values.hovedDiagnosekodeverk)

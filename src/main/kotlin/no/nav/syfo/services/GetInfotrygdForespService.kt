@@ -21,18 +21,15 @@ import no.nav.syfo.UTENLANDSK_SYKEHUS
 import no.nav.syfo.erUtenlandskSykmelding
 import no.nav.syfo.helpers.retry
 import no.nav.syfo.infotrygd.InfotrygdQuery
+import no.nav.syfo.jsonMapper
 import no.nav.syfo.log
 import no.nav.syfo.model.Diagnosekode
 import no.nav.syfo.model.sykmelding.ReceivedSykmelding
-import no.nav.syfo.objectMapper
 import no.nav.syfo.services.updateinfotrygd.exception.InfotrygdDownException
 import no.nav.syfo.toString
 import no.nav.syfo.util.infotrygdSporringJaxBContext
 import no.nav.tsm.diagnoser.Diagnose
 import no.nav.tsm.diagnoser.DiagnoseType
-import no.nav.tsm.diagnoser.ICD10
-import no.nav.tsm.diagnoser.ICPC2
-import no.nav.tsm.diagnoser.ICPC2B
 import no.nav.tsm.diagnoser.toICPC2
 import org.xml.sax.InputSource
 
@@ -92,17 +89,17 @@ fun sendInfotrygdForesporsel(
                     is TextMessage -> consumedMessage.text
                     else ->
                         throw RuntimeException(
-                            "Incoming message needs to be a byte message or text message, JMS type: $consumedMessage.jmsType",
+                            "Incoming message needs to be a byte message or text message, JMS type: $consumedMessage.jmsType"
                         )
                 }
             safeUnmarshal(inputMessageText, id, infotrygdForespRequest.tkNummer).also {
                 sikkerlogg.info(
                     "infotrygdForespResponse: ${
-                        objectMapper.writeValueAsString(
-                            it,
+                        jsonMapper.writeValueAsString(
+                            it
                         )
                     }" +
-                        " for $id",
+                        " for $id"
                 )
             }
         }
@@ -155,10 +152,7 @@ private constructor(
     }
 }
 
-data class InfotrygdDiagnose(
-    val kodeverk: String?,
-    val kode: String?,
-)
+data class InfotrygdDiagnose(val kodeverk: String?, val kode: String?)
 
 private fun no.nav.syfo.model.sykmelding.Diagnose.toInfotrygdDiagnose() =
     Diagnose.fromOid(system, kode.uppercase())?.infotrygdDiagnose()
@@ -221,7 +215,7 @@ fun finnLegeFnrFra(receivedSykmelding: ReceivedSykmelding): String {
         "10108000398"
     } else if (receivedSykmelding.erUtenlandskSykmelding()) {
         log.info(
-            "Setter standardverdi for behandler for utenlandsk sykmelding med id ${receivedSykmelding.sykmelding.id}",
+            "Setter standardverdi for behandler for utenlandsk sykmelding med id ${receivedSykmelding.sykmelding.id}"
         )
         UTENLANDSK_SYKEHUS
     } else {
@@ -235,7 +229,7 @@ fun sendInfotrygdSporring(
     infotrygdForesp: InfotrygdForesp,
     temporaryQueue: TemporaryQueue,
 ) {
-    val infotrygdForespJson = objectMapper.writeValueAsString(infotrygdForesp)
+    val infotrygdForespJson = jsonMapper.writeValueAsString(infotrygdForesp)
     sikkerlogg.info("sending infotrygdforsp json: $infotrygdForespJson")
     val infotrygdForespXml =
         infotrygdSporringJaxBContext.createMarshaller().toString(infotrygdForesp)
@@ -245,14 +239,14 @@ fun sendInfotrygdSporring(
         session.createTextMessage().apply {
             text = infotrygdForespXml
             jmsReplyTo = temporaryQueue
-        },
+        }
     )
 }
 
 private fun stripNonValidXMLCharacters(
     infotrygdString: String,
     id: String,
-    navkontor: String?
+    navkontor: String?,
 ): String {
     val out = StringBuffer(infotrygdString)
     for (i in out.length - 1 downTo 0) {
@@ -298,9 +292,6 @@ private fun infotrygdForesp(validXML: String): InfotrygdForesp {
     spf.isNamespaceAware = true
 
     val xmlSource: Source =
-        SAXSource(
-            spf.newSAXParser().xmlReader,
-            InputSource(StringReader(validXML)),
-        )
+        SAXSource(spf.newSAXParser().xmlReader, InputSource(StringReader(validXML)))
     return infotrygdSporringJaxBContext.createUnmarshaller().unmarshal(xmlSource) as InfotrygdForesp
 }

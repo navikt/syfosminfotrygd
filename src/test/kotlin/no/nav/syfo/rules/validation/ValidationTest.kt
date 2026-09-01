@@ -32,8 +32,8 @@ class ValidationTest :
                                 generatePeriode(
                                     fom = LocalDate.now(),
                                     tom = LocalDate.now().plusDays(10),
-                                ),
-                            ),
+                                )
+                            )
                     )
 
                 val infotrygdForespResponse =
@@ -53,7 +53,7 @@ class ValidationTest :
                     findoperasjonstypeAndFom(
                         sykmelding.perioder.firstFom(),
                         sykmelding.perioder.lastTom(),
-                        infotrygdForespResponse.getInfotrygdPerioder()
+                        infotrygdForespResponse.getInfotrygdPerioder(),
                     )
                 val ruleMetadata =
                     RuleMetadata(
@@ -131,8 +131,8 @@ class ValidationTest :
                                     fom = LocalDate.now(),
                                     tom = LocalDate.now().plusDays(10),
                                     behandlingsdager = 1,
-                                ),
-                            ),
+                                )
+                            )
                     )
 
                 val infotrygdForespResponse =
@@ -150,7 +150,7 @@ class ValidationTest :
                     findoperasjonstypeAndFom(
                         sykmelding.perioder.firstFom(),
                         sykmelding.perioder.lastTom(),
-                        infotrygdForespResponse.getInfotrygdPerioder()
+                        infotrygdForespResponse.getInfotrygdPerioder(),
                     )
                 val ruleMetadata =
                     RuleMetadata(
@@ -167,13 +167,9 @@ class ValidationTest :
                 val result = ruleTree.runRules(sykmelding, ruleMetadata)
 
                 result.first.rulePath.map { it.rule to it.ruleResult } shouldBeEqualTo
-                    listOf(
-                        ValidationRules.NUMBER_OF_TREATMENT_DAYS_SET to true,
-                    )
+                    listOf(ValidationRules.NUMBER_OF_TREATMENT_DAYS_SET to true)
 
-                mapOf(
-                    "perioder" to sykmelding.perioder,
-                ) shouldBeEqualTo result.first.ruleInputs
+                mapOf("perioder" to sykmelding.perioder) shouldBeEqualTo result.first.ruleInputs
 
                 result.first.treeResult.ruleHit shouldBeEqualTo
                     ValidationRuleHit.NUMBER_OF_TREATMENT_DAYS_SET.ruleHit
@@ -191,13 +187,9 @@ class ValidationTest :
                                 generatePeriode(
                                     fom = LocalDate.now(),
                                     tom = LocalDate.now().plusDays(10),
-                                    gradert =
-                                        Gradert(
-                                            reisetilskudd = true,
-                                            grad = 90,
-                                        ),
-                                ),
-                            ),
+                                    gradert = Gradert(reisetilskudd = true, grad = 90),
+                                )
+                            )
                     )
 
                 val infotrygdForespResponse =
@@ -215,7 +207,7 @@ class ValidationTest :
                     findoperasjonstypeAndFom(
                         sykmelding.perioder.firstFom(),
                         sykmelding.perioder.lastTom(),
-                        infotrygdForespResponse.getInfotrygdPerioder()
+                        infotrygdForespResponse.getInfotrygdPerioder(),
                     )
                 val ruleMetadata =
                     RuleMetadata(
@@ -237,9 +229,7 @@ class ValidationTest :
                         ValidationRules.GRADERT_REISETILSKUDD_ER_OPPGITT to true,
                     )
 
-                mapOf(
-                    "perioder" to sykmelding.perioder,
-                ) shouldBeEqualTo result.first.ruleInputs
+                mapOf("perioder" to sykmelding.perioder) shouldBeEqualTo result.first.ruleInputs
 
                 result.first.treeResult.ruleHit shouldBeEqualTo
                     ValidationRuleHit.GRADERT_REISETILSKUDD_ER_OPPGITT.ruleHit
@@ -256,8 +246,8 @@ class ValidationTest :
                                     fom = LocalDate.now(),
                                     tom = LocalDate.now().plusDays(10),
                                     reisetilskudd = true,
-                                ),
-                            ),
+                                )
+                            )
                     )
 
                 val infotrygdForespResponse =
@@ -275,7 +265,7 @@ class ValidationTest :
                     findoperasjonstypeAndFom(
                         sykmelding.perioder.firstFom(),
                         sykmelding.perioder.lastTom(),
-                        infotrygdForespResponse.getInfotrygdPerioder()
+                        infotrygdForespResponse.getInfotrygdPerioder(),
                     )
                 val ruleMetadata =
                     RuleMetadata(
@@ -298,9 +288,7 @@ class ValidationTest :
                         ValidationRules.TRAVEL_SUBSIDY_SPECIFIED to true,
                     )
 
-                mapOf(
-                    "perioder" to sykmelding.perioder,
-                ) shouldBeEqualTo result.first.ruleInputs
+                mapOf("perioder" to sykmelding.perioder) shouldBeEqualTo result.first.ruleInputs
 
                 result.first.treeResult.ruleHit shouldBeEqualTo
                     ValidationRuleHit.TRAVEL_SUBSIDY_SPECIFIED.ruleHit
@@ -316,8 +304,8 @@ class ValidationTest :
                                 generatePeriode(
                                     fom = LocalDate.now(),
                                     tom = LocalDate.now().plusDays(10),
-                                ),
-                            ),
+                                )
+                            )
                     )
 
                 val infotrygdForespResponse =
@@ -336,7 +324,7 @@ class ValidationTest :
                     findoperasjonstypeAndFom(
                         sykmelding.perioder.firstFom(),
                         sykmelding.perioder.lastTom(),
-                        infotrygdForespResponse.getInfotrygdPerioder()
+                        infotrygdForespResponse.getInfotrygdPerioder(),
                     )
                 val ruleMetadata =
                     RuleMetadata(
@@ -380,8 +368,8 @@ class ValidationTest :
                                 generatePeriode(
                                     fom = LocalDate.of(2019, 1, 1),
                                     tom = LocalDate.of(2019, 1, 5),
-                                ),
-                            ),
+                                )
+                            )
                     )
 
                 val infotrygdForespResponse =
@@ -398,7 +386,7 @@ class ValidationTest :
                                                 arbufoerFOM = LocalDate.of(2019, 2, 7)
                                                 arbufoerTOM = LocalDate.of(2019, 2, 10)
                                             }
-                                    },
+                                    }
                                 )
                             }
                     }
@@ -413,7 +401,7 @@ class ValidationTest :
                     findoperasjonstypeAndFom(
                         generateSykmelding.perioder.firstFom(),
                         generateSykmelding.perioder.lastTom(),
-                        infotrygdForespResponse.getInfotrygdPerioder()
+                        infotrygdForespResponse.getInfotrygdPerioder(),
                     )
                 val ruleMetadata =
                     RuleMetadata(
@@ -490,8 +478,8 @@ class ValidationTest :
                                 generatePeriode(
                                     fom = LocalDate.of(2019, 1, 1),
                                     tom = LocalDate.of(2019, 1, 5),
-                                ),
-                            ),
+                                )
+                            )
                     )
 
                 val infotrygdForespResponse =
@@ -506,7 +494,7 @@ class ValidationTest :
                                                 arbufoerFOM = LocalDate.of(2019, 1, 2)
                                                 arbufoerTOM = LocalDate.of(2019, 1, 5)
                                             }
-                                    },
+                                    }
                                 )
                             }
                     }
@@ -521,7 +509,7 @@ class ValidationTest :
                     findoperasjonstypeAndFom(
                         generateSykmelding.perioder.firstFom(),
                         generateSykmelding.perioder.lastTom(),
-                        infotrygdForespResponse.getInfotrygdPerioder()
+                        infotrygdForespResponse.getInfotrygdPerioder(),
                     )
                 val ruleMetadata =
                     RuleMetadata(
@@ -576,8 +564,8 @@ class ValidationTest :
                                 generatePeriode(
                                     fom = LocalDate.of(2018, 1, 2),
                                     tom = LocalDate.of(2018, 1, 15),
-                                ),
-                            ),
+                                )
+                            )
                     )
 
                 val infotrygdForespResponse =
@@ -594,7 +582,7 @@ class ValidationTest :
                                                 hovedDiagnosekode = "001"
                                                 utbetTOM = LocalDate.of(2018, 1, 3)
                                             }
-                                    },
+                                    }
                                 )
                             }
                     }
@@ -609,7 +597,7 @@ class ValidationTest :
                     findoperasjonstypeAndFom(
                         generateSykmelding.perioder.firstFom(),
                         generateSykmelding.perioder.lastTom(),
-                        infotrygdForespResponse.getInfotrygdPerioder()
+                        infotrygdForespResponse.getInfotrygdPerioder(),
                     )
                 val ruleMetadata =
                     RuleMetadata(
@@ -663,8 +651,8 @@ class ValidationTest :
                                 generatePeriode(
                                     fom = LocalDate.of(2018, 1, 4),
                                     tom = LocalDate.now().plusMonths(3).plusDays(1),
-                                ),
-                            ),
+                                )
+                            )
                     )
 
                 val infotrygdForespResponse =
@@ -680,7 +668,7 @@ class ValidationTest :
                                                 hovedDiagnosekode = "001"
                                                 utbetTOM = LocalDate.of(2018, 1, 3)
                                             }
-                                    },
+                                    }
                                 )
                             }
                     }
@@ -695,7 +683,7 @@ class ValidationTest :
                     findoperasjonstypeAndFom(
                         generateSykmelding.perioder.firstFom(),
                         generateSykmelding.perioder.lastTom(),
-                        infotrygdForespResponse.getInfotrygdPerioder()
+                        infotrygdForespResponse.getInfotrygdPerioder(),
                     )
                 val ruleMetadata =
                     RuleMetadata(
@@ -750,8 +738,8 @@ class ValidationTest :
                                 generatePeriode(
                                     fom = LocalDate.of(2018, 1, 7),
                                     tom = LocalDate.now().plusMonths(3).plusDays(1),
-                                ),
-                            ),
+                                )
+                            )
                     )
 
                 val infotrygdForespResponse =
@@ -767,7 +755,7 @@ class ValidationTest :
                                                 hovedDiagnosekode = "001"
                                                 utbetTOM = LocalDate.of(2018, 1, 5)
                                             }
-                                    },
+                                    }
                                 )
                             }
                     }
@@ -782,7 +770,7 @@ class ValidationTest :
                     findoperasjonstypeAndFom(
                         generateSykmelding.perioder.firstFom(),
                         generateSykmelding.perioder.lastTom(),
-                        infotrygdForespResponse.getInfotrygdPerioder()
+                        infotrygdForespResponse.getInfotrygdPerioder(),
                     )
                 val ruleMetadata =
                     RuleMetadata(
@@ -833,12 +821,7 @@ class ValidationTest :
             ) {
                 val generateSykmelding =
                     generateSykmelding(
-                        perioder =
-                            listOf(
-                                generatePeriode(
-                                    tom = LocalDate.of(2017, 1, 2),
-                                ),
-                            ),
+                        perioder = listOf(generatePeriode(tom = LocalDate.of(2017, 1, 2)))
                     )
 
                 val infotrygdForespResponse =
@@ -853,7 +836,7 @@ class ValidationTest :
                                                 friskmeldtDato = LocalDate.of(2017, 1, 1)
                                                 utbetTOM = LocalDate.of(2018, 1, 1)
                                             }
-                                    },
+                                    }
                                 )
                             }
                     }
@@ -868,7 +851,7 @@ class ValidationTest :
                     findoperasjonstypeAndFom(
                         generateSykmelding.perioder.firstFom(),
                         generateSykmelding.perioder.lastTom(),
-                        infotrygdForespResponse.getInfotrygdPerioder()
+                        infotrygdForespResponse.getInfotrygdPerioder(),
                     )
                 val ruleMetadata =
                     RuleMetadata(
@@ -921,12 +904,7 @@ class ValidationTest :
             ) {
                 val generateSykmelding =
                     generateSykmelding(
-                        perioder =
-                            listOf(
-                                generatePeriode(
-                                    tom = LocalDate.of(2017, 1, 2),
-                                ),
-                            ),
+                        perioder = listOf(generatePeriode(tom = LocalDate.of(2017, 1, 2))),
                         prognose = generatePrognose(arbeidsforEtterPeriode = true),
                     )
 
@@ -941,7 +919,7 @@ class ValidationTest :
                                             TypeSMinfo.Periode().apply {
                                                 friskmeldtDato = LocalDate.of(2018, 1, 3)
                                             }
-                                    },
+                                    }
                                 )
                             }
                     }
@@ -956,7 +934,7 @@ class ValidationTest :
                     findoperasjonstypeAndFom(
                         generateSykmelding.perioder.firstFom(),
                         generateSykmelding.perioder.lastTom(),
-                        infotrygdForespResponse.getInfotrygdPerioder()
+                        infotrygdForespResponse.getInfotrygdPerioder(),
                     )
                 val ruleMetadata =
                     RuleMetadata(
@@ -985,8 +963,7 @@ class ValidationTest :
                         ValidationRules.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_2 to false,
                         ValidationRules.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_3 to false,
                         ValidationRules.NEW_CLEAN_BILL_DATE_BEFORE_PAYOUT to false,
-                        ValidationRules.NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE to
-                            true,
+                        ValidationRules.NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE to true,
                     )
 
                 mapOf(
@@ -1014,8 +991,8 @@ class ValidationTest :
                                 generatePeriode(
                                     fom = LocalDate.of(2018, 1, 1),
                                     tom = LocalDate.of(2018, 2, 1),
-                                ),
-                            ),
+                                )
+                            )
                     )
 
                 val infotrygdForespResponse =
@@ -1033,9 +1010,9 @@ class ValidationTest :
                                                         fom = LocalDate.of(2018, 1, 20)
                                                         tom = LocalDate.of(2018, 1, 26)
                                                     }
-                                            },
+                                            }
                                         )
-                                    },
+                                    }
                                 )
                             }
                     }
@@ -1050,7 +1027,7 @@ class ValidationTest :
                     findoperasjonstypeAndFom(
                         generateSykmelding.perioder.firstFom(),
                         generateSykmelding.perioder.lastTom(),
-                        infotrygdForespResponse.getInfotrygdPerioder()
+                        infotrygdForespResponse.getInfotrygdPerioder(),
                     )
                 val ruleMetadata =
                     RuleMetadata(
@@ -1116,7 +1093,7 @@ class ValidationTest :
                                                 stans = "FL"
                                                 arbufoerFOM = LocalDate.of(2017, 2, 1)
                                             }
-                                    },
+                                    }
                                 )
                                 sykmelding.add(
                                     TypeSMinfo().apply {
@@ -1124,7 +1101,7 @@ class ValidationTest :
                                             TypeSMinfo.Periode().apply {
                                                 arbufoerFOM = LocalDate.of(2017, 1, 1)
                                             }
-                                    },
+                                    }
                                 )
                             }
                     }
@@ -1139,7 +1116,7 @@ class ValidationTest :
                     findoperasjonstypeAndFom(
                         generateSykmelding.perioder.firstFom(),
                         generateSykmelding.perioder.lastTom(),
-                        infotrygdForespResponse.getInfotrygdPerioder()
+                        infotrygdForespResponse.getInfotrygdPerioder(),
                     )
                 val ruleMetadata =
                     RuleMetadata(
@@ -1199,8 +1176,8 @@ class ValidationTest :
                                 generatePeriode(
                                     fom = LocalDate.of(2017, 2, 1),
                                     tom = LocalDate.now().plusMonths(3).plusDays(1),
-                                ),
-                            ),
+                                )
+                            )
                     )
 
                 val infotrygdForespResponse =
@@ -1215,7 +1192,7 @@ class ValidationTest :
                                                 stans = "AA"
                                                 arbufoerTOM = LocalDate.of(2017, 2, 2)
                                             }
-                                    },
+                                    }
                                 )
                             }
                     }
@@ -1230,7 +1207,7 @@ class ValidationTest :
                     findoperasjonstypeAndFom(
                         generateSykmelding.perioder.firstFom(),
                         generateSykmelding.perioder.lastTom(),
-                        infotrygdForespResponse.getInfotrygdPerioder()
+                        infotrygdForespResponse.getInfotrygdPerioder(),
                     )
                 val ruleMetadata =
                     RuleMetadata(
@@ -1291,8 +1268,8 @@ class ValidationTest :
                                 generatePeriode(
                                     fom = LocalDate.of(2017, 2, 1),
                                     tom = LocalDate.now().plusMonths(3).plusDays(1),
-                                ),
-                            ),
+                                )
+                            )
                     )
 
                 val infotrygdForespResponse =
@@ -1307,7 +1284,7 @@ class ValidationTest :
                                                 stans = "AF"
                                                 arbufoerTOM = LocalDate.of(2017, 2, 2)
                                             }
-                                    },
+                                    }
                                 )
                             }
                     }
@@ -1322,7 +1299,7 @@ class ValidationTest :
                     findoperasjonstypeAndFom(
                         generateSykmelding.perioder.firstFom(),
                         generateSykmelding.perioder.lastTom(),
-                        infotrygdForespResponse.getInfotrygdPerioder()
+                        infotrygdForespResponse.getInfotrygdPerioder(),
                     )
                 val ruleMetadata =
                     RuleMetadata(
@@ -1384,8 +1361,8 @@ class ValidationTest :
                                 generatePeriode(
                                     fom = LocalDate.of(2017, 2, 1),
                                     tom = LocalDate.of(2017, 2, 10),
-                                ),
-                            ),
+                                )
+                            )
                     )
 
                 val infotrygdForespResponse =
@@ -1400,7 +1377,7 @@ class ValidationTest :
                                                 arbufoerTOM = LocalDate.of(2017, 2, 2)
                                                 stans = "MAX"
                                             }
-                                    },
+                                    }
                                 )
                             }
                     }
@@ -1415,7 +1392,7 @@ class ValidationTest :
                     findoperasjonstypeAndFom(
                         generateSykmelding.perioder.firstFom(),
                         generateSykmelding.perioder.lastTom(),
-                        infotrygdForespResponse.getInfotrygdPerioder()
+                        infotrygdForespResponse.getInfotrygdPerioder(),
                     )
                 val ruleMetadata =
                     RuleMetadata(
@@ -1480,8 +1457,8 @@ class ValidationTest :
                                 generatePeriode(
                                     fom = LocalDate.of(2017, 2, 1),
                                     tom = LocalDate.of(2017, 2, 10),
-                                ),
-                            ),
+                                )
+                            )
                     )
 
                 val infotrygdForespResponse =
@@ -1499,7 +1476,7 @@ class ValidationTest :
                     findoperasjonstypeAndFom(
                         generateSykmelding.perioder.firstFom(),
                         generateSykmelding.perioder.lastTom(),
-                        infotrygdForespResponse.getInfotrygdPerioder()
+                        infotrygdForespResponse.getInfotrygdPerioder(),
                     )
                 val ruleMetadata =
                     RuleMetadata(
@@ -1566,8 +1543,8 @@ class ValidationTest :
                                 generatePeriode(
                                     fom = LocalDate.of(2017, 2, 1),
                                     tom = LocalDate.of(2017, 2, 10),
-                                ),
-                            ),
+                                )
+                            )
                     )
 
                 val infotrygdForespResponse =
@@ -1589,7 +1566,7 @@ class ValidationTest :
                     findoperasjonstypeAndFom(
                         generateSykmelding.perioder.firstFom(),
                         generateSykmelding.perioder.lastTom(),
-                        infotrygdForespResponse.getInfotrygdPerioder()
+                        infotrygdForespResponse.getInfotrygdPerioder(),
                     )
                 val ruleMetadata =
                     RuleMetadata(
@@ -1658,8 +1635,8 @@ class ValidationTest :
                                 generatePeriode(
                                     fom = LocalDate.of(2017, 2, 1),
                                     tom = LocalDate.of(2017, 2, 10),
-                                ),
-                            ),
+                                )
+                            )
                     )
 
                 val infotrygdForespResponse =
@@ -1681,7 +1658,7 @@ class ValidationTest :
                     findoperasjonstypeAndFom(
                         generateSykmelding.perioder.firstFom(),
                         generateSykmelding.perioder.lastTom(),
-                        infotrygdForespResponse.getInfotrygdPerioder()
+                        infotrygdForespResponse.getInfotrygdPerioder(),
                     )
                 val ruleMetadata =
                     RuleMetadata(
@@ -1752,8 +1729,8 @@ class ValidationTest :
                                 generatePeriode(
                                     fom = LocalDate.of(2017, 2, 1),
                                     tom = LocalDate.of(2017, 2, 10),
-                                ),
-                            ),
+                                )
+                            )
                     )
 
                 val infotrygdForespResponse =
@@ -1775,7 +1752,7 @@ class ValidationTest :
                     findoperasjonstypeAndFom(
                         generateSykmelding.perioder.firstFom(),
                         generateSykmelding.perioder.lastTom(),
-                        infotrygdForespResponse.getInfotrygdPerioder()
+                        infotrygdForespResponse.getInfotrygdPerioder(),
                     )
                 val ruleMetadata =
                     RuleMetadata(
@@ -1863,7 +1840,7 @@ class ValidationTest :
                     findoperasjonstypeAndFom(
                         generateSykmelding.perioder.firstFom(),
                         generateSykmelding.perioder.lastTom(),
-                        infotrygdForespResponse.getInfotrygdPerioder()
+                        infotrygdForespResponse.getInfotrygdPerioder(),
                     )
                 val ruleMetadata =
                     RuleMetadata(
@@ -1937,8 +1914,8 @@ class ValidationTest :
                                 generatePeriode(
                                     fom = LocalDate.of(2019, 6, 27),
                                     tom = LocalDate.of(2019, 6, 28),
-                                ),
-                            ),
+                                )
+                            )
                     )
 
                 val statusType = StatusType().apply { kodeMelding = "00" }
@@ -1956,7 +1933,7 @@ class ValidationTest :
                                             TypeSMinfo.Periode().apply {
                                                 arbufoerFOM = LocalDate.of(2019, 6, 24)
                                             }
-                                    },
+                                    }
                                 )
                                 status = statusType
                             }
@@ -1972,7 +1949,7 @@ class ValidationTest :
                     findoperasjonstypeAndFom(
                         generateSykmelding.perioder.firstFom(),
                         generateSykmelding.perioder.lastTom(),
-                        infotrygdForespResponse.getInfotrygdPerioder()
+                        infotrygdForespResponse.getInfotrygdPerioder(),
                     )
                 val ruleMetadata =
                     RuleMetadata(
@@ -2050,8 +2027,8 @@ class ValidationTest :
                                 generatePeriode(
                                     fom = LocalDate.of(2019, 6, 27),
                                     tom = LocalDate.of(2019, 6, 28),
-                                ),
-                            ),
+                                )
+                            )
                     )
 
                 val statusType = StatusType().apply { kodeMelding = "00" }
@@ -2067,7 +2044,7 @@ class ValidationTest :
                                             TypeSMinfo.Periode().apply {
                                                 arbufoerFOM = LocalDate.of(2019, 6, 24)
                                             }
-                                    },
+                                    }
                                 )
                                 status = statusType
                             }
@@ -2085,7 +2062,7 @@ class ValidationTest :
                     findoperasjonstypeAndFom(
                         generateSykmelding.perioder.firstFom(),
                         generateSykmelding.perioder.lastTom(),
-                        infotrygdForespResponse.getInfotrygdPerioder()
+                        infotrygdForespResponse.getInfotrygdPerioder(),
                     )
                 val ruleMetadata =
                     RuleMetadata(

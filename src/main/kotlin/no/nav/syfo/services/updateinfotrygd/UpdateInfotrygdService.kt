@@ -74,7 +74,7 @@ class UpdateInfotrygdService(
                     behandletAvManuell = behandletAvManuell,
                     utenlandskSykmelding = receivedSykmelding.erUtenlandskSykmelding(),
                     operasjonstypeAndFom = operasjonstypeAndFom,
-                ),
+                )
             )
 
         delay(100)
@@ -91,11 +91,7 @@ class UpdateInfotrygdService(
                             receivedSykmelding.sykmelding.id,
                             receivedSykmelding,
                         )
-                    kafkaAivenProducerReceivedSykmelding
-                        .send(
-                            producerRecord,
-                        )
-                        .get()
+                    kafkaAivenProducerReceivedSykmelding.send(producerRecord).get()
                     log.info("Melding sendt på retry topic {}", fields(loggingMeta))
                 } catch (ex: Exception) {
                     log.error("Failed to send sykmelding to retrytopic {}", fields(loggingMeta))
@@ -150,7 +146,7 @@ class UpdateInfotrygdService(
                                     behandletAvManuell = behandletAvManuell,
                                     utenlandskSykmelding =
                                         receivedSykmelding.erUtenlandskSykmelding(),
-                                    operasjonstypeAndFom = operasjonstypeAndFom
+                                    operasjonstypeAndFom = operasjonstypeAndFom,
                                 ),
                                 loggingMeta,
                             )
@@ -214,6 +210,6 @@ class UpdateInfotrygdService(
                 )
                 text = xmlObjectWriter.writeValueAsString(fellesformat)
                 log.info("Melding er sendt til infotrygd {}", fields(loggingMeta))
-            },
+            }
         )
 }

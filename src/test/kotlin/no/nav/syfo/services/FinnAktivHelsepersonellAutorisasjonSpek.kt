@@ -15,12 +15,7 @@ class FinnAktivHelsepersonellAutorisasjonSpek :
                     Behandler(
                         listOf(
                             Godkjenning(
-                                autorisasjon =
-                                    Kode(
-                                        aktiv = true,
-                                        oid = 0,
-                                        verdi = "",
-                                    ),
+                                autorisasjon = Kode(aktiv = true, oid = 0, verdi = ""),
                                 helsepersonellkategori =
                                     Kode(
                                         aktiv = true,
@@ -29,12 +24,7 @@ class FinnAktivHelsepersonellAutorisasjonSpek :
                                     ),
                             ),
                             Godkjenning(
-                                autorisasjon =
-                                    Kode(
-                                        aktiv = true,
-                                        oid = 0,
-                                        verdi = "",
-                                    ),
+                                autorisasjon = Kode(aktiv = true, oid = 0, verdi = ""),
                                 helsepersonellkategori =
                                     Kode(
                                         aktiv = true,
@@ -42,7 +32,7 @@ class FinnAktivHelsepersonellAutorisasjonSpek :
                                         verdi = HelsepersonellKategori.LEGE.verdi,
                                     ),
                             ),
-                        ),
+                        )
                     )
 
                 finnAktivHelsepersonellAutorisasjons(helsepersonelPerson) shouldBeEqualTo
@@ -56,12 +46,7 @@ class FinnAktivHelsepersonellAutorisasjonSpek :
                     Behandler(
                         listOf(
                             Godkjenning(
-                                autorisasjon =
-                                    Kode(
-                                        aktiv = true,
-                                        oid = 0,
-                                        verdi = "",
-                                    ),
+                                autorisasjon = Kode(aktiv = true, oid = 0, verdi = ""),
                                 helsepersonellkategori =
                                     Kode(
                                         aktiv = true,
@@ -70,12 +55,7 @@ class FinnAktivHelsepersonellAutorisasjonSpek :
                                     ),
                             ),
                             Godkjenning(
-                                autorisasjon =
-                                    Kode(
-                                        aktiv = true,
-                                        oid = 0,
-                                        verdi = "",
-                                    ),
+                                autorisasjon = Kode(aktiv = true, oid = 0, verdi = ""),
                                 helsepersonellkategori =
                                     Kode(
                                         aktiv = false,
@@ -83,7 +63,7 @@ class FinnAktivHelsepersonellAutorisasjonSpek :
                                         verdi = HelsepersonellKategori.LEGE.verdi,
                                     ),
                             ),
-                        ),
+                        )
                     )
 
                 finnAktivHelsepersonellAutorisasjons(helsepersonelPerson) shouldBeEqualTo
@@ -97,12 +77,7 @@ class FinnAktivHelsepersonellAutorisasjonSpek :
                     Behandler(
                         listOf(
                             Godkjenning(
-                                autorisasjon =
-                                    Kode(
-                                        aktiv = true,
-                                        oid = 0,
-                                        verdi = "",
-                                    ),
+                                autorisasjon = Kode(aktiv = true, oid = 0, verdi = ""),
                                 helsepersonellkategori =
                                     Kode(
                                         aktiv = false,
@@ -111,12 +86,7 @@ class FinnAktivHelsepersonellAutorisasjonSpek :
                                     ),
                             ),
                             Godkjenning(
-                                autorisasjon =
-                                    Kode(
-                                        aktiv = true,
-                                        oid = 0,
-                                        verdi = "",
-                                    ),
+                                autorisasjon = Kode(aktiv = true, oid = 0, verdi = ""),
                                 helsepersonellkategori =
                                     Kode(
                                         aktiv = false,
@@ -124,7 +94,7 @@ class FinnAktivHelsepersonellAutorisasjonSpek :
                                         verdi = HelsepersonellKategori.LEGE.verdi,
                                     ),
                             ),
-                        ),
+                        )
                     )
 
                 finnAktivHelsepersonellAutorisasjons(helsepersonelPerson) shouldBeEqualTo ""

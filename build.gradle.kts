@@ -4,17 +4,16 @@ import java.io.ByteArrayOutputStream
 group = "no.nav.syfo"
 version = "1.0.0"
 
-val artemisVersion = "2.44.0"
-val coroutinesVersion = "1.10.2"
-val ibmMqVersion = "9.4.4.0"
+val artemisVersion = "2.56.0"
+val ibmMqVersion = "10.0.0.0"
 val javaxActivationVersion = "1.1.1"
-val jacksonVersion = "2.20.2"
+val jacksonVersion = "3.2.2"
 val jaxbApiVersion = "2.4.0-b180830.0359"
 val valkeyVersion = "5.5.0"
-val kafkaVersion = "3.9.1"
+val kafkaVersion = "4.3.1"
 val kluentVersion = "1.73"
-val ktorVersion = "3.4.0"
-val logbackVersion = "1.5.26"
+val ktorVersion = "3.5.2"
+val logbackVersion = "1.6.3"
 val logstashEncoderVersion = "9.0"
 val prometheusVersion = "0.16.0"
 val kotestVersion = "6.0.4"
@@ -23,20 +22,21 @@ val javaxAnnotationApiVersion = "1.3.2"
 val jaxwsToolsVersion = "2.3.1"
 val jaxbRuntimeVersion = "2.4.0-b180830.0438"
 val jaxbTimeAdaptersVersion = "1.1.3"
-val testcontainerVersion = "2.0.3"
+val testcontainerVersion = "2.0.5"
 val syfoXmlCodegen = "2.0.1"
 val mockkVersion = "1.14.6"
-val kotlinVersion = "2.2.21"
-val ktfmtVersion = "0.44"
+val kotlinVersion = "2.4.10"
+val ktfmtVersion = "0.56"
 val opentelemetryVersion = "2.21.0"
 val diagnoseVersion = "2026.1.10"
-val javaVersion = JvmTarget.JVM_21
+
+val javaVersion = JvmTarget.JVM_25
 
 plugins {
     id("application")
-    kotlin("jvm") version "2.2.21"
+    kotlin("jvm") version "2.4.10"
     id("com.gradleup.shadow") version "8.3.8"
-    id("com.diffplug.spotless") version "8.0.0"
+    id("com.diffplug.spotless") version "8.10.1"
 }
 
 application {
@@ -55,9 +55,6 @@ repositories {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion")
-
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
     implementation("io.prometheus:simpleclient_hotspot:$prometheusVersion")
     implementation("io.prometheus:simpleclient_common:$prometheusVersion")
     implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:$opentelemetryVersion")
@@ -67,10 +64,10 @@ dependencies {
     implementation("io.ktor:ktor-server-auth:$ktorVersion")
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
     implementation("io.ktor:ktor-client-core:$ktorVersion")
-    implementation("io.ktor:ktor-client-apache:$ktorVersion")
+    implementation("io.ktor:ktor-client-apache5:$ktorVersion")
     implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
-    implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
+    implementation("io.ktor:ktor-serialization-jackson3:$ktorVersion")
 
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
     implementation("net.logstash.logback:logstash-logback-encoder:$logstashEncoderVersion")
@@ -79,10 +76,9 @@ dependencies {
 
     implementation("org.apache.kafka:kafka-clients:$kafkaVersion")
 
-    implementation("com.fasterxml.jackson.module:jackson-module-jaxb-annotations:$jacksonVersion")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:$jacksonVersion")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion")
+    implementation("tools.jackson.module:jackson-module-kotlin:$jacksonVersion")
+    implementation("tools.jackson.dataformat:jackson-dataformat-xml:$jacksonVersion")
+    implementation("tools.jackson.module:jackson-module-jaxb-annotations:$jacksonVersion")
 
     implementation("no.nav.helse.xml:sm2013:$syfoXmlCodegen")
     implementation("no.nav.helse.xml:xmlfellesformat:$syfoXmlCodegen")
@@ -105,7 +101,6 @@ dependencies {
     testImplementation("org.amshove.kluent:kluent:$kluentVersion")
     testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    testImplementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion") {
         exclude(group = "org.eclipse.jetty")
     }

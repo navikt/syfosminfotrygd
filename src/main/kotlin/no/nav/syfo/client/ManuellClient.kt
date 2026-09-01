@@ -30,7 +30,7 @@ class ManuellClient(
             else -> {
                 log.error(
                     "Noe gikk galt ved sjekk av om sykmeldingid $sykmeldingId har vært til manuell behandling, {}",
-                    loggingMeta
+                    loggingMeta,
                 )
                 throw RuntimeException(
                     "Noe gikk galt ved sjekk av om sykmeldingid $sykmeldingId har vært til manuell behandling"

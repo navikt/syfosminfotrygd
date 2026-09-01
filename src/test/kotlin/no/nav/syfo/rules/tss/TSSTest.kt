@@ -26,8 +26,8 @@ class TSSTest :
                                 generatePeriode(
                                     fom = LocalDate.now(),
                                     tom = LocalDate.now().plusDays(10),
-                                ),
-                            ),
+                                )
+                            )
                     )
 
                 val infotrygdForespResponse =
@@ -58,12 +58,8 @@ class TSSTest :
                 val result = ruleTree.runRules(sykmelding, ruleMetadata)
 
                 result.first.rulePath.map { it.rule to it.ruleResult } shouldBeEqualTo
-                    listOf(
-                        TSSRules.TSS_IDENT_MANGLER to false,
-                    )
-                mapOf(
-                    "tssId" to receivedSykmelding.tssid,
-                ) shouldBeEqualTo result.first.ruleInputs
+                    listOf(TSSRules.TSS_IDENT_MANGLER to false)
+                mapOf("tssId" to receivedSykmelding.tssid) shouldBeEqualTo result.first.ruleInputs
 
                 result.first.treeResult.ruleHit shouldBeEqualTo null
 
@@ -78,8 +74,8 @@ class TSSTest :
                                 generatePeriode(
                                     fom = LocalDate.now(),
                                     tom = LocalDate.now().plusDays(10),
-                                ),
-                            ),
+                                )
+                            )
                     )
 
                 val infotrygdForespResponse =
@@ -110,12 +106,8 @@ class TSSTest :
 
                 result.first.treeResult.status shouldBeEqualTo Status.MANUAL_PROCESSING
                 result.first.rulePath.map { it.rule to it.ruleResult } shouldBeEqualTo
-                    listOf(
-                        TSSRules.TSS_IDENT_MANGLER to true,
-                    )
-                mapOf(
-                    "tssId" to "",
-                ) shouldBeEqualTo result.first.ruleInputs
+                    listOf(TSSRules.TSS_IDENT_MANGLER to true)
+                mapOf("tssId" to "") shouldBeEqualTo result.first.ruleInputs
 
                 result.first.treeResult.ruleHit shouldBeEqualTo TSSRuleHit.TSS_IDENT_MANGLER.ruleHit
 

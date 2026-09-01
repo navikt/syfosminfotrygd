@@ -166,9 +166,9 @@ fun createInfotrygdFellesformat(
                         behandletAvManuell = behandletAvManuell,
                         utenlandskSykmelding = utenlandskSykmelding,
                         operasjonstypeAndFom = operasjonstypeAndFom,
-                    ),
+                    )
                 )
-            },
+            }
         )
     }
 
@@ -182,7 +182,7 @@ fun findArbeidsKategori(navnArbeidsgiver: String?): String {
 
 private fun findBehandlingsDato(
     itfh: InfotrygdForespAndHealthInformation,
-    signaturDato: LocalDate
+    signaturDato: LocalDate,
 ): LocalDate {
     return if (
         itfh.healthInformation.kontaktMedPasient?.kontaktDato != null &&

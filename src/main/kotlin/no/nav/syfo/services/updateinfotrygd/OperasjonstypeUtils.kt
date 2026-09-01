@@ -19,13 +19,13 @@ enum class Operasjonstype {
     UENDRET_IKKE_OPPDATER,
     ENDRING,
     FORLENGELSE,
-    UGYLDIG_OVERLAPP
+    UGYLDIG_OVERLAPP,
 }
 
 fun findoperasjonstypeAndFom(
     fom: LocalDate,
     tom: LocalDate,
-    listSMinfo: List<TypeSMinfo>
+    listSMinfo: List<TypeSMinfo>,
 ): Pair<Operasjonstype, LocalDate> {
 
     if (listSMinfo.isEmpty()) {
@@ -118,7 +118,7 @@ fun findOperasjonstype(
         else -> {
             log.error(
                 "Could not determined operasjonstype {}",
-                StructuredArguments.fields(loggingMeta)
+                StructuredArguments.fields(loggingMeta),
             )
             throw RuntimeException("Could not determined operasjonstype")
         }
@@ -146,7 +146,7 @@ private fun paafolgendeSykmelding(
             ((typeSMinfo.periode.arbufoerTOM..periode.periodeFOMDato).daysBetween() <= 1 ||
                 oppholdSkyldesHelg(
                     arbufoerTOM = typeSMinfo.periode.arbufoerTOM,
-                    periodeFOMDato = periode.periodeFOMDato
+                    periodeFOMDato = periode.periodeFOMDato,
                 ))))
 
 private fun oppholdSkyldesHelg(arbufoerTOM: LocalDate, periodeFOMDato: LocalDate): Boolean {
@@ -177,7 +177,7 @@ private fun endringSykmelding(
 
 private fun sammePeriodeInfotrygd(
     infotrygdPeriode: TypeSMinfo.Periode,
-    sykemldingsPeriode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode
+    sykemldingsPeriode: HelseOpplysningerArbeidsuforhet.Aktivitet.Periode,
 ): Boolean {
     return infotrygdPeriode.arbufoerFOM.equals(sykemldingsPeriode.periodeFOMDato) &&
         infotrygdPeriode.arbufoerTOM.equals(sykemldingsPeriode.periodeTOMDato)

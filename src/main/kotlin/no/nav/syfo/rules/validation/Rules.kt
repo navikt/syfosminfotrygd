@@ -63,10 +63,7 @@ val patientNotInIP: ValidationRule = { _, ruleMetadata ->
     )
 }
 
-data class InfotrygdPeriode(
-    val fom: LocalDate?,
-    val tom: LocalDate?,
-)
+data class InfotrygdPeriode(val fom: LocalDate?, val tom: LocalDate?)
 
 val partiallConincidentSickLeavePeriodWithPreviousRegistertSickLave: ValidationRule =
     { sykmelding, ruleMetadata ->
@@ -99,13 +96,13 @@ val partiallConincidentSickLeavePeriodWithPreviousRegistertSickLave: ValidationR
             rule =
                 ValidationRules
                     .PARTIALLY_COINCIDENT_SICK_LEAVE_PERIOD_WITH_PREVIOUSLY_REGISTERED_SICK_LEAVE,
-            ruleResult = newRule
+            ruleResult = newRule,
         )
     }
 
 private fun oldOverlappingRule(
     infotrygdSykmelding: List<TypeSMinfo>,
-    sykmeldingPerioder: List<Periode>
+    sykmeldingPerioder: List<Periode>,
 ): Boolean =
     infotrygdSykmelding.sortedSMInfos().lastOrNull()?.periode?.arbufoerFOM != null &&
         infotrygdSykmelding.sortedTOMDate().lastOrNull() != null &&
@@ -145,18 +142,14 @@ val sickLaveExtenionFromDiffrentNavOffice1: ValidationRule = { sykmelding, ruleM
                     .last()
                     .periode
                     .arbufoerFOM
-                    .isBefore(
-                        sykmeldingPerioder.sortedPeriodeFOMDate().last(),
-                    ) &&
+                    .isBefore(sykmeldingPerioder.sortedPeriodeFOMDate().last()) &&
                 infotrygdSykmelding.sortedSMInfos().last().periode?.utbetTOM != null &&
                 infotrygdSykmelding
                     .sortedSMInfos()
                     .last()
                     .periode
                     .utbetTOM
-                    .isAfter(
-                        sykmeldingPerioder.sortedPeriodeFOMDate().last(),
-                    ) &&
+                    .isAfter(sykmeldingPerioder.sortedPeriodeFOMDate().last()) &&
                 infotrygdSykmelding.sortedSMInfos().last().periode.hovedDiagnosekode != "000" &&
                 infotrygdSykmelding.sortedSMInfos().last().periode.friskKode != "H",
     )
@@ -176,7 +169,7 @@ val sickLaveExtenionFromDiffrentNavOffice2: ValidationRule = { sykmelding, ruleM
             ),
         rule = ValidationRules.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_2,
         ruleResult =
-            infotrygdSykmelding?.sortedSMInfos()?.lastOrNull() != null &&
+            infotrygdSykmelding.sortedSMInfos().lastOrNull() != null &&
                 !infotrygdSykmelding.sortedSMInfos().last().periode?.friskKode.isNullOrBlank() &&
                 !infotrygdSykmelding
                     .sortedSMInfos()
@@ -213,7 +206,7 @@ val sickLaveExtenionFromDiffrentNavOffice3: ValidationRule = { sykmelding, ruleM
         rule = ValidationRules.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_3,
         ruleResult =
             sykmeldingPerioder.sortedPeriodeFOMDate().lastOrNull() != null &&
-                infotrygdSykmelding?.sortedSMInfos()?.lastOrNull()?.periode?.utbetTOM != null &&
+                infotrygdSykmelding.sortedSMInfos().lastOrNull()?.periode?.utbetTOM != null &&
                 !infotrygdSykmelding
                     .sortedSMInfos()
                     .lastOrNull()
@@ -231,18 +224,14 @@ val sickLaveExtenionFromDiffrentNavOffice3: ValidationRule = { sykmelding, ruleM
                     .last()
                     .periode
                     .utbetTOM
-                    .isBefore(
-                        sykmeldingPerioder.sortedPeriodeFOMDate().last(),
-                    ) &&
+                    .isBefore(sykmeldingPerioder.sortedPeriodeFOMDate().last()) &&
                 infotrygdSykmelding
                     .sortedSMInfos()
                     .last()
                     .periode
                     .utbetTOM
                     .plusDays(3)
-                    .isAfter(
-                        sykmeldingPerioder.sortedPeriodeFOMDate().last(),
-                    ) &&
+                    .isAfter(sykmeldingPerioder.sortedPeriodeFOMDate().last()) &&
                 infotrygdSykmelding.sortedSMInfos().last().periode.utbetTOM.dayOfWeek >=
                     java.time.DayOfWeek.FRIDAY &&
                 sykmeldingPerioder.sortedPeriodeFOMDate().last().dayOfWeek in
@@ -280,9 +269,7 @@ val newCleanBillDateBeforePayout: ValidationRule = { sykmelding, ruleMetadata ->
                 sykmeldingPerioder
                     .sortedPeriodeTOMDate()
                     .last()
-                    .isBefore(
-                        infotrygdSykmelding.sortedSMInfos().last().periode.utbetTOM,
-                    ),
+                    .isBefore(infotrygdSykmelding.sortedSMInfos().last().periode.utbetTOM),
     )
 }
 
@@ -303,7 +290,7 @@ val newCleanBillDateBeforeRegisteredCleanBillDate: ValidationRule = { sykmelding
             ),
         rule = ValidationRules.NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE,
         ruleResult =
-            infotrygdSykmelding?.sortedSMInfos()?.lastOrNull()?.periode?.friskmeldtDato != null &&
+            infotrygdSykmelding.sortedSMInfos().lastOrNull()?.periode?.friskmeldtDato != null &&
                 sykmeldingPrognose?.arbeidsforEtterPeriode != null &&
                 sykmeldingPrognose.arbeidsforEtterPeriode &&
                 sykmeldingPerioder.sortedPeriodeTOMDate().lastOrNull() != null &&
@@ -312,9 +299,7 @@ val newCleanBillDateBeforeRegisteredCleanBillDate: ValidationRule = { sykmelding
                     .sortedPeriodeTOMDate()
                     .last()
                     .plusDays(1)
-                    .isBefore(
-                        infotrygdSykmelding.sortedSMInfos().last().periode.friskmeldtDato,
-                    ),
+                    .isBefore(infotrygdSykmelding.sortedSMInfos().last().periode.friskmeldtDato),
     )
 }
 
@@ -381,12 +366,12 @@ val personMovingKodeFl: ValidationRule = { _, ruleMetadata ->
                 "infotrygdSykmelding" to
                     infotrygdSykmelding.map {
                         InfotrygdPeriode(it.periode?.arbufoerFOM, it.periode?.arbufoerTOM)
-                    },
+                    }
             ),
         rule = ValidationRules.PERSON_MOVING_KODE_FL,
         ruleResult =
             infotrygdSykmelding
-                ?.find {
+                .find {
                     it.periode?.arbufoerFOM != null &&
                         it.periode.arbufoerFOM.equals(
                             infotrygdSykmelding.sortedFOMDate().lastOrNull()
@@ -419,9 +404,7 @@ val periodForAAEnded: ValidationRule = { sykmelding, ruleMetadata ->
                     !infotrygdSykmelding.lastOrNull()?.periode?.stans.isNullOrBlank() &&
                         infotrygdSykmelding.last().periode.arbufoerTOM != null &&
                         infotrygdSykmelding.last().periode.stans == "AA" &&
-                        it.fom.isBefore(
-                            infotrygdSykmelding.last().periode.arbufoerTOM,
-                        )
+                        it.fom.isBefore(infotrygdSykmelding.last().periode.arbufoerTOM)
                 bool
             },
     )
@@ -446,9 +429,7 @@ val maxSickLeavePayout: ValidationRule = { sykmelding, ruleMetadata ->
                 !infotrygdSykmelding.lastOrNull()?.periode?.stans.isNullOrBlank() &&
                     infotrygdSykmelding.last().periode?.stans == "MAX" &&
                     infotrygdSykmelding.last().periode.arbufoerTOM != null &&
-                    it.fom.isBefore(
-                        infotrygdSykmelding.last().periode.arbufoerTOM.plusMonths(6),
-                    )
+                    it.fom.isBefore(infotrygdSykmelding.last().periode.arbufoerTOM.plusMonths(6))
             },
     )
 }
@@ -461,7 +442,7 @@ val periodIsAf: ValidationRule = { sykmelding, ruleMetadata ->
                 "infotrygdSykmelding" to
                     infotrygdSykmelding.map {
                         InfotrygdPeriode(it.periode?.arbufoerFOM, it.periode?.arbufoerTOM)
-                    },
+                    }
             ),
         rule = ValidationRules.PERIOD_IS_AF,
         ruleResult =
@@ -469,9 +450,7 @@ val periodIsAf: ValidationRule = { sykmelding, ruleMetadata ->
                 !infotrygdSykmelding.lastOrNull()?.periode?.stans.isNullOrBlank() &&
                     infotrygdSykmelding.last().periode.arbufoerTOM != null &&
                     infotrygdSykmelding.last().periode.stans == "AF" &&
-                    it.fom.isBefore(
-                        infotrygdSykmelding.last().periode.arbufoerTOM,
-                    )
+                    it.fom.isBefore(infotrygdSykmelding.last().periode.arbufoerTOM)
             },
     )
 }
@@ -480,10 +459,7 @@ val errorFromItHouvedStatusKodeMelding: ValidationRule = { _, ruleMetadata ->
     val hovedStatusKodeMelding = ruleMetadata.infotrygdForesp.hovedStatus?.kodeMelding
 
     RuleResult(
-        ruleInputs =
-            mapOf(
-                "hovedStatusKodeMelding" to (hovedStatusKodeMelding ?: ""),
-            ),
+        ruleInputs = mapOf("hovedStatusKodeMelding" to (hovedStatusKodeMelding ?: "")),
         rule = ValidationRules.ERROR_FROM_IT_HOUVED_STATUS_KODEMELDING,
         ruleResult =
             hovedStatusKodeMelding?.toIntOrNull() != null && hovedStatusKodeMelding.toInt() > 4,
@@ -494,10 +470,7 @@ val errorFromItSmgistorikkStatusKodemelding: ValidationRule = { _, ruleMetadata 
     val smHistorikkKodeMelding = ruleMetadata.infotrygdForesp.sMhistorikk?.status?.kodeMelding
 
     RuleResult(
-        ruleInputs =
-            mapOf(
-                "smHistorikkKodeMelding" to (smHistorikkKodeMelding ?: ""),
-            ),
+        ruleInputs = mapOf("smHistorikkKodeMelding" to (smHistorikkKodeMelding ?: "")),
         rule = ValidationRules.ERROR_FROM_IT_SMHISTORIKK_STATUS_KODEMELDING,
         ruleResult =
             smHistorikkKodeMelding?.toIntOrNull() != null && smHistorikkKodeMelding.toInt() > 4,
@@ -508,10 +481,7 @@ val errorFromItParalellytelserStatusKodemelding: ValidationRule = { _, ruleMetad
         ruleMetadata.infotrygdForesp.parallelleYtelser?.status?.kodeMelding
 
     RuleResult(
-        ruleInputs =
-            mapOf(
-                "parallelleYtelsesKodeMelding" to (parallelleYtelsesKodeMelding ?: ""),
-            ),
+        ruleInputs = mapOf("parallelleYtelsesKodeMelding" to (parallelleYtelsesKodeMelding ?: "")),
         rule = ValidationRules.ERROR_FROM_IT_PARALELLYTELSER_STATUS_KODEMELDING,
         ruleResult =
             parallelleYtelsesKodeMelding?.toIntOrNull() != null &&
@@ -522,10 +492,7 @@ val errorFromItDiagnoseOkUtrekkStatusKodemelding: ValidationRule = { _, ruleMeta
     val diagnoseKodeKodeMelding = ruleMetadata.infotrygdForesp.diagnosekodeOK?.status?.kodeMelding
 
     RuleResult(
-        ruleInputs =
-            mapOf(
-                "diagnoseKodeKodeMelding" to (diagnoseKodeKodeMelding ?: ""),
-            ),
+        ruleInputs = mapOf("diagnoseKodeKodeMelding" to (diagnoseKodeKodeMelding ?: "")),
         rule = ValidationRules.ERROR_FROM_IT_DIAGNOSE_OK_UTREKK_STATUS_KODEMELDING,
         ruleResult =
             diagnoseKodeKodeMelding?.toIntOrNull() != null && diagnoseKodeKodeMelding.toInt() > 4,
@@ -535,10 +502,7 @@ val errorFromItPasientUtrekkStatusKodemelding: ValidationRule = { _, ruleMetadat
     val pasientStatusKodeMelding = ruleMetadata.infotrygdForesp.pasient?.status?.kodeMelding
 
     RuleResult(
-        ruleInputs =
-            mapOf(
-                "pasientStatusKodeMelding" to (pasientStatusKodeMelding ?: ""),
-            ),
+        ruleInputs = mapOf("pasientStatusKodeMelding" to (pasientStatusKodeMelding ?: "")),
         rule = ValidationRules.ERROR_FROM_IT_PASIENT_UTREKK_STATUS_KODEMELDING,
         ruleResult =
             pasientStatusKodeMelding?.toIntOrNull() != null && pasientStatusKodeMelding.toInt() > 4,
@@ -561,7 +525,7 @@ val arbeiduforetomMangler: ValidationRule = { _, ruleMetadata ->
         ruleResult =
             (sykmeldingInfotrygd.isNotEmpty() &&
                 sykmeldingInfotrygd.sortedSMInfos().lastOrNull()?.periode?.arbufoerTOM == null) &&
-                status?.kodeMelding != "04"
+                status?.kodeMelding != "04",
     )
 }
 

@@ -132,7 +132,7 @@ class FixMissingAndICPC2BDiagnoserTest :
                                             listOf(
                                                 bidiagnoseICPC2B,
                                                 bidiagnoseICPC2,
-                                                bidiagnoseICD10
+                                                bidiagnoseICD10,
                                             )
                                         )
                                     }

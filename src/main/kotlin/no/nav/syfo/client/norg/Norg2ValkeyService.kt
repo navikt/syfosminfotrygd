@@ -1,12 +1,12 @@
 package no.nav.syfo.client.norg
 
-import com.fasterxml.jackson.module.kotlin.readValue
 import io.valkey.Jedis
 import io.valkey.JedisPool
 import java.time.Duration
-import no.nav.syfo.objectMapper
+import no.nav.syfo.jsonMapper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import tools.jackson.module.kotlin.readValue
 
 class Norg2ValkeyService(private val jedisPool: JedisPool) {
     companion object {
@@ -22,7 +22,7 @@ class Norg2ValkeyService(private val jedisPool: JedisPool) {
             jedis.setex(
                 "$PREFIX$geografiskOmraade",
                 valkeyTimeoutSeconds,
-                objectMapper.writeValueAsString(enhet)
+                jsonMapper.writeValueAsString(enhet),
             )
         } catch (ex: Exception) {
             log.error("Could not update valkey for GT {}", ex.message)
@@ -37,7 +37,7 @@ class Norg2ValkeyService(private val jedisPool: JedisPool) {
             jedis = jedisPool.resource
             when (val stringValue = jedis.get("$PREFIX$geografiskOmraade")) {
                 null -> null
-                else -> objectMapper.readValue<Enhet>(stringValue)
+                else -> jsonMapper.readValue<Enhet>(stringValue)
             }
         } catch (ex: Exception) {
             log.error("Could not get valkey for GT {}", ex.message)

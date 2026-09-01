@@ -8,7 +8,7 @@ import no.nav.syfo.smregister.SykmeldingDTO
 fun hasOverlappingPeriodsFromInfotrygd(
     fom: LocalDate,
     tom: LocalDate,
-    infotrygdPerioder: List<TypeSMinfo>
+    infotrygdPerioder: List<TypeSMinfo>,
 ): Boolean {
     val sykmeldingDays = getWorkdays(fom, tom)
 
@@ -22,10 +22,7 @@ fun hasOverlappingPeriodsFromInfotrygd(
     return infotrygdDays.containsAll(sykmeldingDays)
 }
 
-private fun getWorkdays(
-    fom: LocalDate,
-    tom: LocalDate,
-): MutableList<LocalDate> =
+private fun getWorkdays(fom: LocalDate, tom: LocalDate): MutableList<LocalDate> =
     fom.datesUntil(tom.plusDays(1)).filter { date -> date.dayOfWeek.value < 6 }.toList()
 
 private fun harTilbakedatertMerknad(sykmelding: SykmeldingDTO): Boolean {

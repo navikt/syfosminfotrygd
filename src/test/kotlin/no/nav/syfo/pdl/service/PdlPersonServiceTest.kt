@@ -38,7 +38,7 @@ class PdlPersonServiceTest :
                                     gtType = "BYDEL",
                                     gtKommune = null,
                                     gtBydel = "030102",
-                                    gtLand = null
+                                    gtLand = null,
                                 ),
                             hentPerson =
                                 HentPerson(
@@ -49,7 +49,7 @@ class PdlPersonServiceTest :
                                                 type = "Innland",
                                                 gyldigFraOgMed = "2023-01-01T00:00",
                                                 gyldigTilOgMed = null,
-                                            ),
+                                            )
                                         ),
                                 ),
                         ),
@@ -72,7 +72,7 @@ class PdlPersonServiceTest :
                                     gtType = "BYDEL",
                                     gtKommune = null,
                                     gtBydel = "030102",
-                                    gtLand = null
+                                    gtLand = null,
                                 ),
                             hentPerson = null,
                         ),
@@ -110,7 +110,7 @@ class PdlPersonServiceTest :
                         gtType = "KOMMUNE",
                         gtKommune = "0301",
                         gtBydel = null,
-                        gtLand = null
+                        gtLand = null,
                     )
 
                 hentGeografiskTilknytning.finnGT() shouldBeEqualTo "0301"
@@ -121,7 +121,7 @@ class PdlPersonServiceTest :
                         gtType = "UTLAND",
                         gtKommune = "0301",
                         gtBydel = null,
-                        gtLand = null
+                        gtLand = null,
                     )
 
                 hentGeografiskTilknytning.finnGT() shouldBeEqualTo "0301"
@@ -132,7 +132,7 @@ class PdlPersonServiceTest :
                         gtType = "UDEFINERT",
                         gtKommune = null,
                         gtBydel = null,
-                        gtLand = null
+                        gtLand = null,
                     )
 
                 hentGeografiskTilknytning.finnGT() shouldBeEqualTo null

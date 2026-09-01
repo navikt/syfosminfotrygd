@@ -25,7 +25,7 @@ class CreateInfotrygdBlokkSpek :
                                     HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
                                         periodeFOMDato = LocalDate.of(2019, 1, 1)
                                         periodeTOMDato = LocalDate.of(2019, 1, 2)
-                                    },
+                                    }
                                 )
                             }
                     }
@@ -46,7 +46,7 @@ class CreateInfotrygdBlokkSpek :
                     findoperasjonstypeAndFom(
                         healthInformation.aktivitet.periode.sortedFOMDate().first(),
                         healthInformation.aktivitet.periode.maxOf { it.periodeTOMDato },
-                        infotrygdForesp.getInfotrygdPerioder()
+                        infotrygdForesp.getInfotrygdPerioder(),
                     )
                 val forsteFravaersDag = operasjonstypeAndFom.second
 
@@ -81,13 +81,13 @@ class CreateInfotrygdBlokkSpek :
                                     HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
                                         periodeFOMDato = LocalDate.of(2019, 1, 2)
                                         periodeTOMDato = LocalDate.of(2019, 1, 3)
-                                    },
+                                    }
                                 )
                                 periode.add(
                                     HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
                                         periodeFOMDato = LocalDate.of(2019, 1, 4)
                                         periodeTOMDato = LocalDate.of(2019, 1, 5)
-                                    },
+                                    }
                                 )
                             }
                     }
@@ -103,7 +103,7 @@ class CreateInfotrygdBlokkSpek :
                                                 arbufoerFOM = LocalDate.of(2019, 1, 1)
                                                 arbufoerTOM = LocalDate.of(2019, 1, 1)
                                             }
-                                    },
+                                    }
                                 )
                                 status = StatusType().apply { kodeMelding = "00" }
                             }
@@ -117,7 +117,7 @@ class CreateInfotrygdBlokkSpek :
                     findoperasjonstypeAndFom(
                         healthInformation.aktivitet.periode.sortedFOMDate().first(),
                         healthInformation.aktivitet.periode.maxOf { it.periodeTOMDato },
-                        infotrygdForesp.getInfotrygdPerioder()
+                        infotrygdForesp.getInfotrygdPerioder(),
                     )
                 val forsteFravaersDag = operasjonstypeAndFom.second
 
@@ -171,13 +171,13 @@ class CreateInfotrygdBlokkSpek :
                                     HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
                                         periodeFOMDato = LocalDate.of(2019, 1, 3)
                                         periodeTOMDato = LocalDate.of(2019, 1, 4)
-                                    },
+                                    }
                                 )
                                 periode.add(
                                     HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
                                         periodeFOMDato = LocalDate.of(2019, 1, 5)
                                         periodeTOMDato = LocalDate.of(2019, 1, 6)
-                                    },
+                                    }
                                 )
                             }
                     }
@@ -193,7 +193,7 @@ class CreateInfotrygdBlokkSpek :
                                                 arbufoerFOM = LocalDate.of(2019, 1, 1)
                                                 arbufoerTOM = LocalDate.of(2019, 1, 1)
                                             }
-                                    },
+                                    }
                                 )
                                 status = StatusType().apply { kodeMelding = "00" }
                             }
@@ -207,7 +207,7 @@ class CreateInfotrygdBlokkSpek :
                     findoperasjonstypeAndFom(
                         healthInformation.aktivitet.periode.sortedFOMDate().first(),
                         healthInformation.aktivitet.periode.maxOf { it.periodeTOMDato },
-                        infotrygdForesp.getInfotrygdPerioder()
+                        infotrygdForesp.getInfotrygdPerioder(),
                     )
                 val forsteFravaersDag = operasjonstypeAndFom.second
 
@@ -258,7 +258,7 @@ class CreateInfotrygdBlokkSpek :
                                     HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
                                         periodeFOMDato = LocalDate.of(2019, 1, 1)
                                         periodeTOMDato = LocalDate.of(2019, 1, 2)
-                                    },
+                                    }
                                 )
                             }
                     }
@@ -276,7 +276,7 @@ class CreateInfotrygdBlokkSpek :
                     findoperasjonstypeAndFom(
                         healthInformation.aktivitet.periode.sortedFOMDate().first(),
                         healthInformation.aktivitet.periode.maxOf { it.periodeTOMDato },
-                        infotrygdForesp.getInfotrygdPerioder()
+                        infotrygdForesp.getInfotrygdPerioder(),
                     )
                 val forsteFravaersDag = operasjonstypeAndFom.second
 
@@ -308,7 +308,7 @@ class CreateInfotrygdBlokkSpek :
                                     HelseOpplysningerArbeidsuforhet.Aktivitet.Periode().apply {
                                         periodeFOMDato = LocalDate.of(2019, 1, 1)
                                         periodeTOMDato = LocalDate.of(2019, 1, 2)
-                                    },
+                                    }
                                 )
                             }
                     }
@@ -326,7 +326,7 @@ class CreateInfotrygdBlokkSpek :
                     findoperasjonstypeAndFom(
                         healthInformation.aktivitet.periode.sortedFOMDate().first(),
                         healthInformation.aktivitet.periode.maxOf { it.periodeTOMDato },
-                        infotrygdForesp.getInfotrygdPerioder()
+                        infotrygdForesp.getInfotrygdPerioder(),
                     )
                 val forsteFravaersDag = operasjonstypeAndFom.second
 

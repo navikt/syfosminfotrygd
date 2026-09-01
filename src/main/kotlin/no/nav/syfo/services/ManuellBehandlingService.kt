@@ -40,7 +40,7 @@ class ManuellBehandlingService(
             receivedSykmelding,
             validationResult,
             behandletAvManuell,
-            loggingMeta
+            loggingMeta,
         )
     }
 
@@ -87,7 +87,7 @@ class ManuellBehandlingService(
                         behandletAvManuell = behandletAvManuell,
                         utenlandskSykmelding = receivedSykmelding.erUtenlandskSykmelding(),
                         operasjonstypeAndFom = operasjonstypeAndFom.copy(first = Operasjonstype.NY),
-                    ),
+                    )
                 )
             val duplikatInfotrygdOppdatering =
                 if (skipDuplicationCheck) {
@@ -101,7 +101,7 @@ class ManuellBehandlingService(
                     INFOTRYGD,
                     "1",
                     TimeUnit.MINUTES.toSeconds(1).toInt(),
-                    loggingMeta
+                    loggingMeta,
                 )
             }
 
@@ -131,7 +131,7 @@ class ManuellBehandlingService(
                     OVERLAPPENDE_PERIODER_IKKE_OPPRETT_OPPGAVE.inc()
                     log.info(
                         "Sykmelding overlapper, trenger ikke å opprette manuell oppgave for {}",
-                        StructuredArguments.fields(loggingMeta)
+                        StructuredArguments.fields(loggingMeta),
                     )
                 }
                 else -> {
@@ -139,14 +139,14 @@ class ManuellBehandlingService(
                         receivedSykmelding,
                         validationResult,
                         behandletAvManuell,
-                        loggingMeta
+                        loggingMeta,
                     )
                     if (!skipDuplicationCheck) {
                         valkeyService.oppdaterValkey(
                             sha256String,
                             sha256String,
                             TimeUnit.DAYS.toSeconds(60).toInt(),
-                            loggingMeta
+                            loggingMeta,
                         )
                     }
                 }
@@ -154,7 +154,7 @@ class ManuellBehandlingService(
         } catch (connectionException: JedisConnectionException) {
             log.error(
                 "Fikk ikkje opprettet kontakt med valkey, kaster exception",
-                connectionException
+                connectionException,
             )
             throw connectionException
         }
@@ -202,7 +202,7 @@ class ManuellBehandlingService(
                 receivedSykmelding.sykmelding.perioder.lastTom(),
                 infotrygdSykmelding.filter {
                     it.periode.arbufoerFOM != null && it.periode.arbufoerTOM != null
-                }
+                },
             )
         if (overlapperFraInfotrygd) {
             OVERLAPPER_PERIODER_COUNTER.labels("infotrygd").inc()

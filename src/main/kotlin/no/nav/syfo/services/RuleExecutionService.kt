@@ -16,10 +16,7 @@ import no.nav.syfo.rules.validation.validationRuleTree
 class RuleExecutionService() {
 
     private val ruleExecution =
-        sequenceOf(
-            ValidationRulesExecution(validationRuleTree),
-            TSSRulesExecution(tssRuleTree),
-        )
+        sequenceOf(ValidationRulesExecution(validationRuleTree), TSSRulesExecution(tssRuleTree))
 
     @WithSpan
     fun runRules(
