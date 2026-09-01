@@ -4,14 +4,13 @@ import java.io.ByteArrayOutputStream
 group = "no.nav.syfo"
 version = "1.0.0"
 
-val artemisVersion = "2.44.0"
-val coroutinesVersion = "1.10.2"
+val artemisVersion = "2.56.0"
 val ibmMqVersion = "10.0.0.0"
 val javaxActivationVersion = "1.1.1"
 val jacksonVersion = "3.2.2"
 val jaxbApiVersion = "2.4.0-b180830.0359"
 val valkeyVersion = "5.5.0"
-val kafkaVersion = "3.9.1"
+val kafkaVersion = "4.3.1"
 val kluentVersion = "1.73"
 val ktorVersion = "3.5.2"
 val logbackVersion = "1.6.3"
@@ -56,7 +55,6 @@ repositories {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
     implementation("io.prometheus:simpleclient_hotspot:$prometheusVersion")
     implementation("io.prometheus:simpleclient_common:$prometheusVersion")
     implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:$opentelemetryVersion")

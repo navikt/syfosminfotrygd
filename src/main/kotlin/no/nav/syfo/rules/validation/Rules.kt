@@ -169,7 +169,7 @@ val sickLaveExtenionFromDiffrentNavOffice2: ValidationRule = { sykmelding, ruleM
             ),
         rule = ValidationRules.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_2,
         ruleResult =
-            infotrygdSykmelding?.sortedSMInfos()?.lastOrNull() != null &&
+            infotrygdSykmelding.sortedSMInfos().lastOrNull() != null &&
                 !infotrygdSykmelding.sortedSMInfos().last().periode?.friskKode.isNullOrBlank() &&
                 !infotrygdSykmelding
                     .sortedSMInfos()
@@ -206,7 +206,7 @@ val sickLaveExtenionFromDiffrentNavOffice3: ValidationRule = { sykmelding, ruleM
         rule = ValidationRules.SICKLEAVE_EXTENTION_FROM_DIFFRENT_NAV_OFFICE_3,
         ruleResult =
             sykmeldingPerioder.sortedPeriodeFOMDate().lastOrNull() != null &&
-                infotrygdSykmelding?.sortedSMInfos()?.lastOrNull()?.periode?.utbetTOM != null &&
+                infotrygdSykmelding.sortedSMInfos().lastOrNull()?.periode?.utbetTOM != null &&
                 !infotrygdSykmelding
                     .sortedSMInfos()
                     .lastOrNull()
@@ -290,7 +290,7 @@ val newCleanBillDateBeforeRegisteredCleanBillDate: ValidationRule = { sykmelding
             ),
         rule = ValidationRules.NEW_CLEAN_BILL_DATE_BEFORE_REGISTERD_CLEAN_BILL_DATE,
         ruleResult =
-            infotrygdSykmelding?.sortedSMInfos()?.lastOrNull()?.periode?.friskmeldtDato != null &&
+            infotrygdSykmelding.sortedSMInfos().lastOrNull()?.periode?.friskmeldtDato != null &&
                 sykmeldingPrognose?.arbeidsforEtterPeriode != null &&
                 sykmeldingPrognose.arbeidsforEtterPeriode &&
                 sykmeldingPerioder.sortedPeriodeTOMDate().lastOrNull() != null &&
@@ -371,7 +371,7 @@ val personMovingKodeFl: ValidationRule = { _, ruleMetadata ->
         rule = ValidationRules.PERSON_MOVING_KODE_FL,
         ruleResult =
             infotrygdSykmelding
-                ?.find {
+                .find {
                     it.periode?.arbufoerFOM != null &&
                         it.periode.arbufoerFOM.equals(
                             infotrygdSykmelding.sortedFOMDate().lastOrNull()

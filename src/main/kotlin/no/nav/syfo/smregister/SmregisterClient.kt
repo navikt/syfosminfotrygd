@@ -109,7 +109,7 @@ fun Periode.tilPeriodetypeDTO(): PeriodetypeDTO? {
         gradert != null -> return PeriodetypeDTO.GRADERT
         reisetilskudd -> return PeriodetypeDTO.REISETILSKUDD
         avventendeInnspillTilArbeidsgiver != null -> return PeriodetypeDTO.AVVENTENDE
-        behandlingsdager != null && behandlingsdager!! > 0 -> return PeriodetypeDTO.BEHANDLINGSDAGER
+        behandlingsdager != null && behandlingsdager > 0 -> return PeriodetypeDTO.BEHANDLINGSDAGER
         else -> null
     }
 }

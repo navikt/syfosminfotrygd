@@ -324,7 +324,7 @@ fun tryGetHelseOpplysningerArbeidsuforhet(
 fun tryGetHelseOpplysningerArbeidsuforhet(document: XMLDocument): HelseOpplysningerArbeidsuforhet? {
     document.refDoc.content.any.forEach {
         if (it is HelseOpplysningerArbeidsuforhet) {
-            return it as HelseOpplysningerArbeidsuforhet
+            return it
         } else if (it is XMLMsgHead) {
             return tryGetHelseOpplysningerArbeidsuforhet(it)
         }
