@@ -247,7 +247,7 @@ suspend fun Application.module() {
         launch { sykmeldingConsumerService.startConsumer() }
     }
 
-    monitor.subscribe(ApplicationStopping) { applicationState.ready = false }
+    monitor.subscribe(ApplicationStopping) { sykmeldingConsumerService.stopConsumer() }
 }
 
 private fun getkafkaProducerConfig(producerId: String, env: Environment) =

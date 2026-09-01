@@ -27,6 +27,7 @@ import no.nav.syfo.services.updateinfotrygd.exception.InfotrygdDownException
 import no.nav.syfo.shouldRun
 import no.nav.syfo.util.LoggingMeta
 import org.apache.kafka.clients.consumer.KafkaConsumer
+import org.apache.kafka.common.errors.WakeupException
 import tools.jackson.module.kotlin.readValue
 
 class SykmeldingConsumerService(
@@ -38,6 +39,11 @@ class SykmeldingConsumerService(
 ) {
     companion object {
         private const val DELAY_ON_ERROR_SECONDS = 60L
+    }
+
+    fun stopConsumer() {
+        applicationState.ready = false
+        kafkaConsumer.wakeup()
     }
 
     suspend fun startConsumer() =
@@ -94,6 +100,8 @@ class SykmeldingConsumerService(
                             cancellationException,
                         )
                         throw cancellationException
+                    } catch (_: WakeupException) {
+                        delayTime = 0.seconds
                     } catch (ex: Exception) {
                         log.error(
                             "Error running consumer, unsubscribing and waiting 60 seconds for retry",
@@ -123,7 +131,9 @@ class SykmeldingConsumerService(
                         infotrygdOppdateringProducer = null
                         infotrygdSporringProducer = null
                     }
-                    delay(delayTime)
+                    if (applicationState.ready) {
+                        delay(delayTime)
+                    }
                 }
             }
         }
