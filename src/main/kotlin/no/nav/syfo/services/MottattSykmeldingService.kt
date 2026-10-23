@@ -107,6 +107,11 @@ class MottattSykmeldingService(
         when (skalOppdatereInfotrygd(receivedSykmelding, cluster)) {
             true -> {
                 log.info("Received a SM2013, {}", StructuredArguments.fields(loggingMeta))
+
+                if (receivedSykmelding.sykmelding.id == "fd6e1759-2c1e-4dd4-b58f-131d6cadb88f") {
+                    return
+                }
+
                 val requestLatency = REQUEST_TIME.startTimer()
 
                 val fellesformat =

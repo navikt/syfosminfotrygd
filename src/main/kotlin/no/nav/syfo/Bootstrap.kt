@@ -104,7 +104,6 @@ fun main() {
     embeddedServer.start(true)
 }
 
-@OptIn(DelicateCoroutinesApi::class)
 suspend fun Application.module() {
     MqTlsUtils.getMqTlsConfig().forEach { (key, value) ->
         System.setProperty(key as String, value as String)
