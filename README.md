@@ -1,4 +1,4 @@
-# SYFO sykmelding infotrygd
+# syfosminfotrygd
 
 Application for handling rules used for infotrygd and later on persisting them in infotrygd or create a manuall task
 to persisting them in infotrygd
