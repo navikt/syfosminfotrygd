@@ -33,7 +33,6 @@ val fellesformatJaxBContext: JAXBContext =
         HelseOpplysningerArbeidsuforhet::class.java,
         KontrollsystemBlokkType::class.java,
         KontrollSystemBlokk::class.java,
-        InfotrygdForesp::class.java,
     )
 val fellesformatUnmarshaller: Unmarshaller =
     fellesformatJaxBContext.createUnmarshaller().apply {
