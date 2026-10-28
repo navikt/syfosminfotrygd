@@ -4,6 +4,9 @@ import java.io.ByteArrayOutputStream
 group = "no.nav.syfo"
 version = "1.0.0"
 
+val javaVersion = "25"
+
+
 val artemisVersion = "2.56.0"
 val ibmMqVersion = "10.0.0.0"
 val javaxActivationVersion = "1.1.1"
@@ -30,13 +33,11 @@ val ktfmtVersion = "0.56"
 val opentelemetryVersion = "2.21.0"
 val diagnoseVersion = "2026.1.10"
 
-val javaVersion = JvmTarget.JVM_25
 
 plugins {
     id("application")
-    kotlin("jvm") version "2.4.10"
-    id("com.gradleup.shadow") version "8.3.8"
-    id("com.diffplug.spotless") version "8.10.1"
+    kotlin("jvm") version "2.4.21"
+    id("com.diffplug.spotless") version "8.10.4"
 }
 
 application {
@@ -111,8 +112,12 @@ dependencies {
 }
 
 kotlin {
+    jvmToolchain {
+        languageVersion.set(JavaLanguageVersion.of(javaVersion))
+    }
+
     compilerOptions {
-        jvmTarget = javaVersion
+        jvmTarget.set(JvmTarget.fromTarget(javaVersion))
     }
 }
 
@@ -150,23 +155,11 @@ tasks {
     }
 
 
-    shadowJar {
-        archiveBaseName.set("app")
-        archiveClassifier.set("")
-        isZip64 = true
-        manifest {
-            attributes(
-                mapOf(
-                    "Main-Class" to "no.nav.syfo.BootstrapKt",
-                ),
-            )
-        }
-    }
-
     test {
         useJUnitPlatform {}
         testLogging {
             events("skipped", "failed")
+            showStandardStreams = true
             showStackTraces = true
             exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
         }
