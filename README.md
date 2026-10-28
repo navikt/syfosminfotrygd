@@ -37,37 +37,30 @@ This the high level flow of the application
 * Mq
 
 ### Prerequisites
-* JDK 25
-
+#### Java
 Make sure you have the Java JDK 25 installed
 You can check which version you have installed using this command:
 ``` bash
 java -version
 ```
+or install it: https://sdkman.io/
 
-* Docker
-
-Make sure you have the Docker installed
+#### Docker
+Make sure you have docker installed using this command:
 You can check which version you have installed using this command:
-``` shell
-docker -version
-```
-
-## Getting started
-#### Running locally
-
 ``` bash
-./gradlew run
+docker --version
 ```
+or install it: https://docs.docker.com/engine/install/
 
-#### Build and run tests
-
-To build locally and run the integration tests you can simply run 
+### Building the application
+#### Compile and package application
+To build locally and run the integration tests you can simply run
 ``` bash
-./gradlew shadowJar
+./gradlew installDist
 ```
 or on windows
-`gradlew.bat shadowJar`
+`gradlew.bat installDist`
 
 #### Creating a docker image
 
@@ -82,14 +75,17 @@ docker build -t syfosminfotrygd .
 docker run --rm -it -p 8080:8080 syfosminfotrygd
 ```
 
-### Upgrading the gradle wrapper
-
-Find the newest version of gradle here: https://gradle.org/releases/ 
-Then run this command(remeber to 
-replace $gradleVersjon with the newest version of gradle):
-
+#### Running locally
 ``` bash
-./gradlew wrapper --gradle-version $gradleVersjon
+./gradlew run
+```
+> **Note**
+> There are many services and environment variables that need to be set up, for the application to work properly.
+
+
+### Upgrading the Gradle wrapper version to latest
+``` bash
+./gradlew :wrapper --gradle-version latest
 ```
 
 <!-- RULE_MARKER_START -->
