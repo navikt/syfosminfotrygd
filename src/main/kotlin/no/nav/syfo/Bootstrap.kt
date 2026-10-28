@@ -80,7 +80,7 @@ import tools.jackson.databind.SerializationFeature
 import tools.jackson.databind.json.JsonMapper
 import tools.jackson.module.kotlin.jacksonMapperBuilder
 
-val log: Logger = LoggerFactory.getLogger("no.nav.syfo.sminfotrygd")
+val log: Logger = LoggerFactory.getLogger("no.nav.syfo.syfosminfotrygd")
 
 val jsonMapper: JsonMapper =
     jacksonMapperBuilder().enable(SerializationFeature.INDENT_OUTPUT).build()
