@@ -8,7 +8,7 @@ val javaVersion = "25"
 
 
 val artemisVersion = "2.56.0"
-val ibmMqVersion = "10.0.1.0"
+val ibmMqVersion = "10.0.0.0"
 val javaxActivationVersion = "1.1.1"
 val jacksonVersion = "3.2.4"
 val jaxbApiVersion = "2.4.0-b180830.0359"
