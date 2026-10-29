@@ -57,10 +57,10 @@ or install it: https://docs.docker.com/engine/install/
 #### Compile and package application
 To build locally and run the integration tests you can simply run
 ``` bash
-./gradlew installDist
+./gradlew clean build
 ```
 or on windows
-`gradlew.bat installDist`
+`gradlew.bat clean build`
 
 #### Creating a docker image
 

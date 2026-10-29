@@ -37,6 +37,7 @@ val diagnoseVersion = "2026.1.10"
 plugins {
     id("application")
     kotlin("jvm") version "2.4.21"
+    id("com.gradleup.shadow") version "8.3.8"
     id("com.diffplug.spotless") version "8.10.4"
 }
 
@@ -151,6 +152,19 @@ tasks {
                     ) +
                     lines.subList(end + 1, lines.size)
             readme.writeText(newLines.joinToString("\n"))
+        }
+    }
+
+    shadowJar {
+        archiveBaseName.set("app")
+        archiveClassifier.set("")
+        isZip64 = true
+        manifest {
+            attributes(
+                mapOf(
+                    "Main-Class" to "no.nav.syfo.BootstrapKt",
+                ),
+            )
         }
     }
 

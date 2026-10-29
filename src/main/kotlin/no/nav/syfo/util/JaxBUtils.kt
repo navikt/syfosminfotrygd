@@ -11,6 +11,7 @@ import no.nav.helse.infotrygd.foresp.InfotrygdForesp
 import no.nav.helse.msgHead.XMLMsgHead
 import no.nav.helse.sm2013.HelseOpplysningerArbeidsuforhet
 import no.nav.helse.sm2013.KontrollSystemBlokk
+import no.nav.helse.sm2013.KontrollsystemBlokkType
 import org.codehaus.stax2.XMLOutputFactory2
 import tools.jackson.databind.MapperFeature
 import tools.jackson.databind.cfg.DateTimeFeature
@@ -30,6 +31,7 @@ val fellesformatJaxBContext: JAXBContext =
         XMLMsgHead::class.java,
         XMLMottakenhetBlokk::class.java,
         HelseOpplysningerArbeidsuforhet::class.java,
+        KontrollsystemBlokkType::class.java,
         KontrollSystemBlokk::class.java,
         InfotrygdForesp::class.java,
     )
