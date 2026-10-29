@@ -1,5 +1,6 @@
 package no.nav.syfo.util
 
+import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.core.spec.style.FunSpec
 import java.io.StringReader
 import no.nav.helse.eiFellesformat.XMLEIFellesformat
@@ -33,6 +34,12 @@ class JaxBUtilsSpek :
                         "Diagnosekode V=\"W05\" S=\"2.16.578.1.12.4.1.1.7170\" DN=\"KVALME SVANGERSKAP (&gt;22 UKER)\"/>"
                     )
                     .shouldBeTrue()
+            }
+            test("Fellesformat JAXB context initializes without duplicate XML type names") {
+                shouldNotThrowAny {
+                    fellesformatJaxBContext.createMarshaller()
+                    fellesformatJaxBContext.createUnmarshaller()
+                }
             }
         }
     })

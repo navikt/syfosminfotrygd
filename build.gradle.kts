@@ -179,6 +179,31 @@ tasks {
         }
     }
 
+    val distributionJaxbTest = register<Test>("distributionJaxbTest") {
+        group = "verification"
+        description = "Checks JAXB initialization using the installDist runtime JARs."
+        val distribution = named<Sync>("installDist")
+        dependsOn(distribution)
+        testClassesDirs = sourceSets["test"].output.classesDirs
+        classpath =
+            (sourceSets["test"].runtimeClasspath - sourceSets["main"].runtimeClasspath) +
+                fileTree(distribution.map { it.destinationDir.resolve("lib") }) {
+                    include("*.jar")
+                }
+        useJUnitPlatform()
+        filter {
+            includeTestsMatching("no.nav.syfo.util.JaxBUtilsSpek")
+        }
+        testLogging {
+            events("failed")
+            exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+        }
+    }
+
+    named("installDist") {
+        finalizedBy(distributionJaxbTest)
+    }
+
 
     spotless {
         kotlin { ktfmt(ktfmtVersion).kotlinlangStyle() }
